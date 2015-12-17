@@ -11,7 +11,7 @@ define([
 	ReactDOM,
 	_
 ) {
-	var MinScore = .6,
+	var MinScore = .2,
 		MaxItems = 10;
 
 
@@ -58,7 +58,7 @@ define([
 
 			this.setState({
 				matchingTitles: matchingTitles,
-				selected: null
+				selected: 0
 			});
 		},
 
@@ -74,9 +74,15 @@ define([
 						// press esc after clicking in the feature list, and
 						// then type a new feature name
 					searchBox = ReactDOM.findDOMNode(this.refs.searchBox);
-					searchBox.value = "";
-					searchBox.focus();
-					this.onQueryChange({ target: { value: "" }});
+
+					if (!searchBox.value) {
+							// pressing esc in an empty field should close the popup
+						window.close();
+					} else {
+						searchBox.value = "";
+						searchBox.focus();
+						this.onQueryChange({ target: { value: "" }});
+					}
 					break;
 
 				case 38:	// up arrow
@@ -86,6 +92,11 @@ define([
 
 				case 40:	// down arrow
 					this.modifySelected(1);
+					event.preventDefault();
+					break;
+
+				case 13:	// enter
+					this.focusTabByTitle(this.state.matchingTitles[this.state.selected].string);
 					event.preventDefault();
 					break;
 			}
@@ -99,6 +110,26 @@ define([
 
 			if (_.isNumber(clickedIndex)) {
 				this.setSelectedIndex(clickedIndex);
+				this.focusTabByTitle(this.state.matchingTitles[clickedIndex].string);
+			}
+		},
+
+
+		focusTabByTitle: function(
+			title)
+		{
+			var selectedTab = _.find(this.props.tabs, { title: title });
+
+			if (selectedTab) {
+				chrome.tabs.update(selectedTab.id, { active: true });
+
+				if (selectedTab.windowId != chrome.windows.WINDOW_ID_CURRENT) {
+					chrome.windows.update(selectedTab.windowId, { focused: true });
+				}
+
+					// we seem to have to close the window in a timeout so that
+					// the hover state of the button gets cleared
+				setTimeout(function() { window.close(); }, 0);
 			}
 		},
 
