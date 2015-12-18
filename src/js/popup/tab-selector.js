@@ -15,7 +15,8 @@ define([
 		MaxItems = 10;
 
 
-	var scoreArray = arrayScore(qsScore);
+		// use title as the key to score
+	var scoreArray = arrayScore(qsScore, "title");
 
 
 	var TabItem = React.createClass({
@@ -35,13 +36,8 @@ define([
 	var TabSelector = React.createClass({
 		getInitialState: function()
 		{
-				// run scoreArray over all of the feature names to generate an
-				// array with a { string: "..." } object wrapping each name.  passing
-				// an empty query will cause scoreArray to a case-insensitive sort.
-			this.sortableTabNames = scoreArray(_.pluck(this.props.tabs, "title"), "");
-
 			return {
-				matchingTitles: [],
+				matchingTabs: [],
 				selected: null
 			};
 		},
@@ -50,14 +46,14 @@ define([
 		onQueryChange: function(
 			event)
 		{
-			var scores = scoreArray(this.sortableTabNames, event.target.value),
+			var scores = scoreArray(this.props.tabs, event.target.value),
 					// don't show barely-matching results and limit it to 10
-				matchingTitles = _.dropRightWhile(scores, function(item) {
+				matchingTabs = _.dropRightWhile(scores, function(item) {
 					return item.score < MinScore;
 				}).slice(0, MaxItems);
 
 			this.setState({
-				matchingTitles: matchingTitles,
+				matchingTabs: matchingTabs,
 				selected: 0
 			});
 		},
@@ -96,7 +92,7 @@ define([
 					break;
 
 				case 13:	// enter
-					this.focusTabByTitle(this.state.matchingTitles[this.state.selected].string);
+					this.focusTabByTitle(this.state.matchingTabs[this.state.selected].title);
 					event.preventDefault();
 					break;
 			}
@@ -110,7 +106,7 @@ define([
 
 			if (_.isNumber(clickedIndex)) {
 				this.setSelectedIndex(clickedIndex);
-				this.focusTabByTitle(this.state.matchingTitles[clickedIndex].string);
+				this.focusTabByTitle(this.state.matchingTabs[clickedIndex].title);
 			}
 		},
 
@@ -138,7 +134,7 @@ define([
 			delta)
 		{
 			var selected = this.state.selected,
-				maxIndex = this.state.matchingTitles.length - 1;
+				maxIndex = this.state.matchingTabs.length - 1;
 
 			if (!_.isNumber(selected)) {
 				if (delta > 0) {
@@ -155,7 +151,7 @@ define([
 		setSelectedIndex: function(
 			selected)
 		{
-			var maxIndex = this.state.matchingTitles.length - 1;
+			var maxIndex = this.state.matchingTabs.length - 1;
 
 			selected = Math.min(Math.max(0, selected), maxIndex);
 			this.setState({ selected: selected });
@@ -165,10 +161,10 @@ define([
 		render: function()
 		{
 			var selectedIndex = this.state.selected,
-				tabItems = this.state.matchingTitles.slice(0, 10).map(function(item, i) {
+				tabItems = this.state.matchingTabs.slice(0, 10).map(function(tab, i) {
 					return <TabItem
 						key={i}
-						title={item.string}
+						title={tab.title}
 						index={i}
 						isSelected={i == selectedIndex}
 					/>

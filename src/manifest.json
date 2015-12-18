@@ -2,12 +2,10 @@
 	"name": "KeyTab",
 	"version": "0.0.0",
 	"manifest_version": 2,
-	"description": "An extenstion that makes it easier to switch between open tabs.",
+	"description": "A Chrome extension for using the keyboard to switch between open tabs.",
 	"content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
 	"permissions": [
 		"tabs"
-//		"https://*.mail.yahoo.com/*",
-//		"clipboardWrite"
 	],
 	"icons": {
 		"16": "img/icon-16.png",
@@ -25,6 +23,16 @@
 	},
 	"background": {
 		"page": "background.html"
+	},
+	"commands": {
+		"_execute_browser_action": {
+			"suggested_key": {
+				"windows": "Alt+T",
+				"mac": "Alt+T",
+				"chromeos": "Alt+T",
+				"linux": "Alt+T"
+			}
+		}
 	},
 	"offline_enabled": true
 }

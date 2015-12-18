@@ -1,27 +1,28 @@
-var _ = require("lodash");
-
 module.exports = function(grunt)
 {
 	var baseConfig = {
-//			mainConfigFile: "src/js/requireConfig-build.json",
-//			mainConfigFile: "src/js/requireConfig.js",
+			mainConfigFile: "src/js/require-config.js",
 			baseUrl: "src/js",
-			paths: {
-				"lodash": "lib/lodash",
-				"stringScore": "lib/string_score",
-				"react": "lib/react-shim",
-				jquery: "../../build/jquery-2.1.1.min"
-			},
+				// specify the location of the main module
+			include: "popup/main",
+			out: "build/out/js/popup/main.js",
+				// make sure the jsx plugin is excluded, so the JSXTransformer
+				// isn't included
+			exclude: ["jsx"],
 //			optimize: "none",
 			wrap: true,
 			inlineText: true,
 			preserveLicenseComments: true,
-			name: "../../build/almond"
+			name: "../../build/almond",
+			onBuildWrite: function (moduleName, path, singleContents)
+			{
+					// we're inlining the text and not including the text plugin,
+					// since it's part of jsx, so get rid of the text! and jsx!
+					// prefixes. otherwise, require will complain about not
+					// finding the text module.
+				return singleContents.replace(/jsx!|text!/g, "");
+			}
 		},
-		contentConfig = _.defaults({
-			include: "content/main",
-			out: "build/out/js/content/main.js"
-		}, baseConfig),
 		devManifestPath = "src/manifest.json",
 		buildManifestPath = "build/out/manifest.json";
 
@@ -36,20 +37,9 @@ module.exports = function(grunt)
 		},
 
 		copy: {
-			out: {
-				cwd: "src/",
-				expand: true,
-				src: [
-					"css/base.css",
-					"img/**",
-					"js/inject.js",
-					"manifest.json"
-				],
-				dest: "build/out/"
-			},
 			crx: {
 				src: "build/out.crx",
-				dest: "release/Move, Dammit!.crx"
+				dest: "release/KeyTab.crx"
 			}
 		},
 
@@ -60,12 +50,9 @@ module.exports = function(grunt)
 						cwd: "src/",
 						dest: "build/out/",
 						src: [
-							"css/base.css",
+							"css/*.css",
 							"img/**",
-							"js/inject.js",
-							"js/bootstrap.js",
-							"js/content/rte.js",
-							"js/content/rte-paste.js",
+							"background.html",
 							"manifest.json"
 						]
 					}
@@ -75,25 +62,11 @@ module.exports = function(grunt)
 			verbose: true
 		},
 
-		uglify: {
-			rte: {
-				files: [{
-					expand: true,
-					cwd: "src/js/content/",
-					src: [
-						"rte.js",
-						"rte-paste.js"
-					],
-					dest: "build/out/js/content/"
-				}]
-			}
-		},
-
 		exec: {
 			pack: {
 				command: '"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" ' +
-					"--pack-extension=C:\\Projects\\Mail\\move-dammit\\build\\out " +
-					'--pack-extension-key="C:\\Projects\\Mail\\move-dammit\\Move, Dammit!.pem"',
+					"--pack-extension=C:\\Projects\\Tools\\KeyTab\\keytab-extension\\build\\out " +
+					'--pack-extension-key="C:\\Projects\\Tools\\KeyTab\\keytab-extension\\KeyTab.pem"',
 				callback: function()
 				{
 					grunt.task.run(["copy:crx"]);
@@ -104,7 +77,7 @@ module.exports = function(grunt)
 		compress: {
 			main: {
 				options: {
-					archive: "release/Move, Dammit!.zip"
+					archive: "release/KeyTab.zip"
 				},
 				files: [
 					{
@@ -117,7 +90,7 @@ module.exports = function(grunt)
 		},
 
 		requirejs: {
-			content: { options: contentConfig }
+			content: { options: baseConfig }
 		}
 	});
 
@@ -146,7 +119,6 @@ module.exports = function(grunt)
 
 	grunt.registerTask("build", [
 		"sync:out",
-		"uglify:rte",
 		"requirejs"
 	]);
 

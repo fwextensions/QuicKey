@@ -1,7 +1,7 @@
 {
-  "name": "move-dammit",
-  "version": "0.1.0",
-  "repository": "https://git.corp.yahoo.com/jdunning/move-dammit",
+  "name": "keytab",
+  "version": "0.0.0",
+  "repository": "",
   "devDependencies": {
     "lodash": "^2.4.1",
     "grunt": "^0.4.5",

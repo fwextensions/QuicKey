@@ -10,7 +10,13 @@
 - use actual tabs array for matching
 	support passing key value to score()
 
+- highlight matching characters? 
+
+- time out typed text and then start over? 
+
 - indicate that tab was suspended
+
+- pull the RJS config from require-config.js in grunt
  
 - track mouse  
 

@@ -7,9 +7,6 @@ require.config({
 		jsx: "lib/jsx",
 		text: "lib/text",
 		JSXTransformer: "lib/JSXTransformer",
-		"string-score": "lib/string-score",
-		jquery: "lib/jquery-2.1.0",
-		lodash: "lib/lodash",
-		"_": "lib/lodash"
+		lodash: "lib/lodash"
 	}
 });

@@ -17,6 +17,7 @@ html, body {
 
 body {
 	-webkit-user-select: none;
+	cursor: default;
 	overflow: hidden;
 }
 
