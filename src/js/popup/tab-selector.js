@@ -20,6 +20,13 @@ define([
 
 
 	var TabItem = React.createClass({
+		onClick: function(
+			event)
+		{
+			this.props.focusTab(this.props.tab);
+		},
+
+
 		render: function()
 		{
 			var title = this.props.tab.title,
@@ -28,6 +35,7 @@ define([
 			return <li className={className}
 				key={title}
 				data-index={this.props.index}
+				onClick={this.onClick}
 			><img src={this.props.tab.favIconUrl} />{title}</li>
 		}
 	});
@@ -62,8 +70,7 @@ define([
 		onKeyDown: function(
 			event)
 		{
-			var searchBox = ReactDOM.findDOMNode(this.refs.searchBox),
-				selectedTab;
+			var searchBox = this.refs.searchBox;
 
 			switch (event.which) {
 				case 27:	// escape
@@ -87,40 +94,21 @@ define([
 					break;
 
 				case 13:	// enter
-					selectedTab = this.state.matchingTabs[this.state.selected];
-
-					if (selectedTab) {
-						this.focusTabByTitle(this.state.matchingTabs[this.state.selected].title);
-					}
-						
+					this.focusTab(this.state.matchingTabs[this.state.selected]);
 					event.preventDefault();
 					break;
 			}
 		},
 
 
-		onClick: function(
-			event)
+		focusTab: function(
+			tab)
 		{
-			var clickedIndex = parseInt(event.target.dataset.index);
+			if (tab) {
+				chrome.tabs.update(tab.id, { active: true });
 
-			if (_.isNumber(clickedIndex)) {
-				this.setSelectedIndex(clickedIndex);
-				this.focusTabByTitle(this.state.matchingTabs[clickedIndex].title);
-			}
-		},
-
-
-		focusTabByTitle: function(
-			title)
-		{
-			var selectedTab = _.find(this.props.tabs, { title: title });
-
-			if (selectedTab) {
-				chrome.tabs.update(selectedTab.id, { active: true });
-
-				if (selectedTab.windowId != chrome.windows.WINDOW_ID_CURRENT) {
-					chrome.windows.update(selectedTab.windowId, { focused: true });
+				if (tab.windowId != chrome.windows.WINDOW_ID_CURRENT) {
+					chrome.windows.update(tab.windowId, { focused: true });
 				}
 
 					// we seem to have to close the window in a timeout so that
@@ -167,8 +155,9 @@ define([
 						tab={tab}
 						index={i}
 						isSelected={i == selectedIndex}
+						focusTab={this.focusTab}
 					/>
-				}),
+				}, this),
 					// hide the ul when the list is empty, so we don't force the
 					// popup to be taller than the input when it's first opened
 				listStyle = {
@@ -186,7 +175,6 @@ define([
 					onKeyDown={this.onKeyDown}
 				/>
 				<ul className="results-list"
-					onClick={this.onClick}
 					style={listStyle}
 				>
 					{tabItems}
