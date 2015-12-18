@@ -22,13 +22,13 @@ define([
 	var TabItem = React.createClass({
 		render: function()
 		{
-			var title = this.props.title,
+			var title = this.props.tab.title,
 				className = this.props.isSelected ? "selected" : "";
 
 			return <li className={className}
 				key={title}
 				data-index={this.props.index}
-			>{title}</li>
+			><img src={this.props.tab.favIconUrl} />{title}</li>
 		}
 	});
 
@@ -62,21 +62,16 @@ define([
 		onKeyDown: function(
 			event)
 		{
-			var searchBox;
+			var searchBox = ReactDOM.findDOMNode(this.refs.searchBox),
+				selectedTab;
 
 			switch (event.which) {
 				case 27:	// escape
-						// clear and focus the search box so that the user can
-						// press esc after clicking in the feature list, and
-						// then type a new feature name
-					searchBox = ReactDOM.findDOMNode(this.refs.searchBox);
-
 					if (!searchBox.value) {
 							// pressing esc in an empty field should close the popup
 						window.close();
 					} else {
 						searchBox.value = "";
-						searchBox.focus();
 						this.onQueryChange({ target: { value: "" }});
 					}
 					break;
@@ -92,7 +87,12 @@ define([
 					break;
 
 				case 13:	// enter
-					this.focusTabByTitle(this.state.matchingTabs[this.state.selected].title);
+					selectedTab = this.state.matchingTabs[this.state.selected];
+
+					if (selectedTab) {
+						this.focusTabByTitle(this.state.matchingTabs[this.state.selected].title);
+					}
+						
 					event.preventDefault();
 					break;
 			}
@@ -164,7 +164,7 @@ define([
 				tabItems = this.state.matchingTabs.slice(0, 10).map(function(tab, i) {
 					return <TabItem
 						key={i}
-						title={tab.title}
+						tab={tab}
 						index={i}
 						isSelected={i == selectedIndex}
 					/>

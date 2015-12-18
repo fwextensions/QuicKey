@@ -21,6 +21,16 @@ body {
 	overflow: hidden;
 }
 
+.search-box {
+	width: 490px;
+	height: 25px;
+	margin: 5px;
+	border: none;
+	border-bottom: 1px solid #ddd;
+	padding: 2px 2px 5px 5px;
+	outline: none;
+}
+
 ul.results-list {
 	list-style: none;
 	margin: 0;
@@ -38,16 +48,13 @@ ul.results-list li {
 	overflow: hidden;
 }
 
-.search-box {
-	width: 490px;
-	height: 25px;
-	margin: 5px;
-	border: none;
-	border-bottom: 1px solid #ddd;
-	padding: 2px 2px 5px 5px;
-	outline: none;
+ul.results-list li.selected {
+	background: #ccf;
 }
 
-li.selected {
-	background: #eef;
+ul.results-list li img {
+	width: 16px;
+	height: 16px;
+	margin-right: 6px;
+	vertical-align: middle;
 }
