@@ -8,6 +8,8 @@
 
 - why is Facebook only 4th match for "face"
 
+- add fallback icon for tabs without favicons
+
 - option to match bookmarks, too
 
 - highlight matching characters? 
@@ -20,6 +22,8 @@
 
 
 # Done
+
+- use favicon as a background image
 
 - use actual tabs array for matching
 	support passing key value to score()

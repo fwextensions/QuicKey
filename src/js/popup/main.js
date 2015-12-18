@@ -1,17 +1,13 @@
 require([
 	"jsx!popup/tab-selector",
 	"react",
-	"react-dom",
-	"lodash"
+	"react-dom"
 ], function(
 	TabSelector,
 	React,
-	ReactDOM,
-	_
+	ReactDOM
 ) {
 	chrome.tabs.query({}, function(tabs) {
-console.log(tabs);
-
 		ReactDOM.render(
 			React.createElement(TabSelector, {
 				tabs: tabs

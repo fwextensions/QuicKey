@@ -30,13 +30,17 @@ define([
 		render: function()
 		{
 			var title = this.props.tab.title,
-				className = this.props.isSelected ? "selected" : "";
+				className = this.props.isSelected ? "selected" : "",
+				faviconURL = this.props.tab.favIconUrl,
+					// tabs without a favicon will have an undefined favIconUrl
+				style = faviconURL && {
+					backgroundImage: "url(" + faviconURL + ")"
+				};
 
 			return <li className={className}
-				key={title}
-				data-index={this.props.index}
+				style={style}
 				onClick={this.onClick}
-			><img src={this.props.tab.favIconUrl} />{title}</li>
+			>{title}</li>
 		}
 	});
 
@@ -153,7 +157,6 @@ define([
 					return <TabItem
 						key={i}
 						tab={tab}
-						index={i}
 						isSelected={i == selectedIndex}
 						focusTab={this.focusTab}
 					/>
