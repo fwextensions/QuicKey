@@ -11,12 +11,14 @@ define([
 	ReactDOM,
 	_
 ) {
-	var MinScore = .2,
-		MaxItems = 10;
+	var MinScore = .4,
+		MaxItems = 10,
+		ProtocolPattern = /(chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#uri=)?https?:\/\//,
+		DefaultFaviconURL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAbElEQVQ4T2NkoBAwIuuPiopqwGbev3//DqxYseIANjkMA5YtW4ZiCMjQ////f/j///8FbIYQZcC3b98mcHJyJmAzhCgDQK4KCAgQwGYIUQag+x3ZmwQNQNcMCpNRA4Z/GBCTOXGmA2I0o6sBAMYQhBFUQQkzAAAAAElFTkSuQmCC";
 
 
-		// use title as the key to score
-	var scoreArray = arrayScore(qsScore, "title");
+		// use title and url as the two keys to score
+	var scoreArray = arrayScore(qsScore, ["title", "url"]);
 
 
 	var TabItem = React.createClass({
@@ -27,20 +29,32 @@ define([
 		},
 
 
+		onMouseEnter: function(
+			event)
+		{
+			this.props.setSelectedIndex(this.props.index);
+		},
+
+
 		render: function()
 		{
 			var title = this.props.tab.title,
+				url = this.props.tab.displayURL,
 				className = this.props.isSelected ? "selected" : "",
-				faviconURL = this.props.tab.favIconUrl,
 					// tabs without a favicon will have an undefined favIconUrl
-				style = faviconURL && {
+				faviconURL = this.props.tab.favIconUrl || DefaultFaviconURL,
+				style = {
 					backgroundImage: "url(" + faviconURL + ")"
 				};
 
 			return <li className={className}
 				style={style}
 				onClick={this.onClick}
-			>{title}</li>
+				onMouseEnter={this.onMouseEnter}
+			>
+				<div className="title">{title}</div>
+				<div className="url">{url}</div>
+			</li>
 		}
 	});
 
@@ -48,6 +62,12 @@ define([
 	var TabSelector = React.createClass({
 		getInitialState: function()
 		{
+				// add a displayURL to each tab so that we can score against it
+				// in onQueryChange
+			this.props.tabs.forEach(function(tab) {
+				tab.displayURL = tab.url.replace(ProtocolPattern, "");
+			});
+
 			return {
 				matchingTabs: [],
 				selected: null
@@ -157,8 +177,10 @@ define([
 					return <TabItem
 						key={i}
 						tab={tab}
+						index={i}
 						isSelected={i == selectedIndex}
 						focusTab={this.focusTab}
+						setSelectedIndex={this.setSelectedIndex}
 					/>
 				}, this),
 					// hide the ul when the list is empty, so we don't force the

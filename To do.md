@@ -1,27 +1,38 @@
 # To do
 
-- show URLs, without protocol, including for chrome-extension://
-
-- match against URLs
-
-- handle URLs for suspended tabs
-
 - why is Facebook only 4th match for "face"
-
-- add fallback icon for tabs without favicons
+	with the contacts-linkedin-reports tab open, "cale" now has the calendar as
+		the 5th result
+	typing "cal", it doesn't even appear at all
+	maybe something about scoring the tab objects directly is causing it?
+	ama matches AOL Mail first, despite the amazon.com pages
+	jiveon puts the Takoyaki board first, before jiveon.com pages 
 
 - option to match bookmarks, too
 
-- highlight matching characters? 
+- highlight matching characters?
+ 
+- maybe do shift enter to reload suspended tab
+
+- check for 32x32 default document favicon on Mac Retina
 
 - indicate that tab was suspended
+	favicon is already greyed out, so maybe don't need it
 
 - time out typed text and then start over? 
 
-- track mouse  
-
 
 # Done
+
+- show URLs, without protocol, including for chrome-extension://
+
+- add fallback icon for tabs without favicons
+
+- match against URLs
+
+- track mouse  
+
+- handle URLs for suspended tabs
 
 - use favicon as a background image
 

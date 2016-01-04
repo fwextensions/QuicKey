@@ -51,12 +51,15 @@ ul.results-list li {
 }
 
 ul.results-list li.selected {
-	background-color: #ccf;
+	background-color: #dfdfff;
 }
 
-ul.results-list li img {
-	width: 16px;
-	height: 16px;
-	margin-right: 6px;
-	vertical-align: middle;
+ul.results-list li div {
+	width: 458px;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
+
+ul.results-list li div.url {
+	color: #999;
 }

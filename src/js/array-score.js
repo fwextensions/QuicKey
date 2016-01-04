@@ -1,6 +1,9 @@
 define(function() {
-	return function(score, keyName) {
-		keyName = keyName || "string";
+	return function(score, keyNames) {
+			// force keyNames to be an array
+		keyNames = [].concat(keyNames || "string");
+
+		var defaultKeyName = keyNames[0];
 
 
 		function compareScoredStrings(
@@ -8,7 +11,7 @@ define(function() {
 			b)
 		{
 			if (a.score == b.score) {
-				return a[keyName].toLowerCase() < b[keyName].toLowerCase() ? -1 : 1;
+				return a[defaultKeyName].toLowerCase() < b[defaultKeyName].toLowerCase() ? -1 : 1;
 			} else {
 				return b.score - a.score;
 			}
@@ -25,14 +28,17 @@ define(function() {
 							score: 0
 						};
 
-					obj[keyName] = string;
+					obj[defaultKeyName] = string;
 
 					return obj;
 				});
 			}
 
 			strings.forEach(function(item) {
-				item.score = score(item[keyName], text);
+					// add the scores for each keyed string on this item
+				item.score = keyNames.reduce(function(currentScore, key) {
+					return currentScore + score(item[key], text);
+				}, 0);
 			});
 
 			strings.sort(compareScoredStrings);
