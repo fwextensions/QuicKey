@@ -1,5 +1,5 @@
 define(function() {
-	var WhitespacePattern = /[-/:()._=&\[\]\s]/,
+	var WhitespacePattern = /[-/:()<>%._=&\[\]\s]/,
 		UpperCasePattern = /[A-Z]/;
 
 

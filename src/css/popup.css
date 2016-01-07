@@ -4,6 +4,8 @@
 
 * {
 	box-sizing: border-box;
+	font-family: "Segoe UI", "Helvetica Neue", helvetica, tahoma, sans-serif;
+	font-size: 14px;
 }
 
 html, body {
@@ -11,7 +13,6 @@ html, body {
 	height: 35px;
 	margin: 0;
 	padding: 0;
-	font-family: "Segoe UI", "Helvetica Neue", helvetica, tahoma, sans-serif;
 }
 
 body {
@@ -21,13 +22,32 @@ body {
 }
 
 .search-box {
+	font-weight: bold;
 	width: 490px;
 	height: 25px;
 	margin: 5px;
 	border: none;
 	border-bottom: 1px solid #ddd;
-	padding: 2px 2px 5px 5px;
+	padding: 2px 2px 5px 27px;
+	background-image: url(/img/search.svg);
+	background-position: 6px 4px;
+	background-size: 13px 13px;
+	background-repeat: no-repeat;
 	outline: none;
+}
+
+input.search-box::-webkit-input-placeholder {
+	font-weight: normal;
+	font-style: italic;
+}
+
+input.search-box::-webkit-search-cancel-button {
+	-webkit-appearance: none;
+	height: 16px;
+	width: 10px;
+	background-image: url(/img/clear.svg);
+	background-size: 10px 16px;
+	background-repeat: no-repeat;
 }
 
 ul.results-list {
@@ -60,6 +80,10 @@ ul.results-list li div {
 	overflow: hidden;
 }
 
+ul.results-list li div b, .search-box {
+	color: #228;
+}
+
 ul.results-list li div.url {
-	color: #999;
+	opacity: 0.6;
 }
