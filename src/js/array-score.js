@@ -35,10 +35,9 @@ define(function() {
 			}
 
 			strings.forEach(function(item) {
-					// add the scores for each keyed string on this item
-				item.score = keyNames.reduce(function(currentScore, key, i) {
-						// reduce the impact of the scores from secondary keys  
-					return currentScore + (score(item[key], text) * (i ? .25 : 1));
+					// find the highest score for each keyed string on this item
+				item.score = keyNames.reduce(function(currentScore, key) {
+					return Math.max(currentScore, score(item[key], text));
 				}, 0);
 			});
 

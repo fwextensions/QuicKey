@@ -98,7 +98,7 @@ define([
 					backgroundImage: "url(" + faviconURL + ")"
 				};
 
-				// the HTML below will be escaped by wrapMatches()
+				// the inner HTML below will be escaped by wrapMatches()
 			return <li className={className}
 				style={style}
 				onClick={this.onClick}
