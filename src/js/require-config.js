@@ -1,4 +1,5 @@
 require.config({
+//	urlArgs: "bust=" + +new Date(),
 	waitSeconds: 10,
 	baseUrl: "/js",
 	paths: {

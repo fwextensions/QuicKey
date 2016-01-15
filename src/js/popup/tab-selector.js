@@ -21,8 +21,8 @@ define([
 	var scoreArray = arrayScore(qsScore, ["title", "url"]);
 
 
-		// memoize this, since it could get called multiple times by render()
-		// with the same values, such as when the selection changes
+		// memoize this, since it could get called multiple times by render() with
+		// the same values, such as when the selection changes but the query doesn't
 	var wrapMatches = _.memoize(function(
 		query,
 		string)
@@ -101,6 +101,7 @@ define([
 				// the inner HTML below will be escaped by wrapMatches()
 			return <li className={className}
 				style={style}
+				title={this.props.tab.score}
 				onClick={this.onClick}
 				onMouseEnter={this.onMouseEnter}
 			>
@@ -114,6 +115,8 @@ define([
 	var TabSelector = React.createClass({
 		getInitialState: function()
 		{
+			var query = this.props.initialQuery;
+
 				// add a displayURL to each tab so that we can score against it
 				// in onQueryChange
 			this.props.tabs.forEach(function(tab) {
@@ -121,10 +124,37 @@ define([
 			});
 
 			return {
-				query: "",
-				matchingTabs: [],
-				selected: null
+				query: query,
+				matchingTabs: this.getMatchingTabs(query),
+					// default to the first item being selected, in case we got
+					// an initial query
+				selected: 0
 			};
+		},
+
+
+		componentDidMount: function()
+		{
+			var searchBox = this.refs.searchBox,
+				queryLength = searchBox.value.length;
+
+				// even if there's a default value, the insertion point gets set
+				// to the beginning of the input field, instead of at the end.
+				// so move it there after the field is created.
+			searchBox.setSelectionRange(queryLength, queryLength);
+		},
+
+
+		getMatchingTabs: function(
+			query)
+		{
+			var scores = scoreArray(this.props.tabs, query),
+					// first limit the tabs to 10, then drop barely-matching results
+				matchingTabs = _.dropRightWhile(scores.slice(0, MaxItems), function(item) {
+					return item.score < MinScore;
+				});
+
+			return matchingTabs;
 		},
 
 
@@ -132,11 +162,7 @@ define([
 			event)
 		{
 			var query = event.target.value,
-				scores = scoreArray(this.props.tabs, query),
-					// don't show barely-matching results and limit it to 10
-				matchingTabs = _.dropRightWhile(scores, function(item) {
-					return item.score < MinScore;
-				}).slice(0, MaxItems);
+				matchingTabs = this.getMatchingTabs(query);
 
 			this.setState({
 				query: query,
@@ -252,6 +278,7 @@ define([
 					className="search-box"
 					tabIndex="0"
 					placeholder="Search for a tab title or URL"
+					defaultValue={query}
 					autoFocus={true}
 					onChange={this.onQueryChange}
 					onKeyDown={this.onKeyDown}
