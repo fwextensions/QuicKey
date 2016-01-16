@@ -1,6 +1,5 @@
 /node_modules
 /build/out/manifest.json
-/build/out/popup.html
 /build/out/css
 /build/out/img
 /build/out/js

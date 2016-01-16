@@ -52,6 +52,7 @@ module.exports = function(grunt)
 						src: [
 							"css/*.css",
 							"img/**",
+							"js/popup/init.js",
 							"background.html",
 							"manifest.json"
 						]
