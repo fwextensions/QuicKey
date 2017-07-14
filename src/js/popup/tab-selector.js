@@ -13,6 +13,7 @@ define([
 ) {
 	var MinScore = .2,
 		MaxItems = 10,
+		SuspendedURLPattern = /^chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#uri=(.+)$/,
 		ProtocolPattern = /(chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#uri=)?(https?|file):\/\//,
 		DefaultFaviconURL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAbElEQVQ4T2NkoBAwIuuPiopqwGbev3//DqxYseIANjkMA5YtW4ZiCMjQ////f/j///8FbIYQZcC3b98mcHJyJmAzhCgDQK4KCAgQwGYIUQag+x3ZmwQNQNcMCpNRA4Z/GBCTOXGmA2I0o6sBAMYQhBFUQQkzAAAAAElFTkSuQmCC";
 
@@ -199,7 +200,7 @@ define([
 					break;
 
 				case 13:	// enter
-					this.focusTab(this.state.matchingTabs[this.state.selected]);
+					this.focusTab(this.state.matchingTabs[this.state.selected], event.shiftKey);
 					event.preventDefault();
 					break;
 			}
@@ -207,10 +208,18 @@ define([
 
 
 		focusTab: function(
-			tab)
+			tab,
+			unsuspend)
 		{
 			if (tab) {
-				chrome.tabs.update(tab.id, { active: true });
+				var match = unsuspend && tab.url.match(SuspendedURLPattern),
+					updateData = { active: true };
+
+				if (unsuspend && match) {
+					updateData.url = match[1];
+				}
+
+				chrome.tabs.update(tab.id, updateData);
 
 				if (tab.windowId != chrome.windows.WINDOW_ID_CURRENT) {
 					chrome.windows.update(tab.windowId, { focused: true });
