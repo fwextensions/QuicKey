@@ -13,8 +13,8 @@ define([
 ) {
 	var MinScore = .2,
 		MaxItems = 10,
-		SuspendedURLPattern = /^chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#uri=(.+)$/,
-		ProtocolPattern = /(chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#uri=)?(https?|file):\/\//,
+		SuspendedURLPattern = /^chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=(.+)$/,
+		ProtocolPattern = /(chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=)?(https?|file):\/\//,
 		DefaultFaviconURL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAbElEQVQ4T2NkoBAwIuuPiopqwGbev3//DqxYseIANjkMA5YtW4ZiCMjQ////f/j///8FbIYQZcC3b98mcHJyJmAzhCgDQK4KCAgQwGYIUQag+x3ZmwQNQNcMCpNRA4Z/GBCTOXGmA2I0o6sBAMYQhBFUQQkzAAAAAElFTkSuQmCC";
 
 
@@ -121,6 +121,7 @@ define([
 				// add a displayURL to each tab so that we can score against it
 				// in onQueryChange
 			this.props.tabs.forEach(function(tab) {
+// TODO: move this to main.js
 				tab.displayURL = tab.url.replace(ProtocolPattern, "");
 			});
 
