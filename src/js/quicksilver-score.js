@@ -22,13 +22,14 @@ define(function() {
 		}
 
 		for (var i = abbreviationRange.length; i > 0; i--) {
-			var abbreviationSubstring = abbreviation.substr(abbreviationRange.location, i);
-			var matchedRange = rangeOfString(itemString, abbreviationSubstring, searchRange);
+			var abbreviationSubstring = abbreviation.substr(abbreviationRange.location, i),
+				matchedRange = rangeOfString(itemString, abbreviationSubstring, searchRange);
 
 			if (!matchedRange.isValid()) {
 				continue;
 			}
 
+// TODO: do we need this?  new code doesn't have it
 			if (matchedRange.location + abbreviationRange.length > searchRange.max()) {
 				continue;
 			}
@@ -37,8 +38,8 @@ define(function() {
 				addIndexesInRange(hitMask, matchedRange);
 			}
 
-			var remainingSearchRange = new Range(matchedRange.max(), searchRange.max() - matchedRange.max());
-			var remainingScore = scoreForAbbreviation(itemString, abbreviation, remainingSearchRange,
+			var remainingSearchRange = new Range(matchedRange.max(), searchRange.max() - matchedRange.max()),
+				remainingScore = scoreForAbbreviation(itemString, abbreviation, remainingSearchRange,
 					new Range(abbreviationRange.location + i, abbreviationRange.length - i), hitMask);
 
 			if (remainingScore) {
@@ -104,7 +105,6 @@ define(function() {
 	{
 		return (this.location > -1);
 	};
-
 
 
 	function rangeOfString(
@@ -195,9 +195,11 @@ Usage:
 
 		if (remainingScore) {
 			score = remainingSearchRange.location - searchRange.location;
+
 			// ignore skipped characters if is first letter of a word
 			if (matchedRange.location>searchRange.location){//if some letters were skipped
 				j=0;
+
 				if ([[NSCharacterSet whitespaceCharacterSet] characterIsMember: [self characterAtIndex: matchedRange.location-1]]) {
 					for (j=matchedRange.location-2; j >= (int)searchRange.location; j--) {
 						if ([[NSCharacterSet whitespaceCharacterSet] characterIsMember: [self characterAtIndex:j]]) score--;
