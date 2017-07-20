@@ -19,50 +19,42 @@ define([
 
 
 		// use title and url as the two keys to score
-	var scoreArray = arrayScore(qsScore, ["title", "url"]);
+	var scoreArray = arrayScore(qsScore, ["title", "displayURL"]);
 
 
 		// memoize this, since it could get called multiple times by render() with
 		// the same values, such as when the selection changes but the query doesn't
 	var wrapMatches = _.memoize(function(
 		query,
-		string)
+		string,
+		hitMask)
 	{
 		if (!query) {
 			return string;
 		}
 
-		var lcQuery = query.toLowerCase(),
-			lcString = string.toLowerCase(),
-			indices = lcQuery.split("").reduce(function(offsets, char, i) {
-					// for the first char, the undefined + 1 will be ignored by
-					// indexOf, so it'll start looking from the first char
-				var index = lcString.indexOf(char, _.last(offsets) + 1);
+		var index = -1,
+			indices = [],
+			strings;
 
-					// only store found chars as long as we found the first one
-					// in the query.  this means that if the first char is found,
-					// we'll keep adding subsequent ones that are found, even if
-					// intervening ones are not.
-				if (index > -1 && (offsets.length || i == 0)) {
-					offsets.push(index);
-				}
+			// the hit mask contains a true wherever there was a match in the string
+		while ((index = hitMask.indexOf(true, index + 1)) > -1) {
+			indices.push(index);
+		}
 
-				return offsets;
-			}, []),
-			strings = indices.map(function(index, i) {
-					// escape the part before the bold char, so that any brackets
-					// in the title or URL don't get interpreted
-				var prefix = _.escape(string.slice(indices[i - 1] + 1, index)),
-					boldChar = string[index] && "<b>" + string[index] + "</b>";
+		strings = indices.map(function(index, i) {
+				// escape the part before the bold char, so that any brackets
+				// in the title or URL don't get interpreted
+			var prefix = _.escape(string.slice((indices[i - 1] + 1) || 0, index)),
+				boldChar = string[index] && "<b>" + string[index] + "</b>";
 
-					// use an empty string if didn't find the boldChar, so we
-					// don't append "undefined"
-				return prefix + (boldChar || "");
-			});
+				// use an empty string if didn't find the boldChar, so we
+				// don't append "undefined"
+			return prefix + (boldChar || "");
+		});
 
-			// add the part of the string after the last char match.  if we didn't
-			// match anything, meaning that indices is empty, slice(NaN) will
-			// return the whole string.
+			// add the part of the string after the last char match.  if the
+			// hit mask is empty, slice(NaN) will return the whole string.
 		strings.push(_.escape(string.slice(_.last(indices) + 1)));
 
 		return strings.join("");
@@ -90,8 +82,16 @@ define([
 
 		render: function()
 		{
-			var title = wrapMatches(this.props.query, this.props.tab.title),
-				url = wrapMatches(this.props.query, this.props.tab.displayURL),
+			var tab = this.props.tab,
+				query = this.props.query,
+				hitMasks = tab.hitMasks,
+				scores = tab.scores,
+				highestScoreKey = (scores.title > scores.displayURL) ?
+					"title" : "displayURL",
+				title = wrapMatches(query, tab.title,
+					highestScoreKey == "title" ? hitMasks.title : []),
+				url = wrapMatches(query, tab.displayURL,
+					highestScoreKey == "displayURL" ? hitMasks.displayURL : []),
 				className = this.props.isSelected ? "selected" : "",
 					// tabs without a favicon will have an undefined favIconUrl
 				faviconURL = this.props.tab.favIconUrl || DefaultFaviconURL,

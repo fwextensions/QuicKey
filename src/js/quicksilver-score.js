@@ -114,9 +114,9 @@ define(function() {
 	{
 		searchRange = searchRange || new Range(0, string.length);
 
-		var stringToSearch = string.substr(searchRange.location, searchRange.length).toLowerCase();
-		var subStringIndex = stringToSearch.indexOf(substring.toLowerCase());
-		var result = new Range();
+		var stringToSearch = string.substr(searchRange.location, searchRange.length).toLowerCase(),
+			subStringIndex = stringToSearch.indexOf(substring.toLowerCase()),
+			result = new Range();
 
 		if (subStringIndex > -1) {
 			result.location = subStringIndex + searchRange.location;
@@ -131,7 +131,7 @@ define(function() {
 		indexes,
 		range)
 	{
-		for (var i = range.location; i < range.length; i++) {
+		for (var i = range.location; i < range.max(); i++) {
 			indexes[i] = true;
 		}
 

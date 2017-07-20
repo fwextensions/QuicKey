@@ -19,31 +19,40 @@ define(function() {
 
 
 		return function scoreArray(
-			strings,
+			items,
 			text)
 		{
-			if (typeof strings[0] != "object") {
-				strings = strings.map(function(string) {
-					var obj = {
-							score: 0
-						};
+			if (items.length && !items[0].scores) {
+				items.forEach(function(item) {
+					item.score = 0;
+					item.scores = {};
+					item.hitMasks = {};
 
-					obj[defaultKeyName] = string;
-
-					return obj;
+					keyNames.forEach(function(key) {
+						item.scores[key] = 0;
+						item.hitMasks[key] = [];
+					});
 				});
 			}
 
-			strings.forEach(function(item) {
+			items.forEach(function(item) {
 					// find the highest score for each keyed string on this item
 				item.score = keyNames.reduce(function(currentScore, key) {
-					return Math.max(currentScore, score(item[key], text));
+					var hitMask = [],
+							// add nulls for params that are generated within
+							// the Quicksilver scorer recursion
+						newScore = score(item[key], text, null, null, hitMask);
+
+					item.scores[key] = newScore;
+					item.hitMasks[key] = hitMask;
+
+					return Math.max(currentScore, newScore);
 				}, 0);
 			});
 
-			strings.sort(compareScoredStrings);
+			items.sort(compareScoredStrings);
 
-			return strings;
+			return items;
 		}
 	}
 });
