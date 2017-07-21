@@ -2,113 +2,29 @@ define([
 	"array-score",
 	"quicksilver-score",
 	"react",
-	"react-dom",
+	"jsx!./tab-item",
 	"lodash"
 ], function(
 	arrayScore,
 	qsScore,
 	React,
-	ReactDOM,
+	TabItem,
 	_
 ) {
-	var MinScore = .2,
+	const MinScore = .2,
 		MaxItems = 10,
 		SuspendedURLPattern = /^chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=(.+)$/,
-		ProtocolPattern = /(chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=)?(https?|file):\/\//,
-		DefaultFaviconURL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAbElEQVQ4T2NkoBAwIuuPiopqwGbev3//DqxYseIANjkMA5YtW4ZiCMjQ////f/j///8FbIYQZcC3b98mcHJyJmAzhCgDQK4KCAgQwGYIUQag+x3ZmwQNQNcMCpNRA4Z/GBCTOXGmA2I0o6sBAMYQhBFUQQkzAAAAAElFTkSuQmCC";
+		ProtocolPattern = /(chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=)?(https?|file):\/\//;
 
 
 		// use title and url as the two keys to score
 	var scoreArray = arrayScore(qsScore, ["title", "displayURL"]);
 
 
-		// memoize this, since it could get called multiple times by render() with
-		// the same values, such as when the selection changes but the query doesn't
-	var wrapMatches = _.memoize(function(
-		query,
-		string,
-		hitMask)
-	{
-		if (!query) {
-			return string;
-		}
-
-		var index = -1,
-			indices = [],
-			strings;
-
-			// the hit mask contains a true wherever there was a match in the string
-		while ((index = hitMask.indexOf(true, index + 1)) > -1) {
-			indices.push(index);
-		}
-
-		strings = indices.map(function(index, i) {
-				// escape the part before the bold char, so that any brackets
-				// in the title or URL don't get interpreted
-			var prefix = _.escape(string.slice((indices[i - 1] + 1) || 0, index)),
-				boldChar = string[index] && "<b>" + string[index] + "</b>";
-
-				// use an empty string if didn't find the boldChar, so we
-				// don't append "undefined"
-			return prefix + (boldChar || "");
-		});
-
-			// add the part of the string after the last char match.  if the
-			// hit mask is empty, slice(NaN) will return the whole string.
-		strings.push(_.escape(string.slice(_.last(indices) + 1)));
-
-		return strings.join("");
-	}, function(query, string) {
-			// by default, memoize uses just the first arg as a key, but that's the
-			// same for all titles/urls.  so combine them to generate something unique.
-		return query + string;
-	});
-
-
-	var TabItem = React.createClass({
-		onClick: function(
-			event)
-		{
-			this.props.focusTab(this.props.tab);
-		},
-
-
-		onMouseEnter: function(
-			event)
-		{
-			this.props.setSelectedIndex(this.props.index);
-		},
-
-
-		render: function()
-		{
-			var tab = this.props.tab,
-				query = this.props.query,
-				hitMasks = tab.hitMasks,
-				title = wrapMatches(query, tab.title, hitMasks.title),
-				url = wrapMatches(query, tab.displayURL, hitMasks.displayURL),
-				className = this.props.isSelected ? "selected" : "",
-					// tabs without a favicon will have an undefined favIconUrl
-				faviconURL = this.props.tab.favIconUrl || DefaultFaviconURL,
-				style = {
-					backgroundImage: "url(" + faviconURL + ")"
-				};
-
-				// the inner HTML below will be escaped by wrapMatches()
-			return <li className={className}
-				style={style}
-				title={this.props.tab.score}
-				onClick={this.onClick}
-				onMouseEnter={this.onMouseEnter}
-			>
-				<div className="title" dangerouslySetInnerHTML={{ __html: title }} />
-				<div className="url" dangerouslySetInnerHTML={{ __html: url }} />
-			</li>
-		}
-	});
-
-
 	var TabSelector = React.createClass({
+		ignoreMouse: true,
+
+
 		getInitialState: function()
 		{
 			var query = this.props.initialQuery;
@@ -152,54 +68,6 @@ define([
 				});
 
 			return matchingTabs;
-		},
-
-
-		onQueryChange: function(
-			event)
-		{
-			var query = event.target.value,
-				matchingTabs = this.getMatchingTabs(query);
-
-			this.setState({
-				query: query,
-				matchingTabs: matchingTabs,
-				selected: 0
-			});
-		},
-
-
-		onKeyDown: function(
-			event)
-		{
-			var searchBox = this.refs.searchBox;
-
-			switch (event.which) {
-				case 27:	// escape
-					if (!searchBox.value) {
-							// pressing esc in an empty field should close the popup
-						window.close();
-					} else {
-						searchBox.value = "";
-						this.onQueryChange({ target: { value: "" }});
-					}
-					break;
-
-				case 38:	// up arrow
-					this.modifySelected(-1);
-					event.preventDefault();
-					break;
-
-				case 40:	// down arrow
-					this.modifySelected(1);
-					event.preventDefault();
-					break;
-
-				case 13:	// enter
-					this.focusTab(this.state.matchingTabs[this.state.selected], event.shiftKey);
-					event.preventDefault();
-					break;
-			}
 		},
 
 
@@ -247,12 +115,70 @@ define([
 
 
 		setSelectedIndex: function(
-			selected)
+			selected,
+			fromMouse)
 		{
 			var maxIndex = this.state.matchingTabs.length - 1;
 
-			selected = Math.min(Math.max(0, selected), maxIndex);
-			this.setState({ selected: selected });
+			if (!fromMouse || !this.ignoreMouse) {
+				selected = Math.min(Math.max(0, selected), maxIndex);
+				this.setState({selected: selected});
+			}
+		},
+
+
+		onQueryChange: function(
+			event)
+		{
+			var query = event.target.value,
+				matchingTabs = this.getMatchingTabs(query);
+
+			this.setState({
+				query: query,
+				matchingTabs: matchingTabs,
+				selected: 0
+			});
+		},
+
+
+		onMouseMove: function(
+			event)
+		{
+			this.ignoreMouse = false;
+		},
+
+
+		onKeyDown: function(
+			event)
+		{
+			var searchBox = this.refs.searchBox;
+
+			switch (event.which) {
+				case 27:	// escape
+					if (!searchBox.value) {
+							// pressing esc in an empty field should close the popup
+						window.close();
+					} else {
+						searchBox.value = "";
+						this.onQueryChange({ target: { value: "" }});
+					}
+					break;
+
+				case 38:	// up arrow
+					this.modifySelected(-1);
+					event.preventDefault();
+					break;
+
+				case 40:	// down arrow
+					this.modifySelected(1);
+					event.preventDefault();
+					break;
+
+				case 13:	// enter
+					this.focusTab(this.state.matchingTabs[this.state.selected], event.shiftKey);
+					event.preventDefault();
+					break;
+			}
 		},
 
 
@@ -262,13 +188,15 @@ define([
 				query = this.state.query,
 				tabItems = this.state.matchingTabs.map(function(tab, i) {
 					return <TabItem
-						key={i}
+						key={tab.id}
 						tab={tab}
 						index={i}
 						isSelected={i == selectedIndex}
 						query={query}
+						ignoreMouse={this.state.ignoreMouse}
 						focusTab={this.focusTab}
 						setSelectedIndex={this.setSelectedIndex}
+						onMouseMove={this.onMouseMove}
 					/>
 				}, this),
 					// hide the ul when the list is empty, so we don't force the
