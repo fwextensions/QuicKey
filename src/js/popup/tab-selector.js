@@ -85,13 +85,8 @@ define([
 			var tab = this.props.tab,
 				query = this.props.query,
 				hitMasks = tab.hitMasks,
-				scores = tab.scores,
-				highestScoreKey = (scores.title > scores.displayURL) ?
-					"title" : "displayURL",
-				title = wrapMatches(query, tab.title,
-					highestScoreKey == "title" ? hitMasks.title : []),
-				url = wrapMatches(query, tab.displayURL,
-					highestScoreKey == "displayURL" ? hitMasks.displayURL : []),
+				title = wrapMatches(query, tab.title, hitMasks.title),
+				url = wrapMatches(query, tab.displayURL, hitMasks.displayURL),
 				className = this.props.isSelected ? "selected" : "",
 					// tabs without a favicon will have an undefined favIconUrl
 				faviconURL = this.props.tab.favIconUrl || DefaultFaviconURL,
