@@ -2,11 +2,13 @@ require([
 	"jsx!popup/tab-selector",
 	"react",
 	"react-dom",
+	"cp",
 	"lodash"
 ], function(
 	TabSelector,
 	React,
 	ReactDOM,
+	cp,
 	_
 ) {
 	if (gClose) {
@@ -17,12 +19,17 @@ require([
 		return;
 	}
 
-	chrome.tabs.query({}, function(tabs) {
-		chrome.tabs.query({
+	Promise.all([
+		cp.tabs.query({}),
+		cp.tabs.query({
 			active: true,
 			currentWindow: true
-		}, function(activeTab) {
-			var query = gKeyCache.join("");
+		})
+	])
+		.then(function(result) {
+			var tabs = result[0],
+				activeTab = result[1],
+				query = gKeyCache.join("");
 
 				// clean up the globals
 			document.removeEventListener("keydown", gOnKeyDown, false);
@@ -41,5 +48,4 @@ require([
 				document.getElementById("content")
 			);
 		});
-	});
 });
