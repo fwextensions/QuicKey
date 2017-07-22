@@ -118,8 +118,16 @@ module.exports = function(grunt)
 		grunt.file.write(devManifestPath, JSON.stringify(manifest, null, "\t"));
 	});
 
+	grunt.registerTask("cleanupManifest", function() {
+		var manifest = grunt.file.readJSON(buildManifestPath);
+
+		delete manifest.content_security_policy;
+		grunt.file.write(buildManifestPath, JSON.stringify(manifest, null, "\t"));
+	});
+
 	grunt.registerTask("build", [
 		"sync:out",
+		"cleanupManifest",
 		"requirejs"
 	]);
 

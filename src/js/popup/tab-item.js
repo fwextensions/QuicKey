@@ -5,7 +5,7 @@ define([
 	React,
 	_
 ) {
-	const DefaultFaviconURL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAbElEQVQ4T2NkoBAwIuuPiopqwGbev3//DqxYseIANjkMA5YtW4ZiCMjQ////f/j///8FbIYQZcC3b98mcHJyJmAzhCgDQK4KCAgQwGYIUQag+x3ZmwQNQNcMCpNRA4Z/GBCTOXGmA2I0o6sBAMYQhBFUQQkzAAAAAElFTkSuQmCC";
+	const FaviconURL = "chrome://favicon/";
 
 
 		// memoize this, since it could get called multiple times by render() with
@@ -94,14 +94,15 @@ define([
 
 		render: function()
 		{
-			var tab = this.props.tab,
-				query = this.props.query,
+			var props = this.props,
+				tab = props.tab,
+				query = props.query,
 				hitMasks = tab.hitMasks,
 				title = wrapMatches(query, tab.title, hitMasks.title),
 				url = wrapMatches(query, tab.displayURL, hitMasks.displayURL),
-				className = this.props.isSelected ? "selected" : "",
-					// tabs without a favicon will have an undefined favIconUrl
-				faviconURL = this.props.tab.favIconUrl || DefaultFaviconURL,
+				className = props.isSelected ? "selected" : "",
+					// look up the favicon via chrome://favicon
+				faviconURL = FaviconURL + tab.url,
 				style = {
 					backgroundImage: "url(" + faviconURL + ")"
 				};

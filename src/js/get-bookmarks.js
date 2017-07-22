@@ -3,18 +3,23 @@ define([
 ], function(
 	cp
 ) {
-	const ProtocolPattern = /^.+:\/\//;
+	const ProtocolPattern = /^[^:]+:\/\//;
 
 
-	var bookmarks = [];
+	var bookmarks = [],
+		urls = {};
 
 
 	function processNodes(
 		nodes)
 	{
 		nodes.forEach(function(node) {
-			if (node.url) {
-				node.displayURL = node.url.replace(ProtocolPattern, "");
+			var url = node.url;
+
+				// don't return any duplicate URLs
+			if (url && !urls[url]) {
+				node.displayURL = url.replace(ProtocolPattern, "");
+				urls[url] = true;
 				bookmarks.push(node);
 			} else if (node.children) {
 				processNodes(node.children);
@@ -26,10 +31,12 @@ define([
 	function getBookmarks()
 	{
 		bookmarks = [];
+		urls = {};
 
 		return cp.bookmarks.getTree()
 			.then(function(bookmarkNodes) {
 				processNodes(bookmarkNodes);
+				urls = null;
 
 				return bookmarks;
 			});

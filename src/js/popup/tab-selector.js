@@ -1,12 +1,14 @@
 define([
 	"array-score",
 	"quicksilver-score",
+	"get-bookmarks",
 	"react",
 	"jsx!./tab-item",
 	"lodash"
 ], function(
 	arrayScore,
 	qsScore,
+	getBookmarks,
 	React,
 	TabItem,
 	_
@@ -14,7 +16,9 @@ define([
 	const MinScore = .2,
 		MaxItems = 10,
 		SuspendedURLPattern = /^chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=(.+)$/,
-		ProtocolPattern = /(chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=)?(https?|file):\/\//;
+		ProtocolPattern = /^(chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=)?(https?|file):\/\//,
+		BookmarksQuery = "/b ",
+		BookmarksQueryPattern = /^\/b /;
 
 
 		// use title and url as the two keys to score
@@ -22,6 +26,8 @@ define([
 
 
 	var TabSelector = React.createClass({
+		mode: "tabs",
+		bookmarks: [],
 		ignoreMouse: true,
 
 
@@ -38,7 +44,7 @@ define([
 
 			return {
 				query: query,
-				matchingTabs: this.getMatchingTabs(query),
+				matchingItems: this.getMatchingItems(query),
 					// default to the first item being selected, in case we got
 					// an initial query
 				selected: 0
@@ -58,16 +64,17 @@ define([
 		},
 
 
-		getMatchingTabs: function(
+		getMatchingItems: function(
 			query)
 		{
-			var scores = scoreArray(this.props.tabs, query),
+			var items = this.mode == "tabs" ? this.props.tabs : this.bookmarks,
+				scores = scoreArray(items, query),
 					// first limit the tabs to 10, then drop barely-matching results
-				matchingTabs = _.dropRightWhile(scores.slice(0, MaxItems), function(item) {
+				matchingItems = _.dropRightWhile(scores.slice(0, MaxItems), function(item) {
 					return item.score < MinScore;
 				});
 
-			return matchingTabs;
+			return matchingItems;
 		},
 
 
@@ -100,7 +107,7 @@ define([
 			delta)
 		{
 			var selected = this.state.selected,
-				maxIndex = this.state.matchingTabs.length - 1;
+				maxIndex = this.state.matchingItems.length - 1;
 
 			if (!_.isNumber(selected)) {
 				if (delta > 0) {
@@ -118,7 +125,7 @@ define([
 			selected,
 			fromMouse)
 		{
-			var maxIndex = this.state.matchingTabs.length - 1;
+			var maxIndex = this.state.matchingItems.length - 1;
 
 			if (!fromMouse || !this.ignoreMouse) {
 				selected = Math.min(Math.max(0, selected), maxIndex);
@@ -131,12 +138,30 @@ define([
 			event)
 		{
 			var query = event.target.value,
-				matchingTabs = this.getMatchingTabs(query);
+				queryString = query,
+				matchingItems,
+				promise = Promise.resolve(),
+				self = this;
 
-			this.setState({
-				query: query,
-				matchingTabs: matchingTabs,
-				selected: 0
+			if (BookmarksQueryPattern.test(query)) {
+				this.mode = "bookmarks";
+				query = query.replace(BookmarksQueryPattern, "");
+			}
+
+			if (this.mode == "bookmarks" && !this.bookmarks.length) {
+				promise = getBookmarks().then(function(bookmarks) {
+					self.bookmarks = bookmarks;
+				});
+			}
+
+			promise.then(function() {
+				matchingItems = self.getMatchingItems(query);
+
+				self.setState({
+					query: queryString,
+					matchingItems: matchingItems,
+					selected: 0
+				});
 			});
 		},
 
@@ -151,16 +176,25 @@ define([
 		onKeyDown: function(
 			event)
 		{
-			var searchBox = this.refs.searchBox;
+			var searchBox = this.refs.searchBox,
+				query = searchBox.value;
 
 			switch (event.which) {
 				case 27:	// escape
-					if (!searchBox.value) {
+					if (!query) {
 							// pressing esc in an empty field should close the popup
 						window.close();
 					} else {
-						searchBox.value = "";
-						this.onQueryChange({ target: { value: "" }});
+							// there's a default behavior where pressing esc
+							// clears the input, but we want to control what it
+							// gets cleared to
+						event.preventDefault();
+
+							// if we're searching for bookmarks, reset the query
+							// to just /b, rather than clearing it
+						query = this.mode == "bookmarks" ? BookmarksQuery : "";
+						searchBox.value = query;
+						this.onQueryChange({ target: { value: query }});
 					}
 					break;
 
@@ -175,7 +209,7 @@ define([
 					break;
 
 				case 13:	// enter
-					this.focusTab(this.state.matchingTabs[this.state.selected], event.shiftKey);
+					this.focusTab(this.state.matchingItems[this.state.selected], event.shiftKey);
 					event.preventDefault();
 					break;
 			}
@@ -186,7 +220,7 @@ define([
 		{
 			var selectedIndex = this.state.selected,
 				query = this.state.query,
-				tabItems = this.state.matchingTabs.map(function(tab, i) {
+				tabItems = this.state.matchingItems.map(function(tab, i) {
 					return <TabItem
 						key={tab.id}
 						tab={tab}
