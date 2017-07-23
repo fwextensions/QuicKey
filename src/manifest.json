@@ -1,5 +1,5 @@
 {
-	"name": "KeyTab",
+	"name": "QuicKey",
 	"version": "0.0.0",
 	"manifest_version": 2,
 	"description": "A Chrome extension for using the keyboard to switch between open tabs.",
@@ -17,10 +17,10 @@
 	},
 	"browser_action": {
 		"default_icon": {
-			"19": "img/icon-19.png"
-//			"38": "img/icon-38.png"
+			"19": "img/icon-19.png",
+			"38": "img/icon-38.png"
 		},
-		"default_title": "KeyTab",
+		"default_title": "QuicKey",
 		"default_popup": "popup.html"
 	},
 	"background": {
@@ -29,9 +29,9 @@
 	"commands": {
 		"_execute_browser_action": {
 			"suggested_key": {
-				"windows": "Alt+T",
+				"windows": "Alt+Q",
 				"mac": "Alt+T",
-				"chromeos": "Alt+T",
+				"chromeos": "Alt+Q",
 				"linux": "Alt+T"
 			}
 		}

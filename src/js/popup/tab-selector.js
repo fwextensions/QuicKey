@@ -87,13 +87,37 @@ define([
 					updateData = { active: true };
 
 				if (unsuspend && match) {
+						// change to the unsuspended URL
 					updateData.url = match[1];
 				}
 
+					// switch to the selected tab
 				chrome.tabs.update(tab.id, updateData);
 
+					// make sure that tab's window comes forward
 				if (tab.windowId != chrome.windows.WINDOW_ID_CURRENT) {
 					chrome.windows.update(tab.windowId, { focused: true });
+				}
+
+					// we seem to have to close the window in a timeout so that
+					// the hover state of the button gets cleared
+				setTimeout(function() { window.close(); }, 0);
+			}
+		},
+
+
+		openBookmark: function(
+			bookmark,
+			newWindow,
+			newTab)
+		{
+			if (bookmark) {
+				if (newWindow) {
+					chrome.windows.create({ url: bookmark.url });
+				} else if (newTab) {
+					chrome.tabs.create({ url: bookmark.url });
+				} else {
+					chrome.tabs.update({ url: bookmark.url });
 				}
 
 					// we seem to have to close the window in a timeout so that
@@ -177,7 +201,8 @@ define([
 			event)
 		{
 			var searchBox = this.refs.searchBox,
-				query = searchBox.value;
+				query = searchBox.value,
+				state = this.state;
 
 			switch (event.which) {
 				case 27:	// escape
@@ -191,8 +216,14 @@ define([
 						event.preventDefault();
 
 							// if we're searching for bookmarks, reset the query
-							// to just /b, rather than clearing it
-						query = this.mode == "bookmarks" ? BookmarksQuery : "";
+							// to just /b, rather than clearing it, unless it's
+							// already /b, in which case, clear it
+						if (this.mode == "tabs" || query == BookmarksQuery) {
+							query = "";
+						} else {
+							query = BookmarksQuery;
+						}
+
 						searchBox.value = query;
 						this.onQueryChange({ target: { value: query }});
 					}
@@ -209,7 +240,12 @@ define([
 					break;
 
 				case 13:	// enter
-					this.focusTab(this.state.matchingItems[this.state.selected], event.shiftKey);
+					if (this.mode == "tabs") {
+						this.focusTab(state.matchingItems[state.selected], event.shiftKey);
+					} else {
+						this.openBookmark(state.matchingItems[state.selected],
+							event.shiftKey, event.ctrlKey);
+					}
 					event.preventDefault();
 					break;
 			}
