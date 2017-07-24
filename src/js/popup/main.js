@@ -45,7 +45,7 @@ require([
 					tabs: tabs,
 					initialQuery: query
 				}),
-				document.getElementById("content")
+				document.getElementById("root")
 			);
 		});
 });

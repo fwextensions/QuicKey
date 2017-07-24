@@ -2,6 +2,7 @@ define([
 	"array-score",
 	"quicksilver-score",
 	"get-bookmarks",
+	"get-history",
 	"react",
 	"jsx!./tab-item",
 	"lodash"
@@ -9,6 +10,7 @@ define([
 	arrayScore,
 	qsScore,
 	getBookmarks,
+	getHistory,
 	React,
 	TabItem,
 	_
@@ -18,7 +20,10 @@ define([
 		SuspendedURLPattern = /^chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=(.+)$/,
 		ProtocolPattern = /^(chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=)?(https?|file):\/\//,
 		BookmarksQuery = "/b ",
-		BookmarksQueryPattern = /^\/b /;
+		BookmarksQueryPattern = new RegExp("^" + BookmarksQuery),
+		HistoryQuery = "/h ",
+		HistoryQueryPattern = new RegExp("^" + HistoryQuery),
+		WhitespacePattern = /\s+/g;
 
 
 		// use title and url as the two keys to score
@@ -28,6 +33,7 @@ define([
 	var TabSelector = React.createClass({
 		mode: "tabs",
 		bookmarks: [],
+		history: [],
 		ignoreMouse: true,
 
 
@@ -67,7 +73,9 @@ define([
 		getMatchingItems: function(
 			query)
 		{
-			var items = this.mode == "tabs" ? this.props.tabs : this.bookmarks,
+			var mode = this.mode,
+				items = mode == "tabs" ? this.props.tabs :
+					mode == "bookmarks" ? this.bookmarks : this.history,
 				scores = scoreArray(items, query),
 					// first limit the tabs to 10, then drop barely-matching results
 				matchingItems = _.dropRightWhile(scores.slice(0, MaxItems), function(item) {
@@ -153,7 +161,7 @@ define([
 
 			if (!fromMouse || !this.ignoreMouse) {
 				selected = Math.min(Math.max(0, selected), maxIndex);
-				this.setState({selected: selected});
+				this.setState({ selected: selected });
 			}
 		},
 
@@ -170,13 +178,25 @@ define([
 			if (BookmarksQueryPattern.test(query)) {
 				this.mode = "bookmarks";
 				query = query.replace(BookmarksQueryPattern, "");
+			} else if (HistoryQueryPattern.test(query)) {
+				this.mode = "history";
+				query = query.replace(HistoryQueryPattern, "");
+			} else {
+				this.mode = "tabs";
 			}
 
 			if (this.mode == "bookmarks" && !this.bookmarks.length) {
 				promise = getBookmarks().then(function(bookmarks) {
 					self.bookmarks = bookmarks;
 				});
+			} else if (this.mode == "history" && !this.history.length) {
+				promise = getHistory().then(function(history) {
+					self.history = history;
+				});
 			}
+
+				// including spaces in the query generally produces worse results
+			query = query.replace(WhitespacePattern, "");
 
 			promise.then(function() {
 				matchingItems = self.getMatchingItems(query);
@@ -218,10 +238,13 @@ define([
 							// if we're searching for bookmarks, reset the query
 							// to just /b, rather than clearing it, unless it's
 							// already /b, in which case, clear it
-						if (this.mode == "tabs" || query == BookmarksQuery) {
+						if (this.mode == "tabs" || query == BookmarksQuery ||
+								query == HistoryQuery) {
 							query = "";
-						} else {
+						} else if (this.mode == "bookmarks") {
 							query = BookmarksQuery;
+						} else if (this.mode == "history") {
+							query = HistoryQuery;
 						}
 
 						searchBox.value = query;
