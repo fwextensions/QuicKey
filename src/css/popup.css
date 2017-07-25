@@ -4,7 +4,7 @@
 
 * {
 	box-sizing: border-box;
-	font-family: "Segoe UI", "Helvetica Neue", helvetica, tahoma, sans-serif;
+	font-family: system-ui, sans-serif;
 	font-size: 14px;
 }
 
