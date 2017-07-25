@@ -1,6 +1,6 @@
 # QuicKey
 
-![QuicKey](../src/img/icon-128.png)
+![QuicKey](img/icon-128.png)
 
 
 ## Installation
