@@ -30,9 +30,9 @@
 		"_execute_browser_action": {
 			"suggested_key": {
 				"windows": "Alt+Q",
-				"mac": "Alt+T",
+				"mac": "Ctrl+Q",
 				"chromeos": "Alt+Q",
-				"linux": "Alt+T"
+				"linux": "Alt+Q"
 			}
 		}
 	},
