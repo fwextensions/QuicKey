@@ -42,10 +42,16 @@ define([
 			var query = this.props.initialQuery;
 
 				// add a displayURL to each tab so that we can score against it
-				// in onQueryChange
+				// in onQueryChange.  also add a URL without the Great Suspender
+				// preamble that we can use with chrome://favicon/ to get the
+				// site's favicon instead of the Great Suspender's, as there are
+				// times it hasn't generated a faded icon for some sites. 
 			this.props.tabs.forEach(function(tab) {
+				var url = tab.url;
+
 // TODO: move this to main.js
-				tab.displayURL = tab.url.replace(ProtocolPattern, "");
+				tab.displayURL = url.replace(ProtocolPattern, "");
+				tab.unsuspendURL = url.replace(SuspendedURLPattern, "$1");
 			});
 
 			return {
@@ -91,12 +97,11 @@ define([
 			unsuspend)
 		{
 			if (tab) {
-				var match = unsuspend && tab.url.match(SuspendedURLPattern),
-					updateData = { active: true };
+				var updateData = { active: true };
 
-				if (unsuspend && match) {
+				if (unsuspend && tab.url != tab.unsuspendURL) {
 						// change to the unsuspended URL
-					updateData.url = match[1];
+					updateData.url = tab.unsuspendURL;
 				}
 
 					// switch to the selected tab

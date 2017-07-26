@@ -101,8 +101,11 @@ define([
 				title = wrapMatches(query, tab.title, hitMasks.title),
 				url = wrapMatches(query, tab.displayURL, hitMasks.displayURL),
 				className = props.isSelected ? "selected" : "",
-					// look up the favicon via chrome://favicon
-				faviconURL = FaviconURL + tab.url,
+					// look up the favicon via chrome://favicon if the tab itself
+					// doesn't have one.  we want to prioritize the tab's URL
+					// since The Great Suspender creates faded favicons and stores
+					// them as data URIs in tab.favIconUrl.
+				faviconURL = tab.favIconUrl || FaviconURL + tab.unsuspendURL,
 				style = {
 					backgroundImage: "url(" + faviconURL + ")"
 				};
