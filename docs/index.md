@@ -1,5 +1,5 @@
 ---
-title: QuicKey - A Chrome extension for switching tabs or pulling up bookmarks and history via a Quicksilver-style search.
+site.title: QuicKey - A Chrome extension for switching tabs or pulling up bookmarks and history via a Quicksilver-style search.
 ---
 
 # QuicKey
@@ -26,3 +26,14 @@ You can click the <img src="img/icon-38.png" style="height: 19px"> button on the
 
 ## Permissions needed by the extension
 
+
+## Credits
+
+X
+Attribution-Non-Commercial 3.0 Netherlands (help for licenses) http://creativecommons.org/licenses/by-nc/3.0/nl/deed.en_GB
+P.J. Onori
+http://www.somerandomdude.com/
+
+search
+Octicons https://www.iconfinder.com/search/?q=iconset%3Aocticons
+http://opensource.org/licenses/MIT
