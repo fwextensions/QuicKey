@@ -15,16 +15,18 @@ You can click the <img src="img/icon-38.png" style="height: 19px; vertical-align
 
 To change these, you can go to *Settings > Extensions*, scroll to the very bottom of the page, and then click *Keyboard Shortcuts*.  You can then select a different shortcut in the dialog.   
 
+incognito tabs 
+
 
 ## Switching tabs
 
-When you've opened the *QuicKey* search box, either by pressing the keyboard shortcut or clicking its icon, you can type a few letters of the title or URL of the tab you're looking for.  *QuicKey* uses a [Quicksilver]() style matching algorithm, where contiguous matches at the beginning of words are ranked highly, as are matches against capital letters at the beginning of words.  This should let you type just a few letters to find the right tab.
+When you've opened the *QuicKey* search box, either by pressing the keyboard shortcut or clicking its icon, you can type a few letters of the title or URL of the tab you're looking for.  *QuicKey* uses a [Quicksilver](https://github.com/quicksilver/Quicksilver) style matching algorithm, where contiguous matches at the beginning of words are ranked highly, as are matches against capital letters at the beginning of words.  This should let you type just a few letters to find the right tab.
  
 The first matched tab is selected by default, so you can just press <kbd>enter</kbd> to switch to it.  Or press the <kbd>&#8593;</kbd> or <kbd>&#8595;</kbd> key to move to other results.  You can also click the desired tab using the mouse.
   
 Press <kbd>esc</kbd> to clear what you've typed.  If the search box is empty, then pressing <kbd>esc</kbd> will close it. 
  
-If you use the handy extension [The Great Suspender](https://chrome.google.com/webstore/detail/the-great-suspender/klbibkeccnjlkjkiokjodocebajanakg?hl=en) (and you almost certainly are if you have hundreds of tabs open), then suspended tabs will have a faded icon in the list.  Pressing <kbd>enter</kbd> will switch to the suspended tab, but you can press <kbd>shift</kbd><kbd>enter</kbd> to switch to the tab and unsuspend it in one go.  
+If you use the handy extension [The Great Suspender](https://chrome.google.com/webstore/detail/the-great-suspender/klbibkeccnjlkjkiokjodocebajanakg?hl=en) (and you almost certainly are if you have hundreds of tabs open), then suspended tabs will have a faded icon in the list.  Pressing <kbd>enter</kbd> will switch to the suspended tab, but you can press <kbd>shift</kbd>&nbsp;<kbd>enter</kbd> to switch to the tab and unsuspend it in one go.  
 
 
 ## Searching bookmarks and visited pages
@@ -33,10 +35,12 @@ Besides tabs, you can also quickly open bookmarks or visited pages using *QuicKe
    
 When you've selected the desired bookmark, press <kbd>enter</kbd> to open it in the current tab.  Press <kbd>ctrl</kbd>&nbsp;<kbd>enter</kbd> to open the bookmark in a new tab in the current window, or press <kbd>shift</kbd>&nbsp;<kbd>enter</kbd> to open the bookmark in a new window.    
 
-To match a page from your browsing history, type `/h`, a space and then start typing part of the name or URL of a page.  The same <kbd>ctrl</kbd>&nbsp;<kbd>enter</kbd> and <kbd>shift</kbd>&nbsp;<kbd>enter</kbd> shortcuts work with visited pages to open them in new tabs or windows.  Currently, only the last 100 pages in the history are available for searching through *QuicKey*.
+To match a page from your browsing history, type `/h`, a space and then start typing part of the name or URL of a page.  The same <kbd>ctrl</kbd>&nbsp;<kbd>enter</kbd> and <kbd>shift</kbd>&nbsp;<kbd>enter</kbd> shortcuts work with visited pages to open them in new tabs or windows.  Only the last 100 pages in the history are available for searching through *QuicKey*.
 
 
 ## Permissions needed by the extension
+
+To function, *QuicKey* needs access to your open tabs, bookmarks and history.  It doesn't interact with the page content in any way and doesn't transmit any information anywhere. 
 
 
 ## Credits
@@ -49,3 +53,5 @@ http://www.somerandomdude.com/
 search
 Octicons https://www.iconfinder.com/search/?q=iconset%3Aocticons
 http://opensource.org/licenses/MIT
+
+Inspired by [Quicksilver](https://github.com/quicksilver/Quicksilver).
