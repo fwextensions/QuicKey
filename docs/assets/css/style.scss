@@ -20,11 +20,18 @@ kbd {
 
 body {
 	color: #444;
+	font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+	font-size: 16px;
+	line-height: 1.4em;
 }
 
 footer {
-	float: none;
+	float: right;
 	position: static;
 	width: 500px;
 	clear: both;
+}
+
+h2 {
+	margin: 40px 0 20px;
 }

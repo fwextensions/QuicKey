@@ -1,7 +1,5 @@
 ![QuicKey](img/icon-128.png)
 
-[![Chrome Webstore](img/webstore.png)]()
-
 If you like to have lots of tabs open in Chrome, it can quickly become difficult to find the one you want.  The tabs get very small, so you have to hover over each one to see its name in a tooltip.  And there's no overall Windows menu that would let you more easily pick a tab from a list.  
 
 *QuicKey* makes tabs much easier to navigate.  Just use its keyboard shortcut to open it, type a few letters of a tab's name or URL, and then press <kbd>enter</kbd>.  You can even search through bookmarks and your browsing history.
