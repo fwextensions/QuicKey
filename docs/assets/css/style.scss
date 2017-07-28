@@ -19,5 +19,11 @@ kbd {
 }
 
 body {
-  color: #444;
+	color: #444;
+}
+
+footer {
+	float: none;
+	position: static;
+	width: auto;
 }
