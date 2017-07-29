@@ -41,7 +41,9 @@ To match a page from your history, type <kbd>/</kbd>&nbsp;<kbd>h</kbd>&nbsp;<kbd
 To function, *QuicKey* needs access to your open tabs, bookmarks and history.  It doesn't interact with the page content in any way and doesn't transmit any information anywhere. 
 
 
-create issue link 
+## Feedback and bugs
+
+If you find a bug in *QuicKey* or have a suggestion for a new feature, please [create a new issue](https://github.com/fwextensions/QuicKey/issues) on the GitHub repo.
 
 
 ## Credits
