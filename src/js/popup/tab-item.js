@@ -111,9 +111,9 @@ define([
 				};
 
 				// the inner HTML below will be escaped by wrapMatches()
+// 				title={this.props.tab.score}
 			return <li className={className}
 				style={style}
-				title={this.props.tab.score}
 				onClick={this.onClick}
 				onMouseMove={this.onMouseMove}
 				onMouseEnter={this.onMouseEnter}
