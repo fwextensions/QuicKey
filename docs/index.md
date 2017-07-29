@@ -43,6 +43,7 @@ To function, *QuicKey* needs access to your open tabs, bookmarks and history.  I
 
 create issue link 
 
+
 ## Credits
 
 X
