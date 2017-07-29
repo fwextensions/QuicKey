@@ -13,7 +13,7 @@ You can click the <img src="img/icon-38.png" style="height: 19px; vertical-align
 
 To change these, you can go to *Settings > Extensions*, scroll to the very bottom of the page, and then click *Keyboard Shortcuts*.  You can then select a different shortcut in the dialog.   
 
-incognito tabs 
+If you'd like to use *QuicKey* with incognito windows as well, you'll need to enable it in *Settings > Extensions*.  Scroll down until you see *QuicKey* (or use the find function) and then click the *Allow in incognito* checkbox.  
 
 
 ## Switching tabs
@@ -23,17 +23,17 @@ When you've opened the *QuicKey* search box, either by pressing the keyboard sho
 The first matched tab is selected by default, so you can just press <kbd>enter</kbd> to switch to it.  Or press the <kbd>&#8593;</kbd> or <kbd>&#8595;</kbd> key to move to other results.  You can also click the desired tab using the mouse.
   
 Press <kbd>esc</kbd> to clear what you've typed.  If the search box is empty, then pressing <kbd>esc</kbd> will close it. 
- 
+
 If you use the handy extension [The Great Suspender](https://chrome.google.com/webstore/detail/the-great-suspender/klbibkeccnjlkjkiokjodocebajanakg?hl=en) (and you almost certainly are if you have hundreds of tabs open), then suspended tabs will have a faded icon in the list.  Pressing <kbd>enter</kbd> will switch to the suspended tab, but you can press <kbd>shift</kbd>&nbsp;<kbd>enter</kbd> to switch to the tab and unsuspend it in one go.  
 
 
 ## Searching bookmarks and visited pages
 
-Besides tabs, you can also quickly open bookmarks or visited pages using *QuicKey*.  To search all of your bookmarks in Chrome, type `/b` followed by a space, and then start typing part of the name or URL of a bookmark.  
+Besides tabs, you can also quickly open bookmarks or visited pages using *QuicKey*.  To search all of your bookmarks in Chrome, type <kbd>/</kbd>&nbsp;<kbd>b</kbd>&nbsp;<kbd>space</kbd>, and then start typing part of the name or URL of a bookmark.  
    
 When you've selected the desired bookmark, press <kbd>enter</kbd> to open it in the current tab.  Press <kbd>ctrl</kbd>&nbsp;<kbd>enter</kbd> to open the bookmark in a new tab in the current window, or press <kbd>shift</kbd>&nbsp;<kbd>enter</kbd> to open the bookmark in a new window.    
 
-To match a page from your browsing history, type `/h`, a space and then start typing part of the name or URL of a page.  The same <kbd>ctrl</kbd>&nbsp;<kbd>enter</kbd> and <kbd>shift</kbd>&nbsp;<kbd>enter</kbd> shortcuts work with visited pages to open them in new tabs or windows.  Only the last 100 pages in the history are available for searching through *QuicKey*.
+To match a page from your browsing history, type <kbd>/</kbd>&nbsp;<kbd>h</kbd>&nbsp;<kbd>space</kbd> and then start typing part of the name or URL of a page.  The same <kbd>ctrl</kbd>&nbsp;<kbd>enter</kbd> and <kbd>shift</kbd>&nbsp;<kbd>enter</kbd> shortcuts work with visited pages to open them in new tabs or windows.  Only the last 100 pages in the history are available for searching through *QuicKey*.
 
 
 ## Permissions needed by the extension

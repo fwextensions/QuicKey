@@ -105,7 +105,7 @@ define([
 					// doesn't have one.  we want to prioritize the tab's URL
 					// since The Great Suspender creates faded favicons and stores
 					// them as data URIs in tab.favIconUrl.
-				faviconURL = tab.favIconUrl || FaviconURL + tab.unsuspendURL,
+				faviconURL = tab.favIconUrl || FaviconURL + (tab.unsuspendURL || tab.url),
 				style = {
 					backgroundImage: "url(" + faviconURL + ")"
 				};

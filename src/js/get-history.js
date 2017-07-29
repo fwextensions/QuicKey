@@ -13,7 +13,11 @@ define([
 	{
 		history = [];
 
-		return cp.history.search({ text: "", startTime: 0 })
+		return cp.history.search({
+			text: "",
+			startTime: 0,
+			maxResults: 200
+		})
 			.then(function(historyItems) {
 				historyItems.forEach(function(item) {
 					item.displayURL = item.url.replace(ProtocolPattern, "");
