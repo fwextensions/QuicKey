@@ -9,6 +9,10 @@ description: A Chrome extension for switching tabs or pulling up bookmarks and h
 
 logo: img/icon-128.png
 
+image: img/search-box-open.png
+
+url: https://chrome.google.com/webstore/
+
 twitter:
   username: fwextensions
   creator: fwextensions
