@@ -5,7 +5,13 @@
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
 
     <link rel="stylesheet" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}">
-    <link rel="shortcut icon" type="image/png" href="favicon.ico">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="theme-color" content="#ffffff">
 
     <meta name="viewport" content="width=device-width">
     <!--[if lt IE 9]>
@@ -17,10 +23,12 @@
   <body>
     <div class="wrapper">
       <header>
+        <p><img src="img/keyboard.png" alt="QuicKey" /></p>
+
         <h1>{{ site.title | default: site.github.repository_name }}</h1>
         <p>{{ site.description | default: site.github.project_tagline }}</p>
 
-        <p><a href=""><img src="/quickey-extension/img/webstore.png" alt="Chrome Webstore" /></a></p>
+        <p><a href=""><img src="img/webstore.png" alt="Chrome Webstore" /></a></p>
 
         {% if site.github.is_project_page %}
           <p class="view"><a href="{{ site.github.repository_url }}">View the project on GitHub <small>{{ github_name }}</small></a></p>

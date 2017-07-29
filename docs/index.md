@@ -1,4 +1,4 @@
-![QuicKey](img/icon-128.png)
+![QuicKey](img/keyboard.png)
 
 If you like to have lots of tabs open in Chrome, it can quickly become difficult to find the one you want.  The tabs get very small, so you have to hover over each one to see its name in a tooltip.  And there's no overall Windows menu that would let you more easily pick a tab from a list.  
 
