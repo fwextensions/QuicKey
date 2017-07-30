@@ -45,7 +45,7 @@ define([
 				// in onQueryChange.  also add a URL without the Great Suspender
 				// preamble that we can use with chrome://favicon/ to get the
 				// site's favicon instead of the Great Suspender's, as there are
-				// times it hasn't generated a faded icon for some sites. 
+				// times it hasn't generated a faded icon for some sites.
 			this.props.tabs.forEach(function(tab) {
 				var url = tab.url;
 
@@ -309,6 +309,7 @@ define([
 					className="search-box"
 					tabIndex="0"
 					placeholder="Search for a tab title or URL"
+					spellCheck={false}
 					defaultValue={query}
 					autoFocus={true}
 					onChange={this.onQueryChange}
