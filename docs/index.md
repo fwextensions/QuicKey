@@ -1,19 +1,19 @@
 ---
-image: img/search-box-open.png
+image: img/search-results-open.png
 ---
 
 ![QuicKey](img/keyboard.png)
 
-If you like to have lots of tabs open in Chrome, it can quickly become difficult to find the one you want.  The tabs get very small, so you have to hover over each one to see its name in a tooltip.  And there's no overall Windows menu that would let you more easily pick a tab from a list.  
+If you like to keep lots of tabs open in Chrome, it can quickly become difficult to find the one you want.  The tabs get very small, so you have to hover over each one to see its name in a tooltip.  And there's no overall Windows menu that would let you more easily pick a tab from a list.  
 
 ![QuicKey search results](img/search-results-open.png)
 
-*QuicKey* makes tabs much easier to navigate.  Just use its keyboard shortcut to open it, type a few letters of a tab's name or URL, and then press <kbd>enter</kbd>.  You can even search through bookmarks and your browsing history.
+*QuicKey* makes tabs much easier to navigate.  Just use its keyboard shortcut to open it, type a few letters of a tab's name or URL, and then press <kbd>enter</kbd>.  You can even search through bookmarks and your browser history.
 
 
 ## Installation
 
-*QuicKey* can be installed from the [Chrome Web Store]().  It requires Chrome **vXX** or above.
+Install *QuicKey* from the [Chrome Web Store]().  It requires Chrome **vXX** or above.
 
 You can click the <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> button on the toolbar to open the search box.  But if you're using this extension, you probably prefer using the keyboard.  The default shortcut on Windows is <kbd>alt</kbd>&nbsp;<kbd>Q</kbd> and on macOS it's <kbd>ctrl</kbd>&nbsp;<kbd>Q</kbd>.  
 
@@ -54,13 +54,6 @@ If you find a bug in *QuicKey* or have a suggestion for a new feature, please [c
 
 ## Credits
 
-X
-Attribution-Non-Commercial 3.0 Netherlands (help for licenses) http://creativecommons.org/licenses/by-nc/3.0/nl/deed.en_GB
-P.J. Onori
-http://www.somerandomdude.com/
-
-search
-Octicons https://www.iconfinder.com/search/?q=iconset%3Aocticons
-http://opensource.org/licenses/MIT
+The <img src="img/search.svg" style="height: 13px"> and <img src="img/clear.svg" style="height: 16px"> icons are from the [Octicons](https://octicons.github.com/) set, used under the [MIT License](http://opensource.org/licenses/MIT).  
 
 Inspired by [Quicksilver](https://github.com/quicksilver/Quicksilver).

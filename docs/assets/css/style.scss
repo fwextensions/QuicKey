@@ -3,6 +3,24 @@
 
 @import "{{ site.theme }}";
 
+body {
+	color: #444;
+	font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+	font-size: 16px;
+	line-height: 1.4em;
+}
+
+h2 {
+	margin: 40px 0 20px;
+}
+
+footer {
+	float: right;
+	position: static;
+	width: 500px;
+	clear: both;
+}
+
 kbd {
 	font: 11px Consolas, "Liberation Mono", Menlo, Courier, monospace;
 	display: inline-block;
@@ -16,22 +34,4 @@ kbd {
 	border-bottom-color: #bbb;
 	border-radius: 3px;
 	box-shadow: inset 0 -1px 0 #bbb;
-}
-
-body {
-	color: #444;
-	font-family: "Segoe UI", "Trebuchet MS", sans-serif;
-	font-size: 16px;
-	line-height: 1.4em;
-}
-
-footer {
-	float: right;
-	position: static;
-	width: 500px;
-	clear: both;
-}
-
-h2 {
-	margin: 40px 0 20px;
 }
