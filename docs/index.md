@@ -2,13 +2,11 @@
 image: img/search-results-open.png
 ---
 
-![QuicKey](img/keyboard.png)
+![QuicKey search results](img/search-results-open.png)
 
 If you like to keep lots of tabs open in Chrome, it can quickly become difficult to find the one you want.  The tabs get very small, so you have to hover over each one to see its name in a tooltip.  And there's no overall Windows menu that would let you more easily pick a tab from a list.  
 
-![QuicKey search results](img/search-results-open.png)
-
-*QuicKey* makes tabs much easier to navigate.  Just use its keyboard shortcut to open it, type a few letters of a tab's name or URL, and then press <kbd>enter</kbd>.  You can even search through bookmarks and your browser history.
+*QuicKey* makes tabs much easier to navigate.  Just use its keyboard shortcut to open the search box type a few letters of a tab's name or URL, and then press <kbd>enter</kbd>.  You can even search through bookmarks and your browser history.
 
 
 ## Installation
