@@ -13,7 +13,7 @@ If you like to keep lots of tabs open in Chrome, it can quickly become difficult
 
 Install *QuicKey* from the [Chrome Web Store]().  It requires Chrome **vXX** or above.
 
-You can click the <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> button on the toolbar to open the search box.  But if you're using this extension, you probably prefer using the keyboard.  The default shortcut on Windows is <kbd>alt</kbd>&nbsp;<kbd>Q</kbd> and on macOS it's <kbd>ctrl</kbd>&nbsp;<kbd>Q</kbd>.  
+Once the extension is installed, you can click the <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> button on the toolbar to open the search box.  But if you're using this extension, you probably prefer using the keyboard.  The default shortcut on Windows is <kbd>alt</kbd>&nbsp;<kbd>Q</kbd> and on macOS it's <kbd>ctrl</kbd>&nbsp;<kbd>Q</kbd>.  
 
 To change these, you can go to *Settings > Extensions*, scroll to the very bottom of the page, and then click *Keyboard Shortcuts*.  You can then select a different shortcut in the dialog.   
 
