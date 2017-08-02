@@ -28,7 +28,7 @@ The first matched tab is selected by default, so you can just press <kbd>enter</
   
 Press <kbd>esc</kbd> to clear what you've typed.  If the search box is empty, then pressing <kbd>esc</kbd> will close it. 
 
-If you use the handy extension [The Great Suspender](https://chrome.google.com/webstore/detail/the-great-suspender/klbibkeccnjlkjkiokjodocebajanakg?hl=en) (and you almost certainly are if you have hundreds of tabs open), then suspended tabs will have a faded icon in the list.  Pressing <kbd>enter</kbd> will switch to the suspended tab, but you can press <kbd>shift</kbd>&nbsp;<kbd>enter</kbd> to switch to the tab and unsuspend it in one go.  
+If you use the handy extension [The Great Suspender](https://chrome.google.com/webstore/detail/the-great-suspender/klbibkeccnjlkjkiokjodocebajanakg?hl=en) (and you almost certainly are if you have hundreds of tabs open), then suspended tabs will have a faded icon in the list, and the original URL is shown, not that long one that you see in the location bar.  Pressing <kbd>enter</kbd> will switch to the suspended tab, but you can press <kbd>shift</kbd>&nbsp;<kbd>enter</kbd> to switch to the tab and unsuspend it in one go.  
 
 
 ## Searching bookmarks and history
@@ -52,6 +52,6 @@ If you find a bug in *QuicKey* or have a suggestion for a new feature, please [c
 
 ## Credits
 
-The <img src="img/search.svg" style="height: 13px"> and <img src="img/clear.svg" style="height: 16px"> icons are from the [Octicons](https://octicons.github.com/) set, used under the [MIT License](http://opensource.org/licenses/MIT).  
+The <img src="img/search.svg" style="height: 13px"> and <img src="img/clear.svg" style="height: 16px; vertical-align: middle;"> icons are from the [Octicons](https://octicons.github.com/) set, used under the [MIT License](http://opensource.org/licenses/MIT).  
 
-Inspired by [Quicksilver](https://github.com/quicksilver/Quicksilver).
+Search algorithm modeled on [Quicksilver](https://github.com/quicksilver/Quicksilver)'s search code.
