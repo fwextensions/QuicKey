@@ -11,7 +11,7 @@ If you like to keep lots of tabs open in Chrome, it can quickly become difficult
 
 ## Installation
 
-Install *QuicKey* from the [Chrome Web Store]().  It requires Chrome **vXX** or above.
+Install *QuicKey* from the [Chrome Web Store]().
 
 Once the extension is installed, you can click the <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> button on the toolbar to open the search box.  But if you're using this extension, you probably prefer using the keyboard.  The default shortcut on Windows is <kbd>alt</kbd>&nbsp;<kbd>Q</kbd> and on macOS it's <kbd>ctrl</kbd>&nbsp;<kbd>Q</kbd>.  
 
@@ -22,7 +22,7 @@ If you'd like to use *QuicKey* with incognito windows as well, you'll need to en
 
 ## Switching tabs
 
-When you've opened the *QuicKey* search box, either by pressing the keyboard shortcut or by clicking its icon, you can type a few letters of the title or URL of the tab you're looking for.  *QuicKey* uses a [Quicksilver](https://github.com/quicksilver/Quicksilver)-style matching algorithm, where contiguous matches at the beginning of words are ranked highly, as are matches against capital letters at the beginning of words.  This approach should let you type just a few letters to find the right tab.
+When you've opened the *QuicKey* search box, either by pressing the keyboard shortcut or by clicking its icon, type a few letters of the title or URL of the tab you're looking for.  *QuicKey* uses a [Quicksilver](https://github.com/quicksilver/Quicksilver)-style matching algorithm, where contiguous matches at the beginning of words are ranked highly, as are matches against capital letters at the beginning of words.  This approach should let you type just a few letters to find the right tab.
  
 The first matched tab is selected by default, so you can just press <kbd>enter</kbd> to switch to it.  Or press the <kbd>&#8593;</kbd> or <kbd>&#8595;</kbd> key to move to other results.  You can also click the desired tab using the mouse.
   
@@ -33,14 +33,14 @@ If you use the handy extension [The Great Suspender](https://chrome.google.com/w
 
 ## Searching bookmarks and history
 
-Besides tabs, you can also quickly open bookmarks or pages from your browser history using *QuicKey*.  To search all of your bookmarks in Chrome, type <kbd>/</kbd>&nbsp;<kbd>b</kbd>&nbsp;<kbd>space</kbd>, and then start typing part of the name or URL of a bookmark.  
+Besides tabs, you can also quickly open bookmarks or pages from your browser history using *QuicKey*.  To search all of your bookmarks, type <kbd>/</kbd>&nbsp;<kbd>b</kbd>&nbsp;<kbd>space</kbd>, and then start typing part of the name or URL of a bookmark.  
    
 When you've selected the desired bookmark, press <kbd>enter</kbd> to open it in the current tab.  Press <kbd>ctrl</kbd>&nbsp;<kbd>enter</kbd> to open the bookmark in a new tab in the current window, or press <kbd>shift</kbd>&nbsp;<kbd>enter</kbd> to open the bookmark in a new window.    
 
 To match a page from your history, type <kbd>/</kbd>&nbsp;<kbd>h</kbd>&nbsp;<kbd>space</kbd> and then start typing part of the name or URL of a page.  The same <kbd>ctrl</kbd>&nbsp;<kbd>enter</kbd> and <kbd>shift</kbd>&nbsp;<kbd>enter</kbd> shortcuts work with visited pages to open them in new tabs or windows.  The last 200 pages in the history are available for searching through *QuicKey*.
 
 
-## Permissions needed by the extension
+## Privacy
 
 To function, *QuicKey* needs access to your open tabs, bookmarks and history.  It doesn't interact with the page content in any way and doesn't transmit any information anywhere. 
 
@@ -54,4 +54,4 @@ If you find a bug in *QuicKey* or have a suggestion for a new feature, please [c
 
 The <img src="img/search.svg" style="height: 13px"> and <img src="img/clear.svg" style="height: 16px; vertical-align: middle;"> icons are from the [Octicons](https://octicons.github.com/) set, used under the [MIT License](http://opensource.org/licenses/MIT).  
 
-Search algorithm modeled on [Quicksilver](https://github.com/quicksilver/Quicksilver)'s search code.
+Search algorithm modeled on [Quicksilver](https://github.com/quicksilver/Quicksilver/blob/master/Quicksilver/Code-QuickStepCore/QSense.m)'s search code.
