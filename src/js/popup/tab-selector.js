@@ -50,7 +50,7 @@ define([
 				var url = tab.url;
 
 // TODO: move this to main.js
-				tab.displayURL = url.replace(ProtocolPattern, "");
+				tab.displayURL = unescape(url.replace(ProtocolPattern, ""));
 				tab.unsuspendURL = url.replace(SuspendedURLPattern, "$1");
 			});
 
@@ -271,8 +271,9 @@ define([
 					if (this.mode == "tabs") {
 						this.focusTab(state.matchingItems[state.selected], event.shiftKey);
 					} else {
+							// use cmd-enter on macOS
 						this.openBookmark(state.matchingItems[state.selected],
-							event.shiftKey, event.ctrlKey);
+							event.shiftKey, event.ctrlKey || event.metaKey);
 					}
 					event.preventDefault();
 					break;
@@ -284,6 +285,9 @@ define([
 		{
 			var selectedIndex = this.state.selected,
 				query = this.state.query,
+				selectorClassName = ["tab-selector",
+					(query == BookmarksQuery) ? "empty-bookmarks-query" :
+					(query == HistoryQuery) ? "empty-history-query" : ""].join(" "),
 				tabItems = this.state.matchingItems.map(function(tab, i) {
 					return <TabItem
 						key={tab.id}
@@ -303,7 +307,7 @@ define([
 					display: tabItems.length ? "block" : "none"
 				};
 
-			return <div className="tab-selector">
+			return <div className={selectorClassName}>
 				<input type="search"
 					ref="searchBox"
 					className="search-box"
@@ -315,6 +319,8 @@ define([
 					onChange={this.onQueryChange}
 					onKeyDown={this.onKeyDown}
 				/>
+				<div id="bookmarks-placeholder" className="command-placeholder"><b>/b</b> Search for a bookmark title or URL</div>
+				<div id="history-placeholder" className="command-placeholder"><b>/h</b> Search for a title or URL from the browser history</div>
 				<ul className="results-list"
 					style={listStyle}
 				>

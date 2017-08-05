@@ -20,7 +20,7 @@ define([
 		})
 			.then(function(historyItems) {
 				historyItems.forEach(function(item) {
-					item.displayURL = item.url.replace(ProtocolPattern, "");
+					item.displayURL = unescape(item.url.replace(ProtocolPattern, ""));
 					history.push(item);
 				});
 

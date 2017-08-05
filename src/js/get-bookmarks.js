@@ -18,7 +18,7 @@ define([
 
 				// don't return any duplicate URLs
 			if (url && !urls[url]) {
-				node.displayURL = url.replace(ProtocolPattern, "");
+				node.displayURL = unescape(url.replace(ProtocolPattern, ""));
 				urls[url] = true;
 				bookmarks.push(node);
 			} else if (node.children) {

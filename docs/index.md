@@ -35,7 +35,7 @@ If you use the handy extension [The Great Suspender](https://chrome.google.com/w
 
 Besides tabs, you can also quickly open bookmarks or pages from your browser history using *QuicKey*.  To search all of your bookmarks, type <kbd>/</kbd>&nbsp;<kbd>b</kbd>&nbsp;<kbd>space</kbd>, and then start typing part of the name or URL of a bookmark.  
    
-When you've selected the desired bookmark, press <kbd>enter</kbd> to open it in the current tab.  Press <kbd>ctrl</kbd>&nbsp;<kbd>enter</kbd> to open the bookmark in a new tab in the current window, or press <kbd>shift</kbd>&nbsp;<kbd>enter</kbd> to open the bookmark in a new window.    
+When you've selected the desired bookmark, press <kbd>enter</kbd> to open it in the current tab.  Press <kbd>ctrl</kbd>&nbsp;<kbd>enter</kbd> (<kbd>cmd</kbd>&nbsp;<kbd>enter</kbd> on macOS) to open the bookmark in a new tab in the current window, or press <kbd>shift</kbd>&nbsp;<kbd>enter</kbd> to open the bookmark in a new window.    
 
 To match a page from your history, type <kbd>/</kbd>&nbsp;<kbd>h</kbd>&nbsp;<kbd>space</kbd> and then start typing part of the name or URL of a page.  The same <kbd>ctrl</kbd>&nbsp;<kbd>enter</kbd> and <kbd>shift</kbd>&nbsp;<kbd>enter</kbd> shortcuts work with visited pages to open them in new tabs or windows.  The last 200 pages in the history are available for searching through *QuicKey*.
 

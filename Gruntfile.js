@@ -39,7 +39,7 @@ module.exports = function(grunt)
 		copy: {
 			crx: {
 				src: "build/out.crx",
-				dest: "release/KeyTab.crx"
+				dest: "release/QuicKey.crx"
 			}
 		},
 
@@ -67,7 +67,7 @@ module.exports = function(grunt)
 			pack: {
 				command: '"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" ' +
 					"--pack-extension=C:\\Projects\\Tools\\KeyTab\\keytab-extension\\build\\out " +
-					'--pack-extension-key="C:\\Projects\\Tools\\KeyTab\\keytab-extension\\KeyTab.pem"',
+					'--pack-extension-key="C:\\Projects\\Tools\\KeyTab\\keytab-extension\\QuicKey.pem"',
 				callback: function()
 				{
 					grunt.task.run(["copy:crx"]);
@@ -78,7 +78,7 @@ module.exports = function(grunt)
 		compress: {
 			main: {
 				options: {
-					archive: "release/KeyTab.zip"
+					archive: "release/QuicKey.zip"
 				},
 				files: [
 					{

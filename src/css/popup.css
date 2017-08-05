@@ -21,7 +21,7 @@ body {
 	overflow: hidden;
 }
 
-.search-box {
+.search-box, .command-placeholder {
 	font-weight: bold;
 	width: 490px;
 	height: 25px;
@@ -33,10 +33,11 @@ body {
 	background-position: 6px 4px;
 	background-size: 13px 13px;
 	background-repeat: no-repeat;
+	background-color: transparent;
 	outline: none;
 }
 
-input.search-box::-webkit-input-placeholder {
+input.search-box::-webkit-input-placeholder, .command-placeholder {
 	font-weight: normal;
 	font-style: italic;
 }
@@ -48,6 +49,37 @@ input.search-box::-webkit-search-cancel-button {
 	background-image: url(/img/clear.svg);
 	background-size: 10px 16px;
 	background-repeat: no-repeat;
+}
+
+.command-placeholder {
+	top: 0;
+	left: 0;
+	position: absolute;
+	padding-top: 1px;
+	border: none;
+	background: none;
+	display: none;
+		/* rules below are from the input placeholder CSS */
+	line-height: initial;
+	white-space: pre;
+	word-wrap: normal;
+	-webkit-user-modify: read-only;
+	overflow: hidden;
+	-webkit-text-security: none;
+	color: rgb(117, 117, 117);
+	pointer-events: none;
+}
+
+.command-placeholder b {
+	visibility: hidden;
+}
+
+.empty-bookmarks-query #bookmarks-placeholder {
+	display: block;
+}
+
+.empty-history-query #history-placeholder {
+	display: block;
 }
 
 ul.results-list {
