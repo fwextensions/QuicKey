@@ -100,7 +100,6 @@ define([
 				hitMasks = tab.hitMasks,
 				title = wrapMatches(query, tab.title, hitMasks.title),
 				url = wrapMatches(query, tab.displayURL, hitMasks.displayURL),
-				tooltip = tab.title + "\n" + tab.displayURL,
 				className = props.isSelected ? "selected" : "",
 					// look up the favicon via chrome://favicon if the tab itself
 					// doesn't have one.  we want to prioritize the tab's URL
@@ -112,10 +111,8 @@ define([
 				};
 
 				// the inner HTML below will be escaped by wrapMatches()
-// 				title={this.props.tab.score}
 			return <li className={className}
 				style={style}
-				title={tooltip}
 				onClick={this.onClick}
 				onMouseMove={this.onMouseMove}
 				onMouseEnter={this.onMouseEnter}
