@@ -60,7 +60,7 @@ define([
 		onClick: function(
 			event)
 		{
-			this.props.focusTab(this.props.tab);
+			this.props.focusTab(this.props.tab, event.shiftKey);
 		},
 
 

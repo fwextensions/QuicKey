@@ -1,11 +1,10 @@
 define([
+	"display-url",
 	"cp"
 ], function(
+	displayURL,
 	cp
 ) {
-	const ProtocolPattern = /^[^:]+:\/\//;
-
-
 	var history = [];
 
 
@@ -20,7 +19,7 @@ define([
 		})
 			.then(function(historyItems) {
 				historyItems.forEach(function(item) {
-					item.displayURL = unescape(item.url.replace(ProtocolPattern, ""));
+					item.displayURL = displayURL(item.url);
 					history.push(item);
 				});
 

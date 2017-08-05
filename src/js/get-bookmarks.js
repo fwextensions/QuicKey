@@ -1,11 +1,10 @@
 define([
+	"display-url",
 	"cp"
 ], function(
+	displayURL,
 	cp
 ) {
-	const ProtocolPattern = /^[^:]+:\/\//;
-
-
 	var bookmarks = [],
 		urls = {};
 
@@ -18,7 +17,7 @@ define([
 
 				// don't return any duplicate URLs
 			if (url && !urls[url]) {
-				node.displayURL = unescape(url.replace(ProtocolPattern, ""));
+				node.displayURL = displayURL(url);
 				urls[url] = true;
 				bookmarks.push(node);
 			} else if (node.children) {

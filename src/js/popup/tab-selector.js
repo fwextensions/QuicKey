@@ -3,6 +3,7 @@ define([
 	"quicksilver-score",
 	"get-bookmarks",
 	"get-history",
+	"display-url",
 	"react",
 	"jsx!./tab-item",
 	"lodash"
@@ -11,6 +12,7 @@ define([
 	qsScore,
 	getBookmarks,
 	getHistory,
+	displayURL,
 	React,
 	TabItem,
 	_
@@ -18,7 +20,6 @@ define([
 	const MinScore = .2,
 		MaxItems = 10,
 		SuspendedURLPattern = /^chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=(.+)$/,
-		ProtocolPattern = /^(chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=)?(https?|file):\/\//,
 		BookmarksQuery = "/b ",
 		BookmarksQueryPattern = new RegExp("^" + BookmarksQuery),
 		HistoryQuery = "/h ",
@@ -50,7 +51,7 @@ define([
 				var url = tab.url;
 
 // TODO: move this to main.js
-				tab.displayURL = unescape(url.replace(ProtocolPattern, ""));
+				tab.displayURL = displayURL(url);
 				tab.unsuspendURL = url.replace(SuspendedURLPattern, "$1");
 			});
 
