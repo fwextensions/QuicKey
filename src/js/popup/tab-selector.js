@@ -100,7 +100,7 @@ define([
 			if (tab) {
 				var updateData = { active: true };
 
-				if (unsuspend && tab.url != tab.unsuspendURL) {
+				if (unsuspend && tab.unsuspendURL) {
 						// change to the unsuspended URL
 					updateData.url = tab.unsuspendURL;
 				}
@@ -112,26 +112,28 @@ define([
 				if (tab.windowId != chrome.windows.WINDOW_ID_CURRENT) {
 					chrome.windows.update(tab.windowId, { focused: true });
 				}
-
-					// we seem to have to close the window in a timeout so that
-					// the hover state of the button gets cleared
-				setTimeout(function() { window.close(); }, 0);
 			}
 		},
 
 
-		openBookmark: function(
-			bookmark,
-			newWindow,
-			newTab)
+		openItem: function(
+			item,
+			shiftKey,
+			altKey)
 		{
-			if (bookmark) {
-				if (newWindow) {
-					chrome.windows.create({ url: bookmark.url });
-				} else if (newTab) {
-					chrome.tabs.create({ url: bookmark.url });
+			if (item) {
+				if (this.mode == "tabs") {
+						// switch to the tab
+					this.focusTab(item, shiftKey);
+				} else if (shiftKey) {
+						// open in a new window
+					chrome.windows.create({ url: item.url });
+				} else if (altKey) {
+						// open in a new tab
+					chrome.tabs.create({ url: item.url });
 				} else {
-					chrome.tabs.update({ url: bookmark.url });
+						// open in the same tab
+					chrome.tabs.update({ url: item.url });
 				}
 
 					// we seem to have to close the window in a timeout so that
@@ -144,18 +146,7 @@ define([
 		modifySelected: function(
 			delta)
 		{
-			var selected = this.state.selected,
-				maxIndex = this.state.matchingItems.length - 1;
-
-			if (!_.isNumber(selected)) {
-				if (delta > 0) {
-					selected = -1;
-				} else {
-					selected = maxIndex;
-				}
-			}
-
-			this.setSelectedIndex(selected + delta);
+			this.setSelectedIndex(this.state.selected + delta);
 		},
 
 
@@ -163,10 +154,10 @@ define([
 			selected,
 			fromMouse)
 		{
-			var maxIndex = this.state.matchingItems.length - 1;
+			var length = this.state.matchingItems.length;
 
 			if (!fromMouse || !this.ignoreMouse) {
-				selected = Math.min(Math.max(0, selected), maxIndex);
+				selected = (selected + length) % length;
 				this.setState({ selected: selected });
 			}
 		},
@@ -200,9 +191,6 @@ define([
 					self.history = history;
 				});
 			}
-
-				// including spaces in the query generally produces worse results
-			query = query.replace(WhitespacePattern, "");
 
 			promise.then(function() {
 				matchingItems = self.getMatchingItems(query);
@@ -269,13 +257,8 @@ define([
 					break;
 
 				case 13:	// enter
-					if (this.mode == "tabs") {
-						this.focusTab(state.matchingItems[state.selected], event.shiftKey);
-					} else {
-							// use cmd-enter on macOS
-						this.openBookmark(state.matchingItems[state.selected],
-							event.shiftKey, event.ctrlKey || event.metaKey);
-					}
+					this.openItem(state.matchingItems[state.selected],
+						event.shiftKey, event.ctrlKey || event.metaKey);
 					event.preventDefault();
 					break;
 			}
@@ -297,8 +280,8 @@ define([
 						isSelected={i == selectedIndex}
 						query={query}
 						ignoreMouse={this.state.ignoreMouse}
-						focusTab={this.focusTab}
 						setSelectedIndex={this.setSelectedIndex}
+						onItemClicked={this.openItem}
 						onMouseMove={this.onMouseMove}
 					/>
 				}, this),

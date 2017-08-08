@@ -60,7 +60,7 @@ define([
 		onClick: function(
 			event)
 		{
-			this.props.focusTab(this.props.tab, event.shiftKey);
+			this.props.onItemClicked(this.props.tab, event.shiftKey);
 		},
 
 
@@ -100,6 +100,7 @@ define([
 				hitMasks = tab.hitMasks,
 				title = wrapMatches(query, tab.title, hitMasks.title),
 				url = wrapMatches(query, tab.displayURL, hitMasks.displayURL),
+				tooltip = _.toPairs(tab.scores).join("\n"),
 				className = props.isSelected ? "selected" : "",
 					// look up the favicon via chrome://favicon if the tab itself
 					// doesn't have one.  we want to prioritize the tab's URL
@@ -113,6 +114,7 @@ define([
 				// the inner HTML below will be escaped by wrapMatches()
 			return <li className={className}
 				style={style}
+				title={tooltip}
 				onClick={this.onClick}
 				onMouseMove={this.onMouseMove}
 				onMouseEnter={this.onMouseEnter}

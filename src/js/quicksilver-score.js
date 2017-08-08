@@ -66,10 +66,14 @@ define(function() {
 							}
 						}
 					} else {
+// TODO: switch to / 2 to make it score like the latest Quicksilver
+// 						score -= (matchedRange.location - searchRange.location) / 2;
 						score -= matchedRange.location - searchRange.location;
 					}
 				}
 
+// TODO: limiting the multiplier reduces the scores of very long URLs
+// 				score += remainingScore * Math.min(remainingSearchRange.length, 50);
 				score += remainingScore * remainingSearchRange.length;
 				score /= searchRange.length;
 

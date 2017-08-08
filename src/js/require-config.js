@@ -7,6 +7,7 @@ require.config({
 		jsx: "lib/jsx",
 		text: "lib/text",
 		JSXTransformer: "lib/JSXTransformer",
-		lodash: "lib/lodash"
+		lodash: "lib/lodash.full"
+// 		lodash: "lib/lodash"
 	}
 });

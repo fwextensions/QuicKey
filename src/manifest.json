@@ -3,7 +3,8 @@
 	"short_name": "QuicKey",
 	"version": "0.0.1",
 	"manifest_version": 2,
-	"description": "Quickly switch tabs or access bookmarks and history via a Quicksilver-style search",
+	"description": "Switch tabs or access bookmarks and history via a Quicksilver-style search",
+	"author": "John Dunning",
 	"content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
 	"permissions": [
 		"tabs",
@@ -23,9 +24,6 @@
 		},
 		"default_title": "QuicKey",
 		"default_popup": "popup.html"
-	},
-	"background": {
-		"page": "popup.html"
 	},
 	"commands": {
 		"_execute_browser_action": {

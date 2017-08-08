@@ -59,6 +59,6 @@ To function, QuicKey needs access to your open tabs, bookmarks and history. It d
 
 ★ Support and source code
 
-For more information, check out https://fwextensions.github.io/QuicKey/
+For more information, go to https://fwextensions.github.io/QuicKey/
 
 The QuicKey source code is at https://github.com/fwextensions/QuicKey
