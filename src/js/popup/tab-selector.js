@@ -1,20 +1,20 @@
 define([
+	"react",
+	"jsx!./results-list",
 	"array-score",
 	"quicksilver-score",
 	"get-bookmarks",
 	"get-history",
 	"display-url",
-	"react",
-	"jsx!./tab-item",
 	"lodash"
 ], function(
+	React,
+	ResultsList,
 	arrayScore,
 	qsScore,
 	getBookmarks,
 	getHistory,
 	displayURL,
-	React,
-	TabItem,
 	_
 ) {
 	const MinScore = .2,
@@ -23,8 +23,7 @@ define([
 		BookmarksQuery = "/b ",
 		BookmarksQueryPattern = new RegExp("^" + BookmarksQuery),
 		HistoryQuery = "/h ",
-		HistoryQueryPattern = new RegExp("^" + HistoryQuery),
-		WhitespacePattern = /\s+/g;
+		HistoryQueryPattern = new RegExp("^" + HistoryQuery);
 
 
 		// use title and url as the two keys to score
@@ -267,29 +266,11 @@ define([
 
 		render: function()
 		{
-			var selectedIndex = this.state.selected,
-				query = this.state.query,
+			var state = this.state,
+				query = state.query,
 				selectorClassName = ["tab-selector",
 					(query == BookmarksQuery) ? "empty-bookmarks-query" :
-					(query == HistoryQuery) ? "empty-history-query" : ""].join(" "),
-				tabItems = this.state.matchingItems.map(function(tab, i) {
-					return <TabItem
-						key={tab.id}
-						tab={tab}
-						index={i}
-						isSelected={i == selectedIndex}
-						query={query}
-						ignoreMouse={this.state.ignoreMouse}
-						setSelectedIndex={this.setSelectedIndex}
-						onItemClicked={this.openItem}
-						onMouseMove={this.onMouseMove}
-					/>
-				}, this),
-					// hide the ul when the list is empty, so we don't force the
-					// popup to be taller than the input when it's first opened
-				listStyle = {
-					display: tabItems.length ? "block" : "none"
-				};
+					(query == HistoryQuery) ? "empty-history-query" : ""].join(" ");
 
 			return <div className={selectorClassName}>
 				<input type="search"
@@ -305,11 +286,15 @@ define([
 				/>
 				<div id="bookmarks-placeholder" className="command-placeholder"><b>/b</b> Search for a bookmark title or URL</div>
 				<div id="history-placeholder" className="command-placeholder"><b>/h</b> Search for a title or URL from the browser history</div>
-				<ul className="results-list"
-					style={listStyle}
-				>
-					{tabItems}
-				</ul>
+				<ResultsList
+					items={state.matchingItems}
+					query={query}
+					selectedIndex={state.selected}
+					ignoreMouse={state.ignoreMouse}
+					setSelectedIndex={this.setSelectedIndex}
+					onItemClicked={this.openItem}
+					onMouseMove={this.onMouseMove}
+				/>
 			</div>
 		}
 	});

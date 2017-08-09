@@ -53,14 +53,14 @@ define([
 	});
 
 
-	var TabItem = React.createClass({
+	var ResultsListItem = React.createClass({
 		ignoreMouse: true,
 
 
 		onClick: function(
 			event)
 		{
-			this.props.onItemClicked(this.props.tab, event.shiftKey);
+			this.props.onItemClicked(this.props.item, event.shiftKey);
 		},
 
 
@@ -95,18 +95,18 @@ define([
 		render: function()
 		{
 			var props = this.props,
-				tab = props.tab,
+				item = props.item,
 				query = props.query,
-				hitMasks = tab.hitMasks,
-				title = wrapMatches(query, tab.title, hitMasks.title),
-				url = wrapMatches(query, tab.displayURL, hitMasks.displayURL),
-				tooltip = _.toPairs(tab.scores).join("\n"),
-				className = props.isSelected ? "selected" : "",
-					// look up the favicon via chrome://favicon if the tab itself
-					// doesn't have one.  we want to prioritize the tab's URL
+				hitMasks = item.hitMasks,
+				title = wrapMatches(query, item.title, hitMasks.title),
+				url = wrapMatches(query, item.displayURL, hitMasks.displayURL),
+				tooltip = _.toPairs(item.scores).join("\n"),
+				className = (props.selectedIndex == props.index) ? "selected" : "",
+					// look up the favicon via chrome://favicon if the item itself
+					// doesn't have one.  we want to prioritize the item's URL
 					// since The Great Suspender creates faded favicons and stores
-					// them as data URIs in tab.favIconUrl.
-				faviconURL = tab.favIconUrl || FaviconURL + (tab.unsuspendURL || tab.url),
+					// them as data URIs in item.favIconUrl.
+				faviconURL = item.favIconUrl || FaviconURL + (item.unsuspendURL || item.url),
 				style = {
 					backgroundImage: "url(" + faviconURL + ")"
 				};
@@ -126,5 +126,5 @@ define([
 	});
 
 
-	return TabItem;
+	return ResultsListItem;
 });
