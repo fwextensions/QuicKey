@@ -1,5 +1,6 @@
 define([
-		// we need react here even if we're not explicitly referencing it
+		// we need react here even if we're not explicitly referencing it so
+		// that the converted JSX can use it
 	"react",
 	"jsx!./results-list-item"
 ], function(

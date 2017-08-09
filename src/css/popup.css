@@ -21,6 +21,11 @@ body {
 	overflow: hidden;
 }
 
+
+/* ===========================================================================
+    Search box
+   =========================================================================== */
+
 .search-box, .command-placeholder {
 	font-weight: bold;
 	width: 490px;
@@ -82,6 +87,11 @@ input.search-box::-webkit-search-cancel-button {
 	display: block;
 }
 
+
+/* ===========================================================================
+    Results list
+   =========================================================================== */
+
 ul.results-list {
 	list-style: none;
 	margin: 0;
@@ -92,9 +102,9 @@ ul.results-list {
 
 ul.results-list li {
 	margin: 0;
-	padding: 4px 6px 5px 27px;
+	padding: 4px 6px 5px 28px;
 	max-width: 490px;
-	background-position: 5px 5px;
+	background-position: 6px 6px;
 	background-size: 16px 16px;
 	background-repeat: no-repeat;
 	white-space: nowrap;
@@ -108,12 +118,18 @@ ul.results-list li.selected {
 
 ul.results-list li div {
 	width: 458px;
+	height: 19px;
 	text-overflow: ellipsis;
 	overflow: hidden;
 }
 
 ul.results-list li div b, .search-box {
 	color: #228;
+}
+
+ul.results-list li div.title:empty::after {
+	opacity: 0.6;
+	content: "no title"
 }
 
 ul.results-list li div.url {

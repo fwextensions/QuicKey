@@ -34,7 +34,6 @@ define([
 		mode: "tabs",
 		bookmarks: [],
 		history: [],
-		ignoreMouse: true,
 
 
 		getInitialState: function()
@@ -150,15 +149,13 @@ define([
 
 
 		setSelectedIndex: function(
-			selected,
-			fromMouse)
+			index)
 		{
 			var length = this.state.matchingItems.length;
 
-			if (!fromMouse || !this.ignoreMouse) {
-				selected = (selected + length) % length;
-				this.setState({ selected: selected });
-			}
+				// wrap around the end or beginning of the list
+			index = (index + length) % length;
+			this.setState({ selected: index });
 		},
 
 
@@ -200,13 +197,6 @@ define([
 					selected: 0
 				});
 			});
-		},
-
-
-		onMouseMove: function(
-			event)
-		{
-			this.ignoreMouse = false;
 		},
 
 
@@ -293,7 +283,6 @@ define([
 					ignoreMouse={state.ignoreMouse}
 					setSelectedIndex={this.setSelectedIndex}
 					onItemClicked={this.openItem}
-					onMouseMove={this.onMouseMove}
 				/>
 			</div>
 		}

@@ -68,14 +68,14 @@ define([
 			event)
 		{
 			if (this.ignoreMouse) {
-					// tell the list that the mouse is moving, so it no longer
-					// ignores setting the selection from onMouseEnter
-				this.props.onMouseMove(event);
+					// we'll swallow this first mousemove, since it's probably
+					// from the item being rendered under the mouse, but we'll
+					// respond to the next one
 				this.ignoreMouse = false;
 			} else if (!this.props.isSelected) {
 					// the mouse is moving over this item but it's not
 					// selected, which means this is the second mousemove
-					// event while mouseenter is still being ignored.  so
+					// event and we haven't gotten another mouseenter.  so
 					// force this item to be selected.
 				this.props.setSelectedIndex(this.props.index);
 			}
