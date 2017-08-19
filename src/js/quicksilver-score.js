@@ -21,6 +21,16 @@ define(function() {
 			return 0.9;
 		}
 
+// TODO: we may need to switch to this to get the same score as QSense.m, but right
+// now the selector expects 0 scores when there's no query
+// 		if (!abbreviation || !abbreviationRange.length) {
+// 			return 0.9;
+// 		}
+//
+// 		if (abbreviationRange.length > searchRange.length) {
+// 			return 0;
+// 		}
+
 		for (var i = abbreviationRange.length; i > 0; i--) {
 			var abbreviationSubstring = abbreviation.substr(abbreviationRange.location, i),
 				matchedRange = rangeOfString(itemString, abbreviationSubstring, searchRange);

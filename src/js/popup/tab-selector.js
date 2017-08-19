@@ -1,6 +1,8 @@
 define([
 	"react",
+	"jsx!./search-box",
 	"jsx!./results-list",
+	"jsx!./results-list-item",
 	"array-score",
 	"quicksilver-score",
 	"get-bookmarks",
@@ -9,7 +11,9 @@ define([
 	"lodash"
 ], function(
 	React,
+	SearchBox,
 	ResultsList,
+	ResultsListItem,
 	arrayScore,
 	qsScore,
 	getBookmarks,
@@ -17,7 +21,7 @@ define([
 	displayURL,
 	_
 ) {
-	const MinScore = .2,
+	const MinScore = .7,
 		MaxItems = 10,
 		SuspendedURLPattern = /^chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=(.+)$/,
 		BookmarksQuery = "/b ",
@@ -60,18 +64,6 @@ define([
 					// an initial query
 				selected: 0
 			};
-		},
-
-
-		componentDidMount: function()
-		{
-			var searchBox = this.refs.searchBox,
-				queryLength = searchBox.value.length;
-
-				// even if there's a default value, the insertion point gets set
-				// to the beginning of the input field, instead of at the end.
-				// so move it there after the field is created.
-			searchBox.setSelectionRange(queryLength, queryLength);
 		},
 
 
@@ -203,8 +195,7 @@ define([
 		onKeyDown: function(
 			event)
 		{
-			var searchBox = this.refs.searchBox,
-				query = searchBox.value,
+			var query = event.target.value,
 				state = this.state;
 
 			switch (event.which) {
@@ -213,9 +204,9 @@ define([
 							// pressing esc in an empty field should close the popup
 						window.close();
 					} else {
-							// there's a default behavior where pressing esc
-							// clears the input, but we want to control what it
-							// gets cleared to
+							// there's a default behavior where pressing esc in
+							// a search field clears the input, but we want to
+							// control what it gets cleared to
 						event.preventDefault();
 
 							// if we're searching for bookmarks, reset the query
@@ -230,7 +221,6 @@ define([
 							query = HistoryQuery;
 						}
 
-						searchBox.value = query;
 						this.onQueryChange({ target: { value: query }});
 					}
 					break;
@@ -257,26 +247,17 @@ define([
 		render: function()
 		{
 			var state = this.state,
-				query = state.query,
-				selectorClassName = ["tab-selector",
-					(query == BookmarksQuery) ? "empty-bookmarks-query" :
-					(query == HistoryQuery) ? "empty-history-query" : ""].join(" ");
+				query = state.query;
 
-			return <div className={selectorClassName}>
-				<input type="search"
-					ref="searchBox"
-					className="search-box"
-					tabIndex="0"
-					placeholder="Search for a tab title or URL"
-					spellCheck={false}
-					defaultValue={query}
-					autoFocus={true}
+			return <div>
+				<SearchBox
+					mode={this.mode}
+					query={query}
 					onChange={this.onQueryChange}
 					onKeyDown={this.onKeyDown}
 				/>
-				<div id="bookmarks-placeholder" className="command-placeholder"><b>/b</b> Search for a bookmark title or URL</div>
-				<div id="history-placeholder" className="command-placeholder"><b>/h</b> Search for a title or URL from the browser history</div>
 				<ResultsList
+					ItemComponent={ResultsListItem}
 					items={state.matchingItems}
 					query={query}
 					selectedIndex={state.selected}

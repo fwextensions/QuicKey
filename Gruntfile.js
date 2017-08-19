@@ -106,7 +106,7 @@ module.exports = function(grunt)
 	});
 
 	// the lodash grunt task doesn't seem to work
-	// node node_modules\lodash-cli\bin\lodash include=remove,escape,dropRightWhile,memoize exports=amd
+	// node node_modules\lodash-cli\bin\lodash include=remove,escape,dropRightWhile,toPairs,memoize exports=amd
 
 	grunt.loadNpmTasks("grunt-contrib-requirejs");
 	grunt.loadNpmTasks("grunt-contrib-clean");
