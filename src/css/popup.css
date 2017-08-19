@@ -63,7 +63,6 @@ input.search-box::-webkit-search-cancel-button {
 	padding-top: 1px;
 	border: none;
 	background: none;
-	display: none;
 		/* rules below are from the input placeholder CSS */
 	line-height: initial;
 	white-space: pre;
@@ -77,14 +76,6 @@ input.search-box::-webkit-search-cancel-button {
 
 .command-placeholder b {
 	visibility: hidden;
-}
-
-.empty-bookmarks-query #bookmarks-placeholder {
-	display: block;
-}
-
-.empty-history-query #history-placeholder {
-	display: block;
 }
 
 

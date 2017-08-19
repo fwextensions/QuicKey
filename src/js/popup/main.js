@@ -11,6 +11,8 @@ require([
 	cp,
 	_
 ) {
+	console.log("startup time", performance.now() - gInitTime, performance.now());
+
 	if (gClose) {
 			// the user hit esc before we started loading, so just close
 			// the popup

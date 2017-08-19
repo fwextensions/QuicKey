@@ -1,6 +1,7 @@
 var gKeyCache = [],
 	gClose = false,
-	gOnKeyDown;
+	gOnKeyDown,
+	gInitTime = performance.now();
 
 
 (function() {

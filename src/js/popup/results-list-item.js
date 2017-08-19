@@ -100,7 +100,7 @@ define([
 				hitMasks = item.hitMasks,
 				title = wrapMatches(query, item.title, hitMasks.title),
 				url = wrapMatches(query, item.displayURL, hitMasks.displayURL),
-				tooltip = _.toPairs(item.scores).join("\n"),
+				tooltip = _.toPairs(item.scores).concat(url).join("\n"),
 				className = (props.selectedIndex == props.index) ? "selected" : "",
 					// look up the favicon via chrome://favicon if the item itself
 					// doesn't have one.  we want to prioritize the item's URL
