@@ -7,9 +7,9 @@ define(function() {
 	function scoreForAbbreviation(
 		itemString,
 		abbreviation,
+		hitMask,
 		searchRange,
-		abbreviationRange,
-		hitMask)
+		abbreviationRange)
 	{
 		searchRange = searchRange || new Range(0, itemString.length);
 		abbreviationRange = abbreviationRange || new Range(0, abbreviation.length);
@@ -50,8 +50,8 @@ define(function() {
 			}
 
 			var remainingSearchRange = new Range(matchedRange.max(), searchRange.max() - matchedRange.max()),
-				remainingScore = scoreForAbbreviation(itemString, abbreviation, remainingSearchRange,
-					new Range(abbreviationRange.location + i, abbreviationRange.length - i), hitMask);
+				remainingScore = scoreForAbbreviation(itemString, abbreviation, hitMask, remainingSearchRange,
+					new Range(abbreviationRange.location + i, abbreviationRange.length - i));
 
 			if (remainingScore) {
 				var score = remainingSearchRange.location - searchRange.location;
@@ -147,7 +147,7 @@ define(function() {
 		range)
 	{
 		for (var i = range.location; i < range.max(); i++) {
-			indexes[i] = true;
+			indexes.push(i);
 		}
 
 		return indexes;

@@ -11,6 +11,9 @@ define(function() {
 			// since The Great Suspender creates faded favicons and stores
 			// them as data URIs in item.favIconUrl.
 		item.faviconURL = item.favIconUrl || FaviconURL + (item.unsuspendURL || item.url);
+
+			// add a clean displayURL to each tab that we can score against and
+			// show in the item
 		item.displayURL = unescape(item.url.replace(ProtocolPattern, ""));
 	}
 });

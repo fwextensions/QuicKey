@@ -39,9 +39,7 @@ define(function() {
 					// find the highest score for each keyed string on this item
 				item.score = keyNames.reduce(function(currentScore, key) {
 					var hitMask = [],
-							// add nulls for params that are generated within
-							// the Quicksilver scorer recursion
-						newScore = score(item[key], text, null, null, hitMask);
+						newScore = score(item[key], text, hitMask);
 
 					item.scores[key] = newScore;
 					item.hitMasks[key] = hitMask;

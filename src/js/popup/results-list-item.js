@@ -58,7 +58,6 @@ define([
 					backgroundImage: "url(" + item.faviconURL + ")"
 				};
 
-				// the inner HTML below will be escaped by wrapMatches()
 			return <li className={className}
 				style={style}
 				title={tooltip}

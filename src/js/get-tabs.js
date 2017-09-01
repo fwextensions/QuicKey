@@ -15,10 +15,9 @@ define([
 				tabs.forEach(function(tab) {
 					var url = tab.url;
 
-						// add a displayURL to each tab so that we can score against it
-						// in onQueryChange.  also add a URL without the Great Suspender
-						// preamble that we can use with chrome://favicon/ to get the
-						// site's favicon instead of the Great Suspender's, as there are
+						// add a URL without the Great Suspender preamble that
+						// we can use with chrome://favicon/ to get the site's
+						// favicon instead of the Great Suspender's, as there are
 						// times it hasn't generated a faded icon for some sites.
 						// we have to add that before calling addURLs() so that it
 						// can use it in the faviconURL.

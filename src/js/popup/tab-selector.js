@@ -7,7 +7,6 @@ define([
 	"quicksilver-score",
 	"get-bookmarks",
 	"get-history",
-	"display-url",
 	"lodash"
 ], function(
 	React,
@@ -18,7 +17,6 @@ define([
 	qsScore,
 	getBookmarks,
 	getHistory,
-	displayURL,
 	_
 ) {
 	const MinScore = .7,

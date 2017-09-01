@@ -18,31 +18,20 @@ define([
 			return string;
 		}
 
-			// start with -1 so that the first while loop below starts searching
-			// at 0
-		var index = -1,
-			indices = [],
-			strings;
+		var strings = hitMask.map(function(index, i) {
+					// escape the part before the bold char, so that any brackets
+					// in the title or URL don't get interpreted
+				var prefix = _.escape(string.slice((hitMask[i - 1] + 1) || 0, index)),
+					boldChar = string[index] && "<b>" + string[index] + "</b>";
 
-			// the hit mask contains a true wherever there was a match in the string
-		while ((index = hitMask.indexOf(true, index + 1)) > -1) {
-			indices.push(index);
-		}
-
-		strings = indices.map(function(index, i) {
-				// escape the part before the bold char, so that any brackets
-				// in the title or URL don't get interpreted
-			var prefix = _.escape(string.slice((indices[i - 1] + 1) || 0, index)),
-				boldChar = string[index] && "<b>" + string[index] + "</b>";
-
-				// use an empty string if didn't find the boldChar, so we
-				// don't append "undefined"
-			return prefix + (boldChar || "");
-		});
+					// use an empty string if didn't find the boldChar, so we
+					// don't append "undefined"
+				return prefix + (boldChar || "");
+			});
 
 			// add the part of the string after the last char match.  if the
 			// hit mask is empty, slice(NaN) will return the whole string.
-		strings.push(_.escape(string.slice(_.last(indices) + 1)));
+		strings.push(_.escape(string.slice(_.last(hitMask) + 1)));
 
 		return strings.join("");
 	}, function(query, string) {
