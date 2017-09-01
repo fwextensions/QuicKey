@@ -2,12 +2,14 @@ require([
 	"jsx!popup/tab-selector",
 	"react",
 	"react-dom",
+	"get-tabs",
 	"cp",
 	"lodash"
 ], function(
 	TabSelector,
 	React,
 	ReactDOM,
+	getTabs,
 	cp,
 	_
 ) {
@@ -22,7 +24,7 @@ require([
 	}
 
 	Promise.all([
-		cp.tabs.query({}),
+		getTabs(),
 		cp.tabs.query({
 			active: true,
 			currentWindow: true

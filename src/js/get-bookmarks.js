@@ -1,8 +1,8 @@
 define([
-	"display-url",
+	"add-urls",
 	"cp"
 ], function(
-	displayURL,
+	addURLs,
 	cp
 ) {
 	var bookmarks = [],
@@ -17,7 +17,7 @@ define([
 
 				// don't return any duplicate URLs
 			if (url && !urls[url]) {
-				node.displayURL = displayURL(url);
+				addURLs(node);
 				urls[url] = true;
 				bookmarks.push(node);
 			} else if (node.children) {
@@ -27,7 +27,7 @@ define([
 	}
 
 
-	function getBookmarks()
+	return function getBookmarks()
 	{
 		bookmarks = [];
 		urls = {};
@@ -40,7 +40,4 @@ define([
 				return bookmarks;
 			});
 	}
-
-
-	return getBookmarks;
 });

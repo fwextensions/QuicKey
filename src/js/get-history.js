@@ -1,14 +1,14 @@
 define([
-	"display-url",
+	"add-urls",
 	"cp"
 ], function(
-	displayURL,
+	addURLs,
 	cp
 ) {
 	var history = [];
 
 
-	function getHistory()
+	return function getHistory()
 	{
 		history = [];
 
@@ -19,14 +19,11 @@ define([
 		})
 			.then(function(historyItems) {
 				historyItems.forEach(function(item) {
-					item.displayURL = displayURL(item.url);
+					addURLs(item);
 					history.push(item);
 				});
 
 				return history;
 			});
 	}
-
-
-	return getHistory;
 });

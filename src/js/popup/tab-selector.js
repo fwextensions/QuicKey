@@ -23,7 +23,6 @@ define([
 ) {
 	const MinScore = .7,
 		MaxItems = 10,
-		SuspendedURLPattern = /^chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=(.+)$/,
 		BookmarksQuery = "/b ",
 		BookmarksQueryPattern = new RegExp("^" + BookmarksQuery),
 		HistoryQuery = "/h ",
@@ -43,19 +42,6 @@ define([
 		getInitialState: function()
 		{
 			var query = this.props.initialQuery;
-
-				// add a displayURL to each tab so that we can score against it
-				// in onQueryChange.  also add a URL without the Great Suspender
-				// preamble that we can use with chrome://favicon/ to get the
-				// site's favicon instead of the Great Suspender's, as there are
-				// times it hasn't generated a faded icon for some sites.
-			this.props.tabs.forEach(function(tab) {
-				var url = tab.url;
-
-// TODO: move this to main.js
-				tab.displayURL = displayURL(url);
-				tab.unsuspendURL = url.replace(SuspendedURLPattern, "$1");
-			});
 
 			return {
 				query: query,
