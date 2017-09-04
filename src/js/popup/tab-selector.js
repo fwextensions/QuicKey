@@ -4,7 +4,7 @@ define([
 	"jsx!./results-list",
 	"jsx!./results-list-item",
 	"array-score",
-	"quicksilver-score",
+	"quick-score",
 	"get-bookmarks",
 	"get-history",
 	"lodash"

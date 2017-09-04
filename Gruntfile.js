@@ -147,7 +147,7 @@ module.exports = function(grunt)
 
 	grunt.registerTask("pack", [
 		"build",
-// 		"incrementVersion",
+		"incrementVersion",
 		"clean:out",
 		"compress",
 		"exec:pack"
