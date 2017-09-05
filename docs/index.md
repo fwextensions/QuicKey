@@ -32,11 +32,6 @@ The first matched tab is selected by default, so you can just press <kbd>enter</
 Press <kbd>esc</kbd> to clear what you've typed.  If the search box is empty, then pressing <kbd>esc</kbd> will close it.
 
 
-## The Great Suspender integration
-
-If you use the handy extension [The Great Suspender](https://chrome.google.com/webstore/detail/the-great-suspender/klbibkeccnjlkjkiokjodocebajanakg?hl=en) (and you almost certainly are if you have hundreds of tabs open), then suspended tabs will have a faded icon in the list, and the original URL is shown, not that long one that you see in the location bar.  Pressing <kbd>enter</kbd> will switch to the suspended tab, but you can press <kbd>shift</kbd>&nbsp;<kbd>enter</kbd> to switch to the tab and unsuspend it in one go. Or shift-click it with the mouse.
-
-
 ## Search bookmarks
 
 Besides tabs, you can also quickly open bookmarks or pages from your browser history using *QuicKey*.  To search all of your bookmarks, type <kbd>/</kbd>&nbsp;<kbd>b</kbd>&nbsp;<kbd>space</kbd>, and then start typing part of the name or URL of a bookmark.
@@ -49,9 +44,14 @@ When you've selected the desired bookmark, press <kbd>enter</kbd> to open it in 
 To match a page from your history, type <kbd>/</kbd>&nbsp;<kbd>h</kbd>&nbsp;<kbd>space</kbd> and then start typing part of the name or URL of a page.  The same <kbd>ctrl</kbd>&nbsp;<kbd>enter</kbd> and <kbd>shift</kbd>&nbsp;<kbd>enter</kbd> shortcuts work with visited pages to open them in new tabs or windows.  The last 200 pages in the history are available for searching through *QuicKey*.
 
 
+## The Great Suspender integration
+
+If you use the handy extension [The Great Suspender](https://chrome.google.com/webstore/detail/the-great-suspender/klbibkeccnjlkjkiokjodocebajanakg?hl=en) (and you almost certainly are if you have hundreds of tabs open), then suspended tabs will have a faded icon in the list, and the original URL is shown, not that long one that you see in the location bar.  Pressing <kbd>enter</kbd> will switch to the suspended tab, but you can press <kbd>shift</kbd>&nbsp;<kbd>enter</kbd> to switch to the tab and unsuspend it in one go. Or shift-click it with the mouse.
+
+
 ## Privacy
 
-To function, *QuicKey* needs access to your open tabs, bookmarks and history. The permissions dialog says *QuicKey* can also change your bookmarks and browsing history, but it never will. It also doesn't interact with the page content in any way and doesn't transmit any information anywhere.
+To function, *QuicKey* needs access to your open tabs, bookmarks and history.  The permissions dialog says *QuicKey* can also change your bookmarks and browsing history, but it never will.  It also doesn't interact with the page content in any way and doesn't transmit any information anywhere.
 
 
 ## Feedback and bugs
