@@ -92,8 +92,21 @@ module.exports = function(grunt)
 
 		requirejs: {
 			content: { options: baseConfig }
+		},
+
+		lodash: {
+			build: {
+				dest: "src/js/lib",
+				options: {
+					exports: "amd",
+					include: "remove,escape,dropRightWhile,memoize"
+				}
+			}
 		}
 	});
+
+	// the lodash grunt task doesn't seem to work
+	// node node_modules\lodash-cli\bin\lodash include=remove,escape,dropRightWhile,toPairs,memoize exports=amd
 
 	grunt.loadNpmTasks("grunt-contrib-requirejs");
 	grunt.loadNpmTasks("grunt-contrib-clean");
@@ -102,6 +115,7 @@ module.exports = function(grunt)
 	grunt.loadNpmTasks("grunt-contrib-uglify");
 	grunt.loadNpmTasks("grunt-sync");
 	grunt.loadNpmTasks("grunt-exec");
+	grunt.loadNpmTasks("grunt-lodash");
 
 	grunt.registerTask("incrementVersion", function() {
 		var manifest = grunt.file.readJSON(buildManifestPath),

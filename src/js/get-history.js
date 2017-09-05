@@ -1,15 +1,14 @@
 define([
+	"add-urls",
 	"cp"
 ], function(
+	addURLs,
 	cp
 ) {
-	const ProtocolPattern = /^[^:]+:\/\//;
-
-
 	var history = [];
 
 
-	function getHistory()
+	return function getHistory()
 	{
 		history = [];
 
@@ -20,14 +19,11 @@ define([
 		})
 			.then(function(historyItems) {
 				historyItems.forEach(function(item) {
-					item.displayURL = unescape(item.url.replace(ProtocolPattern, ""));
+					addURLs(item);
 					history.push(item);
 				});
 
 				return history;
 			});
 	}
-
-
-	return getHistory;
 });

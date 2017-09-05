@@ -2,15 +2,19 @@ require([
 	"jsx!popup/tab-selector",
 	"react",
 	"react-dom",
+	"get-tabs",
 	"cp",
 	"lodash"
 ], function(
 	TabSelector,
 	React,
 	ReactDOM,
+	getTabs,
 	cp,
 	_
 ) {
+	console.log("startup time", performance.now() - gInitTime, performance.now());
+
 	if (gClose) {
 			// the user hit esc before we started loading, so just close
 			// the popup
@@ -20,7 +24,7 @@ require([
 	}
 
 	Promise.all([
-		cp.tabs.query({}),
+		getTabs(),
 		cp.tabs.query({
 			active: true,
 			currentWindow: true

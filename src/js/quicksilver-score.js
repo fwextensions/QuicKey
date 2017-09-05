@@ -1,4 +1,5 @@
 define(function() {
+// TODO: this misses chars at beginning of string.  but it's only used when matching subsequent chars, so does it matter?
 	var WhitespacePattern = /[-/:()<>%._=&\[\]\s]/,
 		UpperCasePattern = /[A-Z]/;
 
@@ -6,9 +7,9 @@ define(function() {
 	function scoreForAbbreviation(
 		itemString,
 		abbreviation,
+		hitMask,
 		searchRange,
-		abbreviationRange,
-		hitMask)
+		abbreviationRange)
 	{
 		searchRange = searchRange || new Range(0, itemString.length);
 		abbreviationRange = abbreviationRange || new Range(0, abbreviation.length);
@@ -20,6 +21,16 @@ define(function() {
 		if (!abbreviationRange.length) {
 			return 0.9;
 		}
+
+// TODO: we may need to switch to this to get the same score as QSense.m, but right
+// now the selector expects 0 scores when there's no query
+// 		if (!abbreviation || !abbreviationRange.length) {
+// 			return 0.9;
+// 		}
+//
+// 		if (abbreviationRange.length > searchRange.length) {
+// 			return 0;
+// 		}
 
 		for (var i = abbreviationRange.length; i > 0; i--) {
 			var abbreviationSubstring = abbreviation.substr(abbreviationRange.location, i),
@@ -39,8 +50,8 @@ define(function() {
 			}
 
 			var remainingSearchRange = new Range(matchedRange.max(), searchRange.max() - matchedRange.max()),
-				remainingScore = scoreForAbbreviation(itemString, abbreviation, remainingSearchRange,
-					new Range(abbreviationRange.location + i, abbreviationRange.length - i), hitMask);
+				remainingScore = scoreForAbbreviation(itemString, abbreviation, hitMask, remainingSearchRange,
+					new Range(abbreviationRange.location + i, abbreviationRange.length - i));
 
 			if (remainingScore) {
 				var score = remainingSearchRange.location - searchRange.location;
@@ -66,10 +77,14 @@ define(function() {
 							}
 						}
 					} else {
+// TODO: switch to / 2 to make it score like the latest Quicksilver
+// 						score -= (matchedRange.location - searchRange.location) / 2;
 						score -= matchedRange.location - searchRange.location;
 					}
 				}
 
+// TODO: limiting the multiplier reduces the scores of very long URLs
+// 				score += remainingScore * Math.min(remainingSearchRange.length, 50);
 				score += remainingScore * remainingSearchRange.length;
 				score /= searchRange.length;
 
@@ -132,7 +147,7 @@ define(function() {
 		range)
 	{
 		for (var i = range.location; i < range.max(); i++) {
-			indexes[i] = true;
+			indexes.push(i);
 		}
 
 		return indexes;

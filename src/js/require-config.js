@@ -2,7 +2,7 @@ require.config({
 	waitSeconds: 10,
 	baseUrl: "/js",
 	paths: {
-		react: "lib/react-with-addons.min",
+		react: "lib/react.min",
 		"react-dom": "lib/react-dom.min",
 		jsx: "lib/jsx",
 		text: "lib/text",

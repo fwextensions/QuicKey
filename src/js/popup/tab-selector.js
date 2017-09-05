@@ -1,29 +1,30 @@
 define([
+	"react",
+	"jsx!./search-box",
+	"jsx!./results-list",
+	"jsx!./results-list-item",
 	"array-score",
-	"quicksilver-score",
+	"quick-score",
 	"get-bookmarks",
 	"get-history",
-	"react",
-	"jsx!./tab-item",
 	"lodash"
 ], function(
+	React,
+	SearchBox,
+	ResultsList,
+	ResultsListItem,
 	arrayScore,
 	qsScore,
 	getBookmarks,
 	getHistory,
-	React,
-	TabItem,
 	_
 ) {
-	const MinScore = .2,
+	const MinScore = .5,
 		MaxItems = 10,
-		SuspendedURLPattern = /^chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=(.+)$/,
-		ProtocolPattern = /^(chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=)?(https?|file):\/\//,
 		BookmarksQuery = "/b ",
 		BookmarksQueryPattern = new RegExp("^" + BookmarksQuery),
 		HistoryQuery = "/h ",
-		HistoryQueryPattern = new RegExp("^" + HistoryQuery),
-		WhitespacePattern = /\s+/g;
+		HistoryQueryPattern = new RegExp("^" + HistoryQuery);
 
 
 		// use title and url as the two keys to score
@@ -34,25 +35,11 @@ define([
 		mode: "tabs",
 		bookmarks: [],
 		history: [],
-		ignoreMouse: true,
 
 
 		getInitialState: function()
 		{
 			var query = this.props.initialQuery;
-
-				// add a displayURL to each tab so that we can score against it
-				// in onQueryChange.  also add a URL without the Great Suspender
-				// preamble that we can use with chrome://favicon/ to get the
-				// site's favicon instead of the Great Suspender's, as there are
-				// times it hasn't generated a faded icon for some sites.
-			this.props.tabs.forEach(function(tab) {
-				var url = tab.url;
-
-// TODO: move this to main.js
-				tab.displayURL = unescape(url.replace(ProtocolPattern, ""));
-				tab.unsuspendURL = url.replace(SuspendedURLPattern, "$1");
-			});
 
 			return {
 				query: query,
@@ -64,21 +51,15 @@ define([
 		},
 
 
-		componentDidMount: function()
-		{
-			var searchBox = this.refs.searchBox,
-				queryLength = searchBox.value.length;
-
-				// even if there's a default value, the insertion point gets set
-				// to the beginning of the input field, instead of at the end.
-				// so move it there after the field is created.
-			searchBox.setSelectionRange(queryLength, queryLength);
-		},
-
-
 		getMatchingItems: function(
 			query)
 		{
+			if (!query) {
+					// short-circuit the empty query case, since quick-score now
+					// returns 0.9 as the scores for an empty query
+				return [];
+			}
+
 			var mode = this.mode,
 				items = mode == "tabs" ? this.props.tabs :
 					mode == "bookmarks" ? this.bookmarks : this.history,
@@ -99,7 +80,7 @@ define([
 			if (tab) {
 				var updateData = { active: true };
 
-				if (unsuspend && tab.url != tab.unsuspendURL) {
+				if (unsuspend && tab.unsuspendURL) {
 						// change to the unsuspended URL
 					updateData.url = tab.unsuspendURL;
 				}
@@ -111,26 +92,28 @@ define([
 				if (tab.windowId != chrome.windows.WINDOW_ID_CURRENT) {
 					chrome.windows.update(tab.windowId, { focused: true });
 				}
-
-					// we seem to have to close the window in a timeout so that
-					// the hover state of the button gets cleared
-				setTimeout(function() { window.close(); }, 0);
 			}
 		},
 
 
-		openBookmark: function(
-			bookmark,
-			newWindow,
-			newTab)
+		openItem: function(
+			item,
+			shiftKey,
+			altKey)
 		{
-			if (bookmark) {
-				if (newWindow) {
-					chrome.windows.create({ url: bookmark.url });
-				} else if (newTab) {
-					chrome.tabs.create({ url: bookmark.url });
+			if (item) {
+				if (this.mode == "tabs") {
+						// switch to the tab
+					this.focusTab(item, shiftKey);
+				} else if (shiftKey) {
+						// open in a new window
+					chrome.windows.create({ url: item.url });
+				} else if (altKey) {
+						// open in a new tab
+					chrome.tabs.create({ url: item.url });
 				} else {
-					chrome.tabs.update({ url: bookmark.url });
+						// open in the same tab
+					chrome.tabs.update({ url: item.url });
 				}
 
 					// we seem to have to close the window in a timeout so that
@@ -143,31 +126,18 @@ define([
 		modifySelected: function(
 			delta)
 		{
-			var selected = this.state.selected,
-				maxIndex = this.state.matchingItems.length - 1;
-
-			if (!_.isNumber(selected)) {
-				if (delta > 0) {
-					selected = -1;
-				} else {
-					selected = maxIndex;
-				}
-			}
-
-			this.setSelectedIndex(selected + delta);
+			this.setSelectedIndex(this.state.selected + delta);
 		},
 
 
 		setSelectedIndex: function(
-			selected,
-			fromMouse)
+			index)
 		{
-			var maxIndex = this.state.matchingItems.length - 1;
+			var length = this.state.matchingItems.length;
 
-			if (!fromMouse || !this.ignoreMouse) {
-				selected = Math.min(Math.max(0, selected), maxIndex);
-				this.setState({ selected: selected });
-			}
+				// wrap around the end or beginning of the list
+			index = (index + length) % length;
+			this.setState({ selected: index });
 		},
 
 
@@ -200,9 +170,6 @@ define([
 				});
 			}
 
-				// including spaces in the query generally produces worse results
-			query = query.replace(WhitespacePattern, "");
-
 			promise.then(function() {
 				matchingItems = self.getMatchingItems(query);
 
@@ -215,18 +182,10 @@ define([
 		},
 
 
-		onMouseMove: function(
-			event)
-		{
-			this.ignoreMouse = false;
-		},
-
-
 		onKeyDown: function(
 			event)
 		{
-			var searchBox = this.refs.searchBox,
-				query = searchBox.value,
+			var query = event.target.value,
 				state = this.state;
 
 			switch (event.which) {
@@ -235,9 +194,9 @@ define([
 							// pressing esc in an empty field should close the popup
 						window.close();
 					} else {
-							// there's a default behavior where pressing esc
-							// clears the input, but we want to control what it
-							// gets cleared to
+							// there's a default behavior where pressing esc in
+							// a search field clears the input, but we want to
+							// control what it gets cleared to
 						event.preventDefault();
 
 							// if we're searching for bookmarks, reset the query
@@ -252,7 +211,6 @@ define([
 							query = HistoryQuery;
 						}
 
-						searchBox.value = query;
 						this.onQueryChange({ target: { value: query }});
 					}
 					break;
@@ -268,13 +226,8 @@ define([
 					break;
 
 				case 13:	// enter
-					if (this.mode == "tabs") {
-						this.focusTab(state.matchingItems[state.selected], event.shiftKey);
-					} else {
-							// use cmd-enter on macOS
-						this.openBookmark(state.matchingItems[state.selected],
-							event.shiftKey, event.ctrlKey || event.metaKey);
-					}
+					this.openItem(state.matchingItems[state.selected],
+						event.shiftKey, event.ctrlKey || event.metaKey);
 					event.preventDefault();
 					break;
 			}
@@ -283,49 +236,25 @@ define([
 
 		render: function()
 		{
-			var selectedIndex = this.state.selected,
-				query = this.state.query,
-				selectorClassName = ["tab-selector",
-					(query == BookmarksQuery) ? "empty-bookmarks-query" :
-					(query == HistoryQuery) ? "empty-history-query" : ""].join(" "),
-				tabItems = this.state.matchingItems.map(function(tab, i) {
-					return <TabItem
-						key={tab.id}
-						tab={tab}
-						index={i}
-						isSelected={i == selectedIndex}
-						query={query}
-						ignoreMouse={this.state.ignoreMouse}
-						focusTab={this.focusTab}
-						setSelectedIndex={this.setSelectedIndex}
-						onMouseMove={this.onMouseMove}
-					/>
-				}, this),
-					// hide the ul when the list is empty, so we don't force the
-					// popup to be taller than the input when it's first opened
-				listStyle = {
-					display: tabItems.length ? "block" : "none"
-				};
+			var state = this.state,
+				query = state.query;
 
-			return <div className={selectorClassName}>
-				<input type="search"
-					ref="searchBox"
-					className="search-box"
-					tabIndex="0"
-					placeholder="Search for a tab title or URL"
-					spellCheck={false}
-					defaultValue={query}
-					autoFocus={true}
+			return <div>
+				<SearchBox
+					mode={this.mode}
+					query={query}
 					onChange={this.onQueryChange}
 					onKeyDown={this.onKeyDown}
 				/>
-				<div id="bookmarks-placeholder" className="command-placeholder"><b>/b</b> Search for a bookmark title or URL</div>
-				<div id="history-placeholder" className="command-placeholder"><b>/h</b> Search for a title or URL from the browser history</div>
-				<ul className="results-list"
-					style={listStyle}
-				>
-					{tabItems}
-				</ul>
+				<ResultsList
+					ItemComponent={ResultsListItem}
+					items={state.matchingItems}
+					query={query}
+					selectedIndex={state.selected}
+					ignoreMouse={state.ignoreMouse}
+					setSelectedIndex={this.setSelectedIndex}
+					onItemClicked={this.openItem}
+				/>
 			</div>
 		}
 	});
