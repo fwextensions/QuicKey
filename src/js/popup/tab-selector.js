@@ -19,7 +19,7 @@ define([
 	getHistory,
 	_
 ) {
-	const MinScore = .7,
+	const MinScore = .5,
 		MaxItems = 10,
 		BookmarksQuery = "/b ",
 		BookmarksQueryPattern = new RegExp("^" + BookmarksQuery),
@@ -54,6 +54,12 @@ define([
 		getMatchingItems: function(
 			query)
 		{
+			if (!query) {
+					// short-circuit the empty query case, since quick-score now
+					// returns 0.9 as the scores for an empty query
+				return [];
+			}
+
 			var mode = this.mode,
 				items = mode == "tabs" ? this.props.tabs :
 					mode == "bookmarks" ? this.bookmarks : this.history,
