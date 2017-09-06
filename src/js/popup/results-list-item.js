@@ -52,7 +52,8 @@ define([
 				item = props.item,
 				query = props.query,
 				hitMasks = item.hitMasks,
-				tooltip = _.toPairs(item.scores).concat(item.displayURL).join("\n"),
+				tooltip = "",
+// 				tooltip = _.toPairs(item.scores).concat(item.displayURL).join("\n"),
 				className = (props.selectedIndex == props.index) ? "selected" : "",
 				style = {
 					backgroundImage: "url(" + item.faviconURL + ")"

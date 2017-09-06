@@ -14,6 +14,6 @@ define(function() {
 
 			// add a clean displayURL to each tab that we can score against and
 			// show in the item
-		item.displayURL = unescape(item.url.replace(ProtocolPattern, ""));
+		item.displayURL = decodeURIComponent(item.url.replace(/\+/g, "%20").replace(ProtocolPattern, ""));
 	}
 });
