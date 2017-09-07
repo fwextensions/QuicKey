@@ -11,7 +11,7 @@ If you like to keep lots of tabs open in Chrome, it can quickly become difficult
 
 ## Installation
 
-Install *QuicKey* from the [Chrome Web Store]().
+Install *QuicKey* from the [Chrome Web Store](https://chrome.google.com/webstore/detail/quickey-–-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg).
 
 Once the extension is installed, you can click the <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> button on the toolbar to open the search box.  But if you're using this extension, you probably prefer using the default keyboard shortcut:
 

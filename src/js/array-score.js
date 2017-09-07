@@ -38,11 +38,16 @@ define(function() {
 			items.forEach(function(item) {
 					// find the highest score for each keyed string on this item
 				item.score = keyNames.reduce(function(currentScore, key) {
-					var hitMask = [],
+						// we use a Set for the hitMask so that indexes can only
+						// be added once
+					var hitMask = new Set(),
 						newScore = score(item[key], text, hitMask);
 
 					item.scores[key] = newScore;
-					item.hitMasks[key] = hitMask;
+
+						// convert the hitMask to an Array, which is easier to
+						// work with
+					item.hitMasks[key] = Array.from(hitMask);
 
 					return Math.max(currentScore, newScore);
 				}, 0);

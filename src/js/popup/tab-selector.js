@@ -21,6 +21,8 @@ define([
 ) {
 	const MinScore = .5,
 		MaxItems = 10,
+		MinItems = 3,
+		MinScoreDiff = .4,
 		BookmarksQuery = "/b ",
 		BookmarksQueryPattern = new RegExp("^" + BookmarksQuery),
 		HistoryQuery = "/h ",
@@ -65,9 +67,13 @@ define([
 				items = mode == "tabs" ? this.props.tabs :
 					mode == "bookmarks" ? this.bookmarks : this.history,
 				scores = scoreArray(items, query),
-					// first limit the tabs to 10, then drop barely-matching results
-				matchingItems = _.dropRightWhile(scores.slice(0, MaxItems), function(item) {
-					return item.score < MinScore;
+				firstScoresDiff = (scores.length > 1 && scores[0].score > MinScore) ?
+					(scores[0].score - scores[1].score) : 0,
+					// first limit the items to 10, then drop barely-matching
+					// results, keeping a minimum of 3, unless there's a big
+					// difference in scores between the first two items
+				matchingItems = _.dropRightWhile(scores.slice(0, MaxItems), function(item, i) {
+					return item.score < MinScore && (i + 1 > MinItems || firstScoresDiff > MinScoreDiff);
 				});
 
 			return matchingItems;

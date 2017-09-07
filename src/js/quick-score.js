@@ -50,7 +50,7 @@ define(function() {
 
 			fullMatchedRange.max(matchedRange.max());
 
-			if (hitMask) {
+			if (hitMask instanceof Set) {
 				addIndexesInRange(hitMask, matchedRange);
 			}
 
@@ -187,7 +187,7 @@ define(function() {
 		range)
 	{
 		for (var i = range.location; i < range.max(); i++) {
-			indexes.push(i);
+			indexes.add(i);
 		}
 
 		return indexes;
