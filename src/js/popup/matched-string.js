@@ -47,6 +47,9 @@ define([
 		var html = wrapMatches(props.query, props.text, props.hitMask);
 
 			// the html has been escaped by wrapMatches()
-		return <div dangerouslySetInnerHTML={{ __html: html }} />
+		return <div
+			className={props.className}
+			dangerouslySetInnerHTML={{ __html: html }}
+		/>
 	}
 });

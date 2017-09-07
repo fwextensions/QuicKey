@@ -24,7 +24,8 @@ define([
 		BookmarksQuery = "/b ",
 		BookmarksQueryPattern = new RegExp("^" + BookmarksQuery),
 		HistoryQuery = "/h ",
-		HistoryQueryPattern = new RegExp("^" + HistoryQuery);
+		HistoryQueryPattern = new RegExp("^" + HistoryQuery),
+		IsWindows = /Win/i.test(navigator.platform);
 
 
 		// use title and url as the two keys to score
@@ -239,7 +240,7 @@ define([
 			var state = this.state,
 				query = state.query;
 
-			return <div>
+			return <div className={IsWindows ? "win" : ""}>
 				<SearchBox
 					mode={this.mode}
 					query={query}
