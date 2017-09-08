@@ -7,7 +7,7 @@ Quickly switch tabs or access bookmarks and history with a Quicksilver-style sea
 
 # Description
 
-Navigate your ocean of Chrome tabs by typing part of the page's title or URL.
+Navigate your ocean of Chrome tabs by just typing part of the page's title or URL.
 
  • Press the customizable shortcut:
      • Windows: alt-Q
