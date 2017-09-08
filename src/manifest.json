@@ -1,11 +1,12 @@
 {
 	"name": "QuicKey – The quick tab switcher",
 	"short_name": "QuicKey",
-	"version": "0.0.2",
+	"version": "0.0.4",
 	"manifest_version": 2,
 	"description": "Switch tabs or access bookmarks and history with a Quicksilver-style search",
 	"author": "John Dunning",
 	"content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+	"minimum_chrome_version": "38",
 	"permissions": [
 		"tabs",
 		"bookmarks",
@@ -29,7 +30,7 @@
 		"_execute_browser_action": {
 			"suggested_key": {
 				"windows": "Alt+Q",
-				"mac": "Ctrl+Q",
+				"mac": "MacCtrl+Q",
 				"chromeos": "Alt+Q",
 				"linux": "Alt+Q"
 			}

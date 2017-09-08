@@ -1,12 +1,14 @@
 define([
 	"jsx!./matched-string",
-	"react",
-	"lodash"
+	"react"
 ], function(
 	MatchedString,
-	React,
-	_
+	React
 ) {
+	const MaxTitleLength = 70,
+		MaxURLLength = 75;
+
+
 	var ResultsListItem = React.createClass({
 		ignoreMouse: true,
 
@@ -51,8 +53,13 @@ define([
 			var props = this.props,
 				item = props.item,
 				query = props.query,
+				scores = item.scores,
 				hitMasks = item.hitMasks,
-				tooltip = _.toPairs(item.scores).concat(item.displayURL).join("\n"),
+				tooltip = [
+					item.title.length > MaxTitleLength ? item.title : "",
+					item.displayURL.length > MaxURLLength ? item.displayURL : ""
+				].join("\n"),
+// 				tooltip = _.toPairs(item.scores).concat(item.displayURL).join("\n"),
 				className = (props.selectedIndex == props.index) ? "selected" : "",
 				style = {
 					backgroundImage: "url(" + item.faviconURL + ")"
@@ -68,11 +75,13 @@ define([
 				<MatchedString className="title"
 					query={query}
 					text={item.title}
+					score={scores.title}
 					hitMask={hitMasks.title}
 				/>
 				<MatchedString className="url"
 					query={query}
 					text={item.displayURL}
+					score={scores.displayURL}
 					hitMask={hitMasks.displayURL}
 				/>
 			</li>

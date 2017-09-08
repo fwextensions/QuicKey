@@ -21,10 +21,15 @@ define([
 ) {
 	const MinScore = .5,
 		MaxItems = 10,
+		MinItems = 3,
+		MinScoreDiff = .4,
 		BookmarksQuery = "/b ",
 		BookmarksQueryPattern = new RegExp("^" + BookmarksQuery),
 		HistoryQuery = "/h ",
-		HistoryQueryPattern = new RegExp("^" + HistoryQuery);
+		HistoryQueryPattern = new RegExp("^" + HistoryQuery),
+		BHQueryPattern = /^\/[bh]$/,
+		CommandQuery = "/",
+		IsWindows = /Win/i.test(navigator.platform);
 
 
 		// use title and url as the two keys to score
@@ -64,9 +69,13 @@ define([
 				items = mode == "tabs" ? this.props.tabs :
 					mode == "bookmarks" ? this.bookmarks : this.history,
 				scores = scoreArray(items, query),
-					// first limit the tabs to 10, then drop barely-matching results
-				matchingItems = _.dropRightWhile(scores.slice(0, MaxItems), function(item) {
-					return item.score < MinScore;
+				firstScoresDiff = (scores.length > 1 && scores[0].score > MinScore) ?
+					(scores[0].score - scores[1].score) : 0,
+					// first limit the items to 10, then drop barely-matching
+					// results, keeping a minimum of 3, unless there's a big
+					// difference in scores between the first two items
+				matchingItems = _.dropRightWhile(scores.slice(0, MaxItems), function(item, i) {
+					return item.score < MinScore && (i + 1 > MinItems || firstScoresDiff > MinScoreDiff);
 				});
 
 			return matchingItems;
@@ -156,6 +165,9 @@ define([
 			} else if (HistoryQueryPattern.test(query)) {
 				this.mode = "history";
 				query = query.replace(HistoryQueryPattern, "");
+			} else if (query == CommandQuery || BHQueryPattern.test(query)) {
+				this.mode = "command";
+				query = "";
 			} else {
 				this.mode = "tabs";
 			}
@@ -199,11 +211,12 @@ define([
 							// control what it gets cleared to
 						event.preventDefault();
 
-							// if we're searching for bookmarks, reset the query
-							// to just /b, rather than clearing it, unless it's
-							// already /b, in which case, clear it
-						if (this.mode == "tabs" || query == BookmarksQuery ||
-								query == HistoryQuery) {
+							// if we're searching for bookmarks or history,
+							// reset the query to just /b or /h, rather than
+							// clearing it, unless it's already that, in which
+							// case, clear it
+						if (this.mode == "tabs" || this.mode == "command" ||
+								query == BookmarksQuery || query == HistoryQuery) {
 							query = "";
 						} else if (this.mode == "bookmarks") {
 							query = BookmarksQuery;
@@ -239,7 +252,7 @@ define([
 			var state = this.state,
 				query = state.query;
 
-			return <div>
+			return <div className={IsWindows ? "win" : ""}>
 				<SearchBox
 					mode={this.mode}
 					query={query}

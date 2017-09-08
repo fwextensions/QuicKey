@@ -9,7 +9,7 @@ define([
 		var id = props.mode + "-placeholder";
 
 		return <div id={id} className="command-placeholder">
-			<b>/{props.shortcut}</b> {props.text}
+			<b>{props.shortcut}</b> {props.text}
 		</div>
 	}
 
@@ -30,6 +30,7 @@ define([
 		render: function()
 		{
 			var props = this.props,
+				mode = props.mode,
 				query = props.query;
 
 				// we want to show the placeholders only when the user's entered
@@ -40,17 +41,19 @@ define([
 					ref="searchBox"
 					className="search-box"
 					tabIndex="0"
-					placeholder="Search for a tab title or URL"
+					placeholder="Search for a tab title or URL, or type / for more"
 					spellCheck={false}
 					autoFocus={true}
 					value={query}
 					onChange={props.onChange}
 					onKeyDown={props.onKeyDown}
 				/>
-				{props.mode == "bookmarks" && query.length == 3 &&
-					<Placeholder mode={props.mode} shortcut="b" text="Search for a bookmark title or URL" />}
-				{props.mode == "history" && query.length == 3 &&
-					<Placeholder mode={props.mode} shortcut="h" text="Search for a title or URL from the browser history" />}
+				{mode == "bookmarks" && query.length == 3 &&
+					<Placeholder mode={mode} shortcut="/b" text="Search for a bookmark title or URL" />}
+				{mode == "history" && query.length == 3 &&
+					<Placeholder mode={mode} shortcut="/h" text="Search for a title or URL from the browser history" />}
+				{mode == "command" &&
+					<Placeholder mode={mode} shortcut="/b" text="Type b for bookmark search or h for history, then a space" />}
 			</div>
 		}
 	});
