@@ -49,6 +49,7 @@ define([
 			// the html has been escaped by wrapMatches()
 		return <div
 			className={props.className}
+			data-score={props.score}
 			dangerouslySetInnerHTML={{ __html: html }}
 		/>
 	}
