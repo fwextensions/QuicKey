@@ -1,12 +1,25 @@
 define([
 	"jsx!./matched-string",
-	"react"
+	"cp",
+	"react",
+	"lodash"
 ], function(
 	MatchedString,
-	React
+	cp,
+	React,
+	_
 ) {
 	const MaxTitleLength = 70,
 		MaxURLLength = 75;
+
+
+	var IsDevMode = false;
+
+
+	cp.management.getSelf()
+		.then(function(info) {
+			IsDevMode = info.installType == "development";
+		});
 
 
 	var ResultsListItem = React.createClass({
@@ -59,11 +72,14 @@ define([
 					item.title.length > MaxTitleLength ? item.title : "",
 					item.displayURL.length > MaxURLLength ? item.displayURL : ""
 				].join("\n"),
-// 				tooltip = _.toPairs(item.scores).concat(item.displayURL).join("\n"),
 				className = (props.selectedIndex == props.index) ? "selected" : "",
 				style = {
 					backgroundImage: "url(" + item.faviconURL + ")"
 				};
+
+			if (IsDevMode) {
+				tooltip = _.toPairs(item.scores).concat(item.displayURL).join("\n") + tooltip;
+			}
 
 			return <li className={className}
 				style={style}

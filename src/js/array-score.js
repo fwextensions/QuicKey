@@ -64,8 +64,12 @@ define(function() {
 						// the length of the query, though this might still
 						// contain an extraneous hit.  and we have to sort the
 						// array with a function that correctly sorts numbers,
-						// because JavaScript.
-					item.hitMasks[key] = Array.from(hitMask).sort(compareNumbers).slice(0, text.length);
+						// because JavaScript.  if the score is 0, force the
+						// hitMask to be empty, since it could still have some
+						// partial hits in it, and we don't want to highlight
+						// just parts of the query in a result.
+					item.hitMasks[key] = (newScore == 0) ? [] :
+						Array.from(hitMask).sort(compareNumbers).slice(0, text.length);
 
 					return Math.max(currentScore, newScore);
 				}, 0);

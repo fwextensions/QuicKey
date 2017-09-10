@@ -18,7 +18,7 @@ Once the extension is installed, you can click the <img src="img/icon-38.png" st
   * Windows: <kbd>alt</kbd>&nbsp;<kbd>Q</kbd>
   * macOS: <kbd>ctrl</kbd>&nbsp;<kbd>Q</kbd>
 
-To change these, you can go to *Settings > Extensions*, scroll to the very bottom of the page, and then click *Keyboard Shortcuts*.  Or click [this link](chrome://extensions/configureCommands) to open the keyboard shortcuts dialog.  You can then select a different shortcut in the dialog.
+To change these, you can go to *Settings > Extensions*, scroll to the very bottom of the page, and then click *Keyboard Shortcuts*.  Or click [this link](chrome://extensions/configureCommands) in Chrome to open the keyboard shortcuts dialog.  You can then select a different shortcut in the dialog.
 
 If you'd like to use *QuicKey* with incognito windows as well, you'll need to enable it in *Settings > Extensions*.  Scroll down until you see *QuicKey* (or use the find function to look for it) and then click the *Allow in incognito* checkbox.
 
