@@ -1,12 +1,12 @@
 require([
-	"jsx!popup/tab-selector",
+	"jsx!popup/app",
 	"react",
 	"react-dom",
 	"get-tabs",
 	"cp",
 	"lodash"
 ], function(
-	TabSelector,
+	App,
 	React,
 	ReactDOM,
 	getTabs,
@@ -45,7 +45,7 @@ require([
 			_.remove(tabs, { id: activeTab[0].id });
 
 			ReactDOM.render(
-				React.createElement(TabSelector, {
+				React.createElement(App, {
 					tabs: tabs,
 					initialQuery: query
 				}),
