@@ -1,8 +1,10 @@
 define(function() {
 	const WhitespacePattern = /[-/:()<>%._=&\[\]\s]/,
 		UpperCasePattern = /[A-Z]/,
+		IgnoredScore = 0.9,
+		SkippedScore = 0.15,
 		LongStringLength = 101,
-		MaxMatchStartPct = .3,
+		MaxMatchStartPct = .15,
 		MinMatchDensityPct = .5,
 		BeginningOfStringPct = .1;
 
@@ -13,16 +15,16 @@ define(function() {
 		hitMask,
 		searchRange,
 		abbreviationRange,
-		originalAbbreviation,
 		fullMatchedRange)
 	{
 		searchRange = searchRange || new Range(0, itemString.length);
 		abbreviationRange = abbreviationRange || new Range(0, abbreviation.length);
-		originalAbbreviation = originalAbbreviation || abbreviation;
 		fullMatchedRange = fullMatchedRange || new Range();
 
+// TODO: why is the second test necessary?  !"" is true
 		if (!abbreviation || !abbreviationRange.length) {
-			return 0.9;
+				// deduct some points for all remaining characters
+			return IgnoredScore;
 		}
 
 		if (abbreviationRange.length > searchRange.length) {
@@ -57,7 +59,7 @@ define(function() {
 			var remainingSearchRange = new Range(matchedRange.max(), searchRange.max() - matchedRange.max()),
 				remainingScore = scoreForAbbreviation(itemString, abbreviation, hitMask, remainingSearchRange,
 					new Range(abbreviationRange.location + i, abbreviationRange.length - i),
-					originalAbbreviation, fullMatchedRange);
+					fullMatchedRange);
 
 			if (remainingScore) {
 				var score = remainingSearchRange.location - searchRange.location,
@@ -82,7 +84,7 @@ define(function() {
 								score--;
 							} else {
 // this reduces the penalty for skipped chars when we also didn't skip over any other words
-								score -= 0.15;
+								score -= SkippedScore;
 							}
 						}
 					} else if (useSkipReduction && UpperCasePattern.test(itemString.charAt(matchedRange.location))) {
@@ -90,7 +92,7 @@ define(function() {
 							if (UpperCasePattern.test(itemString.charAt(j))) {
 								score--;
 							} else {
-								score -= 0.15;
+								score -= SkippedScore;
 							}
 						}
 					} else {
@@ -102,7 +104,7 @@ define(function() {
 							// match range isn't too sparse and the whole string
 							// is not too long
 						score -= matchedRange.location - searchRange.location;
-						matchRangeDiscount = originalAbbreviation.length / fullMatchedRange.length;
+						matchRangeDiscount = abbreviation.length / fullMatchedRange.length;
 						matchRangeDiscount = (itemString.length < LongStringLength &&
 							matchStartPercentage <= BeginningOfStringPct &&
 							matchRangeDiscount >= MinMatchDensityPct) ? 1 : matchRangeDiscount;
