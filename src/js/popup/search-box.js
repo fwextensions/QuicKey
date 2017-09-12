@@ -1,6 +1,8 @@
 define([
+	"jsx!./input",
 	"react"
 ], function(
+	Input,
 	React
 ) {
 	function Placeholder(
@@ -15,15 +17,24 @@ define([
 
 
 	var SearchBox = React.createClass({
+		searchBox: null,
+
+
 		componentDidMount: function()
 		{
-			var searchBox = this.refs.searchBox,
-				queryLength = this.props.query.length;
+			var queryLength = this.props.query.length;
 
 				// even if there's a default value, the insertion point gets set
 				// to the beginning of the input field, instead of at the end.
 				// so move it there after the field is created.
-			searchBox.setSelectionRange(queryLength, queryLength);
+			this.searchBox.setSelectionRange(queryLength, queryLength);
+		},
+
+
+		handleRef: function(
+			inputComponent)
+		{
+			this.searchBox = inputComponent;
 		},
 
 
@@ -35,16 +46,21 @@ define([
 
 				// we want to show the placeholders only when the user's entered
 				// the history or bookmarks mode and the query length is 3, which
-				// is /h|b space
+				// is /h|b space.  we need to use an Input component that ignores
+				// the value prop when it's focused, so that the insertion point
+				// position isn't lost if the user moves it from the end and
+				// starts typing.  that change is forced when the app gets an
+				// esc and clears the text.
 			return <div>
-				<input type="search"
-					ref="searchBox"
+				<Input type="search"
+					ref={this.handleRef}
 					className="search-box"
 					tabIndex="0"
 					placeholder="Search for a tab title or URL, or type / for more"
 					spellCheck={false}
 					autoFocus={true}
 					value={query}
+					forceUpdate={props.forceUpdate}
 					onChange={props.onChange}
 					onKeyDown={props.onKeyDown}
 				/>

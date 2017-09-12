@@ -38,6 +38,7 @@ define([
 
 	var TabSelector = React.createClass({
 		mode: "tabs",
+		forceUpdate: false,
 		bookmarks: [],
 		history: [],
 
@@ -53,6 +54,13 @@ define([
 					// an initial query
 				selected: 0
 			};
+		},
+
+
+		componentDidUpdate: function()
+		{
+				// we only want this to be true through one render cycle
+			this.forceUpdate = false;
 		},
 
 
@@ -217,10 +225,13 @@ define([
 							// case, clear it
 						if (this.mode == "tabs" || this.mode == "command" ||
 								query == BookmarksQuery || query == HistoryQuery) {
+							this.forceUpdate = true;
 							query = "";
 						} else if (this.mode == "bookmarks") {
+							this.forceUpdate = true;
 							query = BookmarksQuery;
 						} else if (this.mode == "history") {
+							this.forceUpdate = true;
 							query = HistoryQuery;
 						}
 
@@ -255,6 +266,7 @@ define([
 			return <div className={IsWindows ? "win" : ""}>
 				<SearchBox
 					mode={this.mode}
+					forceUpdate={this.forceUpdate}
 					query={query}
 					onChange={this.onQueryChange}
 					onKeyDown={this.onKeyDown}

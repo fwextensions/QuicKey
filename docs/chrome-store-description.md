@@ -7,7 +7,7 @@ Quickly switch tabs or access bookmarks and history with a Quicksilver-style sea
 
 # Description
 
-Navigate your ocean of Chrome tabs by just typing part of the page's title or URL.
+Navigate your hundreds of Chrome tabs by typing just part of the page's title or URL!
 
  • Press the customizable shortcut:
      • Windows: alt-Q
@@ -40,7 +40,7 @@ To find a bookmark, type "/b", then a space, and then part of the bookmark's nam
 
 ★ Search the browser history
 
-To find something in the last 200 pages of your browser history, type "/h", then a space, and then part of the page's name or URL.
+To find something in the last 2000 pages of your browser history, type "/h", then a space, and then part of the page's name or URL.
 
 The same ctrl+enter and shift+enter shortcuts will open the visited page in a new tab or window.
 
