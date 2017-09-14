@@ -17,7 +17,7 @@ Navigate your hundreds of Chrome tabs by typing just part of the page's title or
 
 You can also type "/b" to search bookmarks or "/h" to search your browser history.
 
-Customize the shortcut key in Settings > Extensions > Keyboard Shortcuts.
+Customize the shortcut key in More tools > Extensions > Keyboard Shortcuts.
 
 
 ★ Fast tab switching
@@ -59,7 +59,7 @@ You can quickly close the selected tab by pressing ctrl-W (cmd-W on macOS). So y
 
 ★ Incognito mode
 
-By default, Chrome extensions are not enabled in incognito mode. If you want to use QuicKey to switch to incognito tabs as well as normal ones, go to Settings > Extensions, scroll down to QuicKey, and check the "Allow in incognito" option.
+By default, Chrome extensions are not enabled in incognito mode. If you want to use QuicKey to switch to incognito tabs as well as normal ones, go to More tools > Extensions, scroll down to QuicKey, and check the "Allow in incognito" option.
 
 
 ★ Privacy

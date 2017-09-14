@@ -270,9 +270,8 @@ define([
 				case 87:	// W
 					if ((event.ctrlKey || event.metaKey) && this.mode == "tabs") {
 						this.closeTab(state.matchingItems[state.selected]);
+						event.preventDefault();
 					}
-
-					event.preventDefault();
 					break;
 			}
 		},
