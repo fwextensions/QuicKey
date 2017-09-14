@@ -22,7 +22,7 @@ Customize the shortcut key in Settings > Extensions > Keyboard Shortcuts.
 
 ★ Fast tab switching
 
-QuicKey uses a Quicksilver-style matching algorithm, where contiguous matches at the beginning of words are ranked highly, as are matches against capital letters. So you can type just a few letters to find the right tab.
+Unlike other tab switchers, QuicKey uses a Quicksilver-style search algorithm to rank the results, so contiguous matches at the beginning of words are higher in the list, as are matches against capital letters. So you can type just a few letters to quickly find the right tab.
 
 The best match is selected by default, so you can just press enter to switch to that tab. Or press the up/down arrow keys to move to other results. Or just click one.
 
@@ -50,6 +50,16 @@ The same ctrl+enter and shift+enter shortcuts will open the visited page in a ne
 If you use the handy extension "The Great Suspender", then suspended tabs will have a faded icon in the list, and the original URL is shown (not that long one that you see in the location bar).
 
 Press shift+enter to switch to a tab and unsuspend it in one go. Or shift-click it with the mouse.
+
+
+★ Close tabs
+
+You can quickly close the selected tab by pressing ctrl-W (cmd-W on macOS). So you could type "docg" to match all of your Google Docs tabs and then quickly close each one.
+
+
+★ Incognito mode
+
+By default, Chrome extensions are not enabled in incognito mode. If you want to use QuicKey to switch to incognito tabs as well as normal ones, go to Settings > Extensions, scroll down to QuicKey, and check the "Allow in incognito" option.
 
 
 ★ Privacy

@@ -113,6 +113,21 @@ define([
 		},
 
 
+		closeTab: function(
+			tab)
+		{
+			if (tab) {
+				chrome.tabs.remove(tab.id);
+				_.pull(this.props.tabs, tab);
+
+					// update the list to show the remaining matching tabs
+				this.setState({
+					matchingItems: this.getMatchingItems(this.state.query)
+				});
+			}
+		},
+
+
 		openItem: function(
 			item,
 			shiftKey,
@@ -163,7 +178,6 @@ define([
 		{
 			var query = event.target.value,
 				queryString = query,
-				matchingItems,
 				promise = Promise.resolve(),
 				self = this;
 
@@ -191,11 +205,9 @@ define([
 			}
 
 			promise.then(function() {
-				matchingItems = self.getMatchingItems(query);
-
 				self.setState({
 					query: queryString,
-					matchingItems: matchingItems,
+					matchingItems: self.getMatchingItems(query),
 					selected: 0
 				});
 			});
@@ -252,6 +264,14 @@ define([
 				case 13:	// enter
 					this.openItem(state.matchingItems[state.selected],
 						event.shiftKey, event.ctrlKey || event.metaKey);
+					event.preventDefault();
+					break;
+
+				case 87:	// W
+					if ((event.ctrlKey || event.metaKey) && this.mode == "tabs") {
+						this.closeTab(state.matchingItems[state.selected]);
+					}
+
 					event.preventDefault();
 					break;
 			}
