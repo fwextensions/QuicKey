@@ -18,14 +18,12 @@ Once the extension is installed, you can click the <img src="img/icon-38.png" st
   * Windows: <kbd>alt</kbd>&nbsp;<kbd>Q</kbd>
   * macOS: <kbd>ctrl</kbd>&nbsp;<kbd>Q</kbd>
 
-To change these, you can go to *Settings > Extensions*, scroll to the very bottom of the page, and then click *Keyboard Shortcuts*.  Or click [this link](chrome://extensions/configureCommands) in Chrome to open the keyboard shortcuts dialog.  You can then select a different shortcut in the dialog.
-
-If you'd like to use *QuicKey* with incognito windows as well, you'll need to enable it in *Settings > Extensions*.  Scroll down until you see *QuicKey* (or use the find function to look for it) and then click the *Allow in incognito* checkbox.
+To change these, you can go to *More tools > Extensions*, scroll to the very bottom of the page, and then click *Keyboard Shortcuts*.  Or click [this link](chrome://extensions/configureCommands) in Chrome to open the keyboard shortcuts dialog.  You can then select a different shortcut in the dialog.
 
 
 ## Fast tab switching
 
-When you've opened the *QuicKey* search box via the shortcut key or by clicking its icon, type a few letters of the title or URL of the tab you're looking for.  *QuicKey* uses a [Quicksilver](https://github.com/quicksilver/Quicksilver)-style matching algorithm, where contiguous matches at the beginning of words are ranked highly, as are matches against capital letters at the beginning of words.  This approach should let you type just a few letters to find the right tab.
+When you've opened the *QuicKey* search box via the shortcut key or by clicking its icon, type a few letters of the title or URL of the tab you're looking for.  Unlike other tab switchers, *QuicKey* uses a [Quicksilver](https://github.com/quicksilver/Quicksilver)-style search algorithm to rank the results, where contiguous matches at the beginning of words are higher in the list, as are matches against capital letters at the beginning of words.  So you can type just a few letters to quickly find the right tab.
 
 The first matched tab is selected by default, so you can just press <kbd>enter</kbd> to switch to it.  Or press the <kbd>&#8593;</kbd> or <kbd>&#8595;</kbd> key to move to other results.  You can also click the desired tab using the mouse.
 
@@ -47,6 +45,16 @@ To match a page from your history, type <kbd>/</kbd>&nbsp;<kbd>h</kbd>&nbsp;<kbd
 ## The Great Suspender integration
 
 If you use the handy extension [The Great Suspender](https://chrome.google.com/webstore/detail/the-great-suspender/klbibkeccnjlkjkiokjodocebajanakg?hl=en) (and you almost certainly are if you have hundreds of tabs open), then suspended tabs will have a faded icon in the list, and the original URL is shown, not that long one that you see in the location bar.  Pressing <kbd>enter</kbd> will switch to the suspended tab, but you can press <kbd>shift</kbd>&nbsp;<kbd>enter</kbd> to switch to the tab and unsuspend it in one go. Or shift-click it with the mouse.
+
+
+## Close tabs
+
+You can quickly close the selected tab by pressing <kbd>ctrl-W</kbd> (<kbd>cmd-W</kbd> on macOS). So you could type "docg" to match all of your Google Docs tabs and then quickly close each one.
+
+
+## Incognito mode
+
+By default, Chrome extensions are not enabled in incognito mode.  If you want to use *QuicKey* to switch to incognito tabs as well as normal ones, go to *More tools > Extensions*, scroll down to *QuicKey*, and check the "Allow in incognito" option.  Or click [this link](chrome://extensions/?id=ldlghkoiihaelfnggonhjnfiabmaficg) in Chrome to navigate directly to the extension after you've installed it.
 
 
 ## Privacy

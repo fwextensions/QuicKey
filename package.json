@@ -19,6 +19,7 @@
     "grunt-lodash": "^0.5.1",
     "grunt-sync": "^0.2.2",
     "lodash": "^2.4.1",
-    "lodash-cli": "^4.17.4"
+    "lodash-cli": "^4.17.4",
+    "react-virtualized": "^9.9.0"
   }
 }
