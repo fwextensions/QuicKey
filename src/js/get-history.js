@@ -28,7 +28,9 @@ define([
 
 
 	var Continue = {}; // empty object serves as unique value
-	var again = () => Continue;
+
+	function again() { return Continue; }
+// 	var again = () => Continue;
 
 	function repeat(
 		fn)
@@ -60,7 +62,7 @@ define([
 	{
 		history = [];
 
-		return repeat(again => {
+		return repeat(function(again) {
 			var endTime = history.length && history[history.length - 1].lastVisitTime || 0;
 
 			return searchHistory(endTime)

@@ -78,7 +78,8 @@ define([
 				};
 
 			if (IsDevMode) {
-				tooltip = _.toPairs(item.scores).map(a => a.join(": ")).join("\n") + tooltip;
+				tooltip = _.toPairs(item.scores)
+					.map(function(a) { return a.join(": "); }).join("\n") + tooltip;
 			}
 
 			return <li className={className}
