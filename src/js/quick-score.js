@@ -3,7 +3,7 @@ define(function() {
 		UpperCasePattern = /[A-Z]/,
 		IgnoredScore = 0.9,
 		SkippedScore = 0.15,
-		LongStringLength = 101,
+		LongStringLength = 151,
 		MaxMatchStartPct = .15,
 		MinMatchDensityPct = .5,
 		BeginningOfStringPct = .1;
@@ -111,7 +111,8 @@ define(function() {
 					}
 				}
 
-				score += remainingScore * remainingSearchRange.length *
+					// discount the scores of very long strings
+				score += remainingScore * Math.min(remainingSearchRange.length, LongStringLength) *
 					matchRangeDiscount * matchStartDiscount;
 				score /= searchRange.length;
 

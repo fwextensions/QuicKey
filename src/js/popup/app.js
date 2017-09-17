@@ -19,7 +19,8 @@ define([
 	getHistory,
 	_
 ) {
-	const MinScore = .5,
+	const MinScore = .15,
+		NearlyZeroScore = .05,
 		MaxItems = 10,
 		MinItems = 3,
 		MinScoreDiff = .4,
@@ -78,12 +79,13 @@ define([
 					mode == "bookmarks" ? this.bookmarks : this.history,
 				scores = scoreArray(items, query),
 				firstScoresDiff = (scores.length > 1 && scores[0].score > MinScore) ?
-					(scores[0].score - scores[1].score) : 0,
-					// first limit the items to 10, then drop barely-matching
-					// results, keeping a minimum of 3, unless there's a big
-					// difference in scores between the first two items
-				matchingItems = _.dropRightWhile(scores.slice(0, MaxItems), function(item, i) {
-					return item.score < MinScore && (i + 1 > MinItems || firstScoresDiff > MinScoreDiff);
+					(scores[0].score - scores[1].score) : 0;
+					// drop barely-matching results, keeping a minimum of 3,
+					// unless there's a big difference in scores between the
+					// first two items, which may mean we need a longer tail
+				matchingItems = _.dropRightWhile(scores, function(item, i) {
+					return item.score < NearlyZeroScore ||
+						(item.score < MinScore && (i + 1 > MinItems || firstScoresDiff > MinScoreDiff));
 				});
 
 			return matchingItems;
@@ -169,6 +171,7 @@ define([
 
 				// wrap around the end or beginning of the list
 			index = (index + length) % length;
+
 			this.setState({ selected: index });
 		},
 

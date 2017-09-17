@@ -20,8 +20,13 @@ define([
 						// favicon instead of the Great Suspender's, as there are
 						// times it hasn't generated a faded icon for some sites.
 						// we have to add that before calling addURLs() so that it
-						// can use it in the faviconURL.
-					tab.unsuspendURL = url.replace(SuspendedURLPattern, "$1");
+						// can use it in the faviconURL.  we also only add it if
+						// the tab is suspended, so ResultsListItem can detect that
+						// and fade the icon.
+					if (SuspendedURLPattern.test(url)) {
+						tab.unsuspendURL = url.replace(SuspendedURLPattern, "$1");
+					}
+
 					addURLs(tab);
 				});
 
