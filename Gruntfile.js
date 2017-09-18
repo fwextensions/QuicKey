@@ -3,8 +3,12 @@ module.exports = function(grunt)
 	var baseConfig = {
 			mainConfigFile: "src/js/require-config.js",
 			baseUrl: "src/js",
-				// specify the location of the main module
-			include: "popup/main",
+				// specify the location of the main module.  we also have to
+				// include the require-config file, since it maps the names
+				// used by ReactVirtualized for React and ReactDOM to those
+				// used by the rest of the app, and the optimizer doesn't include
+				// that map by default.
+			include: ["require-config", "popup/main"],
 			out: "build/out/js/popup/main.js",
 				// make sure the jsx plugin is excluded, so the JSXTransformer
 				// isn't included

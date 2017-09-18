@@ -19,7 +19,8 @@ define([
 	getHistory,
 	_
 ) {
-	const MinScore = .5,
+	const MinScore = .15,
+		NearlyZeroScore = .05,
 		MaxItems = 10,
 		MinItems = 3,
 		MinScoreDiff = .4,
@@ -41,6 +42,7 @@ define([
 		forceUpdate: false,
 		bookmarks: [],
 		history: [],
+		resultsList: null,
 
 
 		getInitialState: function()
@@ -78,12 +80,13 @@ define([
 					mode == "bookmarks" ? this.bookmarks : this.history,
 				scores = scoreArray(items, query),
 				firstScoresDiff = (scores.length > 1 && scores[0].score > MinScore) ?
-					(scores[0].score - scores[1].score) : 0,
-					// first limit the items to 10, then drop barely-matching
-					// results, keeping a minimum of 3, unless there's a big
-					// difference in scores between the first two items
-				matchingItems = _.dropRightWhile(scores.slice(0, MaxItems), function(item, i) {
-					return item.score < MinScore && (i + 1 > MinItems || firstScoresDiff > MinScoreDiff);
+					(scores[0].score - scores[1].score) : 0;
+					// drop barely-matching results, keeping a minimum of 3,
+					// unless there's a big difference in scores between the
+					// first two items, which may mean we need a longer tail
+				matchingItems = _.dropRightWhile(scores, function(item, i) {
+					return item.score < NearlyZeroScore ||
+						(item.score < MinScore && (i + 1 > MinItems || firstScoresDiff > MinScoreDiff));
 				});
 
 			return matchingItems;
@@ -169,7 +172,15 @@ define([
 
 				// wrap around the end or beginning of the list
 			index = (index + length) % length;
+
 			this.setState({ selected: index });
+		},
+
+
+		handleListRef: function(
+			resultsList)
+		{
+			this.resultsList = resultsList;
 		},
 
 
@@ -220,8 +231,8 @@ define([
 			var query = event.target.value,
 				state = this.state;
 
-			switch (event.which) {
-				case 27:	// escape
+			switch (event.key) {
+				case "Escape":
 					if (!query) {
 							// pressing esc in an empty field should close the popup
 						window.close();
@@ -251,23 +262,43 @@ define([
 					}
 					break;
 
-				case 38:	// up arrow
+				case "ArrowUp":
 					this.modifySelected(-1);
 					event.preventDefault();
 					break;
 
-				case 40:	// down arrow
+				case "ArrowDown":
 					this.modifySelected(1);
 					event.preventDefault();
 					break;
 
-				case 13:	// enter
+				case "PageDown":
+					this.resultsList.scrollByPage("down");
+					event.preventDefault();
+					break;
+
+				case "PageUp":
+					this.resultsList.scrollByPage("up");
+					event.preventDefault();
+					break;
+
+				case "Home":
+					this.setSelectedIndex(0);
+					event.preventDefault();
+					break;
+
+				case "End":
+					this.setSelectedIndex(this.state.matchingItems.length - 1);
+					event.preventDefault();
+					break;
+
+				case "Enter":
 					this.openItem(state.matchingItems[state.selected],
 						event.shiftKey, event.ctrlKey || event.metaKey);
 					event.preventDefault();
 					break;
 
-				case 87:	// W
+				case "w":
 					if ((event.ctrlKey || event.metaKey) && this.mode == "tabs") {
 						this.closeTab(state.matchingItems[state.selected]);
 						event.preventDefault();
@@ -291,11 +322,12 @@ define([
 					onKeyDown={this.onKeyDown}
 				/>
 				<ResultsList
+					ref={this.handleListRef}
 					ItemComponent={ResultsListItem}
 					items={state.matchingItems}
 					query={query}
+					maxItems={MaxItems}
 					selectedIndex={state.selected}
-					ignoreMouse={state.ignoreMouse}
 					setSelectedIndex={this.setSelectedIndex}
 					onItemClicked={this.openItem}
 				/>

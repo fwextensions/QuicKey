@@ -18,7 +18,7 @@ Once the extension is installed, you can click the <img src="img/icon-38.png" st
   * Windows: <kbd>alt</kbd>&nbsp;<kbd>Q</kbd>
   * macOS: <kbd>ctrl</kbd>&nbsp;<kbd>Q</kbd>
 
-To change these, you can go to *More tools > Extensions*, scroll to the very bottom of the page, and then click *Keyboard Shortcuts*.  Or click [this link](chrome://extensions/configureCommands) in Chrome to open the keyboard shortcuts dialog.  You can then select a different shortcut in the dialog.
+To change these, you can go to *More tools > Extensions*, scroll to the very bottom of the page, and then click *Keyboard Shortcuts*.
 
 
 ## Fast tab switching
@@ -46,15 +46,17 @@ To match a page from your history, type <kbd>/</kbd>&nbsp;<kbd>h</kbd>&nbsp;<kbd
 
 If you use the handy extension [The Great Suspender](https://chrome.google.com/webstore/detail/the-great-suspender/klbibkeccnjlkjkiokjodocebajanakg?hl=en) (and you almost certainly are if you have hundreds of tabs open), then suspended tabs will have a faded icon in the list, and the original URL is shown, not that long one that you see in the location bar.  Pressing <kbd>enter</kbd> will switch to the suspended tab, but you can press <kbd>shift</kbd>&nbsp;<kbd>enter</kbd> to switch to the tab and unsuspend it in one go. Or shift-click it with the mouse.
 
+Sometimes The Great Suspender seems to forget the page's favicon and just shows its own in the tab.  In that case, *QuicKey* will try to show the correct favicon.
+
 
 ## Close tabs
 
-You can quickly close the selected tab by pressing <kbd>ctrl-W</kbd> (<kbd>cmd-W</kbd> on macOS). So you could type "docg" to match all of your Google Docs tabs and then quickly close each one.
+You can quickly close the selected tab by pressing <kbd>ctrl-W</kbd> (<kbd>cmd-W</kbd> on macOS). So you could type "docg" to match all of your Google Docs URLs and then quickly close each one.
 
 
 ## Incognito mode
 
-By default, Chrome extensions are not enabled in incognito mode.  If you want to use *QuicKey* to switch to incognito tabs as well as normal ones, go to *More tools > Extensions*, scroll down to *QuicKey*, and check the "Allow in incognito" option.  Or click [this link](chrome://extensions/?id=ldlghkoiihaelfnggonhjnfiabmaficg) in Chrome to navigate directly to the extension after you've installed it.
+By default, Chrome extensions are not enabled in incognito mode.  If you want to use *QuicKey* to switch to incognito tabs as well as normal ones, go to *More tools > Extensions*, scroll down to *QuicKey*, and check the "Allow in incognito" option.
 
 
 ## Privacy

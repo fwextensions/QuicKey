@@ -10,17 +10,17 @@ define([
 		input: null,
 
 
-		getDefaultProps()
+		getDefaultProps: function()
 		{
 			return {
-				onChange() {},
-				onFocus() {},
-				onBlur() {}
+				onChange: function() {},
+				onFocus: function() {},
+				onBlur: function() {}
 			};
 		},
 
 
-		getInitialState()
+		getInitialState: function()
 		{
 			return {
 				isFocused: false,
@@ -29,17 +29,17 @@ define([
 		},
 
 
-		componentWillReceiveProps(nextProps)
+		componentWillReceiveProps: function(nextProps)
 		{
 				// the parent can pass forceUpdate to force the input's value
 				// to change even if it's focused
-	if (!this.state.isFocused || nextProps.forceUpdate) {
-		this.setState({ currentValue: nextProps.value });
-	}
+			if (!this.state.isFocused || nextProps.forceUpdate) {
+				this.setState({ currentValue: nextProps.value });
+			}
 		},
 
 
-		setSelectionRange(start, end)
+		setSelectionRange: function(start, end)
 		{
 			if (this.input) {
 				this.input.setSelectionRange(start, end);
@@ -47,13 +47,13 @@ define([
 		},
 
 
-		handleRef(input)
+		handleRef: function(input)
 		{
 			this.input = input;
 		},
 
 
-		handleChange(e)
+		handleChange: function(e)
 		{
 			this.setState({ currentValue: e.target.value });
 			e.persist();
@@ -61,7 +61,7 @@ define([
 		},
 
 
-		handleFocus(e)
+		handleFocus: function(e)
 		{
 			this.setState({ isFocused: true });
 			e.persist();
@@ -69,7 +69,7 @@ define([
 		},
 
 
-		handleBlur(e)
+		handleBlur: function(e)
 		{
 			this.setState({ isFocused: false });
 			e.persist();
@@ -77,7 +77,7 @@ define([
 		},
 
 
-		render()
+		render: function()
 		{
 			return <input
 				{...this.props}
