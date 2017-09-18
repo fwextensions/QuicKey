@@ -96,7 +96,7 @@ define([
 
 			if (IsDevMode) {
 				tooltip = _.toPairs(item.scores)
-					.map(function(a) { return a.join(": "); }).join("\n") + tooltip;
+					.map(function(a) { return a.join(": "); }).join("\n") + "\n" + tooltip;
 			}
 
 			if (item.unsuspendURL && !item.favIconUrl) {

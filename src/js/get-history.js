@@ -5,32 +5,15 @@ define([
 	addURLs,
 	cp
 ) {
+		// empty object serves as unique value
+	const Continue = {};
+
+
 	var history = [];
 
 
-	function promiseWhile(
-		condition,
-		action,
-		value)
-	{
-		return Promise.resolve(value)
-			.then(function(value) {
-				if (!condition(value)) {
-					return Promise.resolve(history);
-				} else {
-					return action(value)
-						.then(function(value) {
-							return promiseWhile(condition, action, value);
-						});
-				}
-			});
-	}
-
-
-	var Continue = {}; // empty object serves as unique value
-
 	function again() { return Continue; }
-// 	var again = () => Continue;
+
 
 	function repeat(
 		fn)
@@ -39,9 +22,6 @@ define([
 			return val === Continue && repeat(fn) || val;
 		});
 	}
-
-// 	var repeat = fn => Promise.try(fn, again)
-// 		.then(val => val === Continue && repeat(fn) || val);
 
 
 	function searchHistory(
@@ -79,75 +59,5 @@ define([
 					}
 				});
 		});
-
-// 		return searchHistory()
-// 			.then(function(historyItems) {
-// 				historyItems.forEach(function(item) {
-// 					addURLs(item);
-// 					history.push(item);
-// 				});
-//
-// 				if (historyItems && historyItems.length) {
-// 					return searchHistory(historyItems[historyItems.length - 1].lastVisitTime);
-// 				} else {
-// 					return history;
-// 				}
-// 			});
-
-		return promiseWhile(
-			function(historyItems) {
-				return historyItems && historyItems.length;
-			},
-			function(historyItems) {
-				historyItems.forEach(function(item) {
-					addURLs(item);
-					history.push(item);
-				});
-
-				return historyItems;
-// 				return searchHistory(historyItems[historyItems.length - 1].lastVisitTime);
-			},
-			searchHistory()
-		)
 	}
-
-// 	return function getHistory()
-// 	{
-// 		history = [];
-//
-// 		return promiseWhile(
-// 			function(historyItems) {
-// 				return historyItems && historyItems.length;
-// 			},
-// 			function(historyItems) {
-// 				historyItems.forEach(function(item) {
-// 					addURLs(item);
-// 					history.push(item);
-// 				});
-//
-// 				return searchHistory(historyItems[historyItems.length - 1].lastVisitTime);
-// 			},
-// 			searchHistory()
-// 		)
-// 	}
-
-// 	return function getHistory()
-// 	{
-// 		history = [];
-//
-// 		return cp.history.search({
-// 			text: "",
-// 			startTime: 0,
-// 			maxResults: 10
-// // 			maxResults: 500
-// 		})
-// 			.then(function(historyItems) {
-// 				historyItems.forEach(function(item) {
-// 					addURLs(item);
-// 					history.push(item);
-// 				});
-//
-// 				return history;
-// 			});
-// 	}
 });

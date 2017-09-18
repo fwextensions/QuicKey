@@ -42,6 +42,7 @@ define([
 		forceUpdate: false,
 		bookmarks: [],
 		history: [],
+		resultsList: null,
 
 
 		getInitialState: function()
@@ -176,6 +177,13 @@ define([
 		},
 
 
+		handleListRef: function(
+			resultsList)
+		{
+			this.resultsList = resultsList;
+		},
+
+
 		onQueryChange: function(
 			event)
 		{
@@ -223,8 +231,8 @@ define([
 			var query = event.target.value,
 				state = this.state;
 
-			switch (event.which) {
-				case 27:	// escape
+			switch (event.key) {
+				case "Escape":
 					if (!query) {
 							// pressing esc in an empty field should close the popup
 						window.close();
@@ -254,23 +262,43 @@ define([
 					}
 					break;
 
-				case 38:	// up arrow
+				case "ArrowUp":
 					this.modifySelected(-1);
 					event.preventDefault();
 					break;
 
-				case 40:	// down arrow
+				case "ArrowDown":
 					this.modifySelected(1);
 					event.preventDefault();
 					break;
 
-				case 13:	// enter
+				case "PageDown":
+					this.resultsList.scrollByPage("down");
+					event.preventDefault();
+					break;
+
+				case "PageUp":
+					this.resultsList.scrollByPage("up");
+					event.preventDefault();
+					break;
+
+				case "Home":
+					this.setSelectedIndex(0);
+					event.preventDefault();
+					break;
+
+				case "End":
+					this.setSelectedIndex(this.state.matchingItems.length - 1);
+					event.preventDefault();
+					break;
+
+				case "Enter":
 					this.openItem(state.matchingItems[state.selected],
 						event.shiftKey, event.ctrlKey || event.metaKey);
 					event.preventDefault();
 					break;
 
-				case 87:	// W
+				case "w":
 					if ((event.ctrlKey || event.metaKey) && this.mode == "tabs") {
 						this.closeTab(state.matchingItems[state.selected]);
 						event.preventDefault();
@@ -294,11 +322,12 @@ define([
 					onKeyDown={this.onKeyDown}
 				/>
 				<ResultsList
+					ref={this.handleListRef}
 					ItemComponent={ResultsListItem}
 					items={state.matchingItems}
 					query={query}
+					maxItems={MaxItems}
 					selectedIndex={state.selected}
-					ignoreMouse={state.ignoreMouse}
 					setSelectedIndex={this.setSelectedIndex}
 					onItemClicked={this.openItem}
 				/>
