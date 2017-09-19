@@ -40,8 +40,9 @@ define([
 	var TabSelector = React.createClass({
 		mode: "tabs",
 		forceUpdate: false,
-		bookmarks: [],
-		history: [],
+		bookmarks: null,
+		history: null,
+		bufferedQuery: "",
 		resultsList: null,
 
 
@@ -177,6 +178,58 @@ define([
 		},
 
 
+		setStateFromQuery: function(
+			strings)
+		{
+			this.setState({
+				matchingItems: this.getMatchingItems(strings[0]),
+				query: strings[1],
+				selected: 0
+			});
+		},
+
+
+		loadPromisedItems: function(
+			itemName,
+			originalQuery,
+			forcedQuery,
+			forcedQueryPattern,
+			loader)
+		{
+				// default the buffer to the query we've captured so far
+			this.bufferedQuery = this.bufferedQuery || originalQuery;
+
+				// force the input to update to show just /b or /h
+			this.forceUpdate = true;
+			this.setState({
+				query: forcedQuery
+			});
+
+				// if the bookmarks or history are null, set them to the promise
+				// returned from the loader function so we only call it once
+			if (!this[itemName]) {
+				this[itemName] = loader().then(function(items) {
+					var bufferedQuery = this.bufferedQuery;
+
+						// store the result
+					this[itemName] = items;
+
+						// force the input to update with the buffered string
+						// when the query state is set by setStateFromQuery()
+						// after we return
+					this.forceUpdate = true;
+					this.bufferedQuery = "";
+
+						// strip the /b or /h out of the buffered query again
+					return [bufferedQuery.replace(forcedQueryPattern, ""), bufferedQuery];
+				}.bind(this));
+			}
+
+				// return the promise
+			return this[itemName];
+		},
+
+
 		handleListRef: function(
 			resultsList)
 		{
@@ -188,40 +241,47 @@ define([
 			event)
 		{
 			var query = event.target.value,
-				queryString = query,
-				promise = Promise.resolve(),
-				self = this;
+					// remember the original typed value in case it matches a
+					// special mode below and we have to trip out the / part in
+					// order to match the items against it
+				originalQuery = query;
 
 			if (BookmarksQueryPattern.test(query)) {
 				this.mode = "bookmarks";
 				query = query.replace(BookmarksQueryPattern, "");
+
+					// we haven't fetched the bookmarks yet or are in the process,
+					// so this method will force the search box to just show /b
+					// and return a promise that will resolve to the bookmarks
+				if (!this.bookmarks || this.bookmarks instanceof Promise) {
+					this.loadPromisedItems("bookmarks", originalQuery, BookmarksQuery,
+							BookmarksQueryPattern, getBookmarks)
+						.then(this.setStateFromQuery);
+
+					return;
+				}
 			} else if (HistoryQueryPattern.test(query)) {
 				this.mode = "history";
 				query = query.replace(HistoryQueryPattern, "");
+
+					// same as bookmarks branch above
+				if (!this.history || this.history instanceof Promise) {
+					this.loadPromisedItems("history", originalQuery, HistoryQuery,
+							HistoryQueryPattern, getHistory)
+						.then(this.setStateFromQuery);
+
+					return;
+				}
 			} else if (query == CommandQuery || BHQueryPattern.test(query)) {
+					// we don't know if the user's going to type b or h, so
+					// don't match any items
 				this.mode = "command";
 				query = "";
 			} else {
 				this.mode = "tabs";
 			}
 
-			if (this.mode == "bookmarks" && !this.bookmarks.length) {
-				promise = getBookmarks().then(function(bookmarks) {
-					self.bookmarks = bookmarks;
-				});
-			} else if (this.mode == "history" && !this.history.length) {
-				promise = getHistory().then(function(history) {
-					self.history = history;
-				});
-			}
-
-			promise.then(function() {
-				self.setState({
-					query: queryString,
-					matchingItems: self.getMatchingItems(query),
-					selected: 0
-				});
-			});
+			this.setStateFromQuery([query, originalQuery]);
 		},
 
 
@@ -302,6 +362,20 @@ define([
 					if ((event.ctrlKey || event.metaKey) && this.mode == "tabs") {
 						this.closeTab(state.matchingItems[state.selected]);
 						event.preventDefault();
+					}
+
+					// fall through to the default case so that we'll also capture
+					// typed w's when bookmarks or history is loading
+
+				default:
+					if ((this.mode == "bookmarks" && this.bookmarks instanceof Promise) ||
+						(this.mode == "history" && this.history instanceof Promise) &&
+						key.length == 1) {
+							// we're still loading the bookmarks or history, but
+							// the user's still typing, so add this to the query.
+							// check the key length, to make sure we're not
+							// buffering a special key like Control.
+						this.bufferedQuery += event.key;
 					}
 					break;
 			}
