@@ -24,9 +24,11 @@ Customize the shortcut key in More tools > Extensions > Keyboard Shortcuts.
 
 Unlike other tab switchers, QuicKey uses a Quicksilver-style search algorithm to rank the results, so contiguous matches at the beginning of words are higher in the list, as are matches against capital letters. So you can type just a few letters to quickly find the right tab.
 
-The best match is selected by default, so you can just press enter to switch to that tab. Or press the up/down arrow keys to move to other results. Or just click one.
+The best match is selected by default, so you can press enter to switch to that tab. Or press the up/down arrow keys or page up/down to move to other results. Or just click one.
 
 Press esc to clear what you've typed. If the search box is empty, then pressing esc will close it.
+
+If you type more than 25 letters, which should be plenty to find the right tab, QuicKey switches to an exact string search.
 
 
 ★ Search bookmarks

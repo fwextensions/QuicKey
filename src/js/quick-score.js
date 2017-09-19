@@ -9,6 +9,40 @@ define(function() {
 		BeginningOfStringPct = .1;
 
 
+	function quickScore(
+		string,
+		query,
+		hitMask)
+	{
+			// we use a Set for the hitMask so that indexes can only be added once
+		var hitMaskSet = hitMask instanceof Array && new Set(),
+			score = scoreForAbbreviation(string, query, hitMaskSet);
+
+		if (hitMaskSet) {
+			hitMask.length = 0;
+
+				// convert the hitMask to an Array, which is easier to work with.
+				// we have to sort it because the scorer may find a partial match
+				// later in the string, and then not find the rest of the query,
+				// so it starts over with a shorter piece of the query, which it
+				// might find earlier in the string.  in that case, the hitMask
+				// will have later indexes first, which we slice off so that the
+				// hitMask has at most the same number of indices as the length
+				// of the query, though this might still contain an extraneous
+				// hit.   we have to sort the array with a function that correctly
+				// sorts numbers, because JavaScript.  if the score is 0, force
+				// the hitMask to be empty, since it could still have some
+				// partial hits in it, and we don't want to highlight just parts
+				// of the query in a result.
+			Array.from(hitMaskSet).sort(compareNumbers).slice(0, string.length).forEach(function(index) {
+				hitMask.push(index);
+			});
+		}
+
+		return score;
+	}
+
+
 	function scoreForAbbreviation(
 		itemString,
 		abbreviation,
@@ -172,8 +206,8 @@ define(function() {
 	{
 		searchRange = searchRange || new Range(0, string.length);
 
-		var stringToSearch = string.substr(searchRange.location, searchRange.length).toLowerCase(),
-			subStringIndex = stringToSearch.indexOf(substring.toLowerCase()),
+		var stringToSearch = string.substr(searchRange.location, searchRange.length).toLocaleLowerCase(),
+			subStringIndex = stringToSearch.indexOf(substring.toLocaleLowerCase()),
 			result = new Range();
 
 		if (subStringIndex > -1) {
@@ -197,5 +231,13 @@ define(function() {
 	}
 
 
-	return scoreForAbbreviation;
+	function compareNumbers(
+		a,
+		b)
+	{
+		return a - b;
+	}
+
+
+	return quickScore;
 });

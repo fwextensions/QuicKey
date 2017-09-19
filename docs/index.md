@@ -25,7 +25,7 @@ To change these, you can go to *More tools > Extensions*, scroll to the very bot
 
 When you've opened the *QuicKey* search box via the shortcut key or by clicking its icon, type a few letters of the title or URL of the tab you're looking for.  Unlike other tab switchers, *QuicKey* uses a [Quicksilver](https://github.com/quicksilver/Quicksilver)-style search algorithm to rank the results, where contiguous matches at the beginning of words are higher in the list, as are matches against capital letters at the beginning of words.  So you can type just a few letters to quickly find the right tab.
 
-The first matched tab is selected by default, so you can just press <kbd>enter</kbd> to switch to it.  Or press the <kbd>&#8593;</kbd> or <kbd>&#8595;</kbd> key to move to other results.  You can also click the desired tab using the mouse.
+The first matched tab is selected by default, so you can just press <kbd>enter</kbd> to switch to it.  Or press the <kbd>&#8593;</kbd>, <kbd>&#8595;</kbd>, <kbd>page up</kbd> or <kbd>page down</kbd> key to move to other results.  You can also click the desired tab using the mouse.
 
 Press <kbd>esc</kbd> to clear what you've typed.  If the search box is empty, then pressing <kbd>esc</kbd> will close it.
 
