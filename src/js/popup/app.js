@@ -5,6 +5,7 @@ define([
 	"jsx!./results-list-item",
 	"array-score",
 	"quick-score",
+	"simple-score",
 	"get-bookmarks",
 	"get-history",
 	"lodash"
@@ -14,7 +15,8 @@ define([
 	ResultsList,
 	ResultsListItem,
 	arrayScore,
-	qsScore,
+	quickScore,
+	simpleScore,
 	getBookmarks,
 	getHistory,
 	_
@@ -24,6 +26,7 @@ define([
 		MaxItems = 10,
 		MinItems = 3,
 		MinScoreDiff = .4,
+		MaxQueryLength = 25,
 		BookmarksQuery = "/b ",
 		BookmarksQueryPattern = new RegExp("^" + BookmarksQuery),
 		HistoryQuery = "/h ",
@@ -34,7 +37,8 @@ define([
 
 
 		// use title and url as the two keys to score
-	var scoreArray = arrayScore(qsScore, ["title", "displayURL"]);
+	const quickScoreArray = arrayScore(quickScore, ["title", "displayURL"]),
+		simpleScoreArray = arrayScore(simpleScore, ["title", "displayURL"]);
 
 
 	var TabSelector = React.createClass({
@@ -79,7 +83,8 @@ define([
 			var mode = this.mode,
 				items = mode == "tabs" ? this.props.tabs :
 					mode == "bookmarks" ? this.bookmarks : this.history,
-				scores = scoreArray(items, query),
+				scorer = query.length <= MaxQueryLength ? quickScoreArray : simpleScoreArray,
+				scores = scorer(items, query),
 				firstScoresDiff = (scores.length > 1 && scores[0].score > MinScore) ?
 					(scores[0].score - scores[1].score) : 0;
 					// drop barely-matching results, keeping a minimum of 3,

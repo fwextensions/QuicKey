@@ -206,8 +206,8 @@ define(function() {
 	{
 		searchRange = searchRange || new Range(0, string.length);
 
-		var stringToSearch = string.substr(searchRange.location, searchRange.length).toLowerCase(),
-			subStringIndex = stringToSearch.indexOf(substring.toLowerCase()),
+		var stringToSearch = string.substr(searchRange.location, searchRange.length).toLocaleLowerCase(),
+			subStringIndex = stringToSearch.indexOf(substring.toLocaleLowerCase()),
 			result = new Range();
 
 		if (subStringIndex > -1) {
