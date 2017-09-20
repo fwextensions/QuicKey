@@ -3,7 +3,7 @@ theme: jekyll-theme-minimal
 gems:
   - jekyll-seo-tag
 
-title: QuicKey – The quick tab switcher
+title: QuicKey
 
 description: A Chrome extension that lets you quickly switch tabs or access bookmarks and history via a Quicksilver-style search.
 
