@@ -34,7 +34,7 @@ define([
 		{
 			var item = this.props.item;
 
-			if (IsDevMode && event.altKey) {
+			if (IsDevMode && (event.altKey || event.metaKey)) {
 					// copy some debug info to the clipboard
 				copyTextToClipboard([
 					item.title,
@@ -89,7 +89,8 @@ define([
 					item.title.length > MaxTitleLength ? item.title : "",
 					item.displayURL.length > MaxURLLength ? item.displayURL : ""
 				].join("\n"),
-				className = "results-list-item " + (props.isSelected ? "selected" : ""),
+				className = ["results-list-item", (props.isSelected ? "selected " : ""),
+					(item.incognito ? "incognito" : "")].join(" "),
 				faviconStyle = {
 					backgroundImage: "url(" + item.faviconURL + ")"
 				};

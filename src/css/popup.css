@@ -115,6 +115,12 @@ input.search-box::-webkit-search-cancel-button {
 	background-color: #dfdfff;
 }
 
+.results-list-item.incognito {
+	background-image: url(/img/incognito.svg);
+	background-size: 16px 16px;
+	background-position: 6px 25px;
+}
+
 .results-list-item .favicon {
 	left: 6px;
 	top: 6px;
