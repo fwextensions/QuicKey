@@ -34,7 +34,7 @@ Press <kbd>esc</kbd> to clear what you've typed.  If the search box is empty, th
 
 Besides tabs, you can also quickly open bookmarks or pages from your browser history using *QuicKey*.  To search all of your bookmarks, type <kbd>/</kbd>&nbsp;<kbd>b</kbd>&nbsp;<kbd>space</kbd>, and then start typing part of the name or URL of a bookmark.
 
-When you've selected the desired bookmark, press <kbd>enter</kbd> to open it in the current tab.  Press <kbd>ctrl</kbd>&nbsp;<kbd>enter</kbd> (<kbd>cmd</kbd>&nbsp;<kbd>enter</kbd> on macOS) to open the bookmark in a new tab in the current window, or press <kbd>shift</kbd>&nbsp;<kbd>enter</kbd> to open the bookmark in a new window.
+When you've selected the desired bookmark, press <kbd>enter</kbd> to open it in the current tab.  Press <kbd>ctrl</kbd>&nbsp;<kbd>enter</kbd> (<kbd>cmd⌘</kbd>&nbsp;<kbd>enter</kbd> on macOS) to open the bookmark in a new tab in the current window, or press <kbd>shift</kbd>&nbsp;<kbd>enter</kbd> to open the bookmark in a new window.
 
 
 ## Search history
@@ -51,7 +51,7 @@ Sometimes The Great Suspender seems to forget the page's favicon and just shows 
 
 ## Close tabs
 
-You can quickly close the selected tab by pressing <kbd>ctrl-W</kbd> (<kbd>cmd-W</kbd> on macOS). So you could type "docg" to match all of your Google Docs URLs and then quickly close each one.
+You can quickly close the selected tab by pressing <kbd>ctrl</kbd>&nbsp;<kbd>W</kbd> (<kbd>cmd⌘</kbd>&nbsp;<kbd>W</kbd> on macOS). So you could type "docg" to match all of your Google Docs URLs and then quickly close each one.
 
 
 ## Incognito mode

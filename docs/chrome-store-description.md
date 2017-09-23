@@ -36,7 +36,7 @@ If you type more than 25 letters, which should be plenty to find the right tab, 
 To find a bookmark, type "/b", then a space, and then part of the bookmark's name or URL.
 
  • Press enter to open it in the current tab
- • Press ctrl+enter (cmd+enter on macOS) to open it in a new tab in the current window
+ • Press ctrl+enter (cmd⌘+enter on macOS) to open it in a new tab in the current window
  • Press shift+enter to open it in a new window
 
 
@@ -56,7 +56,7 @@ Press shift+enter to switch to a tab and unsuspend it in one go. Or shift-click 
 
 ★ Close tabs
 
-You can quickly close the selected tab by pressing ctrl-W (cmd-W on macOS). So you could type "docg" to match all of your Google Docs tabs and then quickly close each one.
+You can quickly close the selected tab by pressing ctrl+W (cmd⌘+W on macOS). So you could type "docg" to match all of your Google Docs tabs and then quickly close each one.
 
 
 ★ Incognito mode
