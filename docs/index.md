@@ -58,6 +58,8 @@ You can quickly close the selected tab by pressing <kbd>ctrl</kbd>&nbsp;<kbd>W</
 
 By default, Chrome extensions are not enabled in incognito mode.  If you want to use *QuicKey* to switch to incognito tabs as well as normal ones, go to *More tools > Extensions*, scroll down to *QuicKey*, and check the "Allow in incognito" option.
 
+Tabs in incognito mode display the incognito icon, so you distinguish a normal tab from an incognito one with the same title.
+
 
 ## Privacy
 

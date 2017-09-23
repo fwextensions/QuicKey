@@ -28,7 +28,7 @@ The best match is selected by default, so you can press enter to switch to that 
 
 Press esc to clear what you've typed. If the search box is empty, then pressing esc will close it.
 
-If you type more than 25 letters, which should be plenty to find the right tab, QuicKey switches to an exact string search.
+If you type more than 25 letters, which should be plenty to find the right tab, QuicKey switches to an exact string search to stay fast.
 
 
 ★ Search bookmarks
@@ -62,6 +62,8 @@ You can quickly close the selected tab by pressing ctrl+W (cmd⌘+W on macOS). S
 ★ Incognito mode
 
 By default, Chrome extensions are not enabled in incognito mode. If you want to use QuicKey to switch to incognito tabs as well as normal ones, go to More tools > Extensions, scroll down to QuicKey, and check the "Allow in incognito" option.
+
+Tabs in incognito mode display the incognito icon, so you distinguish a normal tab from an incognito one with the same title.
 
 
 ★ Privacy
