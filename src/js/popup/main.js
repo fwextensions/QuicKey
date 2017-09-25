@@ -32,7 +32,7 @@ require([
 	])
 		.then(function(result) {
 			var tabs = result[0],
-				activeTab = result[1],
+				activeTab = result[1][0],
 				query = gKeyCache.join("");
 
 				// clean up the globals
@@ -42,7 +42,7 @@ require([
 
 				// remove the active tab from the array so it doesn't show up in
 				// the results, making it clearer if you have duplicate tabs open
-			_.remove(tabs, { id: activeTab[0].id });
+			_.remove(tabs, { id: activeTab.id });
 
 			ReactDOM.render(
 				React.createElement(App, {

@@ -3,22 +3,26 @@ define([
 	"jsx!./search-box",
 	"jsx!./results-list",
 	"jsx!./results-list-item",
+	"cp",
 	"array-score",
 	"quick-score",
 	"simple-score",
 	"get-bookmarks",
 	"get-history",
+	"check-modifiers",
 	"lodash"
 ], function(
 	React,
 	SearchBox,
 	ResultsList,
 	ResultsListItem,
+	cp,
 	arrayScore,
 	quickScore,
 	simpleScore,
 	getBookmarks,
 	getHistory,
+	checkModifiers,
 	_
 ) {
 	const MinScore = .15,
@@ -134,6 +138,52 @@ define([
 					matchingItems: this.getMatchingItems(this.state.query)
 				});
 			}
+		},
+
+
+		moveTab: function(
+			tab,
+			direction,
+			unsuspend)
+		{
+			var self = this;
+
+				// get the current active tab, in case the user had closed it
+			cp.tabs.query({
+				active: true,
+				currentWindow: true
+			})
+				.then(function(activeTabs) {
+					var activeTab = activeTabs[0],
+							// if the active tab is at 0, and we want to move
+							// another tab to the left of it, force that index
+							// to be 0, which shifts the active tab to index: 1
+						index = Math.max(0, activeTab.index + direction);
+
+						// if the moved tab is in the same window and is to the
+						// left of the active one and the user wants to move it
+						// to the right, then just set index to the active tab's
+						// position, since removing the moved tab will shift the
+						// active one to the left.  or if the user wants to move
+						// a tab from another window to the active tab's left,
+						// use its index, which will shift it to the right of the
+						// moved tab.
+					if ((tab.windowId == activeTab.windowId && tab.index < activeTab.index && direction > 0) ||
+							direction < 0) {
+						index = activeTab.index;
+					}
+
+					cp.tabs.move(tab.id, {
+						windowId: activeTab.windowId,
+						index: index
+					})
+						.then(function(movedTab) {
+								// use the movedTab from this callback, since
+								// the tab reference we had to it from before is
+								// likely stale
+							self.focusTab(movedTab, unsuspend);
+						});
+				});
 		},
 
 
@@ -294,7 +344,8 @@ define([
 			event)
 		{
 			var query = event.target.value,
-				state = this.state;
+				state = this.state,
+				selectedTab = state.matchingItems[state.selected];
 
 			switch (event.key) {
 				case "Escape":
@@ -358,14 +409,29 @@ define([
 					break;
 
 				case "Enter":
-					this.openItem(state.matchingItems[state.selected],
-						event.shiftKey, event.ctrlKey || event.metaKey);
+					this.openItem(selectedTab, event.shiftKey, checkModifiers(event, "mod"));
 					event.preventDefault();
 					break;
 
+				case "[":
+// TODO: ctrl-shift isn't working because key == {
+					if (this.mode == "tabs" && event.ctrlKey) {
+						this.moveTab(selectedTab, -1, event.shiftKey);
+						event.preventDefault();
+					}
+					break;
+
+				case "]":
+					if (this.mode == "tabs" && event.ctrlKey) {
+						this.moveTab(selectedTab, 1, event.shiftKey);
+						event.preventDefault();
+					}
+					break;
+
+				case "W":
 				case "w":
-					if ((event.ctrlKey || event.metaKey) && this.mode == "tabs") {
-						this.closeTab(state.matchingItems[state.selected]);
+					if (this.mode == "tabs" && checkModifiers(event, "mod")) {
+						this.closeTab(selectedTab);
 						event.preventDefault();
 					}
 
