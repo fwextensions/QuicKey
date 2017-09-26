@@ -34,7 +34,7 @@ define([
 		{
 			var item = this.props.item;
 
-			if (IsDevMode && (event.altKey || event.metaKey)) {
+			if (IsDevMode && event.altKey) {
 					// copy some debug info to the clipboard
 				copyTextToClipboard([
 					item.title,
