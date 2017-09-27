@@ -8,6 +8,9 @@
   "repository": "fwextensions/QuicKey",
   "homepage": "https://fwextensions.github.io/QuicKey/",
   "bugs": "https://github.com/fwextensions/QuicKey/issues",
+  "scripts": {
+    "build-popup": "node build/scripts/build-popup.js"
+  },
   "devDependencies": {
     "grunt": "^0.4.5",
     "grunt-contrib-clean": "^0.6.0",
@@ -20,6 +23,9 @@
     "grunt-sync": "^0.2.2",
     "lodash": "^2.4.1",
     "lodash-cli": "^4.17.4",
-    "react-virtualized": "^9.9.0"
+    "react": "^15.6.2",
+    "react-dom": "^15.6.2",
+    "react-virtualized": "^9.9.0",
+    "requirejs": "^2.3.5"
   }
 }

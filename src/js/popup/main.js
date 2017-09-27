@@ -47,7 +47,8 @@ require([
 			ReactDOM.render(
 				React.createElement(App, {
 					tabs: tabs,
-					initialQuery: query
+					initialQuery: query,
+					platform: /Win/i.test(navigator.platform) ? "win" : "mac"
 				}),
 				document.getElementById("root")
 			);

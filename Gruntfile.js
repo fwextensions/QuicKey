@@ -28,7 +28,9 @@ module.exports = function(grunt)
 			}
 		},
 		devManifestPath = "src/manifest.json",
-		buildManifestPath = "build/out/manifest.json";
+		buildManifestPath = "build/out/manifest.json",
+		devPopupPath = "src/popup.html",
+		buildPopupPath = "build/out/popup.html";
 
 	grunt.initConfig({
 		verbose: true,
@@ -121,6 +123,18 @@ module.exports = function(grunt)
 	grunt.loadNpmTasks("grunt-exec");
 	grunt.loadNpmTasks("grunt-lodash");
 
+	grunt.registerTask("checkPopup", function() {
+		var devPopup = grunt.file.read(devPopupPath),
+			buildPopup = grunt.file.read(buildPopupPath),
+			devBody = devPopup.slice(devPopup.indexOf("<body>")),
+			buildBody = buildPopup.slice(buildPopup.indexOf("<body>"));
+
+		if (devBody !== buildBody) {
+			grunt.fail.fatal("Source and build popup.html don't match:\n\nSource:\n" +
+				devBody + "\n\nBuild:" + buildBody);
+		}
+	});
+
 	grunt.registerTask("incrementVersion", function() {
 		var manifest = grunt.file.readJSON(buildManifestPath),
 			version = manifest.version.split("."),
@@ -146,6 +160,7 @@ module.exports = function(grunt)
 	grunt.registerTask("build", [
 		"sync:out",
 		"cleanupManifest",
+		"checkPopup",
 		"requirejs"
 	]);
 

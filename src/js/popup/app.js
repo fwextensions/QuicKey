@@ -36,8 +36,7 @@ define([
 		HistoryQuery = "/h ",
 		HistoryQueryPattern = new RegExp("^" + HistoryQuery),
 		BHQueryPattern = /^\/[bh]$/,
-		CommandQuery = "/",
-		IsWindows = /Win/i.test(navigator.platform);
+		CommandQuery = "/";
 
 
 		// use title and url as the two keys to score
@@ -45,7 +44,7 @@ define([
 		simpleScoreArray = arrayScore(simpleScore, ["title", "displayURL"]);
 
 
-	var TabSelector = React.createClass({
+	var App = React.createClass({
 		mode: "tabs",
 		forceUpdate: false,
 		bookmarks: null,
@@ -458,7 +457,7 @@ define([
 			var state = this.state,
 				query = state.query;
 
-			return <div className={IsWindows ? "win" : ""}>
+			return <div className={this.props.platform}>
 				<SearchBox
 					mode={this.mode}
 					forceUpdate={this.forceUpdate}
@@ -481,5 +480,5 @@ define([
 	});
 
 
-	return TabSelector;
+	return App;
 });
