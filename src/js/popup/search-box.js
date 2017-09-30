@@ -11,7 +11,7 @@ define([
 		var id = props.mode + "-placeholder";
 
 		return <div id={id} className="command-placeholder">
-			<b>{props.shortcut}</b> {props.text}
+			<b>{props.shortcut} </b>{props.text}
 		</div>
 	}
 

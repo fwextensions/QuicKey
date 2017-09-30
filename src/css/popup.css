@@ -79,6 +79,7 @@ input.search-box::-webkit-search-cancel-button {
 
 .command-placeholder b {
 	visibility: hidden;
+	font-style: normal;
 }
 
 
