@@ -4,9 +4,7 @@ define([
 	"jsx!./results-list",
 	"jsx!./results-list-item",
 	"cp",
-	"array-score",
-	"quick-score",
-	"simple-score",
+	"score-items",
 	"get-bookmarks",
 	"get-history",
 	"add-urls",
@@ -18,9 +16,7 @@ define([
 	ResultsList,
 	ResultsListItem,
 	cp,
-	arrayScore,
-	quickScore,
-	simpleScore,
+	scoreItems,
 	getBookmarks,
 	getHistory,
 	addURLs,
@@ -32,16 +28,10 @@ define([
 		MaxItems = 10,
 		MinItems = 3,
 		MinScoreDiff = .4,
-		MaxQueryLength = 25,
 		BookmarksQuery = "/b ",
 		HistoryQuery = "/h ",
 		BHQueryPattern = /^\/[bh]$/,
 		CommandQuery = "/";
-
-
-		// use title and url as the two keys to score
-	const quickScoreArray = arrayScore(quickScore, ["title", "displayURL"]),
-		simpleScoreArray = arrayScore(simpleScore, ["title", "displayURL"]);
 
 
 	var App = React.createClass({
@@ -96,8 +86,7 @@ define([
 			var mode = this.mode,
 				items = mode == "tabs" ? this.props.tabs :
 					mode == "bookmarks" ? this.bookmarks : this.history,
-				scorer = query.length <= MaxQueryLength ? quickScoreArray : simpleScoreArray,
-				scores = scorer(items, query),
+				scores = scoreItems(items, query),
 				firstScoresDiff = (scores.length > 1 && scores[0].score > MinScore) ?
 					(scores[0].score - scores[1].score) : 0;
 					// drop barely-matching results, keeping a minimum of 3,
