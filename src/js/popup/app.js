@@ -9,7 +9,8 @@ define([
 	"simple-score",
 	"get-bookmarks",
 	"get-history",
-	"check-modifiers",
+	"add-urls",
+	"handle-keys",
 	"lodash"
 ], function(
 	React,
@@ -22,7 +23,8 @@ define([
 	simpleScore,
 	getBookmarks,
 	getHistory,
-	checkModifiers,
+	addURLs,
+	handleKeys,
 	_
 ) {
 	const MinScore = .15,
@@ -32,9 +34,7 @@ define([
 		MinScoreDiff = .4,
 		MaxQueryLength = 25,
 		BookmarksQuery = "/b ",
-		BookmarksQueryPattern = new RegExp("^" + BookmarksQuery),
 		HistoryQuery = "/h ",
-		HistoryQueryPattern = new RegExp("^" + HistoryQuery),
 		BHQueryPattern = /^\/[bh]$/,
 		CommandQuery = "/";
 
@@ -65,6 +65,15 @@ define([
 					// an initial query
 				selected: 0
 			};
+		},
+
+
+		componentWillMount: function()
+		{
+				// since this is set after createClass() is called, we need to
+				// bind the handleKeys method to this so that when it's passed
+				// to children as onKeyDown, it will still call this instance
+			this.onKeyDown = handleKeys.bind(this);
 		},
 
 
@@ -148,7 +157,8 @@ define([
 		{
 			var self = this;
 
-				// get the current active tab, in case the user had closed it
+				// get the current active tab, in case the user had closed the
+				// previously active tab
 			cp.tabs.query({
 				active: true,
 				currentWindow: true
@@ -180,7 +190,11 @@ define([
 						.then(function(movedTab) {
 								// use the movedTab from this callback, since
 								// the tab reference we had to it from before is
-								// likely stale
+								// likely stale.  we also have to call addURLs()
+								// on this new tab reference so it gets the
+								// unsuspendURL added to it if necessary, so that
+								// unsuspending it will work.
+							addURLs(movedTab);
 							self.focusTab(movedTab, unsuspend);
 						});
 				});
@@ -242,6 +256,40 @@ define([
 				query: originalQuery,
 				selected: 0
 			});
+		},
+
+
+		clearQuery: function()
+		{
+			var query = this.state.query;
+
+			if (!query) {
+					// pressing esc in an empty field should close the popup
+				window.close();
+			} else {
+					// there's a default behavior where pressing esc in
+					// a search field clears the input, but we want to
+					// control what it gets cleared to
+				event.preventDefault();
+
+					// if we're searching for bookmarks or history,
+					// reset the query to just /b or /h, rather than
+					// clearing it, unless it's already that, in which
+					// case, clear it
+				if (this.mode == "tabs" || this.mode == "command" ||
+						query == BookmarksQuery || query == HistoryQuery) {
+					this.forceUpdate = true;
+					query = "";
+				} else if (this.mode == "bookmarks") {
+					this.forceUpdate = true;
+					query = BookmarksQuery;
+				} else if (this.mode == "history") {
+					this.forceUpdate = true;
+					query = HistoryQuery;
+				}
+
+				this.onQueryChange({ target: { value: query }});
+			}
 		},
 
 
@@ -312,105 +360,6 @@ define([
 			}
 
 			this.setQuery(query, originalQuery);
-		},
-
-
-		onKeyDown: function(
-			event)
-		{
-			var query = event.target.value,
-				state = this.state,
-				selectedTab = state.matchingItems[state.selected];
-
-			switch (event.key) {
-				case "Escape":
-					if (!query) {
-							// pressing esc in an empty field should close the popup
-						window.close();
-					} else {
-							// there's a default behavior where pressing esc in
-							// a search field clears the input, but we want to
-							// control what it gets cleared to
-						event.preventDefault();
-
-							// if we're searching for bookmarks or history,
-							// reset the query to just /b or /h, rather than
-							// clearing it, unless it's already that, in which
-							// case, clear it
-						if (this.mode == "tabs" || this.mode == "command" ||
-								query == BookmarksQuery || query == HistoryQuery) {
-							this.forceUpdate = true;
-							query = "";
-						} else if (this.mode == "bookmarks") {
-							this.forceUpdate = true;
-							query = BookmarksQuery;
-						} else if (this.mode == "history") {
-							this.forceUpdate = true;
-							query = HistoryQuery;
-						}
-
-						this.onQueryChange({ target: { value: query }});
-					}
-					break;
-
-				case "ArrowUp":
-					this.modifySelected(-1);
-					event.preventDefault();
-					break;
-
-				case "ArrowDown":
-					this.modifySelected(1);
-					event.preventDefault();
-					break;
-
-				case "PageDown":
-					this.resultsList.scrollByPage("down");
-					event.preventDefault();
-					break;
-
-				case "PageUp":
-					this.resultsList.scrollByPage("up");
-					event.preventDefault();
-					break;
-
-				case "Home":
-					this.setSelectedIndex(0);
-					event.preventDefault();
-					break;
-
-				case "End":
-					this.setSelectedIndex(this.state.matchingItems.length - 1);
-					event.preventDefault();
-					break;
-
-				case "Enter":
-					this.openItem(selectedTab, event.shiftKey, checkModifiers(event, "mod"));
-					event.preventDefault();
-					break;
-
-				case "[":
-// TODO: ctrl-shift isn't working because key == {
-					if (this.mode == "tabs" && event.ctrlKey) {
-						this.moveTab(selectedTab, -1, event.shiftKey);
-						event.preventDefault();
-					}
-					break;
-
-				case "]":
-					if (this.mode == "tabs" && event.ctrlKey) {
-						this.moveTab(selectedTab, 1, event.shiftKey);
-						event.preventDefault();
-					}
-					break;
-
-				case "W":
-				case "w":
-					if (this.mode == "tabs" && checkModifiers(event, "mod")) {
-						this.closeTab(selectedTab);
-						event.preventDefault();
-					}
-					break;
-			}
 		},
 
 

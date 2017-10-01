@@ -1,12 +1,24 @@
 define(function() {
-	const ProtocolPattern = /^(chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=)?(https?|file):\/\/(www\.)?/,
+	const SuspendedURLPattern = /^chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=(.+)$/,
+		ProtocolPattern = /^(chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=)?(https?|file):\/\/(www\.)?/,
 		FaviconURL = "chrome://favicon/";
 
 
 	return function addURLs(
 		item)
 	{
-		var url = item.url;
+		var url = item.url,
+			unsuspendURL = url.replace(SuspendedURLPattern, "$1");
+
+		if (url != unsuspendURL) {
+				// add a URL without the Great Suspender preamble that we can use
+				// with chrome://favicon/ to get the site's favicon instead of
+				// the Great Suspender's, as there are times it hasn't generated
+				// a faded icon for some sites.  we have to add that before
+				// setting the faviconURL below.  we also only add it if the tab
+				// is suspended, so ResultsListItem can detect that and fade the icon.
+			item.unsuspendURL = unsuspendURL;
+		}
 
 			// look up the favicon via chrome://favicon if the item itself
 			// doesn't have one.  we want to prioritize the item's URL

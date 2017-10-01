@@ -6,7 +6,7 @@
 	"description": "Switch tabs or access bookmarks and history with a Quicksilver-style search",
 	"author": "John Dunning",
 	"content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
-	"minimum_chrome_version": "38",
+	"minimum_chrome_version": "45",
 	"permissions": [
 		"tabs",
 		"bookmarks",
