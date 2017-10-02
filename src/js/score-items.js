@@ -7,7 +7,7 @@ define([
 	simpleScore,
 	arrayScore
 ) {
-		// use title and url as the two keys to score
+		// use title and displayURL as the two keys to score
 	const QuickScoreArray = arrayScore(quickScore, ["title", "displayURL"]),
 		SimpleScoreArray = arrayScore(simpleScore, ["title", "displayURL"]),
 		MaxQueryLength = 25;

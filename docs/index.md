@@ -49,16 +49,26 @@ If you use the handy extension [The Great Suspender](https://chrome.google.com/w
 Sometimes The Great Suspender seems to forget the page's favicon and just shows its own in the tab.  In that case, *QuicKey* will try to show the correct favicon.
 
 
+## Move tabs
+
+You can also quickly move tabs to the left or right of the current tab, making it easy to pull tabs from other windows into the current one.
+
+  * Press <kbd>ctrl</kbd>&nbsp;<kbd>[<kbd> to move it to the left
+  * Press <kbd>ctrl</kbd>&nbsp;<kbd>]</kbd> to move it to the right
+
+Include shift in the shortcut to also unsuspend the tab while moving it.  The <kbd>ctrl</kbd> key should be used on both Windows and macOS.
+
+
 ## Close tabs
 
-You can quickly close the selected tab by pressing <kbd>ctrl</kbd>&nbsp;<kbd>W</kbd> (<kbd>cmd⌘</kbd>&nbsp;<kbd>W</kbd> on macOS). So you could type "docg" to match all of your Google Docs URLs and then quickly close each one.
+You can quickly close the selected tab by pressing <kbd>ctrl</kbd>&nbsp;<kbd>W</kbd> (<kbd>cmd⌘</kbd>&nbsp;<kbd>W</kbd> on macOS).  So you could type "docg" to match all of your Google Docs URLs and then quickly close each one.
 
 
 ## Incognito mode
 
 By default, Chrome extensions are not enabled in incognito mode.  If you want to use *QuicKey* to switch to incognito tabs as well as normal ones, go to *More tools > Extensions*, scroll down to *QuicKey*, and check the "Allow in incognito" option.
 
-Tabs in incognito mode display the incognito icon, so you distinguish a normal tab from an incognito one with the same title.
+Tabs in incognito mode display the incognito icon, so you can distinguish a normal tab from an incognito one with the same title.
 
 
 ## Privacy

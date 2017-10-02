@@ -44,7 +44,7 @@ To find a bookmark, type "/b", then a space, and then part of the bookmark's nam
 
 To find something in the last 2000 pages of your browser history, type "/h", then a space, and then part of the page's name or URL.
 
-The same ctrl+enter and shift+enter shortcuts will open the visited page in a new tab or window.
+The same ctrl+enter (cmd⌘+enter on macOS) and shift+enter shortcuts will open the visited page in a new tab or window.
 
 
 ★ The Great Suspender integration
@@ -54,16 +54,26 @@ If you use the handy extension "The Great Suspender", then suspended tabs will h
 Press shift+enter to switch to a tab and unsuspend it in one go. Or shift-click it with the mouse.
 
 
+★ Move tabs
+
+You can also quickly move tabs to the left or right of the current tab, making it easy to pull tabs from other windows into the current one.
+
+ • Press ctrl+[ to move it to the left
+ • Press ctrl+] to move it to the right
+
+Include shift in the shortcut to also unsuspend the tab while moving it. The ctrl key should be used on both Windows and macOS.
+
+
 ★ Close tabs
 
-You can quickly close the selected tab by pressing ctrl+W (cmd⌘+W on macOS). So you could type "docg" to match all of your Google Docs tabs and then quickly close each one.
+To quickly close the selected tab, press ctrl+W (cmd⌘+W on macOS). So you could type "docg" to match all of your Google Docs URLs and then quickly close each one.
 
 
 ★ Incognito mode
 
 By default, Chrome extensions are not enabled in incognito mode. If you want to use QuicKey to switch to incognito tabs as well as normal ones, go to More tools > Extensions, scroll down to QuicKey, and check the "Allow in incognito" option.
 
-Tabs in incognito mode display the incognito icon, so you distinguish a normal tab from an incognito one with the same title.
+Tabs in incognito mode display the incognito icon, so you can distinguish a normal tab from an incognito one with the same title.
 
 
 ★ Privacy

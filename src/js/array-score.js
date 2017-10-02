@@ -38,7 +38,7 @@ define(function() {
 			items.forEach(function(item) {
 					// find the highest score for each keyed string on this item
 				item.score = keyNames.reduce(function(currentScore, key) {
-					var hitMask = [];
+					var hitMask = [],
 						newScore = score(item[key], text, hitMask);
 
 					item.scores[key] = newScore;

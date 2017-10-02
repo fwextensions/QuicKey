@@ -1,6 +1,15 @@
 define(function() {
-	const WhitespacePattern = /[-/:()<>%._=&\[\]\s]/,
-		UpperCasePattern = /[A-Z]/,
+	const WhitespacePattern = "-/\\:()<>%._=&[] \t\n\r",
+		UpperCasePattern = (function() {
+				var charCodeA = "A".charCodeAt(0),
+					uppercase = [];
+
+				for (var i = 0; i < 26; i++) {
+					uppercase.push(String.fromCharCode(charCodeA + i));
+				}
+
+				return uppercase.join("");
+			})(),
 		IgnoredScore = 0.9,
 		SkippedScore = 0.15,
 		LongStringLength = 151,
@@ -21,22 +30,24 @@ define(function() {
 		if (hitMaskSet) {
 			hitMask.length = 0;
 
-				// convert the hitMask to an Array, which is easier to work with.
-				// we have to sort it because the scorer may find a partial match
-				// later in the string, and then not find the rest of the query,
-				// so it starts over with a shorter piece of the query, which it
-				// might find earlier in the string.  in that case, the hitMask
-				// will have later indexes first, which we slice off so that the
-				// hitMask has at most the same number of indices as the length
-				// of the query, though this might still contain an extraneous
-				// hit.   we have to sort the array with a function that correctly
-				// sorts numbers, because JavaScript.  if the score is 0, force
-				// the hitMask to be empty, since it could still have some
-				// partial hits in it, and we don't want to highlight just parts
-				// of the query in a result.
-			Array.from(hitMaskSet).sort(compareNumbers).slice(0, string.length).forEach(function(index) {
-				hitMask.push(index);
-			});
+				// if the score is 0, leave the hitMask empty, since hitMaskSet
+				// could still have some partial hits in it, and we don't want
+				// to highlight just parts of the query in a result
+			if (score) {
+					// convert the hitMask to an Array, which is easier to work with.
+					// we have to sort it because the scorer may find a partial match
+					// later in the string, and then not find the rest of the query,
+					// so it starts over with a shorter piece of the query, which it
+					// might find earlier in the string.  in that case, the hitMask
+					// will have later indexes first, which we slice off so that the
+					// hitMask has at most the same number of indices as the length
+					// of the query, though this might still contain an extraneous
+					// hit.   we have to sort the array with a function that correctly
+					// sorts numbers, because JavaScript.
+				Array.from(hitMaskSet).sort(compareNumbers).slice(0, string.length).forEach(function(index) {
+					hitMask.push(index);
+				});
+			}
 		}
 
 		return score;
@@ -112,18 +123,18 @@ define(function() {
 						// some letters were skipped when finding this match, so
 						// adjust the score based on whether spaces or capital
 						// letters were skipped
-					if (useSkipReduction && WhitespacePattern.test(itemString.charAt(matchedRange.location - 1))) {
+					if (useSkipReduction && WhitespacePattern.indexOf(itemString.charAt(matchedRange.location - 1)) > -1) {
 						for (j = matchedRange.location - 2; j >= searchRange.location; j--) {
-							if (WhitespacePattern.test(itemString.charAt(j))) {
+							if (WhitespacePattern.indexOf(itemString.charAt(j)) > -1) {
 								score--;
 							} else {
 // this reduces the penalty for skipped chars when we also didn't skip over any other words
 								score -= SkippedScore;
 							}
 						}
-					} else if (useSkipReduction && UpperCasePattern.test(itemString.charAt(matchedRange.location))) {
+					} else if (useSkipReduction && UpperCasePattern.indexOf(itemString.charAt(matchedRange.location)) > -1) {
 						for (j = matchedRange.location - 1; j >= searchRange.location; j--) {
-							if (UpperCasePattern.test(itemString.charAt(j))) {
+							if (UpperCasePattern.indexOf(itemString.charAt(j)) > -1) {
 								score--;
 							} else {
 								score -= SkippedScore;
