@@ -1,17 +1,11 @@
 require([
 	"jsx!popup/app",
 	"react",
-	"react-dom",
-	"get-tabs",
-	"cp",
-	"lodash"
+	"react-dom"
 ], function(
 	App,
 	React,
-	ReactDOM,
-	getTabs,
-	cp,
-	_
+	ReactDOM
 ) {
 	console.log("startup time", performance.now() - gInitTime, performance.now());
 
@@ -23,34 +17,18 @@ require([
 		return;
 	}
 
-	Promise.all([
-		getTabs(),
-		cp.tabs.query({
-			active: true,
-			currentWindow: true
-		})
-	])
-		.then(function(result) {
-			var tabs = result[0],
-				activeTab = result[1][0],
-				query = gKeyCache.join("");
+	var query = gKeyCache.join("");
 
-				// clean up the globals
-			document.removeEventListener("keydown", gOnKeyDown, false);
-			gOnKeyDown = null;
-			gKeyCache = null;
+		// clean up the globals
+	document.removeEventListener("keydown", gOnKeyDown, false);
+	gOnKeyDown = null;
+	gKeyCache = null;
 
-				// remove the active tab from the array so it doesn't show up in
-				// the results, making it clearer if you have duplicate tabs open
-			_.remove(tabs, { id: activeTab.id });
-
-			ReactDOM.render(
-				React.createElement(App, {
-					tabs: tabs,
-					initialQuery: query,
-					platform: /Win/i.test(navigator.platform) ? "win" : "mac"
-				}),
-				document.getElementById("root")
-			);
-		});
+	ReactDOM.render(
+		React.createElement(App, {
+			initialQuery: query,
+			platform: /Win/i.test(navigator.platform) ? "win" : "mac"
+		}),
+		document.getElementById("root")
+	);
 });

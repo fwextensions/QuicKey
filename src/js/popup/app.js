@@ -5,6 +5,7 @@ define([
 	"jsx!./results-list-item",
 	"cp",
 	"score-items",
+	"get-tabs",
 	"get-bookmarks",
 	"get-history",
 	"add-urls",
@@ -17,6 +18,7 @@ define([
 	ResultsListItem,
 	cp,
 	scoreItems,
+	getTabs,
 	getBookmarks,
 	getHistory,
 	addURLs,
@@ -37,6 +39,7 @@ define([
 	var App = React.createClass({
 		mode: "tabs",
 		forceUpdate: false,
+		tabs: [],
 		bookmarks: [],
 		history: [],
 		bookmarksPromise: null,
@@ -64,12 +67,15 @@ define([
 				// bind the handleKeys method to this so that when it's passed
 				// to children as onKeyDown, it will still call this instance
 			this.onKeyDown = handleKeys.bind(this);
+
+				// start the process of getting all the tabs
+			this.loadPromisedItems(getTabs, "tabs", "");
 		},
 
 
 		componentDidUpdate: function()
 		{
-				// we only want this to be true through one render cycle
+				// we only want this flag to be true through one render cycle
 			this.forceUpdate = false;
 		},
 
@@ -83,10 +89,7 @@ define([
 				return [];
 			}
 
-			var mode = this.mode,
-				items = mode == "tabs" ? this.props.tabs :
-					mode == "bookmarks" ? this.bookmarks : this.history,
-				scores = scoreItems(items, query),
+			var scores = scoreItems(this[this.mode], query),
 				firstScoresDiff = (scores.length > 1 && scores[0].score > MinScore) ?
 					(scores[0].score - scores[1].score) : 0;
 					// drop barely-matching results, keeping a minimum of 3,
@@ -129,7 +132,7 @@ define([
 		{
 			if (tab) {
 				chrome.tabs.remove(tab.id);
-				_.pull(this.props.tabs, tab);
+				_.pull(this.tabs, tab);
 
 					// update the list to show the remaining matching tabs
 				this.setState({
