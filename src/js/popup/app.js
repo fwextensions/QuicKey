@@ -68,7 +68,9 @@ define([
 				// to children as onKeyDown, it will still call this instance
 			this.onKeyDown = handleKeys.bind(this);
 
-				// start the process of getting all the tabs
+				// start the process of getting all the tabs.  any initial chars
+				// the user might have typed as we were loading will not match
+				// anything until this promise resolves.
 			this.loadPromisedItems(getTabs, "tabs", "");
 		},
 

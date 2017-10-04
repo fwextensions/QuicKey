@@ -125,8 +125,8 @@ module.exports = function(grunt)
 
 	grunt.registerTask("checkPopup", function() {
 		var devPopup = grunt.file.read(devPopupPath),
-			buildPopup = grunt.file.read(buildPopupPath),
 			devBody = devPopup.slice(devPopup.indexOf("<body>")),
+			buildPopup = grunt.file.read(buildPopupPath),
 			buildBody = buildPopup.slice(buildPopup.indexOf("<body>"));
 
 		if (devBody !== buildBody) {
