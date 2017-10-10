@@ -32,7 +32,8 @@ define([
 		MinScoreDiff = .4,
 		BookmarksQuery = "/b ",
 		HistoryQuery = "/h ",
-		BHQueryPattern = /^\/[bh]$/,
+		BQuery = "/b",
+		HQuery = "/h",
 		CommandQuery = "/";
 
 
@@ -45,6 +46,10 @@ define([
 		bookmarksPromise: null,
 		historyPromise: null,
 		resultsList: null,
+
+
+			// keydown handling is managed in another module
+		onKeyDown: handleKeys,
 
 
 		getInitialState: function()
@@ -63,14 +68,10 @@ define([
 
 		componentWillMount: function()
 		{
-				// since this is set after createClass() is called, we need to
-				// bind the handleKeys method to this so that when it's passed
-				// to children as onKeyDown, it will still call this instance
-			this.onKeyDown = handleKeys.bind(this);
-
 				// start the process of getting all the tabs.  any initial chars
 				// the user might have typed as we were loading will not match
-				// anything until this promise resolves.
+				// anything until this promise resolves and calls
+				// getMatchingItems() again.
 			this.loadPromisedItems(getTabs, "tabs", "");
 		},
 
@@ -332,7 +333,7 @@ define([
 				this.mode = "bookmarks";
 				query = query.slice(BookmarksQuery.length);
 
-				if (!this.bookmarks.length && !this.bookmarksPromise) {
+				if (!this.bookmarks.length) {
 						// we haven't fetched the bookmarks yet, so load them
 						// and then call getMatchingItems() after they're ready
 					this.loadPromisedItems(getBookmarks, "bookmarks", BookmarksQuery);
@@ -341,10 +342,10 @@ define([
 				this.mode = "history";
 				query = query.slice(HistoryQuery.length);
 
-				if (!this.history.length && !this.historyPromise) {
+				if (!this.history.length) {
 					this.loadPromisedItems(getHistory, "history", HistoryQuery);
 				}
-			} else if (query == CommandQuery || BHQueryPattern.test(query)) {
+			} else if (query == CommandQuery || query == BQuery || query == HQuery) {
 					// we don't know if the user's going to type b or h, so
 					// don't match any items
 				this.mode = "command";

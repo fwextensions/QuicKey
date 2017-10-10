@@ -18,42 +18,6 @@ define(function() {
 		BeginningOfStringPct = .1;
 
 
-	function quickScore(
-		string,
-		query,
-		hitMask)
-	{
-			// we use a Set for the hitMask so that indexes can only be added once
-		var hitMaskSet = hitMask instanceof Array && new Set(),
-			score = scoreForAbbreviation(string, query, hitMaskSet);
-
-		if (hitMaskSet) {
-			hitMask.length = 0;
-
-				// if the score is 0, leave the hitMask empty, since hitMaskSet
-				// could still have some partial hits in it, and we don't want
-				// to highlight just parts of the query in a result
-			if (score) {
-					// convert the hitMask to an Array, which is easier to work with.
-					// we have to sort it because the scorer may find a partial match
-					// later in the string, and then not find the rest of the query,
-					// so it starts over with a shorter piece of the query, which it
-					// might find earlier in the string.  in that case, the hitMask
-					// will have later indexes first, which we slice off so that the
-					// hitMask has at most the same number of indices as the length
-					// of the query, though this might still contain an extraneous
-					// hit.   we have to sort the array with a function that correctly
-					// sorts numbers, because JavaScript.
-				Array.from(hitMaskSet).sort(compareNumbers).slice(0, string.length).forEach(function(index) {
-					hitMask.push(index);
-				});
-			}
-		}
-
-		return score;
-	}
-
-
 	function scoreForAbbreviation(
 		itemString,
 		abbreviation,
@@ -97,7 +61,7 @@ define(function() {
 
 			fullMatchedRange.max(matchedRange.max());
 
-			if (hitMask instanceof Set) {
+			if (hitMask) {
 				addIndexesInRange(hitMask, matchedRange);
 			}
 
@@ -150,19 +114,28 @@ define(function() {
 							// is not too long
 						score -= matchedRange.location - searchRange.location;
 						matchRangeDiscount = abbreviation.length / fullMatchedRange.length;
-						matchRangeDiscount = (itemString.length < LongStringLength &&
-							matchStartPercentage <= BeginningOfStringPct &&
-							matchRangeDiscount >= MinMatchDensityPct) ? 1 : matchRangeDiscount;
+//						matchRangeDiscount = (itemString.length < LongStringLength &&
+//							matchStartPercentage <= BeginningOfStringPct &&
+//							matchRangeDiscount >= MinMatchDensityPct) ? 1 : matchRangeDiscount;
 					}
 				}
 
 					// discount the scores of very long strings
 				score += remainingScore * Math.min(remainingSearchRange.length, LongStringLength) *
-					matchRangeDiscount * matchStartDiscount;
+					matchRangeDiscount;
+//					matchRangeDiscount * matchStartDiscount;
 				score /= searchRange.length;
 
 				return score;
 			}
+		}
+
+		if (hitMask) {
+				// the remaining abbreviation does not appear in the remaining
+				// string, so clear the hitMask, since we'll start over with a
+				// shorter piece of the abbreviation, which might match earlier
+				// in the string, making the existing match indexes invalid.
+			hitMask.length = 0;
 		}
 
 		return 0;
@@ -210,6 +183,9 @@ define(function() {
 	};
 
 
+	Range.prototype.toValue = Range.prototype.toString;
+
+
 	function rangeOfString(
 		string,
 		substring,
@@ -235,20 +211,12 @@ define(function() {
 		range)
 	{
 		for (var i = range.location; i < range.max(); i++) {
-			indexes.add(i);
+			indexes.push(i);
 		}
 
 		return indexes;
 	}
 
 
-	function compareNumbers(
-		a,
-		b)
-	{
-		return a - b;
-	}
-
-
-	return quickScore;
+	return scoreForAbbreviation;
 });
