@@ -121,8 +121,6 @@ define(function() {
 				if (Modifiers[key]) {
 					info.modifiers.push(key);
 				}
-
-				return key;
 			});
 
 				// the main key should be last.  force it to lowercase so we can

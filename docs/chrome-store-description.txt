@@ -24,9 +24,9 @@ Customize the shortcut key in More tools > Extensions > Keyboard Shortcuts.
 
 Unlike other tab switchers, QuicKey uses a Quicksilver-style search algorithm to rank the results, so contiguous matches at the beginning of words are higher in the list, as are matches against capital letters. So you can type just a few letters to quickly find the right tab.
 
-The best match is selected by default, so you can press enter to switch to that tab. Or press the up/down arrow keys or page up/down to move to other results. Or just click one.
+The best match is selected by default, so press enter to switch to that tab. Or press the up/down arrow keys or page up/down to move to other results. Or just click one.
 
-Press esc to clear what you've typed. If the search box is empty, then pressing esc will close it.
+Press esc to clear what you've typed. If the search box is empty, then pressing esc will close the popup.
 
 If you type more than 25 letters, which should be plenty to find the right tab, QuicKey switches to an exact string search to stay fast.
 
@@ -66,7 +66,7 @@ Include shift in the shortcut to also unsuspend the tab while moving it. The ctr
 
 ★ Close tabs
 
-To quickly close the selected tab, press ctrl+W (cmd⌘+W on macOS). So you could type "docg" to match all of your Google Docs URLs and then quickly close each one.
+To close the selected tab, press ctrl+W (cmd⌘+W on macOS). So you could type "docg" to match all of your Google Docs URLs and then quickly close each one.
 
 
 ★ Incognito mode

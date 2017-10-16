@@ -61,7 +61,7 @@ Include shift in the shortcut to also unsuspend the tab while moving it.  The <k
 
 ## Close tabs
 
-You can quickly close the selected tab by pressing <kbd>ctrl</kbd>&nbsp;<kbd>W</kbd> (<kbd>cmd⌘</kbd>&nbsp;<kbd>W</kbd> on macOS).  So you could type "docg" to match all of your Google Docs URLs and then quickly close each one.
+You can close the selected tab by pressing <kbd>ctrl</kbd>&nbsp;<kbd>W</kbd> (<kbd>cmd⌘</kbd>&nbsp;<kbd>W</kbd> on macOS).  So you could type "docg" to match all of your Google Docs URLs and then quickly close each one.
 
 
 ## Incognito mode

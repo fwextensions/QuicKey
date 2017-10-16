@@ -30,6 +30,7 @@ define([
 		MaxItems = 10,
 		MinItems = 3,
 		MinScoreDiff = .4,
+		WhitespacePattern = /\s/g,
 		BookmarksQuery = "/b ",
 		HistoryQuery = "/h ",
 		BQuery = "/b",
@@ -92,7 +93,8 @@ define([
 				return [];
 			}
 
-			var scores = scoreItems(this[this.mode], query),
+					// remove spaces from the query before scoring the items
+			var scores = scoreItems(this[this.mode], query.replace(WhitespacePattern, "")),
 				firstScoresDiff = (scores.length > 1 && scores[0].score > MinScore) ?
 					(scores[0].score - scores[1].score) : 0;
 					// drop barely-matching results, keeping a minimum of 3,

@@ -32,6 +32,10 @@ define([
 	];
 
 
+	var self,
+		manager = new ShortcutManager(Bindings);
+
+
 	function selectedTab()
 	{
 		return self.state.matchingItems[self.state.selected];
@@ -54,10 +58,6 @@ define([
 			self.moveTab(selectedTab(), direction, shiftKey);
 		}
 	}
-
-
-	var self,
-		manager = new ShortcutManager(Bindings);
 
 
 	return function handleKeys(
