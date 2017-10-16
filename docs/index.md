@@ -53,7 +53,7 @@ Sometimes The Great Suspender seems to forget the page's favicon and just shows 
 
 You can also quickly move tabs to the left or right of the current tab, making it easy to pull tabs from other windows into the current one.
 
-  * Press <kbd>ctrl</kbd>&nbsp;<kbd>[<kbd> to move it to the left
+  * Press <kbd>ctrl</kbd>&nbsp;<kbd>[</kbd> to move it to the left
   * Press <kbd>ctrl</kbd>&nbsp;<kbd>]</kbd> to move it to the right
 
 Include shift in the shortcut to also unsuspend the tab while moving it.  The <kbd>ctrl</kbd> key should be used on both Windows and macOS.
