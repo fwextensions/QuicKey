@@ -2,7 +2,7 @@
 image: img/search-results-open.png
 ---
 
-![QuicKey search results](img/search-results-open.png)
+<img src="img/search-results-open.png" style="box-shadow: 0px 5px 30px 4px rgba(0, 0, 0, 0.1);" alt="QuicKey search results">
 
 If you like to keep lots of tabs open in Chrome, it can quickly become difficult to find the one you want.  The tabs get very small, so you have to hover over each one to see its name in a tooltip.  And there's no overall Windows menu that would let you more easily pick a tab from a list.
 
@@ -85,4 +85,4 @@ If you find a bug in *QuicKey* or have a suggestion for a new feature, please [c
 
 The <img src="img/search.svg" style="height: 13px"> and <img src="img/clear.svg" style="height: 16px; vertical-align: middle;"> icons are from the [Octicons](https://octicons.github.com/) set, used under the [MIT License](http://opensource.org/licenses/MIT).
 
-Search algorithm modeled on [Quicksilver](https://github.com/quicksilver/Quicksilver/blob/master/Quicksilver/Code-QuickStepCore/QSense.m)'s search code.
+String ranking algorithm modeled on [Quicksilver](https://github.com/quicksilver/Quicksilver/blob/master/Quicksilver/Code-QuickStepCore/QSense.m)'s code.

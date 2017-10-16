@@ -17,7 +17,7 @@ h2 {
 footer {
 	float: right;
 	position: static;
-	width: 500px;
+	width: 525px;
 	clear: both;
 }
 
@@ -39,4 +39,8 @@ kbd {
 a:hover, a:focus {
 	font-weight: normal;
 	text-decoration: underline;
+}
+
+section	{
+	width: 525px;
 }
