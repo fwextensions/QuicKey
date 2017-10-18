@@ -14,24 +14,21 @@ If you like to keep lots of tabs open in Chrome, it can quickly become difficult
   * Type a few letters
   * Press enter to switch to the selected tab
 
-You can also type `/b` to search bookmarks or `/h` to search your browser history.
+You can also type <kbd>/</kbd>&nbsp;<kbd>b</kbd> to search bookmarks or <kbd>/</kbd>&nbsp;<kbd>h</kbd> to search your browser history.
 
 
 ## Installation
 
 Install *QuicKey* from the [Chrome Web Store](https://chrome.google.com/webstore/detail/quickey-–-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg).
 
-Once the extension is installed, you can click the <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> button on the toolbar to open the search box.  But if you're using this extension, you probably prefer using the default keyboard shortcut:
+Once the extension is installed, you can click the <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> button on the toolbar to open the search box.  But if you're using this extension, you probably prefer using the default keyboard shortcut listed above.
 
-  * Windows: <kbd>alt</kbd>&nbsp;<kbd>Q</kbd>
-  * macOS: <kbd>ctrl</kbd>&nbsp;<kbd>Q</kbd>
-
-To change these, you can open the main menu and then go to *More tools > Extensions*, scroll to the very bottom of the page, and then click *Keyboard Shortcuts*.
+To change these shortcuts, you can open the main menu and then go to *More tools > Extensions*, scroll to the very bottom of the page, and then click *Keyboard Shortcuts*.
 
 
 ## Fast tab switching
 
-Unlike other tab switchers, *QuicKey* uses a [Quicksilver](https://github.com/quicksilver/Quicksilver)-style search algorithm to rank the results, where contiguous matches at the beginning of words are higher in the list, as are matches against capital letters at the beginning of words.  So you can type just a few letters to quickly find the right tab.
+Unlike other tab switchers, *QuicKey* uses a [Quicksilver](https://qsapp.com/)-style search algorithm to rank the results, where contiguous matches at the beginning of words are higher in the list, as are matches against capital letters at the beginning of words.  So you can type just a few letters to quickly find the right tab.
 
 The best match is selected by default, so press <kbd>enter</kbd> to switch to that tab.  Or press the <kbd>&#8593;</kbd>, <kbd>&#8595;</kbd>, <kbd>pg up</kbd> or <kbd>pg dn</kbd> key to move to other results.  Or just click one.
 
@@ -82,14 +79,15 @@ To close the selected tab, press <kbd>ctrl</kbd>&nbsp;<kbd>W</kbd> (<kbd>cmd⌘<
 
 ## Incognito mode
 
-By default, Chrome extensions are not enabled in incognito mode.  If you want to use *QuicKey* to switch to incognito tabs as well as normal ones, go to *More tools > Extensions*, scroll down to *QuicKey*, and check the "Allow in incognito" option.
+By default, Chrome extensions are not enabled in incognito mode.  If you want to use *QuicKey* to switch to incognito tabs as well as normal ones, open the main menu and then
+go to *More tools > Extensions*, scroll down to *QuicKey*, and check the *Allow in incognito* option.
 
 Tabs in incognito mode display the incognito icon, so you can distinguish a normal tab from an incognito one with the same title.
 
 
 ## Privacy
 
-To function, *QuicKey* needs access to your open tabs, bookmarks and history.  The permissions dialog says *QuicKey* can also change your bookmarks and browsing history, but it never will.  It also doesn't interact with the page content in any way and doesn't transmit any information anywhere.
+To function, *QuicKey* needs access to your open tabs, bookmarks and history.  The Chrome permissions dialog says *QuicKey* can also change your bookmarks and browsing history, but it never will.  It also doesn't interact with the page content in any way and doesn't transmit any information anywhere.
 
 
 ## Feedback and bugs

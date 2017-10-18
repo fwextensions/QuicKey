@@ -44,3 +44,7 @@ a:hover, a:focus {
 section	{
 	width: 525px;
 }
+
+li > ul {
+	margin-bottom: 0;
+}
