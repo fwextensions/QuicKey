@@ -13,14 +13,16 @@ define([
 	return function getTabs()
 	{
 		return Promise.all([
-			cp.tabs.query({}),
+			cp.windows.getCurrent({ populate: true }),
+//			cp.tabs.query({}),
 			cp.tabs.query({
 				active: true,
 				currentWindow: true
 			})
 		])
 			.then(function(result) {
-				var tabs = result[0],
+				var tabs = result[0].tabs,
+//				var tabs = result[0],
 					activeTab = result[1][0],
 					match;
 

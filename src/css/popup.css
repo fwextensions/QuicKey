@@ -9,7 +9,8 @@
 }
 
 html, body {
-	width: 500px;
+	width: 450px;
+	/*width: 500px;*/
 	height: 35px;
 	margin: 0;
 	padding: 0;
@@ -28,7 +29,8 @@ body {
 
 .search-box, .command-placeholder {
 	font-weight: bold;
-	width: 490px;
+	width: 440px;
+	/*width: 490px;*/
 	height: 25px;
 	margin: 5px;
 	border: none;
@@ -103,7 +105,8 @@ input.search-box::-webkit-search-cancel-button {
 .results-list-item {
 	margin: 0;
 	padding: 4px 6px 5px 28px;
-	max-width: 490px;
+	max-width: 440px;
+	/*max-width: 490px;*/
 	background-position: 6px 6px;
 	background-size: 16px 16px;
 	background-repeat: no-repeat;
