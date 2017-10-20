@@ -34,7 +34,7 @@ The best match is selected by default, so press <kbd>enter</kbd> to switch to th
 
 Press <kbd>esc</kbd> to clear what you've typed.  If the search box is empty, then pressing <kbd>esc</kbd> will close it.
 
-If you type more than 25 letters, which should be plenty to find the right tab, *QuicKey* switches to an exact string search to stay fast.
+If you type more than 25 letters, which should be plenty to find the right tab, *QuicKey* switches to an exact string search to stay fast.  Spaces in the search string are also ignored.
 
 
 ## Search bookmarks
