@@ -114,16 +114,16 @@ define(function() {
 							// is not too long
 						score -= matchedRange.location - searchRange.location;
 						matchRangeDiscount = abbreviation.length / fullMatchedRange.length;
-//						matchRangeDiscount = (itemString.length < LongStringLength &&
-//							matchStartPercentage <= BeginningOfStringPct &&
-//							matchRangeDiscount >= MinMatchDensityPct) ? 1 : matchRangeDiscount;
+						matchRangeDiscount = (itemString.length < LongStringLength &&
+							matchStartPercentage <= BeginningOfStringPct &&
+							matchRangeDiscount >= MinMatchDensityPct) ? 1 : matchRangeDiscount;
 					}
 				}
 
 					// discount the scores of very long strings
 				score += remainingScore * Math.min(remainingSearchRange.length, LongStringLength) *
-					matchRangeDiscount;
-//					matchRangeDiscount * matchStartDiscount;
+//					matchRangeDiscount;
+					matchRangeDiscount * matchStartDiscount;
 				score /= searchRange.length;
 
 				return score;

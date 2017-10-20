@@ -14,6 +14,10 @@ h2 {
 	margin: 40px 0 20px;
 }
 
+section	{
+	width: 525px;
+}
+
 footer {
 	float: right;
 	position: static;
@@ -41,6 +45,15 @@ a:hover, a:focus {
 	text-decoration: underline;
 }
 
-section	{
-	width: 525px;
+@media print, screen and (max-width: 960px) {
+	section, footer {
+		width: auto;
+		float: none;
+		position: static;
+	}
+
+	section {
+		border: none;
+		padding: 40px 0;
+	}
 }
