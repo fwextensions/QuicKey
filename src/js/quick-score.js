@@ -44,6 +44,8 @@ define(function() {
 			var abbreviationSubstring = abbreviation.substr(abbreviationRange.location, i),
 				matchedRange = rangeOfString(itemString, abbreviationSubstring, searchRange);
 
+			/* DEBUG log(abbreviationSubstring); */
+
 			if (!matchedRange.isValid()) {
 				continue;
 			}
@@ -65,10 +67,14 @@ define(function() {
 				addIndexesInRange(hitMask, matchedRange);
 			}
 
+			/* DEBUG logRanges(searchRange, hitMask, fullMatchedRange); */
+
 			var remainingSearchRange = new Range(matchedRange.max(), searchRange.max() - matchedRange.max()),
 				remainingScore = scoreForAbbreviation(itemString, abbreviation, hitMask, remainingSearchRange,
 					new Range(abbreviationRange.location + i, abbreviationRange.length - i),
 					fullMatchedRange);
+
+			/* DEBUG log("remainingScore:", clip(remainingScore)); */
 
 			if (remainingScore) {
 				var score = remainingSearchRange.location - searchRange.location,
@@ -76,10 +82,22 @@ define(function() {
 					useSkipReduction = itemString.length < LongStringLength ||
 						matchStartPercentage < MaxMatchStartPct,
 					matchStartDiscount = (1 - matchStartPercentage),
-						// default to no match sparseness discount, for cases
+						// default to no match-sparseness discount, for cases
 						// where there are spaces before the matched letters or
 						// they're capitals
 					matchRangeDiscount = 1;
+
+				/* DEBUG
+					var matches = [],
+						ranges = [],
+						fromLastMatchRange = new Range(searchRange.location, score);
+
+					setIndexesInRange(ranges, fromLastMatchRange, "+");
+					log(indent(fill(ranges, "-")));
+					setIndexesInRange(matches, remainingSearchRange, "|");
+					setIndexesInRange(matches, new Range(searchRange.location, score), "-");
+					log("score:", score, "useSkipReduction:", useSkipReduction);
+				*/
 
 				if (matchedRange.location > searchRange.location) {
 					var j;
@@ -90,6 +108,7 @@ define(function() {
 					if (useSkipReduction && WhitespacePattern.indexOf(itemString.charAt(matchedRange.location - 1)) > -1) {
 						for (j = matchedRange.location - 2; j >= searchRange.location; j--) {
 							if (WhitespacePattern.indexOf(itemString.charAt(j)) > -1) {
+								/* DEBUG matches[j] = "w"; */
 								score--;
 							} else {
 // this reduces the penalty for skipped chars when we also didn't skip over any other words
@@ -99,6 +118,7 @@ define(function() {
 					} else if (useSkipReduction && UpperCasePattern.indexOf(itemString.charAt(matchedRange.location)) > -1) {
 						for (j = matchedRange.location - 1; j >= searchRange.location; j--) {
 							if (UpperCasePattern.indexOf(itemString.charAt(j)) > -1) {
+								/* DEBUG matches[j] = "u"; */
 								score--;
 							} else {
 								score -= SkippedScore;
@@ -120,11 +140,22 @@ define(function() {
 					}
 				}
 
+				/* DEBUG
+					log(indent(fill(matches)));
+					log("score:", score, "remaining:", clip(remainingScore), remainingSearchRange + "",
+						"fullMatched: " + fullMatchedRange, "mStartPct:", clip(matchStartPercentage),
+						"mRangeDiscount:", clip(matchRangeDiscount), "mStartDiscount:", clip(matchStartDiscount));
+				*/
+
 					// discount the scores of very long strings
 				score += remainingScore * Math.min(remainingSearchRange.length, LongStringLength) *
-//					matchRangeDiscount;
 					matchRangeDiscount * matchStartDiscount;
+
+				/* DEBUG log("score:", score); */
+
 				score /= searchRange.length;
+
+				/* DEBUG log(clip(score)); */
 
 				return score;
 			}
