@@ -53,7 +53,7 @@ To find something in the last 2000 pages of your browser history, type <kbd>/</k
 The same <kbd>ctrl</kbd>&nbsp;<kbd>enter</kbd> (<kbd>cmd⌘</kbd>&nbsp;<kbd>enter</kbd> on macOS) and <kbd>shift</kbd>&nbsp;<kbd>enter</kbd> shortcuts will open the visited page in a new tab or window.
 
 
-## The Great Suspender integration <a src="https://chrome.google.com/webstore/detail/the-great-suspender/klbibkeccnjlkjkiokjodocebajanakg?hl=en"><img src="img/tgs-icon.png" style="height: 24px; vertical-align: text-bottom;"></a>
+## The Great Suspender <a href="https://chrome.google.com/webstore/detail/the-great-suspender/klbibkeccnjlkjkiokjodocebajanakg?hl=en"><img src="img/tgs-icon.png" style="height: 24px;"></a> integration
 
 If you use the handy extension [The Great Suspender](https://chrome.google.com/webstore/detail/the-great-suspender/klbibkeccnjlkjkiokjodocebajanakg?hl=en) (and you almost certainly are if you have hundreds of tabs open), then suspended tabs will look faded in the list, and the original URL is shown (not that long one that you see in the location bar).  That means if you search for `chrome` or `extension`, you won't simply match all the suspended tabs, which is what happens in other tab search extensions.
 
