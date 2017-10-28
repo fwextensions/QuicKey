@@ -149,44 +149,24 @@ input.search-box::-webkit-search-cancel-button {
 }
 
 .results-list-item div.url {
-	height: 17px;
 	font-size: 12px;
 	opacity: 0.7;
 }
 
+	/* we need to set the font-size of the b elements in the URL because they
+	   default to 14px due to the * selector */
 .results-list-item div.url b {
 	font-size: 12px;
 }
-.results-list-item.selected {
-	background-color: #dfdfff;
-}
 
-.results-list-item div {
-	width: 100%;
-	height: 19px;
-	text-overflow: ellipsis;
-	overflow: hidden;
-}
-
-.results-list-item div b, .search-box {
-	color: #228;
-}
-
-.results-list-item div.title:empty::after {
-	opacity: 0.6;
-	content: "no title"
-}
-
-.results-list-item div.url {
-	height: 17px;
-	font-size: 12px;
+.results-list-item.suspended div.title {
 	opacity: 0.7;
 }
 
-.results-list-item div.url b {
-	font-size: 12px;
-
+.results-list-item.suspended div.url {
+	opacity: 0.5;
 }
+
 
 /* ===========================================================================
     Results list scrollbar

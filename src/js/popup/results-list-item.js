@@ -89,8 +89,12 @@ define([
 					item.title.length > MaxTitleLength ? item.title : "",
 					item.displayURL.length > MaxURLLength ? item.displayURL : ""
 				].join("\n"),
-				className = ["results-list-item", (props.isSelected ? "selected " : ""),
-					(item.incognito ? "incognito" : "")].join(" "),
+				className = [
+					"results-list-item",
+					(props.isSelected ? "selected" : ""),
+					(item.unsuspendURL ? "suspended" : ""),
+					(item.incognito ? "incognito" : "")
+				].join(" "),
 				faviconStyle = {
 					backgroundImage: "url(" + item.faviconURL + ")"
 				};
