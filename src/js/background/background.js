@@ -1,17 +1,18 @@
 require([
+	"storage",
 	"cp"
 ], function(
+	storage,
 	cp
 ) {
 	function handleTabActivated(
-		tabID,
-		windowID)
+		event)
 	{
-		console.log(tabID, windowID);
+console.log(event);
 
-		cp.tabs.get(tabID)
+		cp.tabs.get(event.tabId)
 			.then(function(tab) {
-				addTabToStorage(tab);
+				storage.addTab(tab);
 			});
 	}
 
@@ -20,53 +21,15 @@ require([
 		windowID)
 	{
 		if (windowID != chrome.windows.WINDOW_ID_NONE) {
-			cp.windows.get(windowID, { populate: true })
-				.then(function(window) {
-					window.tabs.forEach(function(tab) {
-						if (tab.active) {
-							console.log("active", windowID, tab.id, tab.url);
-							addTabToStorage(tab);
-						}
-					});
+			cp.tabs.query({ active: true, windowId: windowID })
+				.then(function(tabs) {
+					if (tabs.length) {
+console.log("active", windowID, tabs[0].id, tabs[0].url);
+
+						storage.addTab(tabs[0]);
+					}
 				});
 		}
-	}
-
-
-	function getStorage()
-	{
-			// pass null to get everything in storage
-		return cp.storage.local.get(null)
-			.then(function(storage) {
-				if (!storage || !storage.tabIDs) {
-					return {
-						tabIDs: [],
-						tabsByID: {}
-					};
-				} else {
-					return storage;
-				}
-			});
-	}
-
-
-	function addTabToStorage(
-		tab)
-	{
-		return getStorage()
-			.then(function(storage) {
-				var id = tab.id,
-					tabInfo = {
-						id: id,
-						url: tab.url,
-						ts: Date.now()
-					};
-
-				storage.tabIDs.push(id);
-				storage.tabsByID[id] = tabInfo;
-
-				chrome.storage.local.set(storage);
-			});
 	}
 
 

@@ -203,6 +203,20 @@ define([
 			shiftKey,
 			altKey)
 		{
+			var storage = this.props.storage,
+				tabIDs = storage.tabIDs,
+				lastTabID;
+
+				// if the query is empty and we have recent tabs tracked, create
+				// a synthetic tab item corresponding to the previous one
+			if (!item && tabIDs.length && this.mode == "tabs") {
+				lastTabID = tabIDs[tabIDs.length - 2];
+				item = {
+					id: lastTabID,
+					windowId: storage.tabsByID[lastTabID].windowID
+				};
+			}
+
 			if (item) {
 				if (this.mode == "tabs") {
 						// switch to the tab
