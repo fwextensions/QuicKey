@@ -3,7 +3,7 @@
 	"short_name": "QuicKey",
 	"version": "0.0.11",
 	"manifest_version": 2,
-	"description": "Switch tabs or access bookmarks and history with a Quicksilver-style search",
+	"description": "Switch tabs or access bookmarks and history with a Quicksilver-style search! Also supports tabs suspended by The Great Suspender.",
 	"author": "John Dunning",
 	"content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
 	"minimum_chrome_version": "45",
@@ -11,6 +11,7 @@
 		"tabs",
 		"bookmarks",
 		"history",
+		"storage",
 		"chrome://favicon/"
 	],
 	"icons": {
@@ -25,6 +26,13 @@
 		},
 		"default_title": "QuicKey",
 		"default_popup": "popup.html"
+	},
+	"background": {
+		"page": "background.html",
+//		"scripts": [
+//			"background/event-page.js"
+//		],
+		"persistent": false
 	},
 	"commands": {
 		"_execute_browser_action": {
