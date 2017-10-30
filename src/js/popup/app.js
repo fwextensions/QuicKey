@@ -67,6 +67,14 @@ define([
 		},
 
 
+		componentDidMount: function()
+		{
+			if (gSwitchToLastTab) {
+				this.openItem();
+			}
+		},
+
+
 		componentWillMount: function()
 		{
 				// start the process of getting all the tabs.  any initial chars
@@ -209,7 +217,7 @@ define([
 
 				// if the query is empty and we have recent tabs tracked, create
 				// a synthetic tab item corresponding to the previous one
-			if (!item && tabIDs.length && this.mode == "tabs") {
+			if (!item && tabIDs.length > 1 && this.mode == "tabs") {
 				lastTabID = tabIDs[tabIDs.length - 2];
 				item = {
 					id: lastTabID,

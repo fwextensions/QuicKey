@@ -80,7 +80,7 @@ Tabs in incognito mode display the incognito icon, so you can distinguish a norm
 
 ★ Privacy
 
-To function, QuicKey needs access to your open tabs, bookmarks and history. The permissions dialog says QuicKey can also change your bookmarks and browsing history, but it never will. It also doesn't interact with the page content in any way and doesn't transmit any information anywhere.
+To function, QuicKey needs access to your open tabs, bookmarks and history. The permissions dialog says QuicKey can also change your bookmarks and browsing history, but it never will. It also doesn't interact with the page content in any way and doesn't transmit any information other than anonymized Google Analytics data.
 
 
 ★ Support and source code

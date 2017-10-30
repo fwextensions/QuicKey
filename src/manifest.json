@@ -42,6 +42,15 @@
 				"chromeos": "Alt+Q",
 				"linux": "Alt+Q"
 			}
+		},
+		"previous-tab": {
+			"suggested_key": {
+				"windows": "Alt+Shift+Q",
+				"mac": "MacCtrl+Shift+Q",
+				"chromeos": "Alt+Shift+Q",
+				"linux": "Alt+Shift+Q"
+			},
+			"description": "Switch to the previous tab"
 		}
 	},
 	"offline_enabled": true

@@ -1,13 +1,12 @@
 var gKeyCache = [],
 	gClose = false,
+	gSwitchToLastTab = false,
 	gOnKeyDown,
 	gInitTime = performance.now();
 
 
 (function() {
-	var AllowedPattern = /[-'!"#$%&()\*+,\.\/:;<=>?@\[\\\]\^_`{|}~ \w]/,
-		Escape = 27,
-		Backspace = 8;
+	var AllowedPattern = /[-'!"#$%&()\*+,\.\/:;<=>?@\[\\\]\^_`{|}~ \w]/;
 
 
 	gOnKeyDown = function(
@@ -20,12 +19,17 @@ var gKeyCache = [],
 		}
 
 		switch (event.which) {
-			case Escape:
+			case 27:	// esc
 				gClose = true;
 				break;
 
-			case Backspace:
+			case 8:		// backspace
 				gKeyCache.pop();
+				break;
+
+			case 13:	// enter
+			case 9:		// tab
+				gSwitchToLastTab = true;
 				break;
 
 			default:
