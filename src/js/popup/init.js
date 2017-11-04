@@ -40,7 +40,6 @@ var gKeyCache = [],
 		}
 	};
 
-
 		// listen to key events that happen before the React code fully loads
 		// and instantiates the components. the gKeyCache global will be passed
 		// to the TabSelector as the default query when it loads.

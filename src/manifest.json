@@ -29,9 +29,6 @@
 	},
 	"background": {
 		"page": "background.html",
-//		"scripts": [
-//			"background/event-page.js"
-//		],
 		"persistent": false
 	},
 	"commands": {

@@ -10,6 +10,7 @@ define([
 	"get-history",
 	"add-urls",
 	"handle-keys",
+	"storage",
 	"lodash"
 ], function(
 	React,
@@ -23,6 +24,7 @@ define([
 	getHistory,
 	addURLs,
 	handleKeys,
+	storage,
 	_
 ) {
 	const MinScore = .15,
@@ -44,6 +46,8 @@ define([
 		tabs: [],
 		bookmarks: [],
 		history: [],
+		recents: [],
+		storage: null,
 		bookmarksPromise: null,
 		historyPromise: null,
 		resultsList: null,
@@ -67,21 +71,40 @@ define([
 		},
 
 
-		componentDidMount: function()
-		{
-			if (gSwitchToLastTab) {
-				this.openItem();
-			}
-		},
-
-
 		componentWillMount: function()
 		{
+				// before returning the recents, we need to run scoreItems() on
+				// them so that the hitMask and scores keys are added to them.
+				// we don't for regular tabs because in getMatchingItems(), those
+				// always get scoreItems() called on them before they're rendered.
+			this.loadPromisedItems(function() {
+				return getTabs(storage.getRecents())
+					.then(function(recents) {
+						scoreItems(recents, "");
+
+						return recents;
+					});
+			}, "recents", "");
+
 				// start the process of getting all the tabs.  any initial chars
 				// the user might have typed as we were loading will not match
 				// anything until this promise resolves and calls
 				// getMatchingItems() again.
-			this.loadPromisedItems(getTabs, "tabs", "");
+			this.loadPromisedItems(function() { return getTabs(cp.tabs.query({})); }, "tabs", "");
+		},
+
+
+		componentDidMount: function()
+		{
+				// if enter was pressed as we were starting up, wait for the
+				// recents to load before calling openItem() so that it has a
+				// previous tab to switch back to
+			if (gSwitchToLastTab && this.recentsPromise) {
+				this.recentsPromise
+					.then(function() {
+						this.openItem();
+					}.bind(this));
+			}
 		},
 
 
@@ -98,7 +121,7 @@ define([
 			if (!query) {
 					// short-circuit the empty query case, since quick-score now
 					// returns 0.9 as the scores for an empty query
-				return [];
+				return this.recents;
 			}
 
 					// remove spaces from the query before scoring the items
@@ -211,17 +234,16 @@ define([
 			shiftKey,
 			altKey)
 		{
-			var storage = this.props.storage,
-				tabIDs = storage.tabIDs,
-				lastTabID;
+			var recents = this.recents,
+				lastTab;
 
 				// if the query is empty and we have recent tabs tracked, create
 				// a synthetic tab item corresponding to the previous one
-			if (!item && tabIDs.length > 1 && this.mode == "tabs") {
-				lastTabID = tabIDs[tabIDs.length - 2];
+			if (!item && recents.length > 1 && this.mode == "tabs") {
+				lastTab = recents[recents.length - 2];
 				item = {
-					id: lastTabID,
-					windowId: storage.tabsByID[lastTabID].windowID
+					id: lastTab.id,
+					windowId: lastTab.windowId
 				};
 			}
 
@@ -330,6 +352,8 @@ define([
 						// the match on the existing query
 					this[itemName] = items;
 					this.setQuery(query, originalQuery);
+
+					return items;
 				}.bind(this));
 			}
 

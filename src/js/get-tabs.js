@@ -10,10 +10,11 @@ define([
 	const TitlePattern = /ttl=([^&]+)/;
 
 
-	return function getTabs()
+	return function getTabs(
+		tabsPromise)
 	{
 		return Promise.all([
-			cp.tabs.query({}),
+			tabsPromise,
 			cp.tabs.query({
 				active: true,
 				currentWindow: true

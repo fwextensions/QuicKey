@@ -11,7 +11,11 @@ define(function() {
 			b)
 		{
 			if (a.score == b.score) {
-				return a[defaultKeyName].toLocaleLowerCase() < b[defaultKeyName].toLocaleLowerCase() ? -1 : 1;
+				if (a.recent) {
+					return b.recent - a.recent;
+				} else {
+					return a[defaultKeyName].toLocaleLowerCase() < b[defaultKeyName].toLocaleLowerCase() ? -1 : 1;
+				}
 			} else {
 				return b.score - a.score;
 			}

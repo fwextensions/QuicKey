@@ -5,6 +5,9 @@ require([
 	storage,
 	cp
 ) {
+	const MaxSwitchDelay = 750;
+
+
 	chrome.tabs.onActivated.addListener(function(event) {
 		cp.tabs.get(event.tabId)
 			.then(function(tab) {
@@ -29,7 +32,10 @@ console.log("closing", tabID);
 					if (tabs.length) {
 console.log("active", windowID, tabs[0].id, tabs[0].url);
 
-						storage.addTab(tabs[0]);
+							// pass true to let addTab() know that this change
+							// is from alt-tabbing between windows, not switching
+							// tabs within a window
+						storage.addTab(tabs[0], true);
 					}
 				});
 		}
@@ -41,18 +47,39 @@ console.log("active", windowID, tabs[0].id, tabs[0].url);
 			storage.getAll()
 				.then(function(storage) {
 					var tabIDs = storage.tabIDs,
-						previousTabID,
-						previousWindowID;
-
-					if (tabIDs.length > 1) {
-						previousTabID = tabIDs[tabIDs.length - 2];
-						previousWindowID = storage.tabsByID[previousTabID].windowID;
-
+						tabIDCount = tabIDs.length,
+						now = Date.now(),
 							// set a flag so we know when the previous tab is
 							// re-activated that it was caused by us, not the
 							// user, so that it doesn't remove tabs based on
 							// dwell time
-						chrome.storage.local.set({ switchFromShortcut: true });
+						newStorage = {
+							switchFromShortcut: true,
+							lastShortcutTime: now,
+							previousTabIndex: -1
+						},
+						previousTabIndex = tabIDCount - 2,
+						previousTabID,
+						previousWindowID;
+
+					if (tabIDCount > 1) {
+						if (tabIDCount > 2 && !isNaN(storage.lastShortcutTime) &&
+								now - storage.lastShortcutTime < MaxSwitchDelay) {
+							if (storage.previousTabIndex > -1) {
+								previousTabIndex = (storage.previousTabIndex - 1 + tabIDCount) % tabIDCount;
+							} else {
+								previousTabIndex = tabIDCount - 3;
+							}
+
+// TODO: rearrange tabs so two most recently visited are at the end of the list
+
+							newStorage.previousTabIndex = previousTabIndex;
+						}
+
+						previousTabID = tabIDs[previousTabIndex];
+						previousWindowID = storage.tabsByID[previousTabID].windowId;
+
+						chrome.storage.local.set(newStorage);
 						chrome.tabs.update(previousTabID, { active: true });
 
 						if (previousWindowID != chrome.windows.WINDOW_ID_CURRENT) {
@@ -62,4 +89,9 @@ console.log("active", windowID, tabs[0].id, tabs[0].url);
 				});
 		}
 	});
+
+
+	window.log = function() {
+		console.log.apply(console, arguments);
+	}
 });

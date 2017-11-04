@@ -1,11 +1,9 @@
 require([
 	"jsx!popup/app",
-	"storage",
 	"react",
 	"react-dom"
 ], function(
 	App,
-	storage,
 	React,
 	ReactDOM
 ) {
@@ -26,15 +24,11 @@ require([
 	gOnKeyDown = null;
 	gKeyCache = null;
 
-	storage.getAll()
-		.then(function(storage) {
-			ReactDOM.render(
-				React.createElement(App, {
-					initialQuery: query,
-					storage: storage,
-					platform: /Win/i.test(navigator.platform) ? "win" : "mac"
-				}),
-				document.getElementById("root")
-			);
-		});
+	ReactDOM.render(
+		React.createElement(App, {
+			initialQuery: query,
+			platform: /Win/i.test(navigator.platform) ? "win" : "mac"
+		}),
+		document.getElementById("root")
+	);
 });
