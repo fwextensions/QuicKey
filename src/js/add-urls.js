@@ -45,5 +45,7 @@ define(function() {
 		}
 
 		item.displayURL = url.replace(ProtocolPattern, "");
+
+		item.recentBoost = 1;
 	}
 });

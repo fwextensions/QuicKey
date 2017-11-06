@@ -168,7 +168,12 @@ module.exports = function(grunt)
 		grunt.file.write(buildManifestPath, JSON.stringify(manifest, null, "\t"));
 	});
 
+	grunt.registerTask("time", function() {
+		console.log("Started at", new Date().toLocaleString());
+	});
+
 	grunt.registerTask("build", [
+		"time",
 		"sync:out",
 		"cleanupManifest",
 		"checkPopup",

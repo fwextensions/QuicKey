@@ -32,6 +32,12 @@ define([
 		MaxItems = 10,
 		MinItems = 3,
 		MinScoreDiff = .4,
+		VeryRecentMS = 5 * 1000,
+		HourMS = 60 * 60 * 1000,
+		HourCount = 3 * 24,
+		RecentMS = HourCount * HourMS,
+		VeryRecentBoost = .4,
+		RecentBoost = .3,
 		WhitespacePattern = /\s/g,
 		BookmarksQuery = "/b ",
 		HistoryQuery = "/h ",
@@ -73,24 +79,59 @@ define([
 
 		componentWillMount: function()
 		{
-				// before returning the recents, we need to run scoreItems() on
-				// them so that the hitMask and scores keys are added to them.
-				// we don't for regular tabs because in getMatchingItems(), those
-				// always get scoreItems() called on them before they're rendered.
-			this.loadPromisedItems(function() {
-				return getTabs(storage.getRecents())
-					.then(function(recents) {
-						scoreItems(recents, "");
+			Promise.all([
+				storage.getAll(),
+					// start the process of getting all the tabs.  any initial chars
+					// the user might have typed as we were loading will not match
+					// anything until this promise resolves and calls
+					// getMatchingItems() again.
+				this.loadPromisedItems(function() { return getTabs(cp.tabs.query({})); }, "tabs", "")
+			])
+				.then(function(results) {
+					var data = results[0],
+						now = Date.now();
 
-						return recents;
+						// boost the scores of recent tabs
+					this.tabs.forEach(function(tab) {
+						var recentTab = data.tabsByID[tab.id],
+							age,
+							hours;
+
+						if (recentTab) {
+							age = now - recentTab.recent;
+
+							if (age < VeryRecentMS) {
+								tab.recentBoost = 1 + VeryRecentBoost;
+							} else if (age < RecentMS) {
+								hours = Math.floor(age / HourMS);
+								tab.recentBoost = 1 +
+									RecentBoost * ((HourCount - hours) / HourCount);
+							}
+						}
 					});
-			}, "recents", "");
 
-				// start the process of getting all the tabs.  any initial chars
-				// the user might have typed as we were loading will not match
-				// anything until this promise resolves and calls
-				// getMatchingItems() again.
-			this.loadPromisedItems(function() { return getTabs(cp.tabs.query({})); }, "tabs", "");
+						// set the query again because we may have already
+						// rendered a match on the tabs without the recent boosts
+					this.setQuery(this.state.query);
+
+					this.loadPromisedItems(function() {
+							// create the recents list from the data we've loaded
+						var recents = data.tabIDs.map(function(tabID) {
+								return data.tabsByID[tabID];
+							});
+
+						return getTabs(Promise.resolve(recents))
+							.then(function(recents) {
+									// before returning the recents, we need to run scoreItems() on
+									// them so that the hitMask and scores keys are added to them.
+									// we don't for regular tabs because in getMatchingItems(), those
+									// always get scoreItems() called on them before they're rendered.
+								scoreItems(recents, "");
+
+								return recents;
+							});
+					}, "recents", "");
+				}.bind(this));
 		},
 
 
@@ -289,11 +330,11 @@ define([
 
 
 		setQuery: function(
-			query,
-			originalQuery)
+			originalQuery,
+			query)
 		{
 			this.setState({
-				matchingItems: this.getMatchingItems(query),
+				matchingItems: this.getMatchingItems(query || originalQuery),
 				query: originalQuery,
 				selected: 0
 			});
@@ -351,7 +392,7 @@ define([
 						// store the result and then update the results list with
 						// the match on the existing query
 					this[itemName] = items;
-					this.setQuery(query, originalQuery);
+					this.setQuery(originalQuery, query);
 
 					return items;
 				}.bind(this));
@@ -402,7 +443,7 @@ define([
 				this.mode = "tabs";
 			}
 
-			this.setQuery(query, originalQuery);
+			this.setQuery(originalQuery, query);
 		},
 
 

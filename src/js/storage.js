@@ -7,6 +7,23 @@ define([
 		MinDwellTime = 750;
 
 
+	function store(
+		data)
+	{
+			// arrays and objects that are updated don't seem to get saved with
+			// the updated state, so make copies and store those
+		if (data.tabIDs) {
+			data.tabIDs = [].concat(data.tabIDs);
+		}
+
+		if (data.tabsByID) {
+			data.tabsByID = Object.assign({}, data.tabsByID);
+		}
+
+		cp.storage.local.set(data);
+	}
+
+
 	function getDefaultStorage()
 	{
 		return cp.tabs.query({ active: true, currentWindow: true, windowType: "normal" })
@@ -109,7 +126,7 @@ define([
 				});
 
 //				if (!storage.switchFromShortcut && !fromFocusChange && lastTab &&
-//						(now - lastTab.ts < MinDwellTime)) {
+//						(now - lastTab.recent < MinDwellTime)) {
 //						// the previously active tab wasn't active for very long,
 //						// so remove it from the list and the dictionary
 //console.log("removing", lastID, lastTab.url);
@@ -129,7 +146,7 @@ if (storage.switchFromShortcut) {
 //	console.log(tabIDs.map(id => tabsByID[id].title).slice(-10).join("\n"));
 }
 
-				chrome.storage.local.set({
+				store({
 					tabIDs: tabIDs,
 					tabsByID: tabsByID,
 					switchFromShortcut: false
@@ -155,7 +172,7 @@ console.log("tab closed", tabID);
 
 				delete tabsByID[tabID];
 
-				chrome.storage.local.set({
+				store({
 					tabIDs: tabIDs,
 					tabsByID: tabsByID
 				});
