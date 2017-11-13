@@ -28,7 +28,8 @@ define(function() {
 			opt: "alt",
 			command: "meta",
 			cmd: "meta",
-			mod: /Win/i.test(navigator.platform) ? "ctrl" : "meta"
+			mod: /Win/i.test(navigator.platform) ? "ctrl" : "meta",
+			space: " "
 		};
 
 
@@ -115,17 +116,22 @@ define(function() {
 				},
 				keys = shortcut.split("+");
 
-			keys.forEach(function(key) {
+			keys = keys.map(function(key) {
+					// lowercase all the key names so we'll match even if a
+					// modifier was written as Ctrl, and we want regular keys
+					// lowercase anyway to handle shift shortcuts and capslock
+				key = key.toLowerCase();
 				key = Aliases[key] || key;
 
 				if (Modifiers[key]) {
 					info.modifiers.push(key);
 				}
+
+				return key;
 			});
 
-				// the main key should be last.  force it to lowercase so we can
-				// handle shift shortcuts and when capslock is on.
-			info.key = keys.pop().toLowerCase();
+				// the main key should be last
+			info.key = keys.pop();
 
 				// sort the modifiers so we don't have to do it every time we
 				// handle a key event

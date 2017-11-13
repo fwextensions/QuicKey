@@ -28,7 +28,17 @@ define([
 		["mod+w",
 			function() { self.closeTab(selectedTab()); }],
 		["Escape",
-			function(event) { self.clearQuery(event.target.value); }]
+			function(event) { self.clearQuery(event.target.value); }],
+		[["Space", "shift+Space"],
+			function(event) {
+				if (self.mode != "command") {
+					self.modifySelected(event.shiftKey ? -1 : 1);
+				} else {
+						// in command mode, return true so that the space after
+						// the /h or b isn't swallowed
+					return true;
+				}
+			}]
 	];
 
 
@@ -67,8 +77,8 @@ define([
 
 			// we only need to check for shortcuts if there's a modifier key
 			// pressed or event.key is more than 1 char (ArrowUp, etc.)
-		if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey ||
-				event.key.length > 1) {
+		if (event.key.length > 1 || event.altKey || event.ctrlKey || event.metaKey ||
+				event.shiftKey || event.key == " ") {
 			return manager.handleKeyEvent(event);
 		}
 	}

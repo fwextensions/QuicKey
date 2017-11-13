@@ -1,3 +1,20 @@
+	// we can't add this listener inside the require below because it's
+	// called asynchronously, and the startup event will have already fired
+	// by the time the require callback runs
+chrome.runtime.onStartup.addListener(function() {
+console.log("startup");
+	require([
+		"storage"
+	], function(
+		storage
+	) {
+			// the stored recent tab data will be out of date, since the tabs
+			// will likely get new IDs when reloaded
+		return storage.updateRecents();
+	});
+});
+
+
 require([
 	"storage",
 	"cp"
@@ -9,8 +26,10 @@ require([
 
 
 	chrome.tabs.onActivated.addListener(function(event) {
-		cp.tabs.get(event.tabId)
+		return cp.tabs.get(event.tabId)
 			.then(function(tab) {
+console.log("activate", tab.id);
+
 				storage.addTab(tab);
 			});
 	});
