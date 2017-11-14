@@ -159,7 +159,9 @@ define([
 		getMatchingItems: function(
 			query)
 		{
-			if (!query) {
+			if (this.mode == "command") {
+				return [];
+			} else if (!query && this.mode == "tabs") {
 					// short-circuit the empty query case, since quick-score now
 					// returns 0.9 as the scores for an empty query
 				return this.recents;
@@ -207,9 +209,11 @@ define([
 		closeTab: function(
 			tab)
 		{
-			if (tab) {
+				// we can only remove actual tabs
+			if (tab && this.mode == "tabs") {
 				chrome.tabs.remove(tab.id);
 				_.pull(this.tabs, tab);
+				_.remove(this.recents, { id: tab.id });
 
 					// update the list to show the remaining matching tabs
 				this.setState({

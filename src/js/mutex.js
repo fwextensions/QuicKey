@@ -1,11 +1,14 @@
 define(function() {
 	function Mutex() {
-	  this._busy  = false;
-	  this._queue = [];
+		this._busy  = false;
+		this._queue = [];
 	}
 
+
 	Object.assign(Mutex.prototype, {
-		synchronize: function(task) {
+		synchronize: function(
+			task)
+		{
 			return new Promise(function(resolve, reject) {
 				this._queue.push([task, resolve, reject]);
 
@@ -14,6 +17,7 @@ define(function() {
 				}
 			}.bind(this));
 		},
+
 
 		_dequeue: function() {
 			var next = this._queue.shift();
@@ -26,7 +30,10 @@ define(function() {
 			}
 		},
 
-		_execute: function(record) {
+
+		_execute: function(
+			record)
+		{
 			var task = record[0],
 				resolve = record[1],
 				reject = record[2];
@@ -36,6 +43,7 @@ define(function() {
 			}.bind(this));
 		}
 	});
+
 
 	return Mutex;
 });

@@ -120,9 +120,12 @@ console.log("saving", event, data.tabIDs && data.tabIDs.slice(-4).join(","), dat
 						if (newTab) {
 								// we found the same URL in a new tab, so copy over
 								// the recent timestamp and store it in the hash
-								// using the new tab's ID
+								// using the new tab's ID.  also delete the URL
+								// from the hash in case there are duplicate tabs
+								// pointing at the same URL.
 							newTab.recent = oldTab.recent;
 							tabsByID[newTab.id] = newTab;
+							delete newTabsByURL[oldTab.url];
 
 							return newTab.id;
 						} else {
@@ -234,14 +237,13 @@ if (storage.switchFromShortcut) {
 					if (index > -1) {
 console.log("tab closed", tabID);
 						tabIDs.splice(index, 1);
+						delete tabsByID[tabID];
+
+						return save({
+							tabIDs: tabIDs,
+							tabsByID: tabsByID
+						}, "removeTab");
 					}
-
-					delete tabsByID[tabID];
-
-					return save({
-						tabIDs: tabIDs,
-						tabsByID: tabsByID
-					}, "removeTab");
 				});
 		});
 	}
