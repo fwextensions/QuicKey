@@ -10,7 +10,7 @@ define([
 	"get-history",
 	"add-urls",
 	"handle-keys",
-	"storage",
+	"recent-tabs",
 	"lodash"
 ], function(
 	React,
@@ -24,7 +24,7 @@ define([
 	getHistory,
 	addURLs,
 	handleKeys,
-	storage,
+	recentTabs,
 	_
 ) {
 	const MinScore = .15,
@@ -53,7 +53,6 @@ define([
 		bookmarks: [],
 		history: [],
 		recents: [],
-		storage: null,
 		bookmarksPromise: null,
 		historyPromise: null,
 		resultsList: null,
@@ -80,7 +79,7 @@ define([
 		componentWillMount: function()
 		{
 			Promise.all([
-				storage.getAll(),
+				recentTabs.getAll(),
 					// start the process of getting all the tabs.  any initial chars
 					// the user might have typed as we were loading will not match
 					// anything until this promise resolves and calls
@@ -88,12 +87,14 @@ define([
 				this.loadPromisedItems(function() { return getTabs(cp.tabs.query({})); }, "tabs", "")
 			])
 				.then(function(results) {
-					var data = results[0],
+					var recents = results[0],
+						tabs = results[1],
+						tabsByID = recents.tabsByID,
 						now = Date.now();
 
 						// boost the scores of recent tabs
-					this.tabs.forEach(function(tab) {
-						var recentTab = data.tabsByID[tab.id],
+					tabs.forEach(function(tab) {
+						var recentTab = tabsByID[tab.id],
 							age,
 							hours;
 
@@ -111,15 +112,11 @@ define([
 					});
 
 						// set the query again because we may have already
-						// rendered a match on the tabs without the recent boosts
+						// rendered a match on the tabs without the recent boosts,
+						// which may have changed the results
 					this.setQuery(this.state.query);
 
 					this.loadPromisedItems(function() {
-							// create the recents list from the data we've loaded
-						var recents = data.tabIDs.map(function(tabID) {
-								return data.tabsByID[tabID];
-							});
-
 						return getTabs(Promise.resolve(recents))
 							.then(function(recents) {
 									// before returning the recents, we need to run scoreItems() on
@@ -141,10 +138,7 @@ define([
 				// recents to load before calling openItem() so that it has a
 				// previous tab to switch back to
 			if (gSwitchToLastTab && this.recentsPromise) {
-				this.recentsPromise
-					.then(function() {
-						this.openItem();
-					}.bind(this));
+				this.recentsPromise.then(function() { this.openItem(); }.bind(this));
 			}
 		},
 

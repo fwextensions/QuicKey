@@ -100,7 +100,7 @@ define([
 				};
 
 			if (IsDevMode) {
-				tooltip = _.toPairs(item.scores).concat([["recentBoost", item.recentBoost]])
+				tooltip = _.toPairs(item.scores).concat([["recentBoost", item.recentBoost], ["id", item.id]])
 					.map(function(a) { return a.join(": "); }).join("\n") + "\n" + tooltip;
 			}
 

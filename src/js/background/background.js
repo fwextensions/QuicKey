@@ -4,22 +4,24 @@
 chrome.runtime.onStartup.addListener(function() {
 console.log("startup");
 	require([
-		"storage"
+		"recent-tabs"
 	], function(
-		storage
+		recentTabs
 	) {
 			// the stored recent tab data will be out of date, since the tabs
 			// will likely get new IDs when reloaded
-		return storage.updateRecents();
+		return recentTabs.updateAll();
 	});
 });
 
 
 require([
 	"storage",
+	"recent-tabs",
 	"cp"
 ], function(
 	storage,
+	recentTabs,
 	cp
 ) {
 	const MaxSwitchDelay = 750;
@@ -30,7 +32,7 @@ require([
 			.then(function(tab) {
 console.log("onActivated", tab.id);
 
-				storage.addTab(tab);
+				recentTabs.add(tab);
 			});
 	});
 
@@ -38,19 +40,19 @@ console.log("onActivated", tab.id);
 	chrome.tabs.onRemoved.addListener(function(tabID, removeInfo) {
 console.log("onRemoved", tabID);
 
-		storage.removeTab(tabID, removeInfo);
+		recentTabs.remove(tabID, removeInfo);
 	});
 
 
 	chrome.tabs.onUpdated.addListener(function(tabID, changeInfo) {
 console.log("onUpdated", tabID);
 
-		storage.updateTab(tabID, changeInfo);
+		recentTabs.update(tabID, changeInfo);
 	});
 
 
-		// the onActivated event isn't fired when windows are switched between,
-		// so get the active tab in this window and store it
+		// the onActivated event isn't fired when the user switches between
+		// windows, so get the active tab in this window and store it
 	chrome.windows.onFocusChanged.addListener(function(windowID) {
 		if (windowID != chrome.windows.WINDOW_ID_NONE) {
 			cp.tabs.query({ active: true, windowId: windowID })
@@ -61,13 +63,14 @@ console.log("onFocusChanged", windowID, tabs[0].id, tabs[0].url);
 							// pass true to let addTab() know that this change
 							// is from alt-tabbing between windows, not switching
 							// tabs within a window
-						storage.addTab(tabs[0], true);
+						recentTabs.add(tabs[0], true);
 					}
 				});
 		}
 	});
 
 
+// TODO: move this to recentTabs
 	chrome.commands.onCommand.addListener(function(command) {
 		if (command == "previous-tab") {
 			storage.getAll()
