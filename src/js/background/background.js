@@ -1,4 +1,4 @@
-	// we can't add this listener inside the require below because it's
+	// we can't add this listener inside the require below because that's
 	// called asynchronously, and the startup event will have already fired
 	// by the time the require callback runs
 chrome.runtime.onStartup.addListener(function() {
@@ -28,7 +28,7 @@ require([
 	chrome.tabs.onActivated.addListener(function(event) {
 		return cp.tabs.get(event.tabId)
 			.then(function(tab) {
-console.log("activate", tab.id);
+console.log("onActivated", tab.id);
 
 				storage.addTab(tab);
 			});
@@ -36,9 +36,16 @@ console.log("activate", tab.id);
 
 
 	chrome.tabs.onRemoved.addListener(function(tabID, removeInfo) {
-console.log("closing", tabID);
+console.log("onRemoved", tabID);
 
 		storage.removeTab(tabID, removeInfo);
+	});
+
+
+	chrome.tabs.onUpdated.addListener(function(tabID, changeInfo) {
+console.log("onUpdated", tabID);
+
+		storage.updateTab(tabID, changeInfo);
 	});
 
 
@@ -49,7 +56,7 @@ console.log("closing", tabID);
 			cp.tabs.query({ active: true, windowId: windowID })
 				.then(function(tabs) {
 					if (tabs.length) {
-console.log("active", windowID, tabs[0].id, tabs[0].url);
+console.log("onFocusChanged", windowID, tabs[0].id, tabs[0].url);
 
 							// pass true to let addTab() know that this change
 							// is from alt-tabbing between windows, not switching

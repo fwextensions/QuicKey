@@ -1,6 +1,6 @@
 define(function() {
 	function Mutex() {
-		this._busy  = false;
+		this._locked = false;
 		this._queue = [];
 	}
 
@@ -12,7 +12,7 @@ define(function() {
 			return new Promise(function(resolve, reject) {
 				this._queue.push([task, resolve, reject]);
 
-				if (!this._busy) {
+				if (!this._locked) {
 					this._dequeue();
 				}
 			}.bind(this));
@@ -23,10 +23,10 @@ define(function() {
 			var next = this._queue.shift();
 
 			if (next) {
-				this._busy = true;
+				this._locked = true;
 				this._execute(next);
 			} else {
-				this._busy = false;
+				this._locked = false;
 			}
 		},
 

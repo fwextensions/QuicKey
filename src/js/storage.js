@@ -6,10 +6,28 @@ define([
 	Mutex
 ) {
 	const MaxTabsLength = 50,
-		MinDwellTime = 750;
+		MinDwellTime = 750,
+		TabKeysHash = {
+			favIconUrl: 1,
+			id: 1,
+			incognito: 1,
+			title: 1,
+			url: 1,
+			windowId: 1
+		},
+		TabKeys = Object.keys(TabKeysHash);
 
 
 	const storageMutex = new Mutex();
+
+
+	function pluckRelevantKeys(
+		tab)
+	{
+		return TabKeys.reduce(function(obj, key) {
+			obj[key] = tab[key]; return obj;
+		}, {});
+	}
 
 
 	function save(
@@ -60,15 +78,6 @@ console.log("saving", event, data.tabIDs && data.tabIDs.slice(-4).join(","), dat
 	}
 
 
-	function reset()
-	{
-		return storageMutex.synchronize(function() {
-			return getDefaultStorage()
-				.then(save);
-		});
-	}
-
-
 	function getAll()
 	{
 			// pass null to get everything in storage
@@ -94,59 +103,11 @@ console.log("saving", event, data.tabIDs && data.tabIDs.slice(-4).join(","), dat
 	}
 
 
-	function updateRecents()
+	function reset()
 	{
 		return storageMutex.synchronize(function() {
-			return Promise.all([
-				cp.tabs.query({}),
-				getAll()
-			])
-				.then(function(result) {
-					var newTabs = result[0],
-						data = result[1],
-						tabIDs = data.tabIDs,
-						tabsByID = data.tabsByID,
-						newTabsByURL = {};
-
-						// create a dictionary of the new tabs by URL
-					newTabs.forEach(function(tab) {
-						newTabsByURL[tab.url] = tab;
-					});
-
-					tabIDs = tabIDs.map(function(tabID) {
-						var oldTab = tabsByID[tabID],
-							newTab = newTabsByURL[oldTab && oldTab.url];
-
-						if (newTab) {
-								// we found the same URL in a new tab, so copy over
-								// the recent timestamp and store it in the hash
-								// using the new tab's ID.  also delete the URL
-								// from the hash in case there are duplicate tabs
-								// pointing at the same URL.
-							newTab.recent = oldTab.recent;
-							tabsByID[newTab.id] = newTab;
-							delete newTabsByURL[oldTab.url];
-
-							return newTab.id;
-						} else {
-							delete tabsByID[tabID];
-
-							return null;
-						}
-					})
-						.filter(function(tabID) {
-								// filter out the IDs for any tabs we didn't find
-							return tabID;
-						});
-
-
-					return save({
-						tabIDs: tabIDs,
-						tabsByID: tabsByID,
-						recentsUpdated: Date.now(),
-						newTabsCount: newTabs.length
-					}, "updateRecents");
-				});
+			return getDefaultStorage()
+				.then(save);
 		});
 	}
 
@@ -162,6 +123,7 @@ console.log("saving", event, data.tabIDs && data.tabIDs.slice(-4).join(","), dat
 						now = Date.now(),
 						tabIDs = storage.tabIDs,
 						tabsByID = storage.tabsByID,
+						tabData,
 						lastID,
 						lastTab;
 
@@ -200,9 +162,11 @@ console.log("saving", event, data.tabIDs && data.tabIDs.slice(-4).join(","), dat
 //						delete tabsByID[tabIDs.pop()];
 //					}
 
-					tab.recent = now;
+						// copy just the keys we need from the tab object
+					tabData = pluckRelevantKeys(tab);
+					tabData.recent = now;
 					tabIDs.push(id);
-					tabsByID[id] = tab;
+					tabsByID[id] = tabData;
 
 						// remove any older tabs that are over the max limit
 					tabIDs.splice(0, Math.max(tabIDs.length - MaxTabsLength, 0)).forEach(function(id) {
@@ -230,9 +194,8 @@ if (storage.switchFromShortcut) {
 			return getAll()
 				.then(function(storage) {
 					var tabIDs = storage.tabIDs,
-						tabsByID = storage.tabsByID;
-
-					var index = tabIDs.indexOf(tabID);
+						tabsByID = storage.tabsByID,
+						index = tabIDs.indexOf(tabID);
 
 					if (index > -1) {
 console.log("tab closed", tabID);
@@ -249,13 +212,111 @@ console.log("tab closed", tabID);
 	}
 
 
+	function updateTab(
+		tabID,
+		changeInfo)
+	{
+		return storageMutex.synchronize(function() {
+			return getAll()
+				.then(function(data) {
+					var tabsByID = data.tabsByID,
+						tab = tabsByID[tabID],
+						foundRelevantChange = false;
+
+					if (tab) {
+						Object.keys(changeInfo).forEach(function(key) {
+							if (key in TabKeysHash) {
+								foundRelevantChange = true;
+console.log("tab updated", tabID, key, changeInfo[key]);
+								tab[key] = changeInfo[key];
+							}
+						});
+
+						if (foundRelevantChange) {
+console.log("saving updated tab");
+							return save({
+								tabsByID: tabsByID
+							}, "updateTab");
+						}
+					}
+				});
+		});
+	}
+
+
+	function updateRecents()
+	{
+		return storageMutex.synchronize(function() {
+			return Promise.all([
+				cp.tabs.query({}),
+				getAll()
+			])
+				.then(function(result) {
+					var freshTabs = result[0],
+						data = result[1],
+						freshTabsByURL = {},
+						tabIDs = data.tabIDs,
+						tabsByID = data.tabsByID,
+							// start with an empty object so if there are old
+							// tabs lying around that aren't listed in tabIDs
+							// they'll get dropped
+						newTabsByID = {},
+						newTabIDs;
+
+						// create a dictionary of the new tabs by URL
+					freshTabs.forEach(function(tab) {
+						freshTabsByURL[tab.url] = tab;
+					});
+
+						// we need to map tabIDs instead of just building a hash
+						// and using Object.keys() to get the list because we
+						// want to maintain the recency order
+					newTabIDs = tabIDs.map(function(tabID) {
+						var oldTab = tabsByID[tabID],
+							newTab = freshTabsByURL[oldTab && oldTab.url];
+
+						if (newTab) {
+								// we found the same URL in a new tab, so copy over
+								// the recent timestamp and store it in the hash
+								// using the new tab's ID.  also delete the URL
+								// from the hash in case there are duplicate tabs
+								// pointing at the same URL.
+							newTab = pluckRelevantKeys(newTab);
+							newTab.recent = oldTab.recent;
+							newTabsByID[newTab.id] = newTab;
+							delete freshTabsByURL[oldTab.url];
+
+							return newTab.id;
+						} else {
+							return null;
+						}
+					})
+						.filter(function(tabID) {
+								// filter out the IDs for any tabs we didn't find
+							return tabID;
+						});
+
+
+					return save({
+						tabIDs: newTabIDs,
+						tabsByID: newTabsByID,
+						recentsUpdated: Date.now(),
+// TODO: remove newTabsCount when we've verified this works
+						newTabsCount: freshTabs.length
+					}, "updateRecents");
+				});
+		});
+	}
+
+
 	return {
 		save: save,
 		reset: reset,
 		getAll: getAll,
 		getRecents: getRecents,
-		updateRecents: updateRecents,
 		addTab: addTab,
-		removeTab: removeTab
+		removeTab: removeTab,
+		updateTab: updateTab,
+		updateRecents: updateRecents
 	};
 });
