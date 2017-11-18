@@ -6,6 +6,7 @@ define([
 	cp
 ) {
 	const MaxTabsLength = 50,
+		MaxSwitchDelay = 750,
 		MinDwellTime = 750,
 		TabKeysHash = {
 			favIconUrl: 1,
@@ -15,7 +16,12 @@ define([
 			url: 1,
 			windowId: 1
 		},
-		TabKeys = Object.keys(TabKeysHash);
+		TabKeys = Object.keys(TabKeysHash),
+		IconPath = "img/icon-19.png",
+		InvertedIconPath = "img/icon-19-inverted.png";
+
+
+	var shortcutTimer = null;
 
 
 	function pluckRelevantKeys(
@@ -24,6 +30,53 @@ define([
 		return TabKeys.reduce(function(obj, key) {
 			obj[key] = tab[key]; return obj;
 		}, {});
+	}
+
+
+	function removeItem(
+		array,
+		item)
+	{
+		var index = array.indexOf(item);
+
+		if (index > -1) {
+			array.splice(index, 1);
+		}
+
+		return array;
+	}
+
+
+	function updateDataFromShortcut()
+	{
+		return storage.set(function(data) {
+			const lastShortcutTabID = data.lastShortcutTabID;
+
+			if (lastShortcutTabID) {
+				removeItem(data.tabIDs, lastShortcutTabID);
+				data.tabIDs.push(lastShortcutTabID);
+				data.tabsByID[lastShortcutTabID].recent = Date.now();
+				data.lastShortcutTabID = null;
+			}
+
+			return data;
+		}, "updateDataFromShortcut");
+	}
+
+
+	function startShortcutTimer()
+	{
+		chrome.browserAction.setIcon({ path: InvertedIconPath });
+		clearTimeout(shortcutTimer);
+		shortcutTimer = setTimeout(onShortcutTimerDone, MaxSwitchDelay);
+	}
+
+
+	function onShortcutTimerDone()
+	{
+		chrome.browserAction.setIcon({ path: IconPath });
+
+		return updateDataFromShortcut();
 	}
 
 
@@ -50,7 +103,14 @@ define([
 // TODO: store visits to a tab in an array.  if visit is < MinDwellTime, pop its last visit time
 // remove it if the array is empty
 
-console.log("add", tab.title);
+// TODO: if this came from switchFromShortcut, then need to ignore this now
+// 	and start a timer to update tabIDs in a second
+
+console.log("add", tab.id, tab.title);
+
+			if (data.switchFromShortcut) {
+				return { switchFromShortcut: false };
+			}
 
 			lastID =  tabIDs[tabIDs.length - 1];
 			lastTab = tabsByID[lastID];
@@ -62,13 +122,15 @@ console.log("add", tab.title);
 					// happen just from opening the extension and then
 					// closing it without doing anything.  or we switched to
 					// the tab using the keyboard shortcut.
-				return { switchFromShortcut: false };
+				return {
+					switchFromShortcut: false,
+					lastShortcutTabID: null
+				};
 			}
 
 				// make sure the ID isn't currently in the list
-			tabIDs = tabIDs.filter(function(item) {
-				return item != id;
-			});
+			removeItem(tabIDs, id);
+
 
 //					if (!data.switchFromShortcut && !fromFocusChange && lastTab &&
 //							(now - lastTab.recent < MinDwellTime)) {
@@ -96,7 +158,8 @@ if (data.switchFromShortcut) {
 			return {
 				tabIDs: tabIDs,
 				tabsByID: tabsByID,
-				switchFromShortcut: false
+				switchFromShortcut: false,
+				lastShortcutTabID: null
 			};
 		}, "addTab");
 	}
@@ -127,9 +190,13 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 	function getAll()
 	{
 		return storage.get(function(data) {
+// TODO: this won't save the data with the newly pushed lastShortcutTabID
+//			updateDataFromShortcut(data);
+
+				// filter out any undefineds, which seem to sneak in sometimes
 			var recents = data.tabIDs.map(function(tabID) {
 					return data.tabsByID[tabID];
-				});
+				}).filter(function(recent) { return recent; });
 
 			recents.tabsByID = data.tabsByID;
 
@@ -158,7 +225,6 @@ console.log("tab updated", tabID, key, changeInfo[key], tab.title);
 				});
 
 				if (foundRelevantChange) {
-console.log("saving updated tab");
 					return {
 						tabsByID: tabsByID,
 						updateCount: (updateCount || 0) + 1
@@ -191,6 +257,7 @@ console.log("saving updated tab");
 						// we need to map tabIDs instead of just building a hash
 						// and using Object.keys() to get the list because we
 						// want to maintain the recency order from tabIDs
+// TODO: push updated tabs into an array with forEach instead of map
 					newTabIDs = tabIDs.map(function(tabID) {
 						var oldTab = tabsByID[tabID],
 							newTab = freshTabsByURL[oldTab && oldTab.url];
@@ -228,11 +295,71 @@ console.log("saving updated tab");
 	}
 
 
+	function toggleTab(
+		direction)
+	{
+		storage.set(function(data) {
+			var tabIDs = data.tabIDs,
+				tabIDCount = tabIDs.length,
+				now = Date.now(),
+					// set a flag so we know when the previous tab is
+					// re-activated that it was caused by us, not the
+					// user, so that it doesn't remove tabs based on
+					// dwell time
+				newData = {
+					switchFromShortcut: true,
+					lastShortcutTime: now,
+					previousTabIndex: -1
+				},
+				previousTabIndex = tabIDCount - 2;
+
+			if (tabIDCount > 1) {
+//console.log("==== switch time", now - data.lastShortcutTime, tabIDCount > 2, !isNaN(data.lastShortcutTime),
+//						now - data.lastShortcutTime < MaxSwitchDelay );
+
+				if (tabIDCount > 2 && !isNaN(data.lastShortcutTime) &&
+						now - data.lastShortcutTime < MaxSwitchDelay) {
+					if (data.previousTabIndex > -1) {
+						previousTabIndex = (data.previousTabIndex - 1 + tabIDCount) % tabIDCount;
+					} else {
+						previousTabIndex = tabIDCount - 3;
+					}
+console.log("==== previous", previousTabIndex);
+				}
+
+				newData.previousTabIndex = previousTabIndex;
+				newData.lastShortcutTabID = data.tabIDs[previousTabIndex];
+console.log("toggleTab previousTabIndex", newData.lastShortcutTabID, previousTabIndex, data.tabsByID[newData.lastShortcutTabID ].title);
+
+				Object.assign(data, newData);
+
+// TODO: always return data to force prev index to -1 if there aren't enough tabs?
+				return data;
+			}
+		}, "toggleTab")
+			.then(function(data) {
+				if (data && data.previousTabIndex > -1 && data.lastShortcutTabID) {
+					var previousTabID = data.lastShortcutTabID,
+						previousWindowID = data.tabsByID[previousTabID].windowId;
+console.log("toggleTab then previousTabID", previousTabID, data.previousTabIndex);
+
+					startShortcutTimer();
+					chrome.tabs.update(previousTabID, { active: true });
+
+					if (previousWindowID != chrome.windows.WINDOW_ID_CURRENT) {
+						chrome.windows.update(previousWindowID, { focused: true });
+					}
+				}
+			});
+	}
+
+
 	return {
 		add: add,
 		remove: remove,
 		getAll: getAll,
 		update: update,
-		updateAll: updateAll
+		updateAll: updateAll,
+		toggleTab: toggleTab
 	};
 });

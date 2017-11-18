@@ -153,7 +153,7 @@ define([
 		getMatchingItems: function(
 			query)
 		{
-			if (this.mode == "command") {
+			if (this.mode == "command" || query == BookmarksQuery || query == HistoryQuery) {
 				return [];
 			} else if (!query && this.mode == "tabs") {
 					// short-circuit the empty query case, since quick-score now

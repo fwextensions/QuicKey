@@ -12,6 +12,7 @@ define([
 		data,
 		event)
 	{
+// TODO: check if this duplication is still needed.  saving may have been failing because there was no mutex
 			// arrays and objects that are updated don't seem to get saved with
 			// the updated state, so make copies and store those
 		for (var key in data) {
@@ -28,7 +29,7 @@ console.log("saving", event, data.tabIDs && data.tabIDs.slice(-4).join(","), dat
 
 		return cp.storage.local.set(data)
 			.then(function() {
-				console.log("SAVED", event);
+console.log("SAVED", event);
 				return data;
 			});
 	}
