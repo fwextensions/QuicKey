@@ -45,6 +45,10 @@ var gKeyCache = [],
 		// to the TabSelector as the default query when it loads.
 	document.addEventListener("keydown", gOnKeyDown);
 
+	chrome.runtime.getBackgroundPage(function(bg) {
+		window.log = bg.log;
+	});
+
 //	chrome.runtime.getBackgroundPage(function(backgroundPage) {
 //		backgroundPage.log("loading");
 //	});

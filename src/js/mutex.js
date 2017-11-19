@@ -6,7 +6,7 @@ define(function() {
 
 
 	Object.assign(Mutex.prototype, {
-		synchronize: function(
+		lock: function(
 			task)
 		{
 			return new Promise(function(resolve, reject) {

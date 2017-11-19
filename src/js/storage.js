@@ -8,39 +8,12 @@ define([
 	const storageMutex = new Mutex();
 
 
-	function save(
-		data,
-		event)
-	{
-// TODO: check if this duplication is still needed.  saving may have been failing because there was no mutex
-			// arrays and objects that are updated don't seem to get saved with
-			// the updated state, so make copies and store those
-		for (var key in data) {
-			var value = data[key];
-
-			if (value instanceof Array) {
-				data[key] = [].concat(value);
-			} else if (value && typeof value == "object") {
-				data[key] = Object.assign({}, value);
-			}
-		}
-
-console.log("saving", event, data.tabIDs && data.tabIDs.slice(-4).join(","), data);
-
-		return cp.storage.local.set(data)
-			.then(function() {
-console.log("SAVED", event);
-				return data;
-			});
-	}
-
-
 	function doTask(
 		task,
 		saveResult,
 		event)
 	{
-		return storageMutex.synchronize(function() {
+		return storageMutex.lock(function() {
 			return getAll()
 				.then(task)
 				.then(function(data) {
@@ -67,6 +40,20 @@ console.log("SAVED", event);
 		event)
 	{
 		return doTask(task, false, event);
+	}
+
+
+	function save(
+		data,
+		event)
+	{
+console.log("saving", event, data.tabIDs && data.tabIDs.slice(-4).join(", "), data);
+
+		return cp.storage.local.set(data)
+			.then(function() {
+//console.log("SAVED", event);
+				return data;
+			});
 	}
 
 
@@ -110,7 +97,7 @@ console.log("SAVED", event);
 
 	function reset()
 	{
-		return storageMutex.synchronize(function() {
+		return storageMutex.lock(function() {
 			return getDefaultStorage()
 				.then(save);
 		});

@@ -445,6 +445,13 @@ define([
 		},
 
 
+		onKeyUp: function(
+			event)
+		{
+//			log("UP",  event.key);
+		},
+
+
 		render: function()
 		{
 			var state = this.state,
@@ -457,6 +464,7 @@ define([
 					query={query}
 					onChange={this.onQueryChange}
 					onKeyDown={this.onKeyDown}
+					onKeyUp={this.onKeyUp}
 				/>
 				<ResultsList
 					ref={this.handleListRef}

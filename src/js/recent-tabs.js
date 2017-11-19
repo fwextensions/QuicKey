@@ -301,6 +301,7 @@ console.log("tab updated", tabID, key, changeInfo[key], tab.title);
 		storage.set(function(data) {
 			var tabIDs = data.tabIDs,
 				tabIDCount = tabIDs.length,
+				maxIndex = tabIDCount - 1,
 				now = Date.now(),
 					// set a flag so we know when the previous tab is
 					// re-activated that it was caused by us, not the
@@ -311,7 +312,7 @@ console.log("tab updated", tabID, key, changeInfo[key], tab.title);
 					lastShortcutTime: now,
 					previousTabIndex: -1
 				},
-				previousTabIndex = tabIDCount - 2;
+				previousTabIndex = (maxIndex + direction + tabIDCount) % tabIDCount;
 
 			if (tabIDCount > 1) {
 //console.log("==== switch time", now - data.lastShortcutTime, tabIDCount > 2, !isNaN(data.lastShortcutTime),
@@ -320,9 +321,7 @@ console.log("tab updated", tabID, key, changeInfo[key], tab.title);
 				if (tabIDCount > 2 && !isNaN(data.lastShortcutTime) &&
 						now - data.lastShortcutTime < MaxSwitchDelay) {
 					if (data.previousTabIndex > -1) {
-						previousTabIndex = (data.previousTabIndex - 1 + tabIDCount) % tabIDCount;
-					} else {
-						previousTabIndex = tabIDCount - 3;
+						previousTabIndex = (data.previousTabIndex + direction + tabIDCount) % tabIDCount;
 					}
 console.log("==== previous", previousTabIndex);
 				}

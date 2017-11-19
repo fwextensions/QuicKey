@@ -69,7 +69,9 @@ require([
 
 	chrome.commands.onCommand.addListener(function(command) {
 		if (command == "previous-tab") {
-			recentTabs.toggleTab("previous");
+			recentTabs.toggleTab(-1);
+		} else if (command == "next-tab") {
+			recentTabs.toggleTab(1);
 		}
 	});
 
