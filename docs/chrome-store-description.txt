@@ -1,0 +1,90 @@
+# Tag line
+
+Quickly switch tabs or access bookmarks and history with a Quicksilver-style search
+
+★
+➤
+
+# Description
+
+Navigate your hundreds of Chrome tabs by typing just part of the page's title or URL!
+
+ • Press the customizable shortcut:
+     • Windows: alt-Q
+     • macOS: ctrl-Q
+ • Type a few letters
+ • Press enter to switch to the selected tab
+
+You can also type "/b" to search bookmarks or "/h" to search your browser history.
+
+Customize the shortcut key by going to the main menu and then More tools > Extensions > Keyboard Shortcuts.
+
+
+★ Fast tab switching
+
+Unlike other tab switchers, QuicKey uses a Quicksilver-style search algorithm to rank the results, where contiguous matches at the beginning of words are higher in the list, as are matches against capital letters. So you can type just a few letters to quickly find the right tab.
+
+The best match is selected by default, so press enter to switch to that tab. Or press the up/down arrow keys or page up/down to move to other results. Or just click one.
+
+Press esc to clear what you've typed. If the search box is empty, then pressing esc will close the popup.
+
+If you type more than 25 letters, which should be plenty to find the right tab, QuicKey switches to an exact string search to stay fast. Spaces in the search string are also ignored.
+
+
+★ Search bookmarks
+
+To find a bookmark, type "/b", then a space, and then part of the bookmark's name or URL.
+
+ • Press enter to open it in the current tab
+ • Press ctrl+enter (cmd⌘+enter on macOS) to open it in a new tab in the current window
+ • Press shift+enter to open it in a new window
+
+
+★ Search the browser history
+
+To find something in the last 2000 pages of your browser history, type "/h", then a space, and then part of the page's name or URL.
+
+The same ctrl+enter (cmd⌘+enter on macOS) and shift+enter shortcuts will open the visited page in a new tab or window.
+
+
+★ The Great Suspender integration
+
+If you use the handy extension "The Great Suspender", then suspended tabs will look faded in the list, and the original URL is shown (not that long one that you see in the location bar). That means if you search for "chrome" or "extension", you won't simply match all the suspended tabs, which is what happens in other tab search extensions.
+
+Press shift+enter to switch to a tab and unsuspend it in one go. Or shift-click it with the mouse.
+
+Sometimes The Great Suspender seems to forget the page's favicon and just shows its own in the tab. In that case, QuicKey will try to show the correct favicon in its list of tabs.
+
+
+★ Move tabs
+
+You can also move tabs to the left or right of the current tab, making it easy to pull tabs from other windows into the current one.
+
+ • Press ctrl+[ to move the selected tab to the left of the current one
+ • Press ctrl+] to move it to the right
+
+Include shift in the shortcut to also unsuspend the tab while moving it. The ctrl key should be used on both Windows and macOS.
+
+
+★ Close tabs
+
+To close the selected tab, press ctrl+W (cmd⌘+W on macOS). So you could type "docg" to match all of your Google Docs URLs and then quickly close each one.
+
+
+★ Incognito mode
+
+By default, Chrome extensions are not enabled in incognito mode. If you want to use QuicKey to switch to incognito tabs as well as normal ones, go to More tools > Extensions, scroll down to QuicKey, and check the "Allow in incognito" option.
+
+Tabs in incognito mode display the incognito icon, so you can distinguish a normal tab from an incognito one with the same title.
+
+
+★ Privacy
+
+To function, QuicKey needs access to your open tabs, bookmarks and history. The permissions dialog says QuicKey can also change your bookmarks and browsing history, but it never will. It also doesn't interact with the page content in any way and doesn't transmit any information anywhere.
+
+
+★ Support and source code
+
+For more information, go to https://fwextensions.github.io/QuicKey/
+
+The QuicKey source code is at https://github.com/fwextensions/QuicKey
