@@ -1,8 +1,19 @@
 define(function() {
-	const WhitespacePattern = /[-/:()<>%._=&\[\]\s]/,
-		UpperCasePattern = /[A-Z]/,
-		LongStringLength = 101,
-		MaxMatchStartPct = .3,
+	const WhitespacePattern = "-/\\:()<>%._=&[] \t\n\r",
+		UpperCasePattern = (function() {
+				var charCodeA = "A".charCodeAt(0),
+					uppercase = [];
+
+				for (var i = 0; i < 26; i++) {
+					uppercase.push(String.fromCharCode(charCodeA + i));
+				}
+
+				return uppercase.join("");
+			})(),
+		IgnoredScore = 0.9,
+		SkippedScore = 0.15,
+		LongStringLength = 151,
+		MaxMatchStartPct = .15,
 		MinMatchDensityPct = .5,
 		BeginningOfStringPct = .1;
 
@@ -13,16 +24,16 @@ define(function() {
 		hitMask,
 		searchRange,
 		abbreviationRange,
-		originalAbbreviation,
 		fullMatchedRange)
 	{
 		searchRange = searchRange || new Range(0, itemString.length);
 		abbreviationRange = abbreviationRange || new Range(0, abbreviation.length);
-		originalAbbreviation = originalAbbreviation || abbreviation;
 		fullMatchedRange = fullMatchedRange || new Range();
 
+// TODO: why is the second test necessary?  !"" is true
 		if (!abbreviation || !abbreviationRange.length) {
-			return 0.9;
+				// deduct some points for all remaining characters
+			return IgnoredScore;
 		}
 
 		if (abbreviationRange.length > searchRange.length) {
@@ -32,6 +43,8 @@ define(function() {
 		for (var i = abbreviationRange.length; i > 0; i--) {
 			var abbreviationSubstring = abbreviation.substr(abbreviationRange.location, i),
 				matchedRange = rangeOfString(itemString, abbreviationSubstring, searchRange);
+
+			/* DEBUG log(abbreviationSubstring); */
 
 			if (!matchedRange.isValid()) {
 				continue;
@@ -54,21 +67,37 @@ define(function() {
 				addIndexesInRange(hitMask, matchedRange);
 			}
 
+			/* DEBUG logRanges(searchRange, hitMask, fullMatchedRange); */
+
 			var remainingSearchRange = new Range(matchedRange.max(), searchRange.max() - matchedRange.max()),
 				remainingScore = scoreForAbbreviation(itemString, abbreviation, hitMask, remainingSearchRange,
 					new Range(abbreviationRange.location + i, abbreviationRange.length - i),
-					originalAbbreviation, fullMatchedRange);
+					fullMatchedRange);
+
+			/* DEBUG log("remainingScore:", clip(remainingScore)); */
 
 			if (remainingScore) {
 				var score = remainingSearchRange.location - searchRange.location,
 					matchStartPercentage = fullMatchedRange.location / itemString.length,
-					useSkipReduction = itemString.length < LongStringLength ||
-						matchStartPercentage < MaxMatchStartPct,
+					isShortString = itemString.length < LongStringLength,
+					useSkipReduction = isShortString || matchStartPercentage < MaxMatchStartPct,
 					matchStartDiscount = (1 - matchStartPercentage),
-						// default to no match sparseness discount, for cases
+						// default to no match-sparseness discount, for cases
 						// where there are spaces before the matched letters or
 						// they're capitals
 					matchRangeDiscount = 1;
+
+				/* DEBUG
+					var matches = [],
+						ranges = [],
+						fromLastMatchRange = new Range(searchRange.location, score);
+
+					setIndexesInRange(ranges, fromLastMatchRange, "+");
+					log(indent(fill(ranges, "-")));
+					setIndexesInRange(matches, remainingSearchRange, "|");
+					setIndexesInRange(matches, new Range(searchRange.location, score), "-");
+					log("score:", score, "useSkipReduction:", useSkipReduction);
+				*/
 
 				if (matchedRange.location > searchRange.location) {
 					var j;
@@ -76,21 +105,23 @@ define(function() {
 						// some letters were skipped when finding this match, so
 						// adjust the score based on whether spaces or capital
 						// letters were skipped
-					if (useSkipReduction && WhitespacePattern.test(itemString.charAt(matchedRange.location - 1))) {
+					if (useSkipReduction && WhitespacePattern.indexOf(itemString.charAt(matchedRange.location - 1)) > -1) {
 						for (j = matchedRange.location - 2; j >= searchRange.location; j--) {
-							if (WhitespacePattern.test(itemString.charAt(j))) {
+							if (WhitespacePattern.indexOf(itemString.charAt(j)) > -1) {
+								/* DEBUG matches[j] = "w"; */
 								score--;
 							} else {
 // this reduces the penalty for skipped chars when we also didn't skip over any other words
-								score -= 0.15;
+								score -= SkippedScore;
 							}
 						}
-					} else if (useSkipReduction && UpperCasePattern.test(itemString.charAt(matchedRange.location))) {
+					} else if (useSkipReduction && UpperCasePattern.indexOf(itemString.charAt(matchedRange.location)) > -1) {
 						for (j = matchedRange.location - 1; j >= searchRange.location; j--) {
-							if (UpperCasePattern.test(itemString.charAt(j))) {
+							if (UpperCasePattern.indexOf(itemString.charAt(j)) > -1) {
+								/* DEBUG matches[j] = "u"; */
 								score--;
 							} else {
-								score -= 0.15;
+								score -= SkippedScore;
 							}
 						}
 					} else {
@@ -102,19 +133,40 @@ define(function() {
 							// match range isn't too sparse and the whole string
 							// is not too long
 						score -= matchedRange.location - searchRange.location;
-						matchRangeDiscount = originalAbbreviation.length / fullMatchedRange.length;
-						matchRangeDiscount = (itemString.length < LongStringLength &&
+						matchRangeDiscount = abbreviation.length / fullMatchedRange.length;
+						matchRangeDiscount = (isShortString &&
 							matchStartPercentage <= BeginningOfStringPct &&
 							matchRangeDiscount >= MinMatchDensityPct) ? 1 : matchRangeDiscount;
 					}
 				}
 
-				score += remainingScore * remainingSearchRange.length *
+				/* DEBUG
+					log(indent(fill(matches)));
+					log("score:", score, "remaining:", clip(remainingScore), remainingSearchRange + "",
+						"fullMatched: " + fullMatchedRange, "mStartPct:", clip(matchStartPercentage),
+						"mRangeDiscount:", clip(matchRangeDiscount), "mStartDiscount:", clip(matchStartDiscount));
+				*/
+
+					// discount the scores of very long strings
+				score += remainingScore * Math.min(remainingSearchRange.length, LongStringLength) *
 					matchRangeDiscount * matchStartDiscount;
+
+				/* DEBUG log("score:", score); */
+
 				score /= searchRange.length;
+
+				/* DEBUG log(clip(score)); */
 
 				return score;
 			}
+		}
+
+		if (hitMask) {
+				// the remaining abbreviation does not appear in the remaining
+				// string, so clear the hitMask, since we'll start over with a
+				// shorter piece of the abbreviation, which might match earlier
+				// in the string, making the existing match indexes invalid.
+			hitMask.length = 0;
 		}
 
 		return 0;
@@ -162,6 +214,9 @@ define(function() {
 	};
 
 
+	Range.prototype.toValue = Range.prototype.toString;
+
+
 	function rangeOfString(
 		string,
 		substring,
@@ -169,8 +224,8 @@ define(function() {
 	{
 		searchRange = searchRange || new Range(0, string.length);
 
-		var stringToSearch = string.substr(searchRange.location, searchRange.length).toLowerCase(),
-			subStringIndex = stringToSearch.indexOf(substring.toLowerCase()),
+		var stringToSearch = string.substr(searchRange.location, searchRange.length).toLocaleLowerCase(),
+			subStringIndex = stringToSearch.indexOf(substring.toLocaleLowerCase()),
 			result = new Range();
 
 		if (subStringIndex > -1) {

@@ -1,19 +1,49 @@
 define(function() {
-	const ProtocolPattern = /^(chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=)?(https?|file):\/\/(www\.)?/,
+	const SuspendedURLPattern = /^chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=(.+)$/,
+		ProtocolPattern = /^((chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=)?(https?|file|chrome):\/\/(www\.)?)|(chrome-extension:\/\/[^/]+\/)/,
 		FaviconURL = "chrome://favicon/";
 
 
 	return function addURLs(
 		item)
 	{
+		var url = item.url,
+			unsuspendURL = url.replace(SuspendedURLPattern, "$1");
+
+		if (url != unsuspendURL) {
+				// add a URL without the Great Suspender preamble that we can use
+				// with chrome://favicon/ to get the site's favicon instead of
+				// the Great Suspender's, as there are times it hasn't generated
+				// a faded icon for some sites.  we have to add that before
+				// setting the faviconURL below.  we also only add it if the tab
+				// is suspended, so ResultsListItem can detect that and fade the icon.
+			item.unsuspendURL = unsuspendURL;
+		}
+
 			// look up the favicon via chrome://favicon if the item itself
 			// doesn't have one.  we want to prioritize the item's URL
 			// since The Great Suspender creates faded favicons and stores
 			// them as data URIs in item.favIconUrl.
-		item.faviconURL = item.favIconUrl || FaviconURL + (item.unsuspendURL || item.url);
+		item.faviconURL = item.favIconUrl || FaviconURL + (item.unsuspendURL || url);
 
 			// add a clean displayURL to each tab that we can score against and
-			// show in the item
-		item.displayURL = unescape(item.url.replace(ProtocolPattern, ""));
+			// show in the item.  unfortunately, decodeURIComponent() will throw
+			// an exception if it doesn't like how a URL is formed, which we
+			// don't have any control over.  so first replace +'s with %20 and
+			// then try to decode.  if that throws, try unescape(), even though
+			// it's deprecated.  if unescape is ever fully removed from Chrome,
+			// then url will just be left undecoded for the displayURL.
+		try {
+			url = url.replace(/\+/g, "%20");
+			url = decodeURIComponent(url);
+		} catch (e) {
+			console.error("decodeURIComponent failed:", url);
+
+			try {
+				url = unescape(url);
+			} catch (e) {}
+		}
+
+		item.displayURL = url.replace(ProtocolPattern, "");
 	}
 });

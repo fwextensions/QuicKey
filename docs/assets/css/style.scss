@@ -14,10 +14,14 @@ h2 {
 	margin: 40px 0 20px;
 }
 
+section	{
+	width: 525px;
+}
+
 footer {
 	float: right;
 	position: static;
-	width: 500px;
+	width: 525px;
 	clear: both;
 }
 
@@ -25,7 +29,6 @@ kbd {
 	font: 11px Consolas, "Liberation Mono", Menlo, Courier, monospace;
 	display: inline-block;
 	padding: 3px 5px;
-	font-size: 11px;
 	line-height: 10px;
 	color: #555;
 	vertical-align: middle;
@@ -39,4 +42,21 @@ kbd {
 a:hover, a:focus {
 	font-weight: normal;
 	text-decoration: underline;
+}
+
+@media print, screen and (max-width: 960px) {
+	section, footer {
+		width: auto;
+		float: none;
+		position: static;
+	}
+
+	section {
+		border: none;
+		padding: 40px 0;
+	}
+}
+
+li > ul {
+	margin-bottom: 0;
 }

@@ -1,28 +1,56 @@
 define([
 	"add-urls",
-	"cp"
+	"cp",
+	"lodash"
 ], function(
 	addURLs,
-	cp
+	cp,
+	_
 ) {
-	const SuspendedURLPattern = /^chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=(.+)$/;
+	const TitlePattern = /ttl=([^&]+)/;
 
 
 	return function getTabs()
 	{
-		return cp.tabs.query({})
-			.then(function(tabs) {
-				tabs.forEach(function(tab) {
-					var url = tab.url;
+		return Promise.all([
+			cp.tabs.query({}),
+			cp.tabs.query({
+				active: true,
+				currentWindow: true
+			})
+		])
+			.then(function(result) {
+				var tabs = result[0],
+					activeTab = result[1][0],
+					match;
 
-						// add a URL without the Great Suspender preamble that
-						// we can use with chrome://favicon/ to get the site's
-						// favicon instead of the Great Suspender's, as there are
-						// times it hasn't generated a faded icon for some sites.
-						// we have to add that before calling addURLs() so that it
-						// can use it in the faviconURL.
-					tab.unsuspendURL = url.replace(SuspendedURLPattern, "$1");
+					// remove the active tab from the array so it doesn't show up in
+					// the results, making it clearer if you have duplicate tabs open
+				_.remove(tabs, { id: activeTab.id });
+
+				tabs.forEach(function(tab) {
 					addURLs(tab);
+
+						// if the tab is suspended, check if it it's in the bad
+						// state where The Great Suspender hasn't updated its
+						// title so it just says "Suspended Tab".  if so, pull
+						// the title from the ttl param that TGS puts in the URL.
+					if (tab.unsuspendURL && tab.title == "Suspended Tab") {
+						match = tab.url.match(TitlePattern);
+
+						if (match) {
+								// try to use decodeURIComponent() to unescape
+								// the ttl param, which sometimes throws if it
+								// doesn't like the encoding
+							try {
+								tab.title = decodeURIComponent(match[1]);
+							} catch (e) {
+								try {
+									tab.title = unescape(match[1]);
+								} catch (e) {}
+							}
+						}
+					}
 				});
 
 				return tabs;

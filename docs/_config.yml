@@ -5,14 +5,20 @@ gems:
 
 title: QuicKey
 
-description: A Chrome extension for switching tabs or pulling up bookmarks and history via a Quicksilver-style search.
+description: A Chrome extension that lets you quickly switch tabs or access bookmarks and history via a Quicksilver-style search.
+
+tagline: Quickly switch tabs or access bookmarks and history with a Quicksilver-style search.
 
 image: /img/search-box-open.png
 
-google_analytics: UA-3380390-2
+logo: /img/icon-300.png
+
+google_analytics: UA-108153491-1
 
 twitter:
   username: fwextensions
   creator: fwextensions
 
 author: John Dunning
+
+rootPath: /QuicKey

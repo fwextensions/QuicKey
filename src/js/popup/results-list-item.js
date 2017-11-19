@@ -1,12 +1,30 @@
 define([
 	"jsx!./matched-string",
+	"cp",
+	"lib/copy-to-clipboard",
 	"react",
 	"lodash"
 ], function(
 	MatchedString,
+	cp,
+	copyTextToClipboard,
 	React,
 	_
 ) {
+	const MaxTitleLength = 70,
+		MaxURLLength = 75,
+		SuspendedFaviconOpacity = .5;
+
+
+	var IsDevMode = false;
+
+
+	cp.management.getSelf()
+		.then(function(info) {
+			IsDevMode = info.installType == "development";
+		});
+
+
 	var ResultsListItem = React.createClass({
 		ignoreMouse: true,
 
@@ -14,13 +32,27 @@ define([
 		onClick: function(
 			event)
 		{
-			this.props.onItemClicked(this.props.item, event.shiftKey);
+			var item = this.props.item;
+
+			if (IsDevMode && event.altKey) {
+					// copy some debug info to the clipboard
+				copyTextToClipboard([
+					item.title,
+					item.displayURL,
+					this.props.query,
+					_.toPairs(item.scores).map(function(a) { return a.join(": "); }).join("\n")
+				].join("\n"));
+			} else {
+				this.props.onItemClicked(item, event.shiftKey);
+			}
 		},
 
 
 		onMouseMove: function(
 			event)
 		{
+			var props = this.props;
+
 			if (this.ignoreMouse) {
 					// we'll swallow this first mousemove, since it's probably
 					// from the item being rendered under the mouse, but we'll
@@ -31,7 +63,7 @@ define([
 					// selected, which means this is the second mousemove
 					// event and we haven't gotten another mouseenter.  so
 					// force this item to be selected.
-				this.props.setSelectedIndex(this.props.index);
+				props.setSelectedIndex(props.index);
 			}
 		},
 
@@ -51,31 +83,57 @@ define([
 			var props = this.props,
 				item = props.item,
 				query = props.query,
+				scores = item.scores,
 				hitMasks = item.hitMasks,
-				tooltip = _.toPairs(item.scores).concat(item.displayURL).join("\n"),
-				className = (props.selectedIndex == props.index) ? "selected" : "",
-				style = {
+				tooltip = [
+					item.title.length > MaxTitleLength ? item.title : "",
+					item.displayURL.length > MaxURLLength ? item.displayURL : ""
+				].join("\n"),
+				className = [
+					"results-list-item",
+					(props.isSelected ? "selected" : ""),
+					(item.unsuspendURL ? "suspended" : ""),
+					(item.incognito ? "incognito" : "")
+				].join(" "),
+				faviconStyle = {
 					backgroundImage: "url(" + item.faviconURL + ")"
 				};
 
-			return <li className={className}
-				style={style}
+			if (IsDevMode) {
+				tooltip = _.toPairs(item.scores)
+					.map(function(a) { return a.join(": "); }).join("\n") + "\n" + tooltip;
+			}
+
+			if (item.unsuspendURL && !item.favIconUrl) {
+					// this is a suspended tab, but The Great Suspender has
+					// forgotten the faded favicon for it.  so we get the favicon
+					// through chrome://favicon/ and then fade it ourselves.
+				faviconStyle.opacity = SuspendedFaviconOpacity;
+			}
+
+			return <div className={className}
+				style={props.style}
 				title={tooltip}
 				onClick={this.onClick}
 				onMouseMove={this.onMouseMove}
 				onMouseEnter={this.onMouseEnter}
 			>
+				<span className="favicon"
+					style={faviconStyle}
+				/>
 				<MatchedString className="title"
 					query={query}
 					text={item.title}
+					score={scores.title}
 					hitMask={hitMasks.title}
 				/>
 				<MatchedString className="url"
 					query={query}
 					text={item.displayURL}
+					score={scores.displayURL}
 					hitMask={hitMasks.displayURL}
 				/>
-			</li>
+			</div>
 		}
 	});
 

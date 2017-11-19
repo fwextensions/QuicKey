@@ -11,7 +11,7 @@ define(function() {
 			b)
 		{
 			if (a.score == b.score) {
-				return a[defaultKeyName].toLowerCase() < b[defaultKeyName].toLowerCase() ? -1 : 1;
+				return a[defaultKeyName].toLocaleLowerCase() < b[defaultKeyName].toLocaleLowerCase() ? -1 : 1;
 			} else {
 				return b.score - a.score;
 			}

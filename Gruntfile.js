@@ -3,8 +3,12 @@ module.exports = function(grunt)
 	var baseConfig = {
 			mainConfigFile: "src/js/require-config.js",
 			baseUrl: "src/js",
-				// specify the location of the main module
-			include: "popup/main",
+				// specify the location of the main module.  we also have to
+				// include the require-config file, since it maps the names
+				// used by ReactVirtualized for React and ReactDOM to those
+				// used by the rest of the app, and the optimizer doesn't include
+				// that map by default.
+			include: ["require-config", "popup/main"],
 			out: "build/out/js/popup/main.js",
 				// make sure the jsx plugin is excluded, so the JSXTransformer
 				// isn't included
@@ -24,7 +28,9 @@ module.exports = function(grunt)
 			}
 		},
 		devManifestPath = "src/manifest.json",
-		buildManifestPath = "build/out/manifest.json";
+		buildManifestPath = "build/out/manifest.json",
+		devPopupPath = "src/popup.html",
+		buildPopupPath = "build/out/popup.html";
 
 	grunt.initConfig({
 		verbose: true,
@@ -106,7 +112,7 @@ module.exports = function(grunt)
 	});
 
 	// the lodash grunt task doesn't seem to work
-	// node node_modules\lodash-cli\bin\lodash include=remove,escape,dropRightWhile,toPairs,memoize exports=amd
+	// node node_modules\lodash-cli\bin\lodash include=remove,escape,dropRightWhile,toPairs,memoize,pull exports=amd
 
 	grunt.loadNpmTasks("grunt-contrib-requirejs");
 	grunt.loadNpmTasks("grunt-contrib-clean");
@@ -116,6 +122,18 @@ module.exports = function(grunt)
 	grunt.loadNpmTasks("grunt-sync");
 	grunt.loadNpmTasks("grunt-exec");
 	grunt.loadNpmTasks("grunt-lodash");
+
+	grunt.registerTask("checkPopup", function() {
+		var devPopup = grunt.file.read(devPopupPath),
+			devBody = devPopup.slice(devPopup.indexOf("<body>")),
+			buildPopup = grunt.file.read(buildPopupPath),
+			buildBody = buildPopup.slice(buildPopup.indexOf("<body>"));
+
+		if (devBody !== buildBody) {
+			grunt.fail.fatal("Source and build popup.html don't match:\n\nSource:\n" +
+				devBody + "\n\nBuild:" + buildBody);
+		}
+	});
 
 	grunt.registerTask("incrementVersion", function() {
 		var manifest = grunt.file.readJSON(buildManifestPath),
@@ -142,6 +160,7 @@ module.exports = function(grunt)
 	grunt.registerTask("build", [
 		"sync:out",
 		"cleanupManifest",
+		"checkPopup",
 		"requirejs"
 	]);
 

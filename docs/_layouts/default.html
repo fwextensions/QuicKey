@@ -5,14 +5,16 @@
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
 
     {% seo %}
+    <meta property="og:title" content="QuicKey – The quick tab switcher" />
+    <meta property="og:type" content="website" />
 
     <link rel="stylesheet" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}">
 
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="manifest" href="/manifest.json">
-    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ site.rootPath | '' }}/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ site.rootPath | '' }}/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ site.rootPath | '' }}/favicon-16x16.png">
+    <link rel="manifest" href="{{ site.rootPath | '' }}/manifest.json">
+    <link rel="mask-icon" href="{{ site.rootPath | '' }}/safari-pinned-tab.svg" color="#5bbad5">
     <meta name="theme-color" content="#ffffff">
 
     <meta name="viewport" content="width=device-width">
@@ -26,9 +28,9 @@
         <p><img src="img/icon-300.png" alt="QuicKey" style="width: 120px; margin-left: -6px;" /></p>
 
         <h1 style="font-style: italic;">{{ site.title | default: site.github.repository_name }}</h1>
-        <p>{{ site.description | default: site.github.project_tagline }}</p>
+        <p>{{ site.tagline | site.description | default: site.github.project_tagline }}</p>
 
-        <p><a href=""><img src="img/webstore.png" alt="Chrome Webstore" /></a></p>
+        <p><a href="https://chrome.google.com/webstore/detail/quickey-–-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg"><img src="img/webstore.png" alt="QuicKey in the Chrome Webstore" /></a></p>
 
         {% if site.github.is_project_page %}
           <p class="view"><a href="{{ site.github.repository_url }}">View the project on GitHub <small>{{ github_name }}</small></a></p>
@@ -51,7 +53,7 @@
         {% if site.github.is_project_page %}
         <p>This project is maintained by <a href="{{ site.github.owner_url }}">{{ site.github.owner_name }}</a></p>
         {% endif %}
-        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist/minimal">orderedlist</a></small></p>
       </footer>
     </div>
     <script src="{{ '/assets/js/scale.fix.js' | relative_url }}"></script>

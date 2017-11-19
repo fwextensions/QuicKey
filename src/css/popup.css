@@ -60,7 +60,6 @@ input.search-box::-webkit-search-cancel-button {
 	top: 0;
 	left: 0;
 	position: absolute;
-	padding-top: 1px;
 	border: none;
 	background: none;
 		/* rules below are from the input placeholder CSS */
@@ -74,8 +73,13 @@ input.search-box::-webkit-search-cancel-button {
 	pointer-events: none;
 }
 
+.win .command-placeholder {
+	padding-top: 1px;
+}
+
 .command-placeholder b {
 	visibility: hidden;
+	font-style: normal;
 }
 
 
@@ -83,15 +87,20 @@ input.search-box::-webkit-search-cancel-button {
     Results list
    =========================================================================== */
 
-ul.results-list {
-	list-style: none;
-	margin: 0;
+.results-list-container {
 	padding: 0 5px 5px 5px;
-	width: 100%;
-	display: none;
 }
 
-ul.results-list li {
+.results-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	overflow: overlay !important;
+	outline: none;
+}
+
+.results-list-item {
 	margin: 0;
 	padding: 4px 6px 5px 28px;
 	max-width: 490px;
@@ -103,26 +112,97 @@ ul.results-list li {
 	overflow: hidden;
 }
 
-ul.results-list li.selected {
+.results-list-item.selected {
 	background-color: #dfdfff;
 }
 
-ul.results-list li div {
-	width: 458px;
+.results-list-item.incognito {
+	background-image: url(/img/incognito.svg);
+	background-size: 16px 16px;
+	background-position: 6px 25px;
+}
+
+.results-list-item .favicon {
+	left: 6px;
+	top: 6px;
+	width: 16px;
+	height: 16px;
+	background-size: cover;
+	background-repeat: no-repeat;
+	position: absolute;
+}
+
+.results-list-item div {
+	width: 100%;
 	height: 19px;
 	text-overflow: ellipsis;
 	overflow: hidden;
 }
 
-ul.results-list li div b, .search-box {
+.results-list-item div b, .search-box {
 	color: #228;
 }
 
-ul.results-list li div.title:empty::after {
+.results-list-item div.title:empty::after {
 	opacity: 0.6;
 	content: "no title"
 }
 
-ul.results-list li div.url {
-	opacity: 0.6;
+.results-list-item div.url {
+	font-size: 12px;
+	opacity: 0.7;
+}
+
+	/* we need to set the font-size of the b elements in the URL because they
+	   default to 14px due to the * selector */
+.results-list-item div.url b {
+	font-size: 12px;
+}
+
+.results-list-item.suspended div.title {
+	opacity: 0.7;
+}
+
+.results-list-item.suspended div.url {
+	opacity: 0.5;
+}
+
+
+/* ===========================================================================
+    Results list scrollbar
+   =========================================================================== */
+
+::-webkit-scrollbar {
+	background: none !important;
+	overflow: visible;
+	width: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+	background-color: rgba(0, 0, 0, 0.05);
+	border: 1px solid transparent;
+	border-radius: 0;
+	width: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background-color: rgba(0, 0, 0, 0.15);
+}
+
+::-webkit-scrollbar-thumb:horizontal {
+	border-width: 4px 6px;
+	min-width: 40px;
+}
+
+::-webkit-scrollbar-thumb:vertical {
+	border-width: 6px 4px;
+	min-height: 20px;
+}
+
+::-webkit-scrollbar-track-piece {
+	background: none;
+}
+
+::-webkit-scrollbar-corner {
+	background: transparent;
 }
