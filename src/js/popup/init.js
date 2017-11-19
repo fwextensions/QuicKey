@@ -49,11 +49,7 @@ var gKeyCache = [],
 		window.log = bg.log;
 	});
 
-//	chrome.runtime.getBackgroundPage(function(backgroundPage) {
-//		backgroundPage.log("loading");
-//	});
-//
-//	window.onbeforeunload = function() {
-//		chrome.extension.getBackgroundPage().log("unloading");
-//	};
+		// connect to the default port so the background page will get the
+		// onDisconnect event when the popup is closed
+	chrome.runtime.connect();
 })();

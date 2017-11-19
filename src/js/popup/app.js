@@ -58,10 +58,6 @@ define([
 		resultsList: null,
 
 
-			// keydown handling is managed in another module
-		onKeyDown: handleKeys,
-
-
 		getInitialState: function()
 		{
 			var query = this.props.initialQuery;
@@ -69,9 +65,9 @@ define([
 			return {
 				query: query,
 				matchingItems: this.getMatchingItems(query),
-					// default to the first item being selected, in case we got
-					// an initial query
-				selected: 0
+					// default to the first item being selected if we got an
+					// initial query
+				selected: query ? 0 : -1
 			};
 		},
 
@@ -309,19 +305,27 @@ define([
 
 
 		modifySelected: function(
-			delta)
+			delta,
+			mruKey)
 		{
-			this.setSelectedIndex(this.state.selected + delta);
+			this.setSelectedIndex(this.state.selected + delta, mruKey);
 		},
 
 
 		setSelectedIndex: function(
-			index)
+			index,
+			mruKey)
 		{
 			var length = this.state.matchingItems.length;
 
-				// wrap around the end or beginning of the list
-			index = (index + length) % length;
+			if (mruKey) {
+					// let the selected value go to -1 when using the MRU key to
+					// navigate up, and don't wrap at the end of the list
+				index = Math.min(Math.max(-1, index), length - 1);
+			} else {
+					// wrap around the end or beginning of the list
+				index = (index + length) % length;
+			}
 
 			this.setState({ selected: index });
 		},
@@ -334,7 +338,7 @@ define([
 			this.setState({
 				matchingItems: this.getMatchingItems(query || originalQuery),
 				query: originalQuery,
-				selected: 0
+				selected: query ? 0 : -1
 			});
 		},
 
@@ -445,10 +449,16 @@ define([
 		},
 
 
+			// keydown handling is managed in another module
+		onKeyDown: handleKeys,
+
+
 		onKeyUp: function(
 			event)
 		{
-//			log("UP",  event.key);
+			if (event.key == "Alt" && this.state.selected > -1) {
+				this.openItem(this.state.matchingItems[this.state.selected]);
+			}
 		},
 
 

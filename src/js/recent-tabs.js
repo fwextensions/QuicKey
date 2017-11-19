@@ -17,8 +17,18 @@ define([
 			windowId: 1
 		},
 		TabKeys = Object.keys(TabKeysHash),
-		IconPath = "img/icon-19.png",
-		InvertedIconPath = "img/icon-19-inverted.png";
+		IconPaths = {
+			path: {
+				"19": "img/icon-19.png",
+				"38": "img/icon-38.png"
+			}
+		},
+		InvertedIconPaths = {
+			path: {
+				"19": "img/icon-19-inverted.png",
+				"38": "img/icon-38-inverted.png"
+			}
+		};
 
 
 	var shortcutTimer = null;
@@ -66,7 +76,7 @@ define([
 
 	function startShortcutTimer()
 	{
-		chrome.browserAction.setIcon({ path: InvertedIconPath });
+		chrome.browserAction.setIcon(InvertedIconPaths);
 		clearTimeout(shortcutTimer);
 		shortcutTimer = setTimeout(onShortcutTimerDone, MaxSwitchDelay);
 	}
@@ -74,7 +84,7 @@ define([
 
 	function onShortcutTimerDone()
 	{
-		chrome.browserAction.setIcon({ path: IconPath });
+		chrome.browserAction.setIcon(IconPaths);
 
 		return updateDataFromShortcut();
 	}

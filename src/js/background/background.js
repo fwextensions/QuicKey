@@ -24,6 +24,11 @@ require([
 	recentTabs,
 	cp
 ) {
+		// if the popup is opened and closed within this time, switch to the
+		// previous tab
+	const MaxPopupLifetime = 350;
+
+
 	chrome.tabs.onActivated.addListener(function(event) {
 		return cp.tabs.get(event.tabId)
 			.then(function(tab) {
@@ -73,6 +78,17 @@ require([
 		} else if (command == "next-tab") {
 			recentTabs.toggleTab(1);
 		}
+	});
+
+
+	chrome.runtime.onConnect.addListener(function(port) {
+		const connectTime = Date.now();
+
+		port.onDisconnect.addListener(function() {
+			if (Date.now() - connectTime < MaxPopupLifetime) {
+				recentTabs.toggleTab(-1);
+			}
+		});
 	});
 
 
