@@ -14,6 +14,13 @@ If you like to keep lots of tabs open in Chrome, it can quickly become difficult
   * Type a few letters
   * Press enter to switch to the selected tab
 
+Or quickly switch to a recently used tab:
+
+  * Press the shortcut and hold down <kbd>alt</kbd>
+  * Press <kbd>alt</kbd>&nbsp;<kbd>W</kbd> to move through the recent tabs
+  * Release <kbd>alt</kbd> to switch to the selected tab
+
+
 You can also type <kbd>/</kbd>&nbsp;<kbd>b</kbd> to search bookmarks or <kbd>/</kbd>&nbsp;<kbd>h</kbd> to search your browser history.
 
 
@@ -26,11 +33,11 @@ Once the extension is installed, you can click the <img src="img/icon-38.png" st
 To change these shortcuts, you can open the main menu and then go to *More tools > Extensions*, scroll to the very bottom of the page, and then click *Keyboard Shortcuts*.
 
 
-## Fast tab switching
+## Search for a tab quickly
 
 Unlike other tab switchers, *QuicKey* uses a [Quicksilver](https://qsapp.com/)-style search algorithm to rank the results, where contiguous matches at the beginning of words are higher in the list, as are matches against capital letters at the beginning of words.  So you can type just a few letters to quickly find the right tab.
 
-The best match is selected by default, so press <kbd>enter</kbd> to switch to that tab.  Or press the <kbd>&#8593;</kbd>, <kbd>&#8595;</kbd>, <kbd>pg up</kbd> or <kbd>pg dn</kbd> key to move to other results.  Or just click one.
+The best match is selected by default, so press <kbd>enter</kbd> to switch to that tab.  Or press the <kbd>&#8593;</kbd>, <kbd>&#8595;</kbd>, <kbd>pg up</kbd> or <kbd>pg dn</kbd> keys to move to other results.  Like in Quicksilver, you can also press <kbd>space</kbd> or <kbd>shift</kbd>&nbsp;<kbd>space</kbd> to move the selection down or up.  Or just click the tab you want.
 
 Press <kbd>esc</kbd> to clear what you've typed.  If the search box is empty, then pressing <kbd>esc</kbd> will close it.
 
@@ -79,15 +86,15 @@ To close the selected tab, press <kbd>ctrl</kbd>&nbsp;<kbd>W</kbd> (<kbd>cmd⌘<
 
 ## Incognito mode
 
-By default, Chrome extensions are not enabled in incognito mode.  If you want to use *QuicKey* to switch to incognito tabs as well as normal ones, open the main menu and then
-go to *More tools > Extensions*, scroll down to *QuicKey*, and check the *Allow in incognito* option.
+By default, Chrome extensions are not enabled in incognito mode when you install them.  If you want to use *QuicKey* to switch to incognito tabs as well as normal ones, open the main menu and then
+go to *More tools > Extensions*, scroll down to the *QuicKey* extension, and check the *Allow in incognito* option.
 
 Tabs in incognito mode display the incognito icon, so you can distinguish a normal tab from an incognito one with the same title.
 
 
 ## Privacy
 
-To function, *QuicKey* needs access to your open tabs, bookmarks and history.  The Chrome permissions dialog says *QuicKey* can also change your bookmarks and browsing history, but it never will.  It also doesn't interact with the page content in any way and doesn't transmit any information anywhere.
+To function, *QuicKey* needs access to your open tabs, bookmarks and history.  The Chrome permissions dialog says *QuicKey* can also change your bookmarks and browsing history, but it never will.  It can't access the page content at all and doesn't transmit any information anywhere, other than anonymized Google Analytics metrics.
 
 
 ## Feedback and bugs
