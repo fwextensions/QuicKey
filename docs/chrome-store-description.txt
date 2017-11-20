@@ -1,6 +1,7 @@
 # Tag line
 
-Quickly switch tabs or access bookmarks and history with a Quicksilver-style search
+Quickly switch tabs or access bookmarks and history with a Quicksilver-style search and MRU tab navigation
+Switch tabs or access bookmarks and history with a Quicksilver-style search or a most recently used (MRU) tab list
 
 ★
 ➤
