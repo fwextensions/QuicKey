@@ -86,7 +86,7 @@ require([
 
 		port.onDisconnect.addListener(function() {
 			if (Date.now() - connectTime < MaxPopupLifetime) {
-				recentTabs.toggleTab(-1);
+				recentTabs.toggleTab(-1, true);
 			}
 		});
 	});

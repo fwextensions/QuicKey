@@ -306,20 +306,25 @@ console.log("tab updated", tabID, key, changeInfo[key], tab.title);
 
 
 	function toggleTab(
-		direction)
+		direction,
+		fromDoublePress)
 	{
 		storage.set(function(data) {
 			var tabIDs = data.tabIDs,
 				tabIDCount = tabIDs.length,
 				maxIndex = tabIDCount - 1,
 				now = Date.now(),
-					// set a flag so we know when the previous tab is
-					// re-activated that it was caused by us, not the
-					// user, so that it doesn't remove tabs based on
-					// dwell time
+					// set a flag so we know when the previous tab is re-activated
+					// that it was caused by us, not the user, so that it doesn't
+					// remove tabs based on dwell time.  but only do that if the
+					// user is toggling the tab via the previous/next-tab shortcut
+					// and not by double-pressing the popup shortcut.  use 0 as
+					// the lastShortcutTime in that case so if quickly does the
+					// double-press twice, it will just toggle instead of pushing
+					// further back in the stack.
 				newData = {
-					switchFromShortcut: true,
-					lastShortcutTime: now,
+					switchFromShortcut: fromDoublePress ? false : true,
+					lastShortcutTime: fromDoublePress ? 0 : now,
 					previousTabIndex: -1
 				},
 				previousTabIndex = (maxIndex + direction + tabIDCount) % tabIDCount;
@@ -352,7 +357,14 @@ console.log("toggleTab previousTabIndex", newData.lastShortcutTabID, previousTab
 						previousWindowID = data.tabsByID[previousTabID].windowId;
 console.log("toggleTab then previousTabID", previousTabID, data.previousTabIndex);
 
-					startShortcutTimer();
+						// we only want to start the timer if the user triggered
+						// us with the previous/next-tab shortcut, not double-
+						// pressing the popup shortcut, so that the tab activation
+						// will immediately reorder the tabIDs array in add() above
+					if (!fromDoublePress) {
+						startShortcutTimer();
+					}
+
 					chrome.tabs.update(previousTabID, { active: true });
 
 					if (previousWindowID != chrome.windows.WINDOW_ID_CURRENT) {
