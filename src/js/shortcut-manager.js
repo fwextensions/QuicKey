@@ -28,7 +28,7 @@ define(function() {
 			opt: "alt",
 			command: "meta",
 			cmd: "meta",
-			mod: /Win/i.test(navigator.platform) ? "ctrl" : "meta",
+			mod: /Mac/i.test(navigator.platform) ? "meta" : "ctrl",
 			space: " "
 		};
 

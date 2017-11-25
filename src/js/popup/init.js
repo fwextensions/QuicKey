@@ -1,12 +1,14 @@
 var gKeyCache = [],
+	gShortcutCache = [],
 	gClose = false,
-	gSwitchToLastTab = false,
 	gOnKeyDown,
 	gInitTime = performance.now();
 
 
 (function() {
-	var AllowedPattern = /[-'!"#$%&()\*+,\.\/:;<=>?@\[\\\]\^_`{|}~ \w]/;
+	const AllowedPattern = /[-'!"#$%&()\*+,\.\/:;<=>?@\[\\\]\^_`{|}~ \w]/,
+		IsMac = /Mac/i.test(navigator.platform),
+		ShortcutModifier = IsMac ? "ctrlKey" : "altKey";
 
 
 	gOnKeyDown = function(
@@ -27,13 +29,10 @@ var gKeyCache = [],
 				gKeyCache.pop();
 				break;
 
-			case 13:	// enter
-			case 9:		// tab
-				gSwitchToLastTab = true;
-				break;
-
 			default:
-				if (AllowedPattern.test(char)) {
+				if (event[ShortcutModifier]) {
+					gShortcutCache.push(char);
+				} else if (AllowedPattern.test(char)) {
 					gKeyCache.push(char);
 				}
 				break;

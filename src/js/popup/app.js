@@ -38,6 +38,8 @@ define([
 		RecentMS = HourCount * HourMS,
 		VeryRecentBoost = .15,
 		RecentBoost = .1,
+		IsMac = /Mac/i.test(navigator.platform),
+		ShortcutModifier = IsMac ? "Ctrl" : "Alt",
 		WhitespacePattern = /\s/g,
 		BookmarksQuery = "/b ",
 		HistoryQuery = "/h ",
@@ -55,6 +57,8 @@ define([
 		recents: [],
 		bookmarksPromise: null,
 		historyPromise: null,
+		gotModifierUp: false,
+		gotMRU: false,
 		resultsList: null,
 
 
@@ -123,19 +127,21 @@ define([
 
 								return recents;
 							});
-					}, "recents", "");
+					}, "recents", "")
+						.then(function() {
+							var initialShortcuts = this.props.initialShortcuts;
+
+							if (initialShortcuts.length) {
+								initialShortcuts.forEach(function(shortcut) {
+									if (shortcut == "w") {
+										this.modifySelected(1, true);
+									} else if (shortcut == "W") {
+										this.modifySelected(-1, true);
+									}
+								}, this);
+							}
+						}.bind(this));
 				}.bind(this));
-		},
-
-
-		componentDidMount: function()
-		{
-				// if enter was pressed as we were starting up, wait for the
-				// recents to load before calling openItem() so that it has a
-				// previous tab to switch back to
-			if (gSwitchToLastTab && this.recentsPromise) {
-				this.recentsPromise.then(function() { this.openItem(); }.bind(this));
-			}
 		},
 
 
@@ -322,6 +328,8 @@ define([
 					// let the selected value go to -1 when using the MRU key to
 					// navigate up, and don't wrap at the end of the list
 				index = Math.min(Math.max(-1, index), length - 1);
+				this.gotMRU = true;
+				this.gotModifierUp = false;
 			} else {
 					// wrap around the end or beginning of the list
 				index = (index + length) % length;
@@ -456,8 +464,12 @@ define([
 		onKeyUp: function(
 			event)
 		{
-			if (event.key == "Alt" && this.state.selected > -1) {
-				this.openItem(this.state.matchingItems[this.state.selected]);
+			if (event.key == ShortcutModifier) {
+				if (!this.gotModifierUp && this.state.selected > -1) {
+					this.openItem(this.state.matchingItems[this.state.selected]);
+				}
+
+				this.gotModifierUp = true;
 			}
 		},
 

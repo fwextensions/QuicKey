@@ -14,7 +14,7 @@ If you like to keep lots of tabs open in Chrome, it can quickly become difficult
   * Type a few letters
   * Press enter to switch to the selected tab
 
-Quickly press the keyboard shortcut twice to toggle between the two most recently used tabs.  Or navigate the full most-recently-used (MRU) tab list as described below.
+To toggle between the two most recently used tabs, quickly press the keyboard shortcut twice .  Or navigate the full most-recently-used (MRU) tab list as described below.
 
 You can also type <kbd>/</kbd>&nbsp;<kbd>b</kbd> to search bookmarks or <kbd>/</kbd>&nbsp;<kbd>h</kbd> to search your browser history.
 
@@ -34,41 +34,35 @@ Unlike other tab switchers, *QuicKey* uses a [Quicksilver](https://qsapp.com/)-s
 
 The best match is selected by default, so press <kbd>enter</kbd> to switch to that tab.  Or press the <kbd>&#8593;</kbd>, <kbd>&#8595;</kbd>, <kbd>pg up</kbd> or <kbd>pg dn</kbd> keys to move to other results.  Like in Quicksilver, you can also press <kbd>space</kbd> or <kbd>shift</kbd>&nbsp;<kbd>space</kbd> to move the selection down or up.  Or just click the tab you want.
 
-Press <kbd>esc</kbd> to clear what you've typed.  If the search box is empty, then pressing <kbd>esc</kbd> will close it.
+Press <kbd>esc</kbd> to clear what you've typed.  If the search box is empty, pressing <kbd>esc</kbd> will close it.
 
-If you type more than 25 letters, which should be plenty to find the right tab, *QuicKey* switches to an exact string search to stay fast.  Spaces in the search string are also ignored.
+If you type more than 25 letters, which should be plenty to find the right tab, *QuicKey* switches to an exact string search to stay fast.
 
-Recently used tabs get a slight boost in the search results ranking, so it should require typing fewer letters to get back to a tab you were just using.
+Recently used tabs get a slight boost in the search results ranking, so getting back to a tab you were just using should require typing fewer letters.
 
 
 ## Navigate the most recently used tabs
 
-When first installed, *QuicKey* won't have any tab usage history.  But over time, opening the extension will automatically display the list of tabs you've visited, in order of recency.  Click a tab to switch to it, or use one of the keyboard shortcuts below to navigate through the recently used tab history.
+When first installed, *QuicKey* won't have any tab usage history.  But over time, opening the extension will automatically display the list of tabs you've visited, in order of recency.  Click a tab to switch to it, or use one of the keyboard shortcuts below to navigate through the recently used tab history:
 
   * To toggle between the two most recently used tabs:
       * Quickly double-press the <kbd>alt</kbd>&nbsp;<kbd>Q</kbd> or <kbd>ctrl</kbd>&nbsp;<kbd>Q</kbd> shortcut.  The tab list won't open in this case.
 
   * To navigate farther back in the MRU tab list:
-    * Press <kbd>alt</kbd>&nbsp;<kbd>A</kbd> (<kbd>ctrl</kbd>&nbsp;<kbd>A</kbd> on macOS) once to switch to the previous tab.  The *QuicKey* icon will invert for .75 seconds: <img src="img/icon-38-inverted.png" style="height: 19px; vertical-align: text-bottom;">.
+    * Press <kbd>alt</kbd>&nbsp;<kbd>A</kbd> (<kbd>ctrl</kbd>&nbsp;<kbd>A</kbd> on macOS) once to switch to the previous tab.  The *QuicKey* icon will invert for .75 seconds: <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> to <img src="img/icon-38-inverted.png" style="height: 19px; vertical-align: text-bottom;">.
     * Press <kbd>alt</kbd>&nbsp;<kbd>A</kbd> while the icon is inverted to switch to an older tab, once for each tab.
     * Press <kbd>alt</kbd>&nbsp;<kbd>shift</kbd>&nbsp;<kbd>A</kbd> to move back to newer tabs.
     * Pause to let the icon go back to its normal state.
     * Press <kbd>alt</kbd>&nbsp;<kbd>A</kbd> again to switch back to the tab you initially started on.
 
-  * To visually pick a recent tab from the MRU list menu:
+  * To pick a recent tab from the full MRU list menu:
     * Press the shortcut but keep holding the <kbd>alt</kbd> key (<kbd>ctrl</kbd> on macOS).
     * Press <kbd>alt</kbd>&nbsp;<kbd>W</kbd> to move down through the list of recent tabs.
     * Press <kbd>alt</kbd>&nbsp;<kbd>shift</kbd>&nbsp;<kbd>W</kbd> to move up.
     * Release <kbd>alt</kbd> to switch to the selected tab.
     * You can also hover over a tab and then release <kbd>alt</kbd> to switch to it.
 
-
-When first installed, *QuicKey* won't have any tab usage history.  But over time, it will automatically display the tabs you've visited, in order of recency.  You can click a tab to switch to it, or use one of the keyboard shortcuts below to navigate through the recent tab history.
-
-  * Quickly double-press the <kbd>alt</kbd>&nbsp;<kbd>Q</kbd> or <kbd>ctrl</kbd>&nbsp;<kbd>Q</kbd> shortcut to toggle between the two most recently used tabs.  The search box won't open in this case.
-  * Press <kbd>alt</kbd>&nbsp;<kbd>A</kbd> (<kbd>ctrl</kbd>&nbsp;<kbd>A</kbd> on macOS) once to switch to the previous tab.  The *QuicKey* icon will invert for .75 seconds: <img src="img/icon-38-inverted.png" style="height: 19px; vertical-align: text-bottom;">.  If you press <kbd>alt</kbd>&nbsp;<kbd>A</kbd> again while the icon is inverted, you will switch to the tab before that, then the tab before *that* one, and so on, much like pressing <kbd>alt</kbd>&nbsp;<kbd>tab</kbd> repeatedly while holding the <kbd>alt</kbd> key down.  Once the icon switches back to normal, press <kbd>alt</kbd>&nbsp;<kbd>A</kbd> again to switch back to the tab you originally started from.
-  * Or press <kbd>alt</kbd>&nbsp;<kbd>Q</kbd> as normal, but continue to hold down the <kbd>alt</kbd> key as the recent tabs list opens.  With the <kbd>alt</kbd> key still   down, press <kbd>W</kbd> to move the selection down the list, or <kbd>shift</kbd>&nbsp;<kbd>W</kbd> to move up.  When the desired tab is selected, release the <kbd>alt</kbd> key to switch to it.  On macOS, use the <kbd>ctrl</kbd> key instead of <kbd>alt</kbd>.  You can also hover over the desired tab with the mouse and then release the key.
-
+Which shortcuts to use is up to you.  Double-pressing <kbd>alt</kbd>&nbsp;<kbd>Q</kbd> is nice because you only have to use one shortcut and can switch back and forth between the two recent tabs as quickly as you want.  <kbd>alt</kbd>&nbsp;<kbd>A</kbd> is handy because you can quickly navigate to even older tabs, though the timing can be a little tricky.  Selecting from the menu gives you the closest experience to an OS's <kbd>alt</kbd>&nbsp;<kbd>tab</kbd> menu, at the expense of using a different shortcut to navigate while the menu is open.
 
 ## Search bookmarks
 

@@ -257,18 +257,19 @@ console.log("tab updated", tabID, key, changeInfo[key], tab.title);
 							// tabs lying around that aren't listed in tabIDs
 							// they'll get dropped
 						newTabsByID = {},
-						newTabIDs;
+						newTabIDs = [],
+						newTabsCount = [].concat(data.newTabsCount,
+							{ l: freshTabs.length, d: Date.now() });
 
 						// create a dictionary of the new tabs by URL
 					freshTabs.forEach(function(tab) {
 						freshTabsByURL[tab.url] = tab;
 					});
 
-						// we need to map tabIDs instead of just building a hash
-						// and using Object.keys() to get the list because we
-						// want to maintain the recency order from tabIDs
-// TODO: push updated tabs into an array with forEach instead of map
-					newTabIDs = tabIDs.map(function(tabID) {
+						// we need to loop on tabIDs instead of just building a
+						// hash and using Object.keys() to get a new list because
+						// we want to maintain the recency order from tabIDs
+					tabIDs.forEach(function(tabID) {
 						var oldTab = tabsByID[tabID],
 							newTab = freshTabsByURL[oldTab && oldTab.url];
 
@@ -282,23 +283,16 @@ console.log("tab updated", tabID, key, changeInfo[key], tab.title);
 							newTab.recent = oldTab.recent;
 							newTabsByID[newTab.id] = newTab;
 							delete freshTabsByURL[oldTab.url];
-
-							return newTab.id;
-						} else {
-							return null;
+							newTabIDs.push(newTab.id);
 						}
-					})
-						.filter(function(tabID) {
-								// filter out the IDs for any tabs we didn't find
-							return tabID;
-						});
+					});
 
 					return {
 						tabIDs: newTabIDs,
 						tabsByID: newTabsByID,
-						recentsUpdated: Date.now(),
+						recentsUpdated: null,
 // TODO: remove newTabsCount when we've verified this works
-						newTabsCount: freshTabs.length
+						newTabsCount: newTabsCount
 					};
 				}, "updateRecents");
 		});

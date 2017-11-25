@@ -17,16 +17,19 @@ require([
 		return;
 	}
 
-	var query = gKeyCache.join("");
+	const query = gKeyCache.join(""),
+		shortcuts = gShortcutCache;
 
 		// clean up the globals
 	document.removeEventListener("keydown", gOnKeyDown, false);
 	gOnKeyDown = null;
 	gKeyCache = null;
+	gShortcutCache = null;
 
 	ReactDOM.render(
 		React.createElement(App, {
 			initialQuery: query,
+			initialShortcuts: shortcuts,
 			platform: /Win/i.test(navigator.platform) ? "win" : "mac"
 		}),
 		document.getElementById("root")
