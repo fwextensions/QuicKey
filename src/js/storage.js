@@ -5,6 +5,9 @@ define([
 	cp,
 	Mutex
 ) {
+	const StorageVersion = 1;
+
+
 	const storageMutex = new Mutex();
 
 
@@ -62,12 +65,13 @@ console.log("saving", event, data.tabIDs && data.tabIDs.slice(-4).join(", "), da
 		return cp.tabs.query({ active: true, currentWindow: true, windowType: "normal" })
 			.then(function(tabs) {
 				var storage = {
-						version: 1,
+						version: StorageVersion,
 						tabIDs: [],
 						tabsByID: {},
 						previousTabIndex: -1,
 						switchFromShortcut: false,
-						lastShortcutTime: 0
+						lastShortcutTime: 0,
+						newTabsCount: []
 					},
 					tab = tabs && tabs[0];
 
@@ -86,7 +90,7 @@ console.log("saving", event, data.tabIDs && data.tabIDs.slice(-4).join(", "), da
 			// pass null to get everything in storage
 		return cp.storage.local.get(null)
 			.then(function(storage) {
-				if (!storage) {
+				if (!storage.version || storage.version != StorageVersion) {
 					return getDefaultStorage();
 				} else {
 					return storage;

@@ -8,8 +8,9 @@ console.log("startup");
 	], function(
 		recentTabs
 	) {
+// TODO: add window.onCreated handler here, then remove it when first fired.  necessary?
 			// the stored recent tab data will be out of date, since the tabs
-			// will likely get new IDs when reloaded
+			// will get new IDs when the app reloads each one
 		return recentTabs.updateAll();
 	});
 });
@@ -26,7 +27,7 @@ require([
 ) {
 		// if the popup is opened and closed within this time, switch to the
 		// previous tab
-	const MaxPopupLifetime = 350;
+	const MaxPopupLifetime = 400;
 
 
 	chrome.tabs.onActivated.addListener(function(event) {
