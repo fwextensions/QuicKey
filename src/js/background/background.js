@@ -2,26 +2,40 @@
 	// called asynchronously, and the startup event will have already fired
 	// by the time the require callback runs
 chrome.runtime.onStartup.addListener(function() {
-console.log("startup");
-	require([
-		"recent-tabs"
-	], function(
-		recentTabs
-	) {
-// TODO: add window.onCreated handler here, then remove it when first fired.  necessary?
-			// the stored recent tab data will be out of date, since the tabs
-			// will get new IDs when the app reloads each one
-		return recentTabs.updateAll();
+	var timer = null;
+
+console.log("=== startup");
+
+	chrome.windows.onCreated.addListener(function(window) {
+		clearTimeout(timer);
+
+			// set a timer to handle this event, since if many windows are open,
+			// this will get called once for each window on startup
+		timer = setTimeout(function() {
+console.log("=== windows.onCreated");
+			require([
+				"recent-tabs"
+			], function(
+				recentTabs
+			) {
+					// the stored recent tab data will be out of date, since the tabs
+					// will get new IDs when the app reloads each one
+				return recentTabs.updateAll(window);
+			});
+		}, 750);
 	});
 });
 
 
+chrome.runtime.onSuspend.addListener(function() {
+	console.log("===== onSuspend");
+});
+
+
 require([
-	"storage",
 	"recent-tabs",
 	"cp"
 ], function(
-	storage,
 	recentTabs,
 	cp
 ) {

@@ -96,8 +96,7 @@ console.log("saving", event, data.tabIDs && data.tabIDs.slice(-4).join(", "), da
 						// handler probably won't return the full set of data. in
 						// that case, the default storage would never get saved,
 						// so we'd get the default storage on every call.
-					return getDefaultStorage()
-						.then(save);
+					return getDefaultStorage().then(save);
 				} else {
 					return storage;
 				}

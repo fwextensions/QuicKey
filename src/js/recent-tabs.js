@@ -38,7 +38,9 @@ define([
 		tab)
 	{
 		return TabKeys.reduce(function(obj, key) {
-			obj[key] = tab[key]; return obj;
+			obj[key] = tab[key];
+
+			return obj;
 		}, {});
 	}
 
@@ -132,6 +134,7 @@ console.log("add", tab.id, tab.title);
 					// happen just from opening the extension and then
 					// closing it without doing anything.  or we switched to
 					// the tab using the keyboard shortcut.
+// TODO: do we need to save lastShortcutTabID here?  might be faster not to
 				return {
 					switchFromShortcut: false,
 					lastShortcutTabID: null
@@ -222,7 +225,6 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 		return storage.set(function(data) {
 			var tabsByID = data.tabsByID,
 				tab = tabsByID[tabID],
-				updateCount = data.updateCount,
 				foundRelevantChange = false;
 
 			if (tab) {
@@ -236,8 +238,7 @@ console.log("tab updated", tabID, key, changeInfo[key], tab.title);
 
 				if (foundRelevantChange) {
 					return {
-						tabsByID: tabsByID,
-						updateCount: (updateCount || 0) + 1
+						tabsByID: tabsByID
 					};
 				}
 			}
@@ -282,8 +283,8 @@ console.log("tab updated", tabID, key, changeInfo[key], tab.title);
 							newTab = pluckRelevantKeys(newTab);
 							newTab.recent = oldTab.recent;
 							newTabsByID[newTab.id] = newTab;
-							delete freshTabsByURL[oldTab.url];
 							newTabIDs.push(newTab.id);
+							delete freshTabsByURL[oldTab.url];
 						}
 					});
 
@@ -294,8 +295,8 @@ console.log("tab updated", tabID, key, changeInfo[key], tab.title);
 // TODO: remove newTabsCount when we've verified this works
 						newTabsCount: newTabsCount
 					};
-				}, "updateRecents");
-		});
+				});
+		}, "updateAll");
 	}
 
 
@@ -313,11 +314,11 @@ console.log("tab updated", tabID, key, changeInfo[key], tab.title);
 					// remove tabs based on dwell time.  but only do that if the
 					// user is toggling the tab via the previous/next-tab shortcut
 					// and not by double-pressing the popup shortcut.  use 0 as
-					// the lastShortcutTime in that case so if quickly does the
-					// double-press twice, it will just toggle instead of pushing
-					// further back in the stack.
+					// the lastShortcutTime in that case so if the user quickly
+					// does the double-press twice, it will just toggle instead
+					// of pushing further back in the stack.
 				newData = {
-					switchFromShortcut: fromDoublePress ? false : true,
+					switchFromShortcut: !fromDoublePress,
 					lastShortcutTime: fromDoublePress ? 0 : now,
 					previousTabIndex: -1
 				},
