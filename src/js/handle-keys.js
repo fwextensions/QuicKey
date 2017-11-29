@@ -5,9 +5,9 @@ define([
 ) {
 		// the self module global will be set in handleKeys()
 	const Bindings = [
-		[["ArrowUp", "alt+ArrowUp", "alt+shift+w"],
+		[["ArrowUp", "alt+ArrowUp", "alt+shift+w", "ctrl+shift+w"],
 			function(event) { self.modifySelected(-1, event.altKey); }],
-		[["ArrowDown", "alt+ArrowDown", "alt+w"],
+		[["ArrowDown", "alt+ArrowDown", "alt+w", "ctrl+w"],
 			function(event) { self.modifySelected(1, event.altKey); }],
 		["PageUp",
 			function() { self.resultsList.scrollByPage("up"); }],

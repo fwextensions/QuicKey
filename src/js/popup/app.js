@@ -39,7 +39,7 @@ define([
 		VeryRecentBoost = .15,
 		RecentBoost = .1,
 		IsMac = /Mac/i.test(navigator.platform),
-		ShortcutModifier = IsMac ? "Ctrl" : "Alt",
+		ShortcutModifier = IsMac ? "Control" : "Alt",
 		WhitespacePattern = /\s/g,
 		BookmarksQuery = "/b ",
 		HistoryQuery = "/h ",

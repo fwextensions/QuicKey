@@ -13,6 +13,7 @@ console.log("=== startup");
 			// this will get called once for each window on startup
 		timer = setTimeout(function() {
 console.log("=== windows.onCreated");
+
 			require([
 				"recent-tabs"
 			], function(
@@ -22,7 +23,7 @@ console.log("=== windows.onCreated");
 					// will get new IDs when the app reloads each one
 				return recentTabs.updateAll(window);
 			});
-		}, 750);
+		}, 500);
 	});
 });
 
