@@ -203,17 +203,39 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 	function getAll()
 	{
 		return storage.get(function(data) {
-// TODO: this won't save the data with the newly pushed lastShortcutTabID
+			return cp.tabs.query({})
+				.then(function(freshTabs) {
+					var freshTabsByID = {},
+						tabIDs = data.tabIDs,
+						tabsByID = data.tabsByID,
+						newTabsByID = {},
+						recents = [];
+
+						// create a dictionary of the new tabs by ID
+					freshTabs.forEach(function(tab) {
+						freshTabsByID[tab.id] = tab;
+					});
+
+					tabIDs.forEach(function(tabID) {
+						var oldTab = tabsByID[tabID],
+							newTab = freshTabsByID[oldTab && oldTab.id];
+
+						if (newTab) {
+							newTab = pluckRelevantKeys(newTab);
+							newTab.recent = oldTab.recent;
+							newTabsByID[newTab.id] = newTab;
+							recents.push(newTab);
+						}
+					});
+
+					recents.tabsByID = tabsByID;
+
+// TODO: return all the tabs along with recents from this, so app.js doesn't have to also get all tabs
+// TODO: do we need to save the data with the newly pushed lastShortcutTabID?
 //			updateDataFromShortcut(data);
 
-				// filter out any undefineds, which seem to sneak in sometimes
-			var recents = data.tabIDs.map(function(tabID) {
-					return data.tabsByID[tabID];
-				}).filter(function(recent) { return recent; });
-
-			recents.tabsByID = data.tabsByID;
-
-			return recents;
+					return recents;
+				});
 		});
 	}
 
@@ -222,81 +244,35 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 		tabID,
 		changeInfo)
 	{
-		return storage.set(function(data) {
-			var tabsByID = data.tabsByID,
-				tab = tabsByID[tabID],
-				foundRelevantChange = false;
+		var newData = {},
+			foundRelevantChange = false;
 
-			if (tab) {
-				Object.keys(changeInfo).forEach(function(key) {
-					if (key in TabKeysHash) {
-						foundRelevantChange = true;
-console.log("tab updated", tabID, key, changeInfo[key], tab.title);
-						tab[key] = changeInfo[key];
-					}
-				});
-
-				if (foundRelevantChange) {
-					return {
-						tabsByID: tabsByID
-					};
-				}
+		Object.keys(changeInfo).forEach(function(key) {
+			if (key in TabKeysHash) {
+				foundRelevantChange = true;
+				newData[key] = changeInfo[key];
+console.log("tab updated", tabID, key, changeInfo[key]);
 			}
-		}, "updateTab");
-	}
+		});
 
+			// we only want to call storage.set() if we actually found something,
+			// since onUpdated gets called a lot and getting and setting the
+			// storage is a bit costly
+		if (foundRelevantChange) {
+			return storage.set(function(data) {
+				var tabsByID = data.tabsByID,
+					tab = tabsByID[tabID];
 
-	function updateAll()
-	{
-		return storage.set(function(data) {
-			return cp.tabs.query({})
-				.then(function(freshTabs) {
-					var freshTabsByURL = {},
-						tabIDs = data.tabIDs,
-						tabsByID = data.tabsByID,
-							// start with an empty object so if there are old
-							// tabs lying around that aren't listed in tabIDs
-							// they'll get dropped
-						newTabsByID = {},
-						newTabIDs = [],
-						newTabsCount = [].concat(data.newTabsCount,
-							{ l: freshTabs.length, d: Date.now() });
+				if (tab) {
+					Object.assign(tab, newData);
+				}
 
-						// create a dictionary of the new tabs by URL
-					freshTabs.forEach(function(tab) {
-						freshTabsByURL[tab.url] = tab;
-					});
+				return {
+					tabsByID: tabsByID
+				};
+			}, "updateTab");
+		}
 
-						// we need to loop on tabIDs instead of just building a
-						// hash and using Object.keys() to get a new list because
-						// we want to maintain the recency order from tabIDs
-					tabIDs.forEach(function(tabID) {
-						var oldTab = tabsByID[tabID],
-							newTab = freshTabsByURL[oldTab && oldTab.url];
-
-						if (newTab) {
-								// we found the same URL in a new tab, so copy over
-								// the recent timestamp and store it in the hash
-								// using the new tab's ID.  also delete the URL
-								// from the hash in case there are duplicate tabs
-								// pointing at the same URL.
-							newTab = pluckRelevantKeys(newTab);
-							newTab.recent = oldTab.recent;
-							newTabsByID[newTab.id] = newTab;
-							newTabIDs.push(newTab.id);
-							delete freshTabsByURL[oldTab.url];
-						}
-					});
-
-					return {
-						tabIDs: newTabIDs,
-						tabsByID: newTabsByID,
-						recentsUpdated: null,
-// TODO: remove newTabsCount when we've verified this works
-						newTabsCount: newTabsCount
-					};
-				});
-		}, "updateAll");
 	}
 
 
@@ -375,7 +351,6 @@ console.log("toggleTab then previousTabID", previousTabID, data.previousTabIndex
 		remove: remove,
 		getAll: getAll,
 		update: update,
-		updateAll: updateAll,
 		toggleTab: toggleTab
 	};
 });

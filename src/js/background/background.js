@@ -1,8 +1,13 @@
+var gStartingUp = false,
+	gAddedListeners = false;
+
 	// we can't add this listener inside the require below because that's
 	// called asynchronously, and the startup event will have already fired
 	// by the time the require callback runs
 chrome.runtime.onStartup.addListener(function() {
 	var timer = null;
+
+	gStartingUp = true;
 
 console.log("=== startup");
 
@@ -14,24 +19,38 @@ console.log("=== startup");
 		timer = setTimeout(function() {
 console.log("=== windows.onCreated");
 
-			require([
-				"recent-tabs"
-			], function(
-				recentTabs
-			) {
-					// the stored recent tab data will be out of date, since the tabs
-					// will get new IDs when the app reloads each one
-				return recentTabs.updateAll(window);
-			});
+			gStartingUp = false;
+			addListeners();
 		}, 500);
 	});
 });
 
 
+// TODO: remove this
 chrome.runtime.onSuspend.addListener(function() {
 	console.log("===== onSuspend");
 });
 
+
+setTimeout(function() {
+console.log("== gStartingUp", gStartingUp);
+
+	if (!gStartingUp) {
+		addListeners();
+	}
+}, 100);
+
+
+// TODO: clean this up
+function addListeners()
+{
+console.log("== addListeners", gAddedListeners);
+
+	if (gAddedListeners) {
+		return;
+	}
+
+	gAddedListeners = true;
 
 require([
 	"recent-tabs",
@@ -59,13 +78,6 @@ require([
 //console.log("onRemoved", tabID);
 
 		recentTabs.remove(tabID, removeInfo);
-	});
-
-
-	chrome.tabs.onUpdated.addListener(function(tabID, changeInfo) {
-//console.log("onUpdated", tabID);
-
-		recentTabs.update(tabID, changeInfo);
 	});
 
 
@@ -112,3 +124,4 @@ require([
 		console.log.apply(console, arguments);
 	}
 });
+}
