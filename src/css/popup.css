@@ -88,7 +88,7 @@ input.search-box::-webkit-search-cancel-button {
    =========================================================================== */
 
 .results-list-container {
-	padding: 0 5px 5px 5px;
+	padding: 0 5px 3px 5px;
 }
 
 .results-list {

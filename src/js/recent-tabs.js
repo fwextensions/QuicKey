@@ -208,8 +208,8 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 					var freshTabsByID = {},
 						tabIDs = data.tabIDs,
 						tabsByID = data.tabsByID,
-						newTabsByID = {},
-						recents = [];
+						recentTabsByID = {},
+						recentTabs = [];
 
 						// create a dictionary of the new tabs by ID
 					freshTabs.forEach(function(tab) {
@@ -218,61 +218,27 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 
 					tabIDs.forEach(function(tabID) {
 						var oldTab = tabsByID[tabID],
-							newTab = freshTabsByID[oldTab && oldTab.id];
+							newTab = freshTabsByID[tabID];
 
-						if (newTab) {
+						if (oldTab && newTab) {
 							newTab = pluckRelevantKeys(newTab);
 							newTab.recent = oldTab.recent;
-							newTabsByID[newTab.id] = newTab;
-							recents.push(newTab);
+							recentTabsByID[newTab.id] = newTab;
+							recentTabs.push(newTab);
 						}
 					});
 
-					recents.tabsByID = tabsByID;
+					return {
+						tabs: freshTabs,
+						recentTabs: recentTabs,
+						recentTabsByID: recentTabsByID
+					};
 
-// TODO: return all the tabs along with recents from this, so app.js doesn't have to also get all tabs
 // TODO: do we need to save the data with the newly pushed lastShortcutTabID?
 //			updateDataFromShortcut(data);
 
-					return recents;
 				});
 		});
-	}
-
-
-	function update(
-		tabID,
-		changeInfo)
-	{
-		var newData = {},
-			foundRelevantChange = false;
-
-		Object.keys(changeInfo).forEach(function(key) {
-			if (key in TabKeysHash) {
-				foundRelevantChange = true;
-				newData[key] = changeInfo[key];
-console.log("tab updated", tabID, key, changeInfo[key]);
-			}
-		});
-
-			// we only want to call storage.set() if we actually found something,
-			// since onUpdated gets called a lot and getting and setting the
-			// storage is a bit costly
-		if (foundRelevantChange) {
-			return storage.set(function(data) {
-				var tabsByID = data.tabsByID,
-					tab = tabsByID[tabID];
-
-				if (tab) {
-					Object.assign(tab, newData);
-				}
-
-				return {
-					tabsByID: tabsByID
-				};
-			}, "updateTab");
-		}
-
 	}
 
 
@@ -350,7 +316,6 @@ console.log("toggleTab then previousTabID", previousTabID, data.previousTabIndex
 		add: add,
 		remove: remove,
 		getAll: getAll,
-		update: update,
 		toggleTab: toggleTab
 	};
 });

@@ -58,7 +58,6 @@ define([
 		bookmarksPromise: null,
 		historyPromise: null,
 		gotModifierUp: false,
-		gotMRU: false,
 		resultsList: null,
 
 
@@ -78,23 +77,24 @@ define([
 
 		componentWillMount: function()
 		{
-			Promise.all([
-				recentTabs.getAll(),
-					// start the process of getting all the tabs.  any initial chars
-					// the user might have typed as we were loading will not match
-					// anything until this promise resolves and calls
-					// getMatchingItems() again.
-				this.loadPromisedItems(function() { return getTabs(cp.tabs.query({})); }, "tabs", "")
-			])
-				.then(function(results) {
-					var recents = results[0],
-						tabs = results[1],
-						tabsByID = recents.tabsByID,
+			recentTabs.getAll()
+				.then(function(data) {
+					return this.loadPromisedItems(function() { return getTabs(data.tabs) }, "tabs", "")
+						.then(function(tabs) {
+							data.tabs = tabs;
+
+							return data;
+						});
+				}.bind(this))
+				.then(function(data) {
+					var tabs = data.tabs,
+						recentTabs = data.recentTabs,
+						recentTabsByID = data.recentTabsByID,
 						now = Date.now();
 
 						// boost the scores of recent tabs
 					tabs.forEach(function(tab) {
-						var recentTab = tabsByID[tab.id],
+						var recentTab = recentTabsByID[tab.id],
 							age,
 							hours;
 
@@ -116,8 +116,8 @@ define([
 						// which may have changed the results
 					this.setQuery(this.state.query);
 
-					this.loadPromisedItems(function() {
-						return getTabs(Promise.resolve(recents))
+					return this.loadPromisedItems(function() {
+						return getTabs(recentTabs)
 							.then(function(recents) {
 									// before returning the recents, we need to run scoreItems() on
 									// them so that the hitMask and scores keys are added to them.
@@ -127,20 +127,22 @@ define([
 
 								return recents;
 							});
-					}, "recents", "")
-						.then(function() {
-							var initialShortcuts = this.props.initialShortcuts;
+					}, "recents", "");
+				}.bind(this))
+				.then(function() {
+					var initialShortcuts = this.props.initialShortcuts;
 
-							if (initialShortcuts.length) {
-								initialShortcuts.forEach(function(shortcut) {
-									if (shortcut == "w") {
-										this.modifySelected(1, true);
-									} else if (shortcut == "W") {
-										this.modifySelected(-1, true);
-									}
-								}, this);
+						// after the recent tabs have been loaded and scored,
+						// apply any shortcuts that recorded during init
+					if (initialShortcuts.length) {
+						initialShortcuts.forEach(function(shortcut) {
+							if (shortcut == "w") {
+								this.modifySelected(1, true);
+							} else if (shortcut == "W") {
+								this.modifySelected(-1, true);
 							}
-						}.bind(this));
+						}, this);
+					}
 				}.bind(this));
 		},
 
@@ -328,7 +330,6 @@ define([
 					// let the selected value go to -1 when using the MRU key to
 					// navigate up, and don't wrap at the end of the list
 				index = Math.min(Math.max(-1, index), length - 1);
-				this.gotMRU = true;
 				this.gotModifierUp = false;
 			} else {
 					// wrap around the end or beginning of the list
