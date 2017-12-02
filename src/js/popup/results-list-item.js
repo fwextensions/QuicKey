@@ -13,8 +13,8 @@ define([
 ) {
 	const MaxTitleLength = 70,
 		MaxURLLength = 75,
-		SuspendedFaviconOpacity = .5;
-
+		SuspendedFaviconOpacity = .5,
+		FaviconURL = "chrome://favicon/";
 
 	var IsDevMode = false;
 
@@ -104,10 +104,11 @@ define([
 					.map(function(a) { return a.join(": "); }).join("\n") + "\n" + tooltip;
 			}
 
-			if (item.unsuspendURL && !item.favIconUrl) {
+			if (item.unsuspendURL && item.faviconURL.indexOf(FaviconURL) == 0) {
 					// this is a suspended tab, but The Great Suspender has
-					// forgotten the faded favicon for it.  so we get the favicon
-					// through chrome://favicon/ and then fade it ourselves.
+					// forgotten the faded favicon for it or has set its own
+					// icon for some reason.  so we get the favicon through
+					// chrome://favicon/ and then fade it ourselves.
 				faviconStyle.opacity = SuspendedFaviconOpacity;
 			}
 

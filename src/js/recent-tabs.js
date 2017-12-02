@@ -96,6 +96,10 @@ define([
 		tab,
 		fromFocusChange)
 	{
+		if (!tab) {
+			return;
+		}
+
 		return storage.set(function(data) {
 			var id = tab.id,
 				now = Date.now(),
@@ -181,6 +185,10 @@ if (data.switchFromShortcut) {
 	function remove(
 		tabID)
 	{
+		if (isNaN(tabID)) {
+			return;
+		}
+
 		return storage.set(function(data) {
 			var tabIDs = data.tabIDs,
 				tabsByID = data.tabsByID,
@@ -239,6 +247,59 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 
 				});
 		});
+	}
+
+
+	function updateAll()
+	{
+		return storage.set(function(data) {
+			return cp.tabs.query({})
+				.then(function(freshTabs) {
+					var freshTabsByURL = {},
+						tabIDs = data.tabIDs,
+						tabsByID = data.tabsByID,
+							// start with an empty object so if there are old
+							// tabs lying around that aren't listed in tabIDs
+							// they'll get dropped
+						newTabsByID = {},
+						newTabIDs = [],
+						newTabsCount = [].concat(data.newTabsCount,
+							{ l: freshTabs.length, d: Date.now() });
+
+						// create a dictionary of the new tabs by URL
+					freshTabs.forEach(function(tab) {
+						freshTabsByURL[tab.url] = tab;
+					});
+
+						// we need to loop on tabIDs instead of just building a
+						// hash and using Object.keys() to get a new list because
+						// we want to maintain the recency order from tabIDs
+					tabIDs.forEach(function(tabID) {
+						var oldTab = tabsByID[tabID],
+							newTab = freshTabsByURL[oldTab && oldTab.url];
+
+						if (newTab) {
+								// we found the same URL in a new tab, so copy over
+								// the recent timestamp and store it in the hash
+								// using the new tab's ID.  also delete the URL
+								// from the hash in case there are duplicate tabs
+								// pointing at the same URL.
+							newTab = pluckRelevantKeys(newTab);
+							newTab.recent = oldTab.recent;
+							newTabsByID[newTab.id] = newTab;
+							newTabIDs.push(newTab.id);
+							delete freshTabsByURL[oldTab.url];
+						}
+					});
+
+					return {
+						tabIDs: newTabIDs,
+						tabsByID: newTabsByID,
+// TODO: remove newTabsCount when we've verified this works
+						newTabsCount: newTabsCount
+					};
+				});
+		}, "updateAll");
 	}
 
 
@@ -316,6 +377,7 @@ console.log("toggleTab then previousTabID", previousTabID, data.previousTabIndex
 		add: add,
 		remove: remove,
 		getAll: getAll,
+		updateAll: updateAll,
 		toggleTab: toggleTab
 	};
 });

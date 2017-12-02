@@ -4,42 +4,43 @@ define([
 	ShortcutManager
 ) {
 		// the self module global will be set in handleKeys()
-	const Bindings = [
-		[["ArrowUp", "alt+ArrowUp", "alt+shift+w", "ctrl+shift+w"],
-			function(event) { self.modifySelected(-1, event.altKey); }],
-		[["ArrowDown", "alt+ArrowDown", "alt+w", "ctrl+w"],
-			function(event) { self.modifySelected(1, event.altKey); }],
-		["PageUp",
-			function() { self.resultsList.scrollByPage("up"); }],
-		["PageDown",
-			function() { self.resultsList.scrollByPage("down"); }],
-		["Home",
-			function() { self.setSelectedIndex(0); }],
-		["End",
-			function() { self.setSelectedIndex(self.state.matchingItems.length - 1); }],
-		[["Enter", "shift+Enter"],
-			function(event) { openItem(event, false); }],
-		[["mod+Enter", "mod+shift+Enter"],
-			function(event) { openItem(event, true); }],
-		[["ctrl+[", "ctrl+shift+["],
-			function(event) { moveTab(-1, event.shiftKey); }],
-		[["ctrl+]", "ctrl+shift+]"],
-			function(event) { moveTab(1, event.shiftKey); }],
-		["mod+w",
-			function() { self.closeTab(selectedTab()); }],
-		["Escape",
-			function(event) { self.clearQuery(event.target.value); }],
-		[["Space", "shift+Space"],
-			function(event) {
-				if (self.mode != "command") {
-					self.modifySelected(event.shiftKey ? -1 : 1);
-				} else {
-						// in command mode, return true so that the space after
-						// the /h or b isn't swallowed
-					return true;
-				}
-			}]
-	];
+	const IsMac = /Mac/i.test(navigator.platform),
+		Bindings = [
+			[["ArrowUp", "alt+ArrowUp", "alt+shift+w", "ctrl+shift+w", "ctrl+ArrowUp"],
+				function(event) { self.modifySelected(-1, (!IsMac && event.altKey) || (IsMac && event.ctrlKey)); }],
+			[["ArrowDown", "alt+ArrowDown", "alt+w", "ctrl+w", "ctrl+ArrowDown"],
+				function(event) { self.modifySelected(1, (!IsMac && event.altKey) || (IsMac && event.ctrlKey)); }],
+			["PageUp",
+				function() { self.resultsList.scrollByPage("up"); }],
+			["PageDown",
+				function() { self.resultsList.scrollByPage("down"); }],
+			["Home",
+				function() { self.setSelectedIndex(0); }],
+			["End",
+				function() { self.setSelectedIndex(self.state.matchingItems.length - 1); }],
+			[["Enter", "shift+Enter"],
+				function(event) { openItem(event, false); }],
+			[["mod+Enter", "mod+shift+Enter"],
+				function(event) { openItem(event, true); }],
+			[["ctrl+[", "ctrl+shift+["],
+				function(event) { moveTab(-1, event.shiftKey); }],
+			[["ctrl+]", "ctrl+shift+]"],
+				function(event) { moveTab(1, event.shiftKey); }],
+			["mod+w",
+				function() { self.closeTab(selectedTab()); }],
+			["Escape",
+				function(event) { self.clearQuery(event.target.value); }],
+			[["Space", "shift+Space"],
+				function(event) {
+					if (self.mode != "command") {
+						self.modifySelected(event.shiftKey ? -1 : 1);
+					} else {
+							// in command mode, return true so that the space after
+							// the /h or b isn't swallowed
+						return true;
+					}
+				}]
+		];
 
 
 	var self,
