@@ -19,9 +19,9 @@ You can also type <b><kbd>/</kbd><kbd>b</kbd></b> to search bookmarks or <b><kbd
 
 ## Installation
 
-Install *QuicKey* from the [Chrome Web Store](https://chrome.google.com/webstore/detail/quickey-–-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg).
+Click the *Install Now* button to the left, or install *QuicKey* from the [Chrome Web Store](https://chrome.google.com/webstore/detail/quickey-–-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg).
 
-Once the extension is installed, you can click the <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> button on the toolbar to open the search box.  But if you're using this extension, you probably prefer using the default keyboard shortcut listed above.
+Once the extension is installed, you can click the <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> button on the toolbar to open the search box.  But if you're using this extension, you'll probably prefer using the default keyboard shortcut listed above.
 
 To change these shortcuts, you can open the main menu and then go to *More tools > Extensions*, scroll to the very bottom of the page, and then click *Keyboard Shortcuts*.
 
@@ -48,7 +48,7 @@ When first installed, *QuicKey* won't have any tab usage history.  But over time
 
   * **To navigate farther back in the MRU list:**
     * Press <b><kbd>alt</kbd><kbd>A</kbd></b> (<b><kbd>ctrl</kbd><kbd>A</kbd></b> on macOS) once to switch to the previous tab.  The *QuicKey* icon will invert for .75 seconds: <b><img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> ➤ <img src="img/icon-38-inverted.png" style="height: 19px; vertical-align: text-bottom;"></b>.
-    * Press <b><kbd>alt</kbd><kbd>A</kbd></b> while the icon is inverted to switch to an older tab, once for each tab.
+    * Press <b><kbd>alt</kbd><kbd>A</kbd></b> again while the icon is inverted to switch to an older tab, once for each tab.
     * Press <b><kbd>alt</kbd><kbd>shift</kbd><kbd>A</kbd></b> to move to newer tabs.
     * Pause to let the icon revert to normal: <b><img src="img/icon-38-inverted.png" style="height: 19px; vertical-align: text-bottom;"> ➤ <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"></b>.
     * Press <b><kbd>alt</kbd><kbd>A</kbd></b> again to switch back to the tab you initially started on.
@@ -65,6 +65,8 @@ Which shortcuts to use is up to you.  Double-pressing <b><kbd>alt</kbd><kbd>Q</k
 <b><kbd>alt</kbd><kbd>A</kbd></b> lets you quickly navigate to even older tabs, though the timing can be a little tricky.
 
 Selecting from the menu gives you the closest experience to a typical <b><kbd>alt</kbd><kbd>tab</kbd></b> menu, but you have to use a different key to navigate the list while the menu is open.
+
+You can change the <b><kbd>alt</kbd><kbd>A</kbd></b> shortcut by opening the main menu and then going to *More tools > Extensions*, scrolling to the very bottom of the page, and then clicking *Keyboard Shortcuts*.
 
 
 ## Search bookmarks

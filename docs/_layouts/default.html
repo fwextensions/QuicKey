@@ -34,12 +34,6 @@
 
         <p><button id="install" onclick="chrome.webstore.install()">Install Now</button></p>
 
-        <script>
-        if (chrome.app.isInstalled) {
-          document.getElementById("install").style.display = "none";
-        }
-        </script>
-
         <p><a href="https://chrome.google.com/webstore/detail/quickey-–-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg"><img src="img/webstore.png" alt="QuicKey in the Chrome Webstore" /></a></p>
 
         {% if site.github.is_project_page %}
