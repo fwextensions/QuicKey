@@ -39,6 +39,15 @@ kbd {
 	box-shadow: inset 0 -1px 0 #bbb;
 }
 
+p > b, li > b {
+	white-space: nowrap;
+}
+
+b > kbd + kbd {
+	margin-left: 0.3em;
+	font-weight: normal;
+}
+
 a:hover, a:focus {
 	font-weight: normal;
 	text-decoration: underline;

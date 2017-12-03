@@ -8,13 +8,13 @@ If you like to keep lots of tabs open in Chrome, it can quickly become difficult
 
 *QuicKey* lets you navigate your hundreds of Chrome tabs by typing just part of the page's title or URL.  No mouse needed!
 
-  * Press <kbd>alt</kbd>&nbsp;<kbd>Q</kbd> (<kbd>ctrl</kbd>&nbsp;<kbd>Q</kbd> on macOS)
+  * Press <b><kbd>alt</kbd><kbd>Q</kbd></b> (<b><kbd>ctrl</kbd><kbd>Q</kbd></b> on macOS)
   * Type a few letters
   * Press enter to switch to the selected tab
 
 To toggle between the two most recently used tabs, quickly press the keyboard shortcut twice.  Or navigate the full most-recently-used (MRU) tab list as shown below.
 
-You can also type <kbd>/</kbd>&nbsp;<kbd>b</kbd> to search bookmarks or <kbd>/</kbd>&nbsp;<kbd>h</kbd> to search your browser history.
+You can also type <b><kbd>/</kbd><kbd>b</kbd></b> to search bookmarks or <b><kbd>/</kbd><kbd>h</kbd></b> to search your browser history.
 
 
 ## Installation
@@ -30,7 +30,7 @@ To change these shortcuts, you can open the main menu and then go to *More tools
 
 Unlike other tab switchers, *QuicKey* uses a [Quicksilver](https://qsapp.com/)-style search algorithm to rank the results, where contiguous matches at the beginning of words are higher in the list, as are matches against capital letters at the beginning of words.  So you can type just a few letters to quickly find the right tab.
 
-The best match is selected by default, so press <kbd>enter</kbd> to switch to that tab.  Or press the <kbd>&#8593;</kbd>, <kbd>&#8595;</kbd>, <kbd>pg up</kbd> or <kbd>pg dn</kbd> keys to navigate the list.  Like in Quicksilver, you can also press <kbd>space</kbd> or <kbd>shift</kbd>&nbsp;<kbd>space</kbd> to move the selection down or up.  Or just click the tab you want.
+The best match is selected by default, so press <kbd>enter</kbd> to switch to that tab.  Or press the <kbd>&#8593;</kbd>, <kbd>&#8595;</kbd>, <kbd>pg up</kbd> or <kbd>pg dn</kbd> keys to navigate the list.  Like in Quicksilver, you can also press <kbd>space</kbd> or <b><kbd>shift</kbd><kbd>space</kbd></b> to move the selection down or up.  Or just click the tab you want.
 
 Press <kbd>esc</kbd> to clear what you've typed.  If the search box is empty, pressing <kbd>esc</kbd> will close the popup.
 
@@ -39,55 +39,56 @@ If you type more than 25 letters, which should be plenty to find the right tab, 
 Recently used tabs get a slight boost in the search results ranking, so getting back to a tab you were just using should require typing fewer letters.
 
 
-## Navigate the most recently used tabs
+## Navigate the most recently used (MRU) tabs
 
 When first installed, *QuicKey* won't have any tab usage history.  But over time, opening the extension will automatically display the list of tabs you've visited, in order of recency.  Click a tab to switch to it, or use one of the keyboard shortcuts below to navigate the recently used tab history:
 
   * **To switch to the previously active tab:**
-      * Quickly double-press the <kbd>alt</kbd>&nbsp;<kbd>Q</kbd> or <kbd>ctrl</kbd>&nbsp;<kbd>Q</kbd> shortcut.  The tab list won't open.
+      * Quickly double-press the <b><kbd>alt</kbd><kbd>Q</kbd></b> or <b><kbd>ctrl</kbd><kbd>Q</kbd></b> shortcut.  The tab list won't open.
 
   * **To navigate farther back in the MRU list:**
-    * Press <kbd>alt</kbd>&nbsp;<kbd>A</kbd> (<kbd>ctrl</kbd>&nbsp;<kbd>A</kbd> on macOS) once to switch to the previous tab.  The *QuicKey* icon will invert for .75 seconds: <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> ➤ <img src="img/icon-38-inverted.png" style="height: 19px; vertical-align: text-bottom;">.
-    * Press <kbd>alt</kbd>&nbsp;<kbd>A</kbd> while the icon is inverted to switch to an older tab, once for each tab.
-    * Press <kbd>alt</kbd>&nbsp;<kbd>shift</kbd>&nbsp;<kbd>A</kbd> to move to newer tabs.
-    * Pause to let the icon revert to normal: <img src="img/icon-38-inverted.png" style="height: 19px; vertical-align: text-bottom;"> ➤ <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;">.
-    * Press <kbd>alt</kbd>&nbsp;<kbd>A</kbd> again to switch back to the tab you initially started on.
+    * Press <b><kbd>alt</kbd><kbd>A</kbd></b> (<b><kbd>ctrl</kbd><kbd>A</kbd></b> on macOS) once to switch to the previous tab.  The *QuicKey* icon will invert for .75 seconds: <b><img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> ➤ <img src="img/icon-38-inverted.png" style="height: 19px; vertical-align: text-bottom;"></b>.
+    * Press <b><kbd>alt</kbd><kbd>A</kbd></b> while the icon is inverted to switch to an older tab, once for each tab.
+    * Press <b><kbd>alt</kbd><kbd>shift</kbd><kbd>A</kbd></b> to move to newer tabs.
+    * Pause to let the icon revert to normal: <b><img src="img/icon-38-inverted.png" style="height: 19px; vertical-align: text-bottom;"> ➤ <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"></b>.
+    * Press <b><kbd>alt</kbd><kbd>A</kbd></b> again to switch back to the tab you initially started on.
 
   * **To pick a recent tab from the MRU list:**
     * Press the shortcut but keep holding the <kbd>alt</kbd> key (<kbd>ctrl</kbd> key on macOS).
-    * Press <kbd>alt</kbd>&nbsp;<kbd>W</kbd> to move down through the list of recent tabs.
-    * Press <kbd>alt</kbd>&nbsp;<kbd>shift</kbd>&nbsp;<kbd>W</kbd> to move up.
-    * Release <kbd>alt</kbd> to switch to the selected tab.
+    * Press <kbd>W</kbd> to move down through the list of recent tabs.
+    * Press <b><kbd>shift</kbd><kbd>W</kbd></b> to move up.
+    * Release <kbd>alt</kbd> (or <kbd>ctrl</kbd>) to switch to the selected tab.
     * You can also highlight an item with the mouse, then release <kbd>alt</kbd> to go to that tab.
 
-Which shortcuts to use is up to you.  Double-pressing <kbd>alt</kbd>&nbsp;<kbd>Q</kbd> is nice because there's just one shortcut and you can switch between the two recent tabs as quickly as you want.
+Which shortcuts to use is up to you.  Double-pressing <b><kbd>alt</kbd><kbd>Q</kbd></b> is nice because there's just one shortcut and you can switch between the two recent tabs as quickly as you want.
 
-<kbd>alt</kbd>&nbsp;<kbd>A</kbd> lets you quickly navigate to even older tabs, though the timing can be a little tricky.
+<b><kbd>alt</kbd><kbd>A</kbd></b> lets you quickly navigate to even older tabs, though the timing can be a little tricky.
 
-Selecting from the menu gives you the closest experience to an OS's <kbd>alt</kbd>&nbsp;<kbd>tab</kbd> menu, but you have to use a different shortcut to navigate while the menu is open.
+Selecting from the menu gives you the closest experience to a typical <b><kbd>alt</kbd><kbd>tab</kbd></b> menu, but you have to use a different key to navigate the list while the menu is open.
 
 
 ## Search bookmarks
 
-To find a bookmark, type <kbd>/</kbd>&nbsp;<kbd>b</kbd>&nbsp;<kbd>space</kbd> in the search box, and then part of the bookmark's name or URL.
+To find a bookmark, type <b><kbd>/</kbd><kbd>b</kbd><kbd>space</kbd></b> in the search box, and then part of the bookmark's name or URL.
 
   * Press enter to open the bookmark in the current tab
-  * Press <kbd>ctrl</kbd>&nbsp;<kbd>enter</kbd> (<kbd>cmd⌘</kbd>&nbsp;<kbd>enter</kbd> on macOS) to open it in a new tab in the current window
-  * Press <kbd>shift</kbd>&nbsp;<kbd>enter</kbd> to open it in a new window
+  * Press <b><kbd>ctrl</kbd><kbd>enter</kbd></b> (<b><kbd>cmd⌘</kbd><kbd>enter</kbd></b> on macOS) to open it in a new tab in the current window
+  * Press <b><kbd>shift</kbd><kbd>enter</kbd></b> to open it in a new window
 
 
 ## Search the browser history
 
-To find something in the last 2000 pages of your browser history, type <kbd>/</kbd>&nbsp;<kbd>h</kbd>&nbsp;<kbd>space</kbd> in the search box, and then part of the page's name or URL.
+To find something in the last 2000 pages of your browser history, type <b><kbd>/</kbd><kbd>h</kbd><kbd>space</kbd></b> in the search box, and then part of the page's name or URL.
 
-The same <kbd>ctrl</kbd>&nbsp;<kbd>enter</kbd> (<kbd>cmd⌘</kbd>&nbsp;<kbd>enter</kbd> on macOS) and <kbd>shift</kbd>&nbsp;<kbd>enter</kbd> shortcuts will open the visited page in a new tab or window.
+The same <b><kbd>ctrl</kbd><kbd>enter</kbd></b> (<b><kbd>cmd⌘</kbd><kbd>enter</kbd></b>
+  on macOS) and <b><kbd>shift</kbd><kbd>enter</kbd></b> shortcuts will open the visited page in a new tab or window.
 
 
-## The Great Suspender <a href="https://chrome.google.com/webstore/detail/the-great-suspender/klbibkeccnjlkjkiokjodocebajanakg?hl=en"><img src="img/tgs-icon.png" style="height: 24px;"></a> integration
+## <a href="https://chrome.google.com/webstore/detail/the-great-suspender/klbibkeccnjlkjkiokjodocebajanakg?hl=en"><img src="img/tgs-icon.png" style="height: 24px;"></a> The Great Suspender integration
 
 If you use the handy extension [The Great Suspender](https://chrome.google.com/webstore/detail/the-great-suspender/klbibkeccnjlkjkiokjodocebajanakg?hl=en) (and you almost certainly are if you have hundreds of tabs open), then suspended tabs will look faded in the list, and the original URL is shown (not that long one that you see in the location bar).  That means if you search for `chrome` or `extension`, you won't simply match all the suspended tabs, which is what happens in other tab search extensions.
 
-Press <kbd>shift</kbd>&nbsp;<kbd>enter</kbd> to switch to a tab and unsuspend it in one go. Or shift-click it with the mouse.
+Press <b><kbd>shift</kbd><kbd>enter</kbd></b> to switch to a tab and unsuspend it in one go. Or shift-click it with the mouse.
 
 Sometimes The Great Suspender seems to forget the page's favicon and just shows its own in the tab.  In that case, *QuicKey* will try to show the correct favicon in its list of tabs.
 
@@ -96,15 +97,15 @@ Sometimes The Great Suspender seems to forget the page's favicon and just shows 
 
 You can also move tabs to the left or right of the current tab, making it easy to pull tabs from other windows into the current one, or to rearrange tabs without using the mouse.
 
-  * Press <kbd>ctrl</kbd>&nbsp;<kbd>[</kbd> to move the selected tab to the left of the current one
-  * Press <kbd>ctrl</kbd>&nbsp;<kbd>]</kbd> to move it to the right
+  * Press <b><kbd>ctrl</kbd><kbd>[</kbd></b> to move the selected tab to the left of the current one
+  * Press <b><kbd>ctrl</kbd><kbd>]</kbd></b> to move it to the right
 
 Include <kbd>shift</kbd> in the shortcut to also unsuspend the tab while moving it.  The <kbd>ctrl</kbd> key should be used on both Windows and macOS.
 
 
 ## Close tabs
 
-To close the selected tab, press <kbd>ctrl</kbd>&nbsp;<kbd>W</kbd> (<kbd>cmd⌘</kbd>&nbsp;<kbd>W</kbd> on macOS).  So you could, for instance, type `docg` to match all of your Google Docs URLs and then quickly close those you no longer need.
+To close the selected tab, press <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd⌘</kbd><kbd>W</kbd></b> on macOS).  So you could, for instance, type `docg` to match all of your Google Docs URLs and then quickly close those you no longer need.
 
 
 ## Incognito mode
@@ -114,18 +115,18 @@ By default, Chrome extensions are not enabled in incognito mode when you first i
 Tabs in incognito mode display the incognito icon, so you can distinguish a normal tab from an incognito one with the same title.
 
 
-## Privacy
+## Privacy policy
 
 To function, *QuicKey* needs access to your open tabs, bookmarks and history.  The Chrome permissions dialog says *QuicKey* can also change your bookmarks and browsing history, but it never will.  It can't access the page content at all and doesn't transmit any information other than some anonymized Google Analytics metrics.
 
 
 ## Feedback and bugs
 
-If you find a bug in *QuicKey* or have a suggestion for a new feature, please [create a new issue](https://github.com/fwextensions/QuicKey/issues) on its GitHub page.
+If you find a bug in *QuicKey* or have a suggestion for a new feature, please [create a new issue](https://github.com/fwextensions/QuicKey/issues/new) on its GitHub page.
 
 
 ## Credits
 
 The <img src="img/search.svg" style="height: 13px"> and <img src="img/clear.svg" style="height: 16px; vertical-align: middle;"> icons are from the [Octicons](https://octicons.github.com/) set, used under the [MIT License](http://opensource.org/licenses/MIT).
 
-String ranking algorithm modeled on [Quicksilver](https://github.com/quicksilver/Quicksilver/blob/master/Quicksilver/Code-QuickStepCore/QSense.m)'s code.
+The string ranking algorithm is modeled on [Quicksilver](https://github.com/quicksilver/Quicksilver/blob/master/Quicksilver/Code-QuickStepCore/QSense.m)'s code.
