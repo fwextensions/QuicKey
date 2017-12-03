@@ -25,6 +25,28 @@ footer {
 	clear: both;
 }
 
+
+button {
+	width: 110px;
+	padding: 0.4em 0.4em 0.5em;
+	margin: 1em 0;
+	font: inherit;
+	font-weight: bold;
+	color: #ddd;
+	background: #333;
+	border: none;
+	border-radius: 5px;
+}
+
+button:hover {
+	box-shadow: inset 0px 0px 15px 1px rgba(150, 150, 150, 1);
+}
+
+button:active {
+	background: #ddd;
+	color: #333;
+}
+
 kbd {
 	font: 11px Consolas, "Liberation Mono", Menlo, Courier, monospace;
 	display: inline-block;
