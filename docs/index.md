@@ -60,7 +60,7 @@ When first installed, *QuicKey* won't have any tab usage history.  But over time
     * Release <kbd>alt</kbd> (or <kbd>ctrl</kbd>) to switch to the selected tab.
     * You can also highlight an item with the mouse, then release <kbd>alt</kbd> to go to that tab.
 
-Which shortcuts to use is up to you.  Double-pressing <b><kbd>alt</kbd><kbd>Q</kbd></b> is nice because there's just one shortcut and you can switch between the two recent tabs as quickly as you want.
+Which shortcuts to use is up to you.  Double-pressing <b><kbd>alt</kbd><kbd>Q</kbd></b> is nice because there's just one shortcut and you can switch between the two most recently used tabs as quickly as you want.
 
 <b><kbd>alt</kbd><kbd>A</kbd></b> lets you quickly navigate to even older tabs, though the timing can be a little tricky.
 
