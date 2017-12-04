@@ -8,9 +8,9 @@ If you like to keep lots of tabs open in Chrome, it can quickly become difficult
 
 *QuicKey* lets you navigate your hundreds of Chrome tabs by typing just part of the page's title or URL.  No mouse needed!
 
-  * Press <b><kbd>alt</kbd><kbd>Q</kbd></b> (<b><kbd>ctrl</kbd><kbd>Q</kbd></b> on macOS)
-  * Type a few letters
-  * Press enter to switch to the selected tab
+  * Press <b><kbd>alt</kbd><kbd>Q</kbd></b> (<b><kbd>ctrl</kbd><kbd>Q</kbd></b> on macOS).
+  * Type a few letters.
+  * Press enter to switch to the selected tab.
 
 To toggle between the two most recently used tabs, quickly press the keyboard shortcut twice.  Or navigate the full most-recently-used (MRU) tab list as shown below.
 
@@ -46,12 +46,14 @@ When first installed, *QuicKey* won't have any tab usage history.  But over time
   * **To switch to the previously active tab:**
       * Quickly double-press the <b><kbd>alt</kbd><kbd>Q</kbd></b> or <b><kbd>ctrl</kbd><kbd>Q</kbd></b> shortcut.  The tab list won't open.
 
+
   * **To navigate farther back in the MRU list:**
     * Press <b><kbd>alt</kbd><kbd>A</kbd></b> (<b><kbd>ctrl</kbd><kbd>A</kbd></b> on macOS) once to switch to the previous tab.  The *QuicKey* icon will invert for .75 seconds: <b><img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> ➤ <img src="img/icon-38-inverted.png" style="height: 19px; vertical-align: text-bottom;"></b>.
     * Press <b><kbd>alt</kbd><kbd>A</kbd></b> again while the icon is inverted to switch to an older tab, once for each tab.
     * Press <b><kbd>alt</kbd><kbd>shift</kbd><kbd>A</kbd></b> to move to newer tabs.
     * Pause to let the icon revert to normal: <b><img src="img/icon-38-inverted.png" style="height: 19px; vertical-align: text-bottom;"> ➤ <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"></b>.
     * Press <b><kbd>alt</kbd><kbd>A</kbd></b> again to switch back to the tab you initially started on.
+
 
   * **To pick a recent tab from the MRU list:**
     * Press the shortcut but keep holding the <kbd>alt</kbd> key (<kbd>ctrl</kbd> key on macOS).
@@ -64,7 +66,7 @@ Which shortcuts to use is up to you.  Double-pressing <b><kbd>alt</kbd><kbd>Q</k
 
 <b><kbd>alt</kbd><kbd>A</kbd></b> lets you quickly navigate to even older tabs, though the timing can be a little tricky.
 
-Selecting from the menu gives you the closest experience to a typical <b><kbd>alt</kbd><kbd>tab</kbd></b> menu, but you have to use a different key to navigate the list while the menu is open.
+Selecting from the menu by holding down the <kbd>alt</kbd> key gives you the closest experience to a typical <b><kbd>alt</kbd><kbd>tab</kbd></b> menu, but you have to use a different key to navigate the list while the menu is open.
 
 You can change the <b><kbd>alt</kbd><kbd>A</kbd></b> shortcut by opening the main menu and then going to *More tools > Extensions*, scrolling to the very bottom of the page, and then clicking *Keyboard Shortcuts*.
 
@@ -73,9 +75,9 @@ You can change the <b><kbd>alt</kbd><kbd>A</kbd></b> shortcut by opening the mai
 
 To find a bookmark, type <b><kbd>/</kbd><kbd>b</kbd><kbd>space</kbd></b> in the search box, and then part of the bookmark's name or URL.
 
-  * Press enter to open the bookmark in the current tab
-  * Press <b><kbd>ctrl</kbd><kbd>enter</kbd></b> (<b><kbd>cmd⌘</kbd><kbd>enter</kbd></b> on macOS) to open it in a new tab in the current window
-  * Press <b><kbd>shift</kbd><kbd>enter</kbd></b> to open it in a new window
+  * Press enter to open the bookmark in the current tab.
+  * Press <b><kbd>ctrl</kbd><kbd>enter</kbd></b> (<b><kbd>cmd⌘</kbd><kbd>enter</kbd></b> on macOS) to open it in a new tab in the current window.
+  * Press <b><kbd>shift</kbd><kbd>enter</kbd></b> to open it in a new window.
 
 
 ## Search the browser history
@@ -99,8 +101,8 @@ Sometimes The Great Suspender seems to forget the page's favicon and just shows 
 
 You can also move tabs to the left or right of the current tab, making it easy to pull tabs from other windows into the current one, or to rearrange tabs without using the mouse.
 
-  * Press <b><kbd>ctrl</kbd><kbd>[</kbd></b> to move the selected tab to the left of the current one
-  * Press <b><kbd>ctrl</kbd><kbd>]</kbd></b> to move it to the right
+  * Press <b><kbd>ctrl</kbd><kbd>[</kbd></b> to move the selected tab to the left of the current one.
+  * Press <b><kbd>ctrl</kbd><kbd>]</kbd></b> to move it to the right.
 
 Include <kbd>shift</kbd> in the shortcut to also unsuspend the tab while moving it.  The <kbd>ctrl</kbd> key should be used on both Windows and macOS.
 

@@ -30,7 +30,7 @@ require([
 		React.createElement(App, {
 			initialQuery: query,
 			initialShortcuts: shortcuts,
-			platform: /Win/i.test(navigator.platform) ? "win" : "mac"
+			platform: /Mac/i.test(navigator.platform) ? "mac" : "win"
 		}),
 		document.getElementById("root")
 	);

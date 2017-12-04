@@ -4,12 +4,15 @@ define([
 	ShortcutManager
 ) {
 		// the self module global will be set in handleKeys()
-	const IsMac = /Mac/i.test(navigator.platform),
-		Bindings = [
-			[["ArrowUp", "alt+ArrowUp", "alt+shift+w", "ctrl+shift+w", "ctrl+ArrowUp"],
-				function(event) { self.modifySelected(-1, (!IsMac && event.altKey) || (IsMac && event.ctrlKey)); }],
-			[["ArrowDown", "alt+ArrowDown", "alt+w", "ctrl+w", "ctrl+ArrowDown"],
-				function(event) { self.modifySelected(1, (!IsMac && event.altKey) || (IsMac && event.ctrlKey)); }],
+	const Bindings = [
+			["ArrowUp",
+				function() { self.modifySelected(-1); }],
+			["ArrowDown",
+				function() { self.modifySelected(1); }],
+			[["win:alt+ArrowUp", "win:alt+shift+w", "mac:ctrl+shift+w", "mac:ctrl+ArrowUp"],
+				function() { self.modifySelected(-1, true); }],
+			[["win:alt+ArrowDown", "win:alt+w", "mac:ctrl+w", "mac:ctrl+ArrowDown"],
+				function() { self.modifySelected(1, true); }],
 			["PageUp",
 				function() { self.resultsList.scrollByPage("up"); }],
 			["PageDown",

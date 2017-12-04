@@ -4,7 +4,8 @@
 
 * {
 	box-sizing: border-box;
-	font-family: system-ui, sans-serif;
+	font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+		Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
 	font-size: 14px;
 }
 
@@ -91,6 +92,10 @@ input.search-box::-webkit-search-cancel-button {
 	padding: 0 5px 3px 5px;
 }
 
+.mac .results-list-container {
+	padding-bottom: 5px;
+}
+
 .results-list {
 	list-style: none;
 	margin: 0;
@@ -113,7 +118,7 @@ input.search-box::-webkit-search-cancel-button {
 }
 
 .results-list-item.selected {
-	background-color: #dfdfff;
+	background-color: #ebebeb;
 }
 
 .results-list-item.incognito {

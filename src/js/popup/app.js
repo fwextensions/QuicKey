@@ -38,8 +38,6 @@ define([
 		RecentMS = HourCount * HourMS,
 		VeryRecentBoost = .15,
 		RecentBoost = .1,
-		IsMac = /Mac/i.test(navigator.platform),
-		ShortcutModifier = IsMac ? "Control" : "Alt",
 		WhitespacePattern = /\s/g,
 		BookmarksQuery = "/b ",
 		HistoryQuery = "/h ",
@@ -58,12 +56,16 @@ define([
 		bookmarksPromise: null,
 		historyPromise: null,
 		gotModifierUp: false,
+		mruModifier: "Alt",
 		resultsList: null,
 
 
 		getInitialState: function()
 		{
-			var query = this.props.initialQuery;
+			var props = this.props,
+				query = props.initialQuery;
+
+			this.mruModifier = props.platform == "mac" ? "Control" : "Alt";
 
 			return {
 				query: query,
@@ -416,6 +418,8 @@ define([
 		handleListRef: function(
 			resultsList)
 		{
+				// we need this ref because handleKeys calls
+				// resultsList.scrollByPage() to respond to page up/down keys
 			this.resultsList = resultsList;
 		},
 
@@ -465,7 +469,7 @@ define([
 		onKeyUp: function(
 			event)
 		{
-			if (event.key == ShortcutModifier) {
+			if (event.key == this.mruModifier) {
 				if (!this.gotModifierUp && this.state.selected > -1) {
 					this.openItem(this.state.matchingItems[this.state.selected]);
 				}
