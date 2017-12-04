@@ -72,8 +72,7 @@ define([
 			event)
 		{
 			if (!this.ignoreMouse) {
-					// pass true to let the list know this was from a mouse event
-				this.props.setSelectedIndex(this.props.index, true);
+				this.props.setSelectedIndex(this.props.index);
 			}
 		},
 

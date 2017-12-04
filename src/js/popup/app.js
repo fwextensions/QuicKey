@@ -56,6 +56,7 @@ define([
 		bookmarksPromise: null,
 		historyPromise: null,
 		gotModifierUp: false,
+		gotMRUKey: true,
 		mruModifier: "Alt",
 		resultsList: null,
 
@@ -333,6 +334,7 @@ define([
 					// navigate up, and don't wrap at the end of the list
 				index = Math.min(Math.max(-1, index), length - 1);
 				this.gotModifierUp = false;
+				this.gotMRUKey = true;
 			} else {
 					// wrap around the end or beginning of the list
 				index = (index + length) % length;
@@ -463,14 +465,23 @@ define([
 
 
 			// keydown handling is managed in another module
-		onKeyDown: handleKeys,
+		onKeyDown: function(
+			event)
+		{
+				// reset this on every keyDown so we know if the user had typed
+				// an alt-W or alt-shift-W before releasing alt.  it will get set
+				// to true in setSelectedIndex()
+			this.gotMRUKey = false;
+
+			return handleKeys(event, this);
+		},
 
 
 		onKeyUp: function(
 			event)
 		{
 			if (event.key == this.mruModifier) {
-				if (!this.gotModifierUp && this.state.selected > -1) {
+				if (!this.gotModifierUp && this.gotMRUKey && this.state.selected > -1) {
 					this.openItem(this.state.matchingItems[this.state.selected]);
 				}
 

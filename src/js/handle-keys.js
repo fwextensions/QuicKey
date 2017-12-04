@@ -29,7 +29,7 @@ define([
 				function(event) { moveTab(-1, event.shiftKey); }],
 			[["ctrl+]", "ctrl+shift+]"],
 				function(event) { moveTab(1, event.shiftKey); }],
-			[["win:ctrl+w", "mac:opt+w"],
+			[["win:ctrl+w", "mac:cmd+ctrl+w"],
 				function() { self.closeTab(selectedTab()); }],
 			["Escape",
 				function(event) { self.clearQuery(event.target.value); }],
@@ -75,9 +75,10 @@ define([
 
 
 	return function handleKeys(
-		event)
+		event,
+		context)
 	{
-		self = this;
+		self = context || this;
 
 			// we only need to check for shortcuts if there's a modifier key
 			// pressed or event.key is more than 1 char (ArrowUp, etc.)
