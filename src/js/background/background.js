@@ -1,21 +1,31 @@
+	// if the popup is opened and closed within this time, switch to the
+	// previous tab
+const MaxPopupLifetime = 400;
+
+
 var gStartingUp = false;
 
 
-	// called asynchronously, and the startup event will have already fired
-	// by the time the require callback runs
+console.log("= load");
+
 chrome.runtime.onStartup.addListener(function() {
 	var timer = null;
 
 	gStartingUp = true;
 
+console.log("== onStartup");
 
 	function onActivated(window) {
 		clearTimeout(timer);
+
+console.log("=== onActivated");
 
 			// set a timer to debounce this event, since if many windows are open,
 			// this will get called once for each active tab in each window on startup
 		timer = setTimeout(function() {
 			chrome.tabs.onActivated.removeListener(onActivated);
+
+console.log("==== last onActivated");
 
 			require([
 				"recent-tabs"
@@ -26,6 +36,8 @@ chrome.runtime.onStartup.addListener(function() {
 					// will get new IDs when the app reloads each one
 				return recentTabs.updateAll(window)
 					.then(function() {
+console.log("===== updateAll done");
+
 						gStartingUp = false;
 					});
 			});
@@ -36,36 +48,45 @@ chrome.runtime.onStartup.addListener(function() {
 });
 
 
-require([
-	"recent-tabs",
-	"cp"
-], function(
-	recentTabs,
-	cp
-) {
-		// if the popup is opened and closed within this time, switch to the
-		// previous tab
-	const MaxPopupLifetime = 400;
-
-
-	chrome.tabs.onActivated.addListener(function(event) {
+chrome.tabs.onActivated.addListener(function(event) {
+	require([
+		"recent-tabs",
+		"cp"
+	], function(
+		recentTabs,
+		cp
+	) {
 		if (!gStartingUp) {
 			return cp.tabs.get(event.tabId)
 				.then(recentTabs.add)
 		}
 	});
+});
 
 
-	chrome.tabs.onRemoved.addListener(function(tabID, removeInfo) {
+chrome.tabs.onRemoved.addListener(function(tabID, removeInfo) {
+	require([
+		"recent-tabs"
+	], function(
+		recentTabs
+	) {
 		if (!gStartingUp) {
 			recentTabs.remove(tabID, removeInfo);
 		}
 	});
+});
 
 
-		// the onActivated event isn't fired when the user switches between
-		// windows, so get the active tab in this window and store it
-	chrome.windows.onFocusChanged.addListener(function(windowID) {
+	// the onActivated event isn't fired when the user switches between
+	// windows, so get the active tab in this window and store it
+chrome.windows.onFocusChanged.addListener(function(windowID) {
+	require([
+		"recent-tabs",
+		"cp"
+	], function(
+		recentTabs,
+		cp
+	) {
 		if (!gStartingUp && windowID != chrome.windows.WINDOW_ID_NONE) {
 			cp.tabs.query({ active: true, windowId: windowID })
 				.then(function(tabs) {
@@ -78,18 +99,30 @@ require([
 				});
 		}
 	});
+});
 
 
-	chrome.commands.onCommand.addListener(function(command) {
+chrome.commands.onCommand.addListener(function(command) {
+	require([
+		"recent-tabs"
+	], function(
+		recentTabs
+	) {
 		if (command == "previous-tab") {
 			recentTabs.toggleTab(-1);
 		} else if (command == "next-tab") {
 			recentTabs.toggleTab(1);
 		}
 	});
+});
 
 
-	chrome.runtime.onConnect.addListener(function(port) {
+chrome.runtime.onConnect.addListener(function(port) {
+	require([
+		"recent-tabs"
+	], function(
+		recentTabs
+	) {
 		const connectTime = Date.now();
 
 		port.onDisconnect.addListener(function() {
@@ -98,9 +131,9 @@ require([
 			}
 		});
 	});
-
-
-	window.log = function() {
-		console.log.apply(console, arguments);
-	}
 });
+
+
+window.log = function() {
+	console.log.apply(console, arguments);
+};

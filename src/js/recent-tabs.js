@@ -64,12 +64,13 @@ define([
 		return storage.set(function(data) {
 			const lastShortcutTabID = data.lastShortcutTabID;
 
-			if (lastShortcutTabID) {
+			if (lastShortcutTabID && data.tabsByID[lastShortcutTabID]) {
 				removeItem(data.tabIDs, lastShortcutTabID);
 				data.tabIDs.push(lastShortcutTabID);
 				data.tabsByID[lastShortcutTabID].recent = Date.now();
-				data.lastShortcutTabID = null;
 			}
+
+			data.lastShortcutTabID = null;
 
 			return data;
 		}, "updateDataFromShortcut");

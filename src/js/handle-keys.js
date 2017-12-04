@@ -29,7 +29,7 @@ define([
 				function(event) { moveTab(-1, event.shiftKey); }],
 			[["ctrl+]", "ctrl+shift+]"],
 				function(event) { moveTab(1, event.shiftKey); }],
-			["mod+w",
+			[["win:ctrl+w", "mac:opt+w"],
 				function() { self.closeTab(selectedTab()); }],
 			["Escape",
 				function(event) { self.clearQuery(event.target.value); }],
