@@ -1,6 +1,6 @@
 # Tag line
 
-Switch tabs with a Quicksilver-style search or a most-recent (MRU) tab list
+Switch tabs with a Quicksilver-style search or a most-recently-used (MRU) tab list
 
 Switch tabs or access bookmarks and history with a Quicksilver-style search! Also supports tabs suspended by The Great Suspender.
 
@@ -115,7 +115,7 @@ Include shift in the shortcut to also unsuspend the tab while moving it. The ctr
 
 ★ Close tabs
 
-To close the selected tab, press ctrl-W (opt-W on macOS). So you could type "docg" to match all of your Google Docs URLs and then quickly close those you no longer need.
+To close the selected tab, press ctrl-W (cmd-ctrl-W on macOS). So you could type "docg" to match all of your Google Docs URLs and then quickly close those you no longer need.
 
 
 ★ Incognito mode

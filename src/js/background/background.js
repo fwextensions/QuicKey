@@ -49,45 +49,45 @@ console.log("===== updateAll done");
 
 
 chrome.tabs.onActivated.addListener(function(event) {
-	require([
-		"recent-tabs",
-		"cp"
-	], function(
-		recentTabs,
-		cp
-	) {
-		if (!gStartingUp) {
+	if (!gStartingUp) {
+		require([
+			"recent-tabs",
+			"cp"
+		], function(
+			recentTabs,
+			cp
+		) {
 			return cp.tabs.get(event.tabId)
-				.then(recentTabs.add)
-		}
-	});
+				.then(recentTabs.add);
+		});
+	}
 });
 
 
 chrome.tabs.onRemoved.addListener(function(tabID, removeInfo) {
-	require([
-		"recent-tabs"
-	], function(
-		recentTabs
-	) {
-		if (!gStartingUp) {
+	if (!gStartingUp) {
+		require([
+			"recent-tabs"
+		], function(
+			recentTabs
+		) {
 			recentTabs.remove(tabID, removeInfo);
-		}
-	});
+		});
+	}
 });
 
 
 	// the onActivated event isn't fired when the user switches between
 	// windows, so get the active tab in this window and store it
 chrome.windows.onFocusChanged.addListener(function(windowID) {
-	require([
-		"recent-tabs",
-		"cp"
-	], function(
-		recentTabs,
-		cp
-	) {
-		if (!gStartingUp && windowID != chrome.windows.WINDOW_ID_NONE) {
+	if (!gStartingUp && windowID != chrome.windows.WINDOW_ID_NONE) {
+		require([
+			"recent-tabs",
+			"cp"
+		], function(
+			recentTabs,
+			cp
+		) {
 			cp.tabs.query({ active: true, windowId: windowID })
 				.then(function(tabs) {
 					if (tabs.length) {
@@ -97,8 +97,8 @@ chrome.windows.onFocusChanged.addListener(function(windowID) {
 						recentTabs.add(tabs[0], true);
 					}
 				});
-		}
-	});
+		});
+	}
 });
 
 
@@ -118,18 +118,18 @@ chrome.commands.onCommand.addListener(function(command) {
 
 
 chrome.runtime.onConnect.addListener(function(port) {
-	require([
-		"recent-tabs"
-	], function(
-		recentTabs
-	) {
-		const connectTime = Date.now();
+	const connectTime = Date.now();
 
-		port.onDisconnect.addListener(function() {
-			if (Date.now() - connectTime < MaxPopupLifetime) {
+	port.onDisconnect.addListener(function() {
+		if (Date.now() - connectTime < MaxPopupLifetime) {
+			require([
+				"recent-tabs"
+			], function(
+				recentTabs
+			) {
 				recentTabs.toggleTab(-1, true);
-			}
-		});
+			});
+		}
 	});
 });
 

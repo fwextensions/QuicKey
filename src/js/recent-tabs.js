@@ -326,16 +326,25 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 					lastShortcutTime: fromDoublePress ? 0 : now,
 					previousTabIndex: -1
 				},
-				previousTabIndex = (maxIndex + direction + tabIDCount) % tabIDCount;
+					// set the tab index assuming this toggle isn't happening
+					// during the 750ms window since the last shortcut fired. if
+					// the user is going forward, don't let them go past the most
+					// recently used tab.
+				previousTabIndex = (direction == -1) ?
+					(maxIndex + direction + tabIDCount) % tabIDCount :
+					maxIndex;
 
 			if (tabIDCount > 1) {
-//console.log("==== switch time", now - data.lastShortcutTime, tabIDCount > 2, !isNaN(data.lastShortcutTime),
-//						now - data.lastShortcutTime < MaxSwitchDelay );
-
 				if (tabIDCount > 2 && !isNaN(data.lastShortcutTime) &&
 						now - data.lastShortcutTime < MaxSwitchDelay) {
 					if (data.previousTabIndex > -1) {
-						previousTabIndex = (data.previousTabIndex + direction + tabIDCount) % tabIDCount;
+						if (direction == -1) {
+							previousTabIndex = (data.previousTabIndex - 1 + tabIDCount) % tabIDCount;
+						} else {
+								// don't let the user go past the most recently
+								// used tab
+							previousTabIndex = Math.min(data.previousTabIndex + 1, maxIndex);
+						}
 					}
 console.log("==== previous", previousTabIndex);
 				}

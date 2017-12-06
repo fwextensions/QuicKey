@@ -3,7 +3,7 @@
 	"short_name": "QuicKey",
 	"version": "0.0.11",
 	"manifest_version": 2,
-	"description": "Switch tabs or access bookmarks and history with a Quicksilver-style search! Also supports tabs suspended by The Great Suspender.",
+	"description": "Switch tabs with a Quicksilver-style search or a most-recently-used (MRU) tab list",
 	"author": "John Dunning",
 	"content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
 	"minimum_chrome_version": "45",
@@ -47,7 +47,7 @@
 				"chromeos": "Alt+A",
 				"linux": "Alt+A"
 			},
-			"description": "Switch to the previous recent tab"
+			"description": "Switch to the previous tab"
 		},
 		"next-tab": {
 			"suggested_key": {
@@ -56,7 +56,7 @@
 				"chromeos": "Alt+Shift+A",
 				"linux": "Alt+Shift+A"
 			},
-			"description": "Switch to the next recent tab"
+			"description": "Switch to the next tab"
 		}
 	},
 	"offline_enabled": true
