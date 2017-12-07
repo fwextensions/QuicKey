@@ -12,7 +12,7 @@ If you like to keep lots of tabs open in Chrome, it can quickly become difficult
   * Type a few letters.
   * Press enter to switch to the selected tab.
 
-To toggle between the two most recently used tabs, quickly press the keyboard shortcut twice.  Or navigate the full most-recently-used (MRU) tab list as shown below.
+To toggle between the two most recently used tabs, quickly press the keyboard shortcut twice.  Or navigate the full most recently used (MRU) tab list as [shown below](#mru).
 
 You can also type <b><kbd>/</kbd><kbd>b</kbd></b> to search bookmarks or <b><kbd>/</kbd><kbd>h</kbd></b> to search your browser history.
 
@@ -23,39 +23,48 @@ Click the *Install Now* button to the left, or install *QuicKey* from the [Chrom
 
 Once the extension is installed, you can click the <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> button on the toolbar to open the search box.  But if you're using this extension, you'll probably prefer using the default keyboard shortcut listed above.
 
-To change these shortcuts, you can open the main menu and then go to *More tools > Extensions*, scroll to the very bottom of the page, and then click *Keyboard Shortcuts*.
+Customize the shortcut key by going to the main menu and then go to *More tools > Extensions*, scroll to the very bottom of the page, and then click *Keyboard Shortcuts*.
 
 
 ## Search for a tab quickly
 
 Unlike other tab switchers, *QuicKey* uses a [Quicksilver](https://qsapp.com/)-style search algorithm to rank the results, where contiguous matches at the beginning of words are higher in the list, as are matches against capital letters at the beginning of words.  So you can type just a few letters to quickly find the right tab.
 
-The best match is selected by default, so press <kbd>enter</kbd> to switch to that tab.  Or press the <kbd>&#8593;</kbd>, <kbd>&#8595;</kbd>, <kbd>pg up</kbd> or <kbd>pg dn</kbd> keys to navigate the list.  Like in Quicksilver, you can also press <kbd>space</kbd> or <b><kbd>shift</kbd><kbd>space</kbd></b> to move the selection down or up.  Or just click the tab you want.
+Tab search keyboard shortcuts:
 
-Press <kbd>esc</kbd> to clear what you've typed.  If the search box is empty, pressing <kbd>esc</kbd> will close the popup.
+  * <kbd>enter</kbd>: switch to the selected tab
+  * <key>↓</key> or <key>space</key>: move down the list
+  * <key>↑</key> or <b><key>shift</key><key>space</key></b>: move up the list
+  * <key>pg dn</key>: page down the list
+  * <key>pg up</key>: page up the list
+  * <key>end</key>: go to the bottom of the list
+  * <key>home</key>: go to the top of the list
+  * <key>esc</key>: clear the search or close the menu
 
 If you type more than 25 letters, which should be plenty to find the right tab, *QuicKey* switches to an exact string search to stay fast.
 
 Recently used tabs get a slight boost in the search results ranking, so getting back to a tab you were just using should require typing fewer letters.
 
 
-## Navigate the most recently used (MRU) tabs
+## <a name="mru"></a>Navigate the most recently used (MRU) tabs
 
-When first installed, *QuicKey* won't have any tab usage history.  But over time, opening the extension will automatically display the list of tabs you've visited, in order of recency.  Click a tab to switch to it, or use one of the keyboard shortcuts below to navigate the recently used tab history:
+When first installed, *QuicKey* won't have any tab usage history.  But over time, opening the extension will display the list of tabs you've visited, in order of recency.  Click a tab to switch to it, or use one of the keyboard shortcuts below to navigate the recently used tab history:
 
   * **To switch to the previously active tab:**
-      * Quickly double-press the <b><kbd>alt</kbd><kbd>Q</kbd></b> or <b><kbd>ctrl</kbd><kbd>Q</kbd></b> shortcut.  The tab list won't open.
+      * Quickly double-press the <b><kbd>alt</kbd><kbd>Q</kbd></b> or <b><kbd>ctrl</kbd><kbd>Q</kbd></b> shortcut.
+
 
 
   * **To navigate farther back in the MRU list:**
     * Press <b><kbd>alt</kbd><kbd>A</kbd></b> (<b><kbd>ctrl</kbd><kbd>A</kbd></b> on macOS) once to switch to the previous tab.  The *QuicKey* icon will invert for .75 seconds: <b><img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> ➤ <img src="img/icon-38-inverted.png" style="height: 19px; vertical-align: text-bottom;"></b>.
-    * Press <b><kbd>alt</kbd><kbd>A</kbd></b> again while the icon is inverted to switch to an older tab, once for each tab.
+    * Press <b><kbd>alt</kbd><kbd>A</kbd></b> again while the icon is inverted to switch to older tabs, once for each tab.
     * Press <b><kbd>alt</kbd><kbd>shift</kbd><kbd>A</kbd></b> to move to newer tabs.
     * Pause to let the icon revert to normal: <b><img src="img/icon-38-inverted.png" style="height: 19px; vertical-align: text-bottom;"> ➤ <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"></b>.
     * Press <b><kbd>alt</kbd><kbd>A</kbd></b> again to switch back to the tab you initially started on.
 
 
-  * **To pick a recent tab from the MRU list:**
+
+  * **To pick a recent tab from the MRU menu:**
     * Press the shortcut but keep holding the <kbd>alt</kbd> key (<kbd>ctrl</kbd> key on macOS).
     * Press <kbd>W</kbd> to move down through the list of recent tabs.
     * Press <b><kbd>shift</kbd><kbd>W</kbd></b> to move up.
@@ -66,7 +75,7 @@ Which shortcuts to use is up to you.  Double-pressing <b><kbd>alt</kbd><kbd>Q</k
 
 <b><kbd>alt</kbd><kbd>A</kbd></b> lets you quickly navigate to even older tabs, though the timing can be a little tricky.
 
-Selecting from the menu by holding down the <kbd>alt</kbd> key gives you the closest experience to a typical <b><kbd>alt</kbd><kbd>tab</kbd></b> menu, but you have to use a different key to navigate the list while the menu is open.
+Selecting from the MRU menu by holding down the <kbd>alt</kbd> key provides the closest experience to a typical <b><kbd>alt</kbd><kbd>tab</kbd></b> menu, but you have to use a different key to navigate the list while the menu is open.
 
 You can change the <b><kbd>alt</kbd><kbd>A</kbd></b> shortcut by opening the main menu and then going to *More tools > Extensions*, scrolling to the very bottom of the page, and then clicking *Keyboard Shortcuts*.
 
@@ -75,8 +84,8 @@ You can change the <b><kbd>alt</kbd><kbd>A</kbd></b> shortcut by opening the mai
 
 To find a bookmark, type <b><kbd>/</kbd><kbd>b</kbd><kbd>space</kbd></b> in the search box, and then part of the bookmark's name or URL.
 
-  * Press enter to open the bookmark in the current tab.
-  * Press <b><kbd>ctrl</kbd><kbd>enter</kbd></b> (<b><kbd>cmd⌘</kbd><kbd>enter</kbd></b> on macOS) to open it in a new tab in the current window.
+  * Press <key>enter</key> to open the bookmark in the current tab.
+  * Press <b><kbd>ctrl</kbd><kbd>enter</kbd></b> (<b><kbd>cmd</kbd><kbd>enter</kbd></b> on macOS) to open it in a new tab in the current window.
   * Press <b><kbd>shift</kbd><kbd>enter</kbd></b> to open it in a new window.
 
 
@@ -84,8 +93,7 @@ To find a bookmark, type <b><kbd>/</kbd><kbd>b</kbd><kbd>space</kbd></b> in the 
 
 To find something in the last 2000 pages of your browser history, type <b><kbd>/</kbd><kbd>h</kbd><kbd>space</kbd></b> in the search box, and then part of the page's name or URL.
 
-The same <b><kbd>ctrl</kbd><kbd>enter</kbd></b> (<b><kbd>cmd⌘</kbd><kbd>enter</kbd></b>
-  on macOS) and <b><kbd>shift</kbd><kbd>enter</kbd></b> shortcuts will open the visited page in a new tab or window.
+The same <b><kbd>ctrl</kbd><kbd>enter</kbd></b> (<b><kbd>cmd</kbd><kbd>enter</kbd></b> on macOS) and <b><kbd>shift</kbd><kbd>enter</kbd></b> shortcuts will open the visited page in a new tab or window.
 
 
 ## <a href="https://chrome.google.com/webstore/detail/the-great-suspender/klbibkeccnjlkjkiokjodocebajanakg?hl=en"><img src="img/tgs-icon.png" style="height: 24px;"></a> The Great Suspender integration

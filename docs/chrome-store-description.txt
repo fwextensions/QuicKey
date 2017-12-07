@@ -1,6 +1,6 @@
 # Tag line
 
-Switch tabs with a Quicksilver-style search or a most-recently-used (MRU) tab list
+Switch tabs with a Quicksilver-style search or a visual MRU tab list
 
 Switch tabs or access bookmarks and history with a Quicksilver-style search! Also supports tabs suspended by The Great Suspender.
 
@@ -11,6 +11,8 @@ Switch tabs with a Quicksilver-style search or a most recently used (MRU) tab li
 
 ★
 ➤
+↑ ↓
+
 
 # Description
 
@@ -20,7 +22,7 @@ Navigate your hundreds of Chrome tabs by typing just part of the page's title or
  • Type a few letters
  • Press enter to switch to the selected tab
 
-To toggle between the two most recently used tabs, quickly press the keyboard shortcut twice. Or navigate the full most-recently-used (MRU) tab list as shown below.
+To toggle between the two most recently used tabs, quickly press the keyboard shortcut twice. Or navigate the full most recently used (MRU) tab list as shown below.
 
 Customize the shortcut key by going to the main menu and then More tools > Extensions > Keyboard Shortcuts.
 
@@ -29,9 +31,16 @@ Customize the shortcut key by going to the main menu and then More tools > Exten
 
 Unlike other tab switchers, QuicKey uses a Quicksilver-style search algorithm to rank the results, where contiguous matches at the beginning of words are higher in the list, as are matches against capital letters. So you can type just a few letters to quickly find the right tab.
 
-The best match is selected by default, so press enter to switch to that tab. Or press the up/down arrows or page up/down to navigate the list. Like in Quicksilver, you can also press space or shift-space to move the selection down or up. Or just click a tab.
+Tab search keyboard shortcuts:
 
-Press esc to clear what you've typed. If the search box is empty, pressing esc will close the popup.
+ • enter: switch to the selected tab
+ • ↓ or space: move down the list
+ • ↑ or shift-space: move up the list
+ • pg dn: page down the list
+ • pg up: page up the list
+ • end: go to the bottom of the list
+ • home: go to the top of the list
+ • esc: clear the search or close the menu
 
 If you type more than 25 letters, which should be plenty to find the right tab, QuicKey switches to an exact string search to stay fast.
 
@@ -40,18 +49,18 @@ Recently used tabs get a slight boost in the search results ranking, so getting 
 
 ★ Navigate the most recently used tabs
 
-When first installed, QuicKey won't have any tab usage history. But over time, opening the extension will automatically display the list of tabs you've visited, in order of recency. Click a tab to switch to it, or use one of the keyboard shortcuts below to navigate the recently used tab history:
+When first installed, QuicKey won't have any tab usage history. But over time, opening the extension will display the list of tabs you've visited, in order of recency. Click a tab to switch to it, or use one of the keyboard shortcuts below to navigate the recently used tab history:
 
  ➤ To switch to the previously active tab:
     • Quickly double-press the alt-Q or ctrl-Q
-       shortcut. The tab list won't open.
+       shortcut.
 
  ➤ To navigate farther back in the MRU list:
     • Press alt-A (ctrl-A on macOS) once to
        switch to the previous tab. The QuicKey
        icon will invert for .75 seconds.
     • Press alt-A while the icon is inverted to
-       switch to an older tab, once for each tab.
+       switch to older tabs, once for each tab.
     • Press alt-shift-A to move to newer tabs.
     • Pause to let the icon revert to normal.
     • Press alt-A again to switch back to the
@@ -60,9 +69,9 @@ When first installed, QuicKey won't have any tab usage history. But over time, o
  ➤ To pick a recent tab from the MRU list:
     • Press the shortcut but keep holding the
        alt key (ctrl key on macOS).
-    • Press alt-W to move down through the
-       list of recent tabs (ctrl-W on macOS).
-    • Press alt-shift-W to move up.
+    • Press W to move down through the
+       list of recent tabs.
+    • Press shift-W to move up.
     • Release alt to switch to the selected tab.
     • You can also highlight an item with the
        mouse, then release alt to go to that tab.
@@ -71,7 +80,7 @@ Which shortcuts to use is up to you. Double-pressing alt-Q is nice because there
 
 alt-A lets you navigate to even older tabs, though the timing can be a little tricky.
 
-Selecting from the MRU menu provides the closest experience to an OS's alt-tab menu, but you have to use a different shortcut to navigate while the menu is open.
+Selecting from the MRU menu provides the closest experience to a typical alt-tab menu, but you have to use a different key to navigate while the menu is open.
 
 
 ★ Search bookmarks
@@ -79,10 +88,10 @@ Selecting from the MRU menu provides the closest experience to an OS's alt-tab m
 To find a bookmark, type "/b" in the search box, then a space, and then part of the bookmark's name or URL.
 
  • Press enter to open it in the current tab.
- • Press ctrl-enter (cmd⌘-enter on macOS)
+ • Press ctrl-enter (cmd-enter on macOS)
     to open it in a new tab in the current
     window.
- • Press shift+enter to open it in a new
+ • Press shift-enter to open it in a new
     window.
 
 
@@ -90,7 +99,7 @@ To find a bookmark, type "/b" in the search box, then a space, and then part of 
 
 To find something in the last 2000 pages of your browser history, type "/h" in the search box, then a space, and then part of the page's name or URL.
 
-The same ctrl-enter (cmd⌘-enter on macOS) and shift+enter shortcuts will open the visited page in a new tab or window.
+The same ctrl-enter (cmd-enter on macOS) and shift-enter shortcuts will open the visited page in a new tab or window.
 
 
 ★ The Great Suspender integration
@@ -125,7 +134,7 @@ By default, Chrome extensions are not enabled in incognito mode when you first i
 Tabs in incognito mode display the incognito icon, so you can distinguish a normal tab from an incognito one with the same title.
 
 
-★ Privacy
+★ Privacy policy
 
 To function, QuicKey needs access to your open tabs, bookmarks and history. The Chrome permissions dialog says QuicKey can also change your bookmarks and browsing history, but it never will. It can't access the page content at all and doesn't transmit any information other than some anonymized Google Analytics metrics.
 
