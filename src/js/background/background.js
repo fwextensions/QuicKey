@@ -1,6 +1,6 @@
 	// if the popup is opened and closed within this time, switch to the
 	// previous tab
-const MaxPopupLifetime = 400;
+const MaxPopupLifetime = 450;
 
 
 var gStartingUp = false;

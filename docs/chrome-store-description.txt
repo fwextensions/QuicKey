@@ -1,5 +1,8 @@
 # Tag line
 
+Switch tabs with a Quicksilver-style search or a most-recently-used menu
+
+
 Switch tabs with a Quicksilver-style search or a visual MRU tab list
 
 Switch tabs or access bookmarks and history with a Quicksilver-style search! Also supports tabs suspended by The Great Suspender.
@@ -22,7 +25,7 @@ Navigate your hundreds of Chrome tabs by typing just part of the page's title or
  • Type a few letters
  • Press enter to switch to the selected tab
 
-To toggle between the two most recently used tabs, quickly press the keyboard shortcut twice. Or navigate the full most recently used (MRU) tab list as shown below.
+To toggle between the two most recently used tabs, quickly press the keyboard shortcut twice. Or navigate the full most-recently-used (MRU) tab list as shown below.
 
 Customize the shortcut key by going to the main menu and then More tools > Extensions > Keyboard Shortcuts.
 

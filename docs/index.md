@@ -28,18 +28,18 @@ Customize the shortcut key by going to the main menu and then go to *More tools 
 
 ## Search for a tab quickly
 
-Unlike other tab switchers, *QuicKey* uses a [Quicksilver](https://qsapp.com/)-style search algorithm to rank the results, where contiguous matches at the beginning of words are higher in the list, as are matches against capital letters at the beginning of words.  So you can type just a few letters to quickly find the right tab.
+Unlike other tab switchers, *QuicKey* uses a [Quicksilver](https://qsapp.com/)-style search algorithm to rank the results, where contiguous matches at the beginning of words are higher in the list, as are matches against capital letters.  So you can type just a few letters to quickly find the right tab.
 
 Tab search keyboard shortcuts:
 
-  * <kbd>enter</kbd>: switch to the selected tab
-  * <kbd>↓</kbd> or <kbd>space</kbd>: move down the list
-  * <kbd>↑</kbd> or <b><kbd>shift</kbd><kbd>space</kbd></b>: move up the list
-  * <kbd>pg dn</kbd>: page down the list
-  * <kbd>pg up</kbd>: page up the list
-  * <kbd>end</kbd>: go to the bottom of the list
-  * <kbd>home</kbd>: go to the top of the list
-  * <kbd>esc</kbd>: clear the search or close the menu
+  * <kbd>enter</kbd>&nbsp;: switch to the selected tab
+  * <kbd>↓</kbd> or <kbd>space</kbd>&nbsp;: move down the list
+  * <kbd>↑</kbd> or <b><kbd>shift</kbd><kbd>space</kbd></b>&nbsp;: move up the list
+  * <kbd>pg dn</kbd>&nbsp;: page down the list
+  * <kbd>pg up</kbd>&nbsp;: page up the list
+  * <kbd>end</kbd>&nbsp;: go to the bottom of the list
+  * <kbd>home</kbd>&nbsp;: go to the top of the list
+  * <kbd>esc</kbd>&nbsp;: clear the search or close the menu
 
 If you type more than 25 letters, which should be plenty to find the right tab, *QuicKey* switches to an exact string search to stay fast.
 
@@ -49,6 +49,8 @@ Recently used tabs get a slight boost in the search results ranking, so getting 
 ## <a name="mru"></a>Navigate the most recently used (MRU) tabs
 
 When first installed, *QuicKey* won't have any tab usage history.  But over time, opening the extension will display the list of tabs you've visited, in order of recency.  Click a tab to switch to it, or use one of the keyboard shortcuts below to navigate the recently used tab history:
+
+<br>
 
   * **To switch to the previously active tab:**
       * Quickly double-press the <b><kbd>alt</kbd><kbd>Q</kbd></b> or <b><kbd>ctrl</kbd><kbd>Q</kbd></b> shortcut.
@@ -70,6 +72,8 @@ When first installed, *QuicKey* won't have any tab usage history.  But over time
     * Press <b><kbd>shift</kbd><kbd>W</kbd></b> to move up.
     * Release <kbd>alt</kbd> (or <kbd>ctrl</kbd>) to switch to the selected tab.
     * You can also highlight an item with the mouse, then release <kbd>alt</kbd> to go to that tab.
+
+<br>
 
 Which shortcuts to use is up to you.  Double-pressing <b><kbd>alt</kbd><kbd>Q</kbd></b> is nice because there's just one shortcut and you can switch between the two most recently used tabs as quickly as you want.
 
