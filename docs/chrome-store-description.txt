@@ -83,7 +83,7 @@ Which shortcuts to use is up to you. Double-pressing alt-Q is nice because there
 
 alt-A lets you navigate to even older tabs, though the timing can be a little tricky.
 
-Selecting from the MRU menu provides the closest experience to a typical alt-tab menu, but you have to use a different key to navigate while the menu is open.
+Selecting from the MRU menu provides the closest experience to a typical alt-tab menu, but you need to use a different key to navigate while the menu is open.
 
 
 ★ Search bookmarks
