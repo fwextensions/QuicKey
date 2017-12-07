@@ -33,13 +33,13 @@ Unlike other tab switchers, *QuicKey* uses a [Quicksilver](https://qsapp.com/)-s
 Tab search keyboard shortcuts:
 
   * <kbd>enter</kbd>: switch to the selected tab
-  * <key>↓</key> or <key>space</key>: move down the list
-  * <key>↑</key> or <b><key>shift</key><key>space</key></b>: move up the list
-  * <key>pg dn</key>: page down the list
-  * <key>pg up</key>: page up the list
-  * <key>end</key>: go to the bottom of the list
-  * <key>home</key>: go to the top of the list
-  * <key>esc</key>: clear the search or close the menu
+  * <kbd>↓</kbd> or <kbd>space</kbd>: move down the list
+  * <kbd>↑</kbd> or <b><kbd>shift</kbd><kbd>space</kbd></b>: move up the list
+  * <kbd>pg dn</kbd>: page down the list
+  * <kbd>pg up</kbd>: page up the list
+  * <kbd>end</kbd>: go to the bottom of the list
+  * <kbd>home</kbd>: go to the top of the list
+  * <kbd>esc</kbd>: clear the search or close the menu
 
 If you type more than 25 letters, which should be plenty to find the right tab, *QuicKey* switches to an exact string search to stay fast.
 
@@ -53,7 +53,7 @@ When first installed, *QuicKey* won't have any tab usage history.  But over time
   * **To switch to the previously active tab:**
       * Quickly double-press the <b><kbd>alt</kbd><kbd>Q</kbd></b> or <b><kbd>ctrl</kbd><kbd>Q</kbd></b> shortcut.
 
-
+<br>
 
   * **To navigate farther back in the MRU list:**
     * Press <b><kbd>alt</kbd><kbd>A</kbd></b> (<b><kbd>ctrl</kbd><kbd>A</kbd></b> on macOS) once to switch to the previous tab.  The *QuicKey* icon will invert for .75 seconds: <b><img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> ➤ <img src="img/icon-38-inverted.png" style="height: 19px; vertical-align: text-bottom;"></b>.
@@ -62,7 +62,7 @@ When first installed, *QuicKey* won't have any tab usage history.  But over time
     * Pause to let the icon revert to normal: <b><img src="img/icon-38-inverted.png" style="height: 19px; vertical-align: text-bottom;"> ➤ <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"></b>.
     * Press <b><kbd>alt</kbd><kbd>A</kbd></b> again to switch back to the tab you initially started on.
 
-
+<br>
 
   * **To pick a recent tab from the MRU menu:**
     * Press the shortcut but keep holding the <kbd>alt</kbd> key (<kbd>ctrl</kbd> key on macOS).
@@ -84,7 +84,7 @@ You can change the <b><kbd>alt</kbd><kbd>A</kbd></b> shortcut by opening the mai
 
 To find a bookmark, type <b><kbd>/</kbd><kbd>b</kbd><kbd>space</kbd></b> in the search box, and then part of the bookmark's name or URL.
 
-  * Press <key>enter</key> to open the bookmark in the current tab.
+  * Press <kbd>enter</kbd> to open the bookmark in the current tab.
   * Press <b><kbd>ctrl</kbd><kbd>enter</kbd></b> (<b><kbd>cmd</kbd><kbd>enter</kbd></b> on macOS) to open it in a new tab in the current window.
   * Press <b><kbd>shift</kbd><kbd>enter</kbd></b> to open it in a new window.
 
