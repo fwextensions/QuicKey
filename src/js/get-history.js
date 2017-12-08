@@ -5,55 +5,51 @@ define([
 	addURLs,
 	cp
 ) {
-		// empty object serves as unique value
-	const Continue = {};
+	const RequestedCount = 2000;
 
 
-	var history = [];
-
-
-	function again() { return Continue; }
-
-
-	function repeat(
+	function loop(
 		fn)
 	{
-		return fn(again).then(function(val) {
-			return val === Continue && repeat(fn) || val;
-		});
-	}
-
-
-	function searchHistory(
-		endTime)
-	{
-		endTime = endTime || Date.now();
-
-		return cp.history.search({
-			text: "",
-			startTime: 0,
-			endTime: endTime,
-			maxResults: 1000
+		return fn().then(function(val) {
+			return (val === false && loop(fn)) || val;
 		});
 	}
 
 
 	return function getHistory()
 	{
-		history = [];
+		var history = [],
+			ids = {};
 
-		return repeat(function(again) {
-			var endTime = history.length && history[history.length - 1].lastVisitTime || 0;
+		return loop(function() {
+			var endTime = history.length &&
+					history[history.length - 1].lastVisitTime || Date.now();
 
-			return searchHistory(endTime)
+			return cp.history.search({
+				text: "",
+				startTime: 0,
+				endTime: endTime,
+				maxResults: 1000
+			})
 				.then(function(historyItems) {
-					if (historyItems.length && history.length < 2000) {
-						historyItems.forEach(function(item) {
+					var initialHistoryLength = history.length;
+
+					historyItems.forEach(function(item) {
+						var id = item.id;
+
+							// history will often return duplicate items
+						if (!ids[id] && history.length < RequestedCount) {
 							addURLs(item);
 							history.push(item);
-						});
+							ids[id] = true;
+						}
+					});
 
-						return again();
+						// only loop if we found some new items in the last call
+						// and we haven't reached the limit yet
+					if (history.length > initialHistoryLength && history.length < RequestedCount) {
+						return false;
 					} else {
 						return history;
 					}
