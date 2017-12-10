@@ -15,6 +15,7 @@ define(function() {
 		LongStringLength = 151,
 		MaxMatchStartPct = .15,
 		MinMatchDensityPct = .5,
+		MaxMatchDensityPct = .95,
 		BeginningOfStringPct = .1;
 
 
@@ -137,6 +138,8 @@ define(function() {
 						matchRangeDiscount = (isShortString &&
 							matchStartPercentage <= BeginningOfStringPct &&
 							matchRangeDiscount >= MinMatchDensityPct) ? 1 : matchRangeDiscount;
+						matchStartDiscount = matchRangeDiscount >= MaxMatchDensityPct ?
+							1 : matchStartDiscount;
 					}
 				}
 

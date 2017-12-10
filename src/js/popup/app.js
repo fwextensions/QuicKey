@@ -102,7 +102,7 @@ define([
 							hours;
 
 						if (recentTab) {
-							age = now - recentTab.recent;
+							age = now - recentTab.visits[recentTab.visits.length - 1];
 
 							if (age < VeryRecentMS) {
 								tab.recentBoost = 1 + VeryRecentBoost;

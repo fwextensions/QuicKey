@@ -11,8 +11,8 @@ define(function() {
 			b)
 		{
 			if (a.score == b.score) {
-				if (a.recent) {
-					return b.recent - a.recent;
+				if (a.visits && b.visits) {
+					return b.visits[b.visits.length - 1] - a.visits[a.visits.length - 1];
 				} else {
 					return a[defaultKeyName].toLocaleLowerCase() < b[defaultKeyName].toLocaleLowerCase() ? -1 : 1;
 				}

@@ -8,6 +8,7 @@ define([
 	const MaxTabsLength = 50,
 		MaxSwitchDelay = 750,
 		MinDwellTime = 750,
+		MaxVisitCount = 3,
 		TabKeysHash = {
 			favIconUrl: 1,
 			id: 1,
@@ -34,17 +35,6 @@ define([
 	var shortcutTimer = null;
 
 
-	function pluckRelevantKeys(
-		tab)
-	{
-		return TabKeys.reduce(function(obj, key) {
-			obj[key] = tab[key];
-
-			return obj;
-		}, {});
-	}
-
-
 	function removeItem(
 		array,
 		item)
@@ -59,15 +49,47 @@ define([
 	}
 
 
+	function last(
+		array)
+	{
+		return array[array.length - 1];
+	}
+
+
+	function createRecent(
+		tab,
+		oldTab)
+	{
+		var recent = TabKeys.reduce(function(obj, key) {
+				obj[key] = tab[key];
+
+				return obj;
+			}, {});
+
+		recent.visits = (oldTab && oldTab.visits) || [];
+
+		return recent;
+	}
+
+
+	function addVisit(
+		tab)
+	{
+		tab.visits.push(Date.now());
+		tab.visits = tab.visits.slice(-MaxVisitCount);
+	}
+
+
 	function updateDataFromShortcut()
 	{
 		return storage.set(function(data) {
-			const lastShortcutTabID = data.lastShortcutTabID;
+			const lastShortcutTabID = data.lastShortcutTabID,
+				lastShortcutTab = data.tabsByID[lastShortcutTabID];
 
-			if (lastShortcutTabID && data.tabsByID[lastShortcutTabID]) {
+			if (!isNaN(lastShortcutTabID) && lastShortcutTab) {
 				removeItem(data.tabIDs, lastShortcutTabID);
 				data.tabIDs.push(lastShortcutTabID);
-				data.tabsByID[lastShortcutTabID].recent = Date.now();
+				addVisit(lastShortcutTab)
 			}
 
 			data.lastShortcutTabID = null;
@@ -103,25 +125,12 @@ define([
 
 		return storage.set(function(data) {
 			var id = tab.id,
-				now = Date.now(),
 				tabIDs = data.tabIDs,
 				tabsByID = data.tabsByID,
 				tabData,
 				lastID,
-				lastTab;
-
-// TODO: if there are only two items, and we're switching back to the previous one,
-// we don't want to remove one that's < MinViewTime, because then there won't be
-// a record of where to go back to
-
-// TODO: do we need an array?  could just have dictionary and last tab ID
-// to generate a list of recent tabs, would have to sort by ts
-
-// TODO: store visits to a tab in an array.  if visit is < MinDwellTime, pop its last visit time
-// remove it if the array is empty
-
-// TODO: if this came from switchFromShortcut, then need to ignore this now
-// 	and start a timer to update tabIDs in a second
+				lastTab,
+				lastTabVisit;
 
 console.log("add", tab.id, tab.title);
 
@@ -129,12 +138,11 @@ console.log("add", tab.id, tab.title);
 				return { switchFromShortcut: false };
 			}
 
-			lastID =  tabIDs[tabIDs.length - 1];
+			lastID = last(tabIDs);
 			lastTab = tabsByID[lastID];
 
 			if ((lastTab && lastTab.url == tab.url && lastTab.id == tab.id &&
 					lastTab.windowId == tab.windowId)) {
-//							lastTab.windowId == tab.windowId) || storage.previousTabIndex > -1) {
 					// this is the same tab getting refocused, which could
 					// happen just from opening the extension and then
 					// closing it without doing anything.  or we switched to
@@ -146,32 +154,49 @@ console.log("add", tab.id, tab.title);
 				};
 			}
 
-				// make sure the ID isn't currently in the list
+			if (!fromFocusChange && lastTab && tabIDs.length > 2 &&
+					(Date.now() - last(lastTab.visits) < MinDwellTime)) {
+					// the previously active tab wasn't active for very long,
+					// so remove its last visit time
+				lastTab.visits.pop();
+				tabIDs.pop();
+
+				if (!lastTab.visits.length) {
+						// this tab doesn't have any recent visits, so forget it
+					delete tabsByID[lastID];
+				} else {
+						// reinsert the tab based on its previous visit time
+					lastTabVisit = last(lastTab.visits);
+
+					for (var i = tabIDs.length - 1; i >= 0; i--) {
+						if (lastTabVisit > last(tabsByID[tabIDs[i]].visits)) {
+							tabIDs.splice(i + 1, 0, lastID);
+							break;
+						}
+					}
+
+					if (i == 0 && tabIDs[0] != lastID) {
+							// stick lastTab at the beginning of the array if
+							// its last visit is older than all the other tabs
+						tabIDs.splice(0, 0, lastID);
+					}
+				}
+			}
+
+				// make sure the new tab's ID isn't currently in the list and
+				// then push it on the end
 			removeItem(tabIDs, id);
-
-
-//					if (!data.switchFromShortcut && !fromFocusChange && lastTab &&
-//							(now - lastTab.recent < MinDwellTime)) {
-//							// the previously active tab wasn't active for very long,
-//							// so remove it from the list and the dictionary
-//console.log("removing", lastID, lastTab.url);
-//						delete tabsByID[tabIDs.pop()];
-//					}
+			tabIDs.push(id);
 
 				// copy just the keys we need from the tab object
-			tabData = pluckRelevantKeys(tab);
-			tabData.recent = now;
-			tabIDs.push(id);
+			tabData = createRecent(tab, tabsByID[id]);
+			addVisit(tabData);
 			tabsByID[id] = tabData;
 
 				// remove any older tabs that are over the max limit
 			tabIDs.splice(0, Math.max(tabIDs.length - MaxTabsLength, 0)).forEach(function(id) {
 				delete tabsByID[id];
 			});
-
-if (data.switchFromShortcut) {
-//	console.log(tabIDs.map(id => tabsByID[id].title).slice(-10).join("\n"));
-}
 
 			return {
 				tabIDs: tabIDs,
@@ -230,8 +255,7 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 							newTab = freshTabsByID[tabID];
 
 						if (oldTab && newTab) {
-							newTab = pluckRelevantKeys(newTab);
-							newTab.recent = oldTab.recent;
+							newTab = createRecent(newTab, oldTab);
 							recentTabsByID[newTab.id] = newTab;
 							recentTabs.push(newTab);
 						}
@@ -281,12 +305,11 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 
 						if (newTab) {
 								// we found the same URL in a new tab, so copy over
-								// the recent timestamp and store it in the hash
+								// the relevant keys and store it in the hash
 								// using the new tab's ID.  also delete the URL
 								// from the hash in case there are duplicate tabs
 								// pointing at the same URL.
-							newTab = pluckRelevantKeys(newTab);
-							newTab.recent = oldTab.recent;
+							newTab = createRecent(newTab, oldTab);
 							newTabsByID[newTab.id] = newTab;
 							newTabIDs.push(newTab.id);
 							delete freshTabsByURL[oldTab.url];
@@ -327,7 +350,7 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 					previousTabIndex: -1
 				},
 					// set the tab index assuming this toggle isn't happening
-					// during the 750ms window since the last shortcut fired. if
+					// during the 750ms window since the last shortcut fired.  if
 					// the user is going forward, don't let them go past the most
 					// recently used tab.
 				previousTabIndex = (direction == -1) ?

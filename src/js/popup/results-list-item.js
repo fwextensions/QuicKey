@@ -103,6 +103,10 @@ define([
 					.map(function(a) { return a.join(": "); }).join("\n") + "\n" + tooltip;
 			}
 
+				// blank lines at the end of the tooltip show up in macOS Chrome,
+				// so trim them
+			tooltip = tooltip.trim();
+
 			if (item.unsuspendURL && item.faviconURL.indexOf(FaviconURL) == 0) {
 					// this is a suspended tab, but The Great Suspender has
 					// forgotten the faded favicon for it or has set its own

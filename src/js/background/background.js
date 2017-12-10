@@ -127,6 +127,8 @@ chrome.runtime.onConnect.addListener(function(port) {
 			], function(
 				recentTabs
 			) {
+					// pass true so toggleTab() knows this toggle is coming from
+					// a double press of the shortcut
 				recentTabs.toggleTab(-1, true);
 			});
 		}

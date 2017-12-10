@@ -12,7 +12,7 @@ define([
 		fn)
 	{
 		return fn().then(function(val) {
-			return (val === false && loop(fn)) || val;
+			return (val === true && loop(fn)) || val;
 		});
 	}
 
@@ -49,7 +49,7 @@ define([
 						// only loop if we found some new items in the last call
 						// and we haven't reached the limit yet
 					if (history.length > initialHistoryLength && history.length < RequestedCount) {
-						return false;
+						return true;
 					} else {
 						return history;
 					}
