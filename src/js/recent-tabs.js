@@ -237,7 +237,11 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 	function getAll()
 	{
 		return storage.get(function(data) {
-			return cp.tabs.query({})
+			return cp.windows.getCurrent({ populate: true })
+				.then(function(window) {
+					return window.tabs;
+				})
+//			return cp.tabs.query({})
 				.then(function(freshTabs) {
 					var freshTabsByID = {},
 						tabIDs = data.tabIDs,

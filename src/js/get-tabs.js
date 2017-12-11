@@ -21,8 +21,7 @@ define([
 			})
 		])
 			.then(function(result) {
-				var tabs = result[0].tabs,
-//				var tabs = result[0],
+				var tabs = result[0],
 					activeTab = result[1][0],
 					match;
 
