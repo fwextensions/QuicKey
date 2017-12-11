@@ -42,7 +42,11 @@ require([
 
 
 	if (platform == "mac") {
-		setTimeout(renderApp, 100);
+			// there's a bug in Mac Chrome that causes the popup to not resize
+			// if the content changes too soon.  75ms seems to be enough of a
+			// delay to not see it, while 50ms would still show it maybe 1 out
+			// 20 times, and 0ms about 1 out of 3.
+		setTimeout(renderApp, 75);
 	} else {
 		renderApp();
 	}

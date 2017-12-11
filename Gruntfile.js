@@ -108,16 +108,6 @@ module.exports = function(grunt)
 			popup: { options: popupConfig },
 			background: { options: backgroundConfig }
 //			content: { options: baseConfig }
-		},
-
-		lodash: {
-			build: {
-				dest: "src/js/lib",
-				options: {
-					exports: "amd",
-					include: "remove,escape,dropRightWhile,memoize"
-				}
-			}
 		}
 	});
 
@@ -131,7 +121,6 @@ module.exports = function(grunt)
 	grunt.loadNpmTasks("grunt-contrib-uglify");
 	grunt.loadNpmTasks("grunt-sync");
 	grunt.loadNpmTasks("grunt-exec");
-	grunt.loadNpmTasks("grunt-lodash");
 
 	grunt.registerTask("checkPopup", function() {
 		var devPopup = grunt.file.read(devPopupPath),
