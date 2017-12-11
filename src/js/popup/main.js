@@ -18,7 +18,8 @@ require([
 	}
 
 	const query = gKeyCache.join(""),
-		shortcuts = gShortcutCache;
+		shortcuts = gShortcutCache,
+		platform = /Mac/i.test(navigator.platform) ? "mac" : "win";
 
 		// clean up the globals
 	document.removeEventListener("keydown", gOnKeyDown, false);
@@ -26,12 +27,23 @@ require([
 	gKeyCache = null;
 	gShortcutCache = null;
 
-	ReactDOM.render(
-		React.createElement(App, {
-			initialQuery: query,
-			initialShortcuts: shortcuts,
-			platform: /Mac/i.test(navigator.platform) ? "mac" : "win"
-		}),
-		document.getElementById("root")
-	);
+
+	function renderApp()
+	{
+		ReactDOM.render(
+			React.createElement(App, {
+				initialQuery: query,
+				initialShortcuts: shortcuts,
+				platform: platform
+			}),
+			document.getElementById("root")
+		);
+	}
+
+
+	if (platform == "mac") {
+		setTimeout(renderApp, 100);
+	} else {
+		renderApp();
+	}
 });
