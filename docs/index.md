@@ -30,7 +30,7 @@ Customize the shortcut key by going to the main menu and then go to *More tools 
 
 Unlike other tab switchers, *QuicKey* uses a [Quicksilver](https://qsapp.com/)-style search algorithm to rank the results, where contiguous matches at the beginning of words are higher in the list, as are matches against capital letters.  So you can type just a few letters to quickly find the right tab.
 
-Tab search keyboard shortcuts:
+Use a keyboard shortcut to navigate the tab list:
 
   * <kbd>enter</kbd>&nbsp;: switch to the selected tab
   * <kbd>↓</kbd> or <kbd>space</kbd>&nbsp;: move down the list
@@ -73,7 +73,7 @@ When first installed, *QuicKey* won't have any tab usage history.  But over time
     * Release <kbd>alt</kbd> (or <kbd>ctrl</kbd>) to switch to the selected tab.
     * You can also highlight an item with the mouse, then release <kbd>alt</kbd> to go to that tab.
 
-<br>
+![MRU tab list](img/mru-tab-list.png)
 
 Which shortcuts to use is up to you.  Double-pressing <b><kbd>alt</kbd><kbd>Q</kbd></b> is nice because there's just one shortcut and you can switch between the two most recently used tabs as quickly as you want.
 

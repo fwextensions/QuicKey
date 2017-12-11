@@ -5,7 +5,7 @@ define([
 	cp,
 	Mutex
 ) {
-	const StorageVersion = 1;
+	const StorageVersion = 2;
 
 
 	const storageMutex = new Mutex();
