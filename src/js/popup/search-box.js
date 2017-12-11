@@ -63,6 +63,7 @@ define([
 					forceUpdate={props.forceUpdate}
 					onChange={props.onChange}
 					onKeyDown={props.onKeyDown}
+					onKeyUp={props.onKeyUp}
 				/>
 				{mode == "bookmarks" && query.length == 3 &&
 					<Placeholder mode={mode} shortcut="/b" text="Search for a bookmark title or URL" />}

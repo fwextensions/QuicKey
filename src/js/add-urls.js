@@ -1,6 +1,7 @@
 define(function() {
 	const SuspendedURLPattern = /^chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=(.+)$/,
-		ProtocolPattern = /^(chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=)?(https?|file):\/\/(www\.)?/,
+		ProtocolPattern = /^((chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=)?(https?|file|chrome):\/\/(www\.)?)|(chrome-extension:\/\/[^/]+\/)/,
+		TGSIconPath = "chrome-extension://klbibkeccnjlkjkiokjodocebajanakg/img/",
 		FaviconURL = "chrome://favicon/";
 
 
@@ -23,8 +24,11 @@ define(function() {
 			// look up the favicon via chrome://favicon if the item itself
 			// doesn't have one.  we want to prioritize the item's URL
 			// since The Great Suspender creates faded favicons and stores
-			// them as data URIs in item.favIconUrl.
-		item.faviconURL = item.favIconUrl || FaviconURL + (item.unsuspendURL || url);
+			// them as data URIs in item.favIconUrl.  except, sometimes it seems
+			// to put its own icon in there if the background page wasn't available,
+			// so default to the chrome:// URL in that case.
+		item.faviconURL = (item.favIconUrl && item.favIconUrl.indexOf(TGSIconPath) != 0) ?
+			item.favIconUrl : FaviconURL + (item.unsuspendURL || url);
 
 			// add a clean displayURL to each tab that we can score against and
 			// show in the item.  unfortunately, decodeURIComponent() will throw
@@ -45,5 +49,7 @@ define(function() {
 		}
 
 		item.displayURL = url.replace(ProtocolPattern, "");
+
+		item.recentBoost = 1;
 	}
 });

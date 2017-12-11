@@ -10,6 +10,7 @@ define([
 	"get-history",
 	"add-urls",
 	"handle-keys",
+	"recent-tabs",
 	"lodash"
 ], function(
 	React,
@@ -23,6 +24,7 @@ define([
 	getHistory,
 	addURLs,
 	handleKeys,
+	recentTabs,
 	_
 ) {
 	const MinScore = .15,
@@ -30,6 +32,12 @@ define([
 		MaxItems = 10,
 		MinItems = 3,
 		MinScoreDiff = .4,
+		VeryRecentMS = 5 * 1000,
+		HourMS = 60 * 60 * 1000,
+		HourCount = 3 * 24,
+		RecentMS = HourCount * HourMS,
+		VeryRecentBoost = .15,
+		RecentBoost = .1,
 		WhitespacePattern = /\s/g,
 		BookmarksQuery = "/b ",
 		HistoryQuery = "/h ",
@@ -44,36 +52,101 @@ define([
 		tabs: [],
 		bookmarks: [],
 		history: [],
+		recents: [],
 		bookmarksPromise: null,
 		historyPromise: null,
+		gotModifierUp: false,
+		gotMRUKey: true,
+		mruModifier: "Alt",
 		resultsList: null,
-
-
-			// keydown handling is managed in another module
-		onKeyDown: handleKeys,
 
 
 		getInitialState: function()
 		{
-			var query = this.props.initialQuery;
+			var props = this.props,
+				query = props.initialQuery;
+
+			this.mruModifier = props.platform == "mac" ? "Control" : "Alt";
 
 			return {
 				query: query,
 				matchingItems: this.getMatchingItems(query),
-					// default to the first item being selected, in case we got
-					// an initial query
-				selected: 0
+					// default to the first item being selected if we got an
+					// initial query
+				selected: query ? 0 : -1
 			};
 		},
 
 
 		componentWillMount: function()
 		{
-				// start the process of getting all the tabs.  any initial chars
-				// the user might have typed as we were loading will not match
-				// anything until this promise resolves and calls
-				// getMatchingItems() again.
-			this.loadPromisedItems(getTabs, "tabs", "");
+			recentTabs.getAll()
+				.then(function(data) {
+					return this.loadPromisedItems(function() { return getTabs(data.tabs) }, "tabs", "")
+						.then(function(tabs) {
+							data.tabs = tabs;
+
+							return data;
+						});
+				}.bind(this))
+				.then(function(data) {
+					var tabs = data.tabs,
+						recentTabs = data.recentTabs,
+						recentTabsByID = data.recentTabsByID,
+						now = Date.now();
+
+						// boost the scores of recent tabs
+					tabs.forEach(function(tab) {
+						var recentTab = recentTabsByID[tab.id],
+							age,
+							hours;
+
+						if (recentTab) {
+							age = now - recentTab.visits[recentTab.visits.length - 1];
+
+							if (age < VeryRecentMS) {
+								tab.recentBoost = 1 + VeryRecentBoost;
+							} else if (age < RecentMS) {
+								hours = Math.floor(age / HourMS);
+								tab.recentBoost = 1 +
+									RecentBoost * ((HourCount - hours) / HourCount);
+							}
+						}
+					});
+
+						// set the query again because we may have already
+						// rendered a match on the tabs without the recent boosts,
+						// which may have changed the results
+					this.setQuery(this.state.query);
+
+					return this.loadPromisedItems(function() {
+						return getTabs(recentTabs)
+							.then(function(recents) {
+									// before returning the recents, we need to run scoreItems() on
+									// them so that the hitMask and scores keys are added to them.
+									// we don't for regular tabs because in getMatchingItems(), those
+									// always get scoreItems() called on them before they're rendered.
+								scoreItems(recents, "");
+
+								return recents;
+							});
+					}, "recents", "");
+				}.bind(this))
+				.then(function() {
+					var initialShortcuts = this.props.initialShortcuts;
+
+						// after the recent tabs have been loaded and scored,
+						// apply any shortcuts that recorded during init
+					if (initialShortcuts.length) {
+						initialShortcuts.forEach(function(shortcut) {
+							if (shortcut == "w") {
+								this.modifySelected(1, true);
+							} else if (shortcut == "W") {
+								this.modifySelected(-1, true);
+							}
+						}, this);
+					}
+				}.bind(this));
 		},
 
 
@@ -87,10 +160,12 @@ define([
 		getMatchingItems: function(
 			query)
 		{
-			if (!query) {
+			if (this.mode == "command" || query == BookmarksQuery || query == HistoryQuery) {
+				return [];
+			} else if (!query && this.mode == "tabs") {
 					// short-circuit the empty query case, since quick-score now
 					// returns 0.9 as the scores for an empty query
-				return [];
+				return this.recents;
 			}
 
 					// remove spaces from the query before scoring the items
@@ -135,9 +210,11 @@ define([
 		closeTab: function(
 			tab)
 		{
-			if (tab) {
+				// we can only remove actual tabs
+			if (tab && this.mode == "tabs") {
 				chrome.tabs.remove(tab.id);
 				_.pull(this.tabs, tab);
+				_.remove(this.recents, { id: tab.id });
 
 					// update the list to show the remaining matching tabs
 				this.setState({
@@ -203,6 +280,19 @@ define([
 			shiftKey,
 			altKey)
 		{
+			var recents = this.recents,
+				lastTab;
+
+				// if the query is empty and we have recent tabs tracked, create
+				// a synthetic tab item corresponding to the previous one
+			if (!item && recents.length > 1 && this.mode == "tabs") {
+				lastTab = recents[recents.length - 2];
+				item = {
+					id: lastTab.id,
+					windowId: lastTab.windowId
+				};
+			}
+
 			if (item) {
 				if (this.mode == "tabs") {
 						// switch to the tab
@@ -226,32 +316,42 @@ define([
 
 
 		modifySelected: function(
-			delta)
+			delta,
+			mruKey)
 		{
-			this.setSelectedIndex(this.state.selected + delta);
+			this.setSelectedIndex(this.state.selected + delta, mruKey);
 		},
 
 
 		setSelectedIndex: function(
-			index)
+			index,
+			mruKey)
 		{
 			var length = this.state.matchingItems.length;
 
-				// wrap around the end or beginning of the list
-			index = (index + length) % length;
+			if (mruKey) {
+					// let the selected value go to -1 when using the MRU key to
+					// navigate up, and don't wrap at the end of the list
+				index = Math.min(Math.max(-1, index), length - 1);
+				this.gotModifierUp = false;
+				this.gotMRUKey = true;
+			} else {
+					// wrap around the end or beginning of the list
+				index = (index + length) % length;
+			}
 
 			this.setState({ selected: index });
 		},
 
 
 		setQuery: function(
-			query,
-			originalQuery)
+			originalQuery,
+			query)
 		{
 			this.setState({
-				matchingItems: this.getMatchingItems(query),
+				matchingItems: this.getMatchingItems(query || originalQuery),
 				query: originalQuery,
-				selected: 0
+				selected: query ? 0 : -1
 			});
 		},
 
@@ -307,7 +407,9 @@ define([
 						// store the result and then update the results list with
 						// the match on the existing query
 					this[itemName] = items;
-					this.setQuery(query, originalQuery);
+					this.setQuery(originalQuery, query);
+
+					return items;
 				}.bind(this));
 			}
 
@@ -318,6 +420,8 @@ define([
 		handleListRef: function(
 			resultsList)
 		{
+				// we need this ref because handleKeys calls
+				// resultsList.scrollByPage() to respond to page up/down keys
 			this.resultsList = resultsList;
 		},
 
@@ -356,7 +460,33 @@ define([
 				this.mode = "tabs";
 			}
 
-			this.setQuery(query, originalQuery);
+			this.setQuery(originalQuery, query);
+		},
+
+
+			// keydown handling is managed in another module
+		onKeyDown: function(
+			event)
+		{
+				// reset this on every keyDown so we know if the user had typed
+				// an alt-W or alt-shift-W before releasing alt.  it will get set
+				// to true in setSelectedIndex()
+			this.gotMRUKey = false;
+
+			return handleKeys(event, this);
+		},
+
+
+		onKeyUp: function(
+			event)
+		{
+			if (event.key == this.mruModifier) {
+				if (!this.gotModifierUp && this.gotMRUKey && this.state.selected > -1) {
+					this.openItem(this.state.matchingItems[this.state.selected]);
+				}
+
+				this.gotModifierUp = true;
+			}
 		},
 
 
@@ -372,6 +502,7 @@ define([
 					query={query}
 					onChange={this.onQueryChange}
 					onKeyDown={this.onKeyDown}
+					onKeyUp={this.onKeyUp}
 				/>
 				<ResultsList
 					ref={this.handleListRef}

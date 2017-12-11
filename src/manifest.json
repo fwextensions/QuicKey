@@ -1,9 +1,9 @@
 {
 	"name": "QuicKey – The quick tab switcher",
 	"short_name": "QuicKey",
-	"version": "0.0.10",
+	"version": "0.0.12",
 	"manifest_version": 2,
-	"description": "Switch tabs or access bookmarks and history with a Quicksilver-style search",
+	"description": "Switch tabs with a Quicksilver-style search or a most-recently-used menu",
 	"author": "John Dunning",
 	"content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
 	"minimum_chrome_version": "45",
@@ -11,6 +11,7 @@
 		"tabs",
 		"bookmarks",
 		"history",
+		"storage",
 		"chrome://favicon/"
 	],
 	"icons": {
@@ -26,6 +27,10 @@
 		"default_title": "QuicKey",
 		"default_popup": "popup.html"
 	},
+	"background": {
+		"page": "background.html",
+		"persistent": false
+	},
 	"commands": {
 		"_execute_browser_action": {
 			"suggested_key": {
@@ -34,6 +39,24 @@
 				"chromeos": "Alt+Q",
 				"linux": "Alt+Q"
 			}
+		},
+		"previous-tab": {
+			"suggested_key": {
+				"windows": "Alt+A",
+				"mac": "MacCtrl+A",
+				"chromeos": "Alt+A",
+				"linux": "Alt+A"
+			},
+			"description": "Switch to the previous tab"
+		},
+		"next-tab": {
+			"suggested_key": {
+				"windows": "Alt+Shift+A",
+				"mac": "MacCtrl+Shift+A",
+				"chromeos": "Alt+Shift+A",
+				"linux": "Alt+Shift+A"
+			},
+			"description": "Switch to the next tab"
 		}
 	},
 	"offline_enabled": true

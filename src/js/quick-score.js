@@ -15,6 +15,7 @@ define(function() {
 		LongStringLength = 151,
 		MaxMatchStartPct = .15,
 		MinMatchDensityPct = .5,
+		MaxMatchDensityPct = .95,
 		BeginningOfStringPct = .1;
 
 
@@ -79,8 +80,8 @@ define(function() {
 			if (remainingScore) {
 				var score = remainingSearchRange.location - searchRange.location,
 					matchStartPercentage = fullMatchedRange.location / itemString.length,
-					useSkipReduction = itemString.length < LongStringLength ||
-						matchStartPercentage < MaxMatchStartPct,
+					isShortString = itemString.length < LongStringLength,
+					useSkipReduction = isShortString || matchStartPercentage < MaxMatchStartPct,
 					matchStartDiscount = (1 - matchStartPercentage),
 						// default to no match-sparseness discount, for cases
 						// where there are spaces before the matched letters or
@@ -134,9 +135,11 @@ define(function() {
 							// is not too long
 						score -= matchedRange.location - searchRange.location;
 						matchRangeDiscount = abbreviation.length / fullMatchedRange.length;
-						matchRangeDiscount = (itemString.length < LongStringLength &&
+						matchRangeDiscount = (isShortString &&
 							matchStartPercentage <= BeginningOfStringPct &&
 							matchRangeDiscount >= MinMatchDensityPct) ? 1 : matchRangeDiscount;
+						matchStartDiscount = matchRangeDiscount >= MaxMatchDensityPct ?
+							1 : matchStartDiscount;
 					}
 				}
 

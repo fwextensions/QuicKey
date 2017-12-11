@@ -17,6 +17,8 @@
     <link rel="mask-icon" href="{{ site.rootPath | '' }}/safari-pinned-tab.svg" color="#5bbad5">
     <meta name="theme-color" content="#ffffff">
 
+    <link rel="chrome-webstore-item" href="https://chrome.google.com/webstore/detail/ldlghkoiihaelfnggonhjnfiabmaficg">
+
     <meta name="viewport" content="width=device-width">
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
@@ -29,6 +31,8 @@
 
         <h1 style="font-style: italic;">{{ site.title | default: site.github.repository_name }}</h1>
         <p>{{ site.tagline | site.description | default: site.github.project_tagline }}</p>
+
+        <p style="margin: 2em 0;"><button id="install" onclick="chrome.webstore.install()">Install Now</button></p>
 
         <p><a href="https://chrome.google.com/webstore/detail/quickey-–-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg"><img src="img/webstore.png" alt="QuicKey in the Chrome Webstore" /></a></p>
 

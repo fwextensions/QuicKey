@@ -1,5 +1,10 @@
 define(function() {
-	const ShiftedKeyAliases = {
+	const IsMac = /Mac/i.test(navigator.platform),
+		Platforms = {
+			mac: IsMac,
+			win: !IsMac
+		},
+		ShiftedKeyAliases = {
 			106: '*',
 			107: '+',
 			109: '-',
@@ -28,8 +33,11 @@ define(function() {
 			opt: "alt",
 			command: "meta",
 			cmd: "meta",
-			mod: /Win/i.test(navigator.platform) ? "ctrl" : "meta"
-		};
+			mod: IsMac ? "meta" : "ctrl",
+			space: " "
+		},
+		PlatformPattern = /^([^:]+):(.+)/,
+		ModifierSeparator = /[-+ ]/;
 
 
 	function ShortcutManager(
@@ -56,11 +64,15 @@ define(function() {
 			[].concat(shortcuts).forEach(function(shortcut) {
 				var info = this.extractShortcutInfo(shortcut);
 
-				(this.bindings[info.key] || (this.bindings[info.key] = [])).push({
-					key: info.key,
-					modifierString: info.modifiers.join("+"),
-					callback: callback
-				});
+					// only store the binding if no platform was specified, or
+					// if it's the same as the current platform
+				if (!info.platform || Platforms[info.platform]) {
+					(this.bindings[info.key] || (this.bindings[info.key] = [])).push({
+						key: info.key,
+						modifierString: info.modifiers.join("+"),
+						callback: callback
+					});
+				}
 			}, this);
 		},
 
@@ -110,22 +122,30 @@ define(function() {
 		extractShortcutInfo: function(
 			shortcut)
 		{
-			var info = {
+			var platformMatch = shortcut.match(PlatformPattern),
+				info = {
+					platform: platformMatch && platformMatch[1],
 					modifiers: []
 				},
-				keys = shortcut.split("+");
+				shortcutString = platformMatch ? platformMatch[2] : shortcut,
+				keys = shortcutString.split(ModifierSeparator);
 
-			keys.forEach(function(key) {
+			keys = keys.map(function(key) {
+					// lowercase all the key names so we'll match even if a
+					// modifier was written as Ctrl, and we want regular keys
+					// lowercase anyway to handle shift shortcuts and capslock
+				key = key.toLowerCase();
 				key = Aliases[key] || key;
 
 				if (Modifiers[key]) {
 					info.modifiers.push(key);
 				}
+
+				return key;
 			});
 
-				// the main key should be last.  force it to lowercase so we can
-				// handle shift shortcuts and when capslock is on.
-			info.key = keys.pop().toLowerCase();
+				// the main key should be last
+			info.key = keys.pop();
 
 				// sort the modifiers so we don't have to do it every time we
 				// handle a key event

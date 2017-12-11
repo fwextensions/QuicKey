@@ -13,8 +13,8 @@ define([
 ) {
 	const MaxTitleLength = 70,
 		MaxURLLength = 75,
-		SuspendedFaviconOpacity = .5;
-
+		SuspendedFaviconOpacity = .5,
+		FaviconURL = "chrome://favicon/";
 
 	var IsDevMode = false;
 
@@ -72,8 +72,7 @@ define([
 			event)
 		{
 			if (!this.ignoreMouse) {
-					// pass true to let the list know this was from a mouse event
-				this.props.setSelectedIndex(this.props.index, true);
+				this.props.setSelectedIndex(this.props.index);
 			}
 		},
 
@@ -89,21 +88,30 @@ define([
 					item.title.length > MaxTitleLength ? item.title : "",
 					item.displayURL.length > MaxURLLength ? item.displayURL : ""
 				].join("\n"),
-				className = ["results-list-item", (props.isSelected ? "selected " : ""),
-					(item.incognito ? "incognito" : "")].join(" "),
+				className = [
+					"results-list-item",
+					(props.isSelected ? "selected" : ""),
+					(item.unsuspendURL ? "suspended" : ""),
+					(item.incognito ? "incognito" : "")
+				].join(" "),
 				faviconStyle = {
 					backgroundImage: "url(" + item.faviconURL + ")"
 				};
 
 			if (IsDevMode) {
-				tooltip = _.toPairs(item.scores)
+				tooltip = _.toPairs(item.scores).concat([["recentBoost", item.recentBoost], ["id", item.id]])
 					.map(function(a) { return a.join(": "); }).join("\n") + "\n" + tooltip;
 			}
 
-			if (item.unsuspendURL && !item.favIconUrl) {
+				// blank lines at the end of the tooltip show up in macOS Chrome,
+				// so trim them
+			tooltip = tooltip.trim();
+
+			if (item.unsuspendURL && item.faviconURL.indexOf(FaviconURL) == 0) {
 					// this is a suspended tab, but The Great Suspender has
-					// forgotten the faded favicon for it.  so we get the favicon
-					// through chrome://favicon/ and then fade it ourselves.
+					// forgotten the faded favicon for it or has set its own
+					// icon for some reason.  so we get the favicon through
+					// chrome://favicon/ and then fade it ourselves.
 				faviconStyle.opacity = SuspendedFaviconOpacity;
 			}
 

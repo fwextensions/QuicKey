@@ -1,15 +1,11 @@
+const _ = require("lodash");
+
+
 module.exports = function(grunt)
 {
 	var baseConfig = {
 			mainConfigFile: "src/js/require-config.js",
 			baseUrl: "src/js",
-				// specify the location of the main module.  we also have to
-				// include the require-config file, since it maps the names
-				// used by ReactVirtualized for React and ReactDOM to those
-				// used by the rest of the app, and the optimizer doesn't include
-				// that map by default.
-			include: ["require-config", "popup/main"],
-			out: "build/out/js/popup/main.js",
 				// make sure the jsx plugin is excluded, so the JSXTransformer
 				// isn't included
 			exclude: ["jsx"],
@@ -27,6 +23,19 @@ module.exports = function(grunt)
 				return singleContents.replace(/jsx!|text!/g, "");
 			}
 		},
+		popupConfig = _.defaults({}, baseConfig, {
+				// specify the location of the main module.  we also have to
+				// include the require-config file, since it maps the names
+				// used by ReactVirtualized for React and ReactDOM to those
+				// used by the rest of the app, and the optimizer doesn't include
+				// that map by default.
+			include: ["require-config", "popup/main"],
+			out: "build/out/js/popup/main.js"
+		}),
+		backgroundConfig = _.defaults({}, baseConfig, {
+			include: ["require-config", "background/background"],
+			out: "build/out/js/background/background.js"
+		}),
 		devManifestPath = "src/manifest.json",
 		buildManifestPath = "build/out/manifest.json",
 		devPopupPath = "src/popup.html",
@@ -59,7 +68,6 @@ module.exports = function(grunt)
 							"css/*.css",
 							"img/**",
 							"js/popup/init.js",
-							"background.html",
 							"manifest.json"
 						]
 					}
@@ -97,7 +105,9 @@ module.exports = function(grunt)
 		},
 
 		requirejs: {
-			content: { options: baseConfig }
+			popup: { options: popupConfig },
+			background: { options: backgroundConfig }
+//			content: { options: baseConfig }
 		},
 
 		lodash: {
@@ -157,7 +167,12 @@ module.exports = function(grunt)
 		grunt.file.write(buildManifestPath, JSON.stringify(manifest, null, "\t"));
 	});
 
+	grunt.registerTask("time", function() {
+		console.log("Started at", new Date().toLocaleString());
+	});
+
 	grunt.registerTask("build", [
+		"time",
 		"sync:out",
 		"cleanupManifest",
 		"checkPopup",
