@@ -40,6 +40,7 @@ define([
 					item.title,
 					item.displayURL,
 					this.props.query,
+					item.recentBoost,
 					_.toPairs(item.scores).map(function(a) { return a.join(": "); }).join("\n")
 				].join("\n"));
 			} else {
