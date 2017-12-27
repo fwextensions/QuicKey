@@ -29,7 +29,7 @@
 	},
 	"background": {
 		"page": "background.html",
-		"persistent": false
+		"persistent": true
 	},
 	"commands": {
 		"_execute_browser_action": {

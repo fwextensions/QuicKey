@@ -464,7 +464,6 @@ define([
 		},
 
 
-			// keydown handling is managed in another module
 		onKeyDown: function(
 			event)
 		{
@@ -473,6 +472,7 @@ define([
 				// to true in setSelectedIndex()
 			this.gotMRUKey = false;
 
+				// keydown handling is managed in another module
 			return handleKeys(event, this);
 		},
 
