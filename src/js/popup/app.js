@@ -101,11 +101,6 @@ define([
 							age,
 							hours;
 
-if (tab.index == undefined ) {
-	log("=======", tab.index, tab.tabIndex, tab.title);
-	debugger;
-}
-
 						if (recentTab) {
 							age = now - recentTab.visits[recentTab.visits.length - 1];
 
@@ -257,7 +252,6 @@ if (tab.index == undefined ) {
 						// a tab from another window to the active tab's left,
 						// use its index, which will shift it to the right of the
 						// moved tab.
-// TODO: sometimes tab.index is undefined, so the index is calculated incorrectly
 					if ((tab.windowId == activeTab.windowId && tab.index < activeTab.index && direction > 0) ||
 							direction < 0) {
 						index = activeTab.index;

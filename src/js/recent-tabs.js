@@ -15,6 +15,7 @@ define([
 			incognito: 1,
 			title: 1,
 			url: 1,
+			index: 1,
 			windowId: 1
 		},
 		TabKeys = Object.keys(TabKeysHash),
