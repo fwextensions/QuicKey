@@ -27,7 +27,7 @@ Navigate your hundreds of Chrome tabs by typing just part of the page's title or
 
 To toggle between the two most recently used tabs, quickly press the keyboard shortcut twice. Or navigate the full most-recently-used (MRU) tab list as shown below.
 
-Customize the shortcut key by going to the main menu and then More tools > Extensions > Keyboard Shortcuts.
+You can customize the shortcut key by right-clicking the QuicKey icon and selecting Options.
 
 
 ★ Search for a tab quickly
@@ -84,6 +84,8 @@ Which shortcuts to use is up to you. Double-pressing alt-Q is nice because there
 alt-A lets you navigate to even older tabs, though the timing can be a little tricky.
 
 Selecting from the MRU menu provides the closest experience to a typical alt-tab menu, but you need to use a different key to navigate while the menu is open.
+
+You can change the alt-A and alt-shift-A shortcuts by right-clicking the QuicKey icon and selecting Options. Look for the "Switch to previous/next tab" shortcuts.
 
 
 ★ Search bookmarks

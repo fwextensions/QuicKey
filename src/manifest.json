@@ -31,6 +31,10 @@
 		"page": "background.html",
 		"persistent": true
 	},
+	"options_ui": {
+		"chrome_style": true,
+		"page": "options.html"
+	},
 	"commands": {
 		"_execute_browser_action": {
 			"suggested_key": {

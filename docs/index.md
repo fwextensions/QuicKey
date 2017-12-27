@@ -23,7 +23,7 @@ You can also type <b><kbd>/</kbd><kbd>b</kbd></b> to search bookmarks or <b><kbd
 
 Once the extension is installed, you can click the <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> button on the toolbar to open the search box.  But if you're using this extension, you'll probably prefer using the default keyboard shortcut listed above.
 
-Customize the shortcut key by going to the main menu and then go to *More tools > Extensions*, scroll to the very bottom of the page, and then click *Keyboard Shortcuts*.
+You can customize the shortcut key by right-clicking the *QuicKey* icon and selecting *Options*.
 
 
 ## Search for a tab quickly
@@ -81,7 +81,7 @@ Which shortcuts to use is up to you.  Double-pressing <b><kbd>alt</kbd><kbd>Q</k
 
 Selecting from the MRU menu by holding down the <kbd>alt</kbd> key provides the closest experience to a typical <b><kbd>alt</kbd><kbd>tab</kbd></b> menu, but you need to use a different key to navigate the list while the menu is open (due to limitations in Chrome extensions).
 
-You can change the <b><kbd>alt</kbd><kbd>A</kbd></b> shortcut by opening the main menu and then going to *More tools > Extensions*, scrolling to the very bottom of the page, and then clicking *Keyboard Shortcuts*.
+You can change the <b><kbd>alt</kbd><kbd>A</kbd></b> and <b><kbd>alt</kbd><kbd>shift</kbd><kbd>A</kbd></b> shortcuts by right-clicking the *QuicKey* icon and selecting *Options*.  Look for the *Switch to previous/next tab* shortcuts.
 
 
 ## Search bookmarks
