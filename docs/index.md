@@ -48,7 +48,9 @@ Recently used tabs get a slight boost in the search results ranking, so getting 
 
 ## <a name="mru"></a>Navigate the most recently used (MRU) tabs
 
-When first installed, *QuicKey* won't have any tab usage history.  But over time, opening the extension will display the list of tabs you've visited, in order of recency.  Click a tab to switch to it, or use one of the keyboard shortcuts below to navigate the recently used tab history:
+> **Note:** When first installed, *QuicKey* doesn't know which tabs have been recently used, but as you use Chrome, it will start adding tabs to the MRU list.
+
+Opening *QuicKey* displays the list of tabs you've visited, in order of recency.  Click a tab to switch to it, or use one of the keyboard shortcuts below to navigate the recently used tab history:
 
 <br>
 

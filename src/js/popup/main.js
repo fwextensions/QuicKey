@@ -7,7 +7,8 @@ require([
 	React,
 	ReactDOM
 ) {
-	console.log("startup time", performance.now() - gInitTime, performance.now());
+	console.log("=== startup time", performance.now() - gInitTime, performance.now());
+	log("=== startup time", performance.now() - gInitTime, performance.now());
 
 	if (gClose) {
 			// the user hit esc before we started loading, so just close

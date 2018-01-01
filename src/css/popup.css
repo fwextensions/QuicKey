@@ -127,6 +127,12 @@ input.search-box::-webkit-search-cancel-button {
 	background-position: 6px 25px;
 }
 
+.results-list-item.closed {
+	background-image: url(/img/clear.svg);
+	background-size: 10px 16px;
+	background-position: 9px 25px;
+}
+
 .results-list-item .favicon {
 	left: 6px;
 	top: 6px;

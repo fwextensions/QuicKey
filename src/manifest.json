@@ -12,6 +12,7 @@
 		"bookmarks",
 		"history",
 		"storage",
+		"sessions",
 		"chrome://favicon/"
 	],
 	"icons": {

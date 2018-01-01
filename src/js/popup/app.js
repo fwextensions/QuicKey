@@ -80,19 +80,40 @@ define([
 
 		componentWillMount: function()
 		{
-			recentTabs.getAll()
-				.then(function(data) {
-					return this.loadPromisedItems(function() { return getTabs(data.tabs) }, "tabs", "")
-						.then(function(tabs) {
-							data.tabs = tabs;
+			Promise.all([
+				recentTabs.getAll(),
+				cp.sessions.getRecentlyClosed()
+			])
+				.then(function(results) {
+					var closedTabs = results[1].map(function(session) {
+							const tab = session.tab || session.window.tabs[0];
 
-							return data;
+								// session lastModified times are in Unix epoch
+							tab.visits = [session.lastModified * 1000];
+							tab.recentBoost = .95;
+
+							return tab;
+						});
+
+						// save the closed tab data plucked from the session
+					results[1] = closedTabs;
+
+						// update the tabs with the attributes added by addURLs()
+						// and then update the results object with the new tabs
+					return this.loadPromisedItems(function() {
+						return getTabs(results[0].tabs.concat(closedTabs));
+					}, "tabs", "")
+						.then(function(tabs) {
+							results[0].tabs = tabs;
+
+							return results;
 						});
 				}.bind(this))
-				.then(function(data) {
-					var tabs = data.tabs,
-						recentTabs = data.recentTabs,
-						recentTabsByID = data.recentTabsByID,
+				.then(function(results) {
+					var tabs = results[0].tabs,
+						recentTabs = results[0].recentTabs,
+						recentTabsByID = results[0].recentTabsByID,
+						closedTabs = results[1],
 						now = Date.now();
 
 						// boost the scores of recent tabs
@@ -120,7 +141,7 @@ define([
 					this.setQuery(this.state.query);
 
 					return this.loadPromisedItems(function() {
-						return getTabs(recentTabs)
+						return getTabs(recentTabs.concat(closedTabs))
 							.then(function(recents) {
 									// before returning the recents, we need to run scoreItems() on
 									// them so that the hitMask and scores keys are added to them.
@@ -280,23 +301,15 @@ define([
 			shiftKey,
 			altKey)
 		{
-			var recents = this.recents,
-				lastTab;
-
-				// if the query is empty and we have recent tabs tracked, create
-				// a synthetic tab item corresponding to the previous one
-			if (!item && recents.length > 1 && this.mode == "tabs") {
-				lastTab = recents[recents.length - 2];
-				item = {
-					id: lastTab.id,
-					windowId: lastTab.windowId
-				};
-			}
-
 			if (item) {
 				if (this.mode == "tabs") {
-						// switch to the tab
-					this.focusTab(item, shiftKey);
+					if (item.sessionId) {
+							// this is a closed tab, so restore it
+						chrome.sessions.restore(item.sessionId);
+					} else {
+							// switch to the tab
+						this.focusTab(item, shiftKey);
+					}
 				} else if (shiftKey) {
 						// open in a new window
 					chrome.windows.create({ url: item.url });

@@ -36,6 +36,10 @@ module.exports = function(grunt)
 			include: ["require-config", "background/background"],
 			out: "build/out/js/background/background.js"
 		}),
+		optionsConfig = _.defaults({}, baseConfig, {
+			include: ["require-config", "options/options"],
+			out: "build/out/js/options/options.js"
+		}),
 		devManifestPath = "src/manifest.json",
 		buildManifestPath = "build/out/manifest.json",
 		devPopupPath = "src/popup.html",
@@ -68,6 +72,7 @@ module.exports = function(grunt)
 							"css/*.css",
 							"img/**",
 							"js/popup/init.js",
+							"options.html",
 							"manifest.json"
 						]
 					}
@@ -106,7 +111,9 @@ module.exports = function(grunt)
 
 		requirejs: {
 			popup: { options: popupConfig },
-			background: { options: backgroundConfig }
+			background: { options: backgroundConfig },
+				// annoyingly, just calling this "options" doesn't work
+			optionsDialog: { options: optionsConfig }
 //			content: { options: baseConfig }
 		}
 	});

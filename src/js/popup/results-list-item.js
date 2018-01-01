@@ -93,7 +93,8 @@ define([
 					"results-list-item",
 					(props.isSelected ? "selected" : ""),
 					(item.unsuspendURL ? "suspended" : ""),
-					(item.incognito ? "incognito" : "")
+					(item.incognito ? "incognito" : ""),
+					(item.sessionId ? "closed suspended" : "")
 				].join(" "),
 				faviconStyle = {
 					backgroundImage: "url(" + item.faviconURL + ")"
@@ -108,11 +109,13 @@ define([
 				// so trim them
 			tooltip = tooltip.trim();
 
-			if (item.unsuspendURL && item.faviconURL.indexOf(FaviconURL) == 0) {
+			if ((item.unsuspendURL && item.faviconURL.indexOf(FaviconURL) == 0)
+					|| item.sessionId) {
 					// this is a suspended tab, but The Great Suspender has
 					// forgotten the faded favicon for it or has set its own
 					// icon for some reason.  so we get the favicon through
-					// chrome://favicon/ and then fade it ourselves.
+					// chrome://favicon/ and then fade it ourselves.  or it's a
+					// tab from a closed session.
 				faviconStyle.opacity = SuspendedFaviconOpacity;
 			}
 
