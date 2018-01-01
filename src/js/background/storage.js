@@ -1,6 +1,6 @@
 define([
 	"cp",
-	"mutex"
+	"background/mutex"
 ], function(
 	cp,
 	Mutex

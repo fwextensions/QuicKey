@@ -1,7 +1,7 @@
 define([
-	"quick-score",
-	"simple-score",
-	"array-score"
+	"./quick-score",
+	"./simple-score",
+	"./array-score"
 ], function(
 	quickScore,
 	simpleScore,

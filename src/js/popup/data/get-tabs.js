@@ -1,5 +1,5 @@
 define([
-	"add-urls",
+	"./add-urls",
 	"cp",
 	"lodash"
 ], function(

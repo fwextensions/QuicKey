@@ -1,9 +1,9 @@
 define([
-	"storage",
-	"cp"
+	"cp",
+	"background/storage"
 ], function(
-	storage,
-	cp
+	cp,
+	storage
 ) {
 	const MaxTabsLength = 50,
 		MaxSwitchDelay = 750,

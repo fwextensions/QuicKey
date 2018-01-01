@@ -1,16 +1,16 @@
-define([
+define("popup/app", [
 	"react",
 	"jsx!./search-box",
 	"jsx!./results-list",
 	"jsx!./results-list-item",
 	"cp",
-	"score-items",
-	"get-tabs",
-	"get-bookmarks",
-	"get-history",
-	"add-urls",
-	"handle-keys",
-	"recent-tabs",
+	"./score/score-items",
+	"./data/get-tabs",
+	"./data/get-bookmarks",
+	"./data/get-history",
+	"./data/add-urls",
+	"./shortcuts/handle-keys",
+	"background/recent-tabs",
 	"lodash"
 ], function(
 	React,
