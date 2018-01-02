@@ -23,7 +23,7 @@ console.log("== onStartup");
 console.log("==== last onActivated");
 
 		require([
-			"recent-tabs"
+			"background/recent-tabs"
 		], function(
 			recentTabs
 		) {
@@ -57,7 +57,7 @@ console.log("=== onActivated");
 
 
 require([
-	"recent-tabs",
+	"background/recent-tabs",
 	"cp"
 ], function(
 	recentTabs,

@@ -8,7 +8,6 @@ require.config({
 		JSXTransformer: "lib/JSXTransformer",
 		"react-virtualized": "lib/react-virtualized",
 		lodash: "lib/lodash",
-//		"recent-tabs": "background/recent-tabs",
 		cp: "lib/cp"
 	},
 	map: {

@@ -38,6 +38,7 @@ define("popup/app", [
 		RecentMS = HourCount * HourMS,
 		VeryRecentBoost = .15,
 		RecentBoost = .1,
+		ClosedPenalty = .98,
 		WhitespacePattern = /\s/g,
 		BookmarksQuery = "/b ",
 		HistoryQuery = "/h ",
@@ -80,50 +81,20 @@ define("popup/app", [
 
 		componentWillMount: function()
 		{
-			Promise.all([
-				recentTabs.getAll(),
-				cp.sessions.getRecentlyClosed()
-			])
-				.then(function(results) {
-					var closedTabs = results[1].map(function(session) {
-							const tab = session.tab || session.window.tabs[0];
-
-								// session lastModified times are in Unix epoch
-							tab.visits = [session.lastModified * 1000];
-							tab.recentBoost = .95;
-
-							return tab;
-						});
-
-						// save the closed tab data plucked from the session
-					results[1] = closedTabs;
-
-						// update the tabs with the attributes added by addURLs()
-						// and then update the results object with the new tabs
-					return this.loadPromisedItems(function() {
-						return getTabs(results[0].tabs.concat(closedTabs));
-					}, "tabs", "")
-						.then(function(tabs) {
-							results[0].tabs = tabs;
-
-							return results;
-						});
-				}.bind(this))
-				.then(function(results) {
-					var tabs = results[0].tabs,
-						recentTabs = results[0].recentTabs,
-						recentTabsByID = results[0].recentTabsByID,
-						closedTabs = results[1],
-						now = Date.now();
+			recentTabs.getAll()
+				.then(function(tabs) {
+					var now = Date.now();
 
 						// boost the scores of recent tabs
 					tabs.forEach(function(tab) {
-						var recentTab = recentTabsByID[tab.id],
-							age,
+						var age,
 							hours;
 
-						if (recentTab) {
-							age = now - recentTab.visits[recentTab.visits.length - 1];
+						if (tab.sessionId) {
+								// penalize matching closed tabs
+							tab.recentBoost = ClosedPenalty;
+						} else if (tab.visits.length) {
+							age = now - tab.visits[tab.visits.length - 1];
 
 							if (age < VeryRecentMS) {
 								tab.recentBoost = 1 + VeryRecentBoost;
@@ -135,26 +106,40 @@ define("popup/app", [
 						}
 					});
 
+					return this.loadPromisedItems(function() {
+						return getTabs(tabs)
+							.then(function(tabs) {
+									// run scoreItems() on the tabs so that the
+									// hitMask and scores keys are added to each
+								scoreItems(tabs, "");
+
+								return tabs;
+							});
+					}, "tabs", "");
+				}.bind(this))
+				.then(function(tabs) {
+					var initialShortcuts = this.props.initialShortcuts;
+
+						// filter out just recent and closed tabs that we
+						// have a last visit time for
+					this.recents = tabs
+						.filter(function(tab) { return tab.visits.length })
+						.sort(function(a, b) {
+								// sort open tabs before closed ones, and
+								// newer before old
+							if ((a.sessionId && b.sessionId) || (!a.sessionId && !b.sessionId)) {
+								return b.visits[b.visits.length - 1] - a.visits[a.visits.length - 1];
+							} else if (a.sessionId) {
+								return 1;
+							} else {
+								return -1;
+							}
+						});
+
 						// set the query again because we may have already
 						// rendered a match on the tabs without the recent boosts,
 						// which may have changed the results
 					this.setQuery(this.state.query);
-
-					return this.loadPromisedItems(function() {
-						return getTabs(recentTabs.concat(closedTabs))
-							.then(function(recents) {
-									// before returning the recents, we need to run scoreItems() on
-									// them so that the hitMask and scores keys are added to them.
-									// we don't for regular tabs because in getMatchingItems(), those
-									// always get scoreItems() called on them before they're rendered.
-								scoreItems(recents, "");
-
-								return recents;
-							});
-					}, "recents", "");
-				}.bind(this))
-				.then(function() {
-					var initialShortcuts = this.props.initialShortcuts;
 
 						// after the recent tabs have been loaded and scored,
 						// apply any shortcuts that recorded during init
@@ -184,8 +169,6 @@ define("popup/app", [
 			if (this.mode == "command" || query == BookmarksQuery || query == HistoryQuery) {
 				return [];
 			} else if (!query && this.mode == "tabs") {
-					// short-circuit the empty query case, since quick-score now
-					// returns 0.9 as the scores for an empty query
 				return this.recents;
 			}
 

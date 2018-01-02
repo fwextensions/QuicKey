@@ -238,39 +238,33 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 	function getAll()
 	{
 		return storage.get(function(data) {
-			return cp.tabs.query({})
-				.then(function(freshTabs) {
-					var freshTabsByID = {},
-						tabIDs = data.tabIDs,
+			return Promise.all([
+					cp.tabs.query({}),
+					cp.sessions.getRecentlyClosed()
+				])
+				.then(function(results) {
+					var freshTabs = results[0],
+ 						closedTabs = results[1],
 						tabsByID = data.tabsByID,
-						recentTabsByID = {},
-						recentTabs = [];
+						tabs;
 
-						// create a dictionary of the new tabs by ID
-					freshTabs.forEach(function(tab) {
-						freshTabsByID[tab.id] = tab;
+						// update the fresh tabs with any recent data we have
+					tabs = freshTabs.map(function(tab) {
+						return createRecent(tab, tabsByID[tab.id]);
 					});
 
-					tabIDs.forEach(function(tabID) {
-						var oldTab = tabsByID[tabID],
-							newTab = freshTabsByID[tabID];
+					closedTabs = closedTabs.map(function(session) {
+						const tabFromSession = session.tab || session.window.tabs[0],
+							tab = createRecent(tabFromSession);
 
-						if (oldTab && newTab) {
-							newTab = createRecent(newTab, oldTab);
-							recentTabsByID[newTab.id] = newTab;
-							recentTabs.push(newTab);
-						}
+							// session lastModified times are in Unix epoch
+						tab.visits = [session.lastModified * 1000];
+						tab.sessionId = tabFromSession.sessionId;
+
+						return tab;
 					});
 
-					return {
-						tabs: freshTabs,
-						recentTabs: recentTabs,
-						recentTabsByID: recentTabsByID
-					};
-
-// TODO: do we need to save the data with the newly pushed lastShortcutTabID?
-//			updateDataFromShortcut(data);
-
+					return tabs.concat(closedTabs);
 				});
 		});
 	}
