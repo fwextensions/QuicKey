@@ -8,7 +8,19 @@ define([
 	arrayScore
 ) {
 		// use title and displayURL as the two keys to score
-	const QuickScoreArray = arrayScore(quickScore, ["title", "displayURL"]),
+	const QuickScoreArray = arrayScore(quickScore, [
+			{
+				key: "title",
+				score: quickScore
+			},
+			{
+				key: "displayURL",
+				score: function() {
+						// add true to not discount spaces and capitals in the URL
+					return quickScore.apply(null, Array.from(arguments).concat(true));
+				}
+			}
+		]),
 		SimpleScoreArray = arrayScore(simpleScore, ["title", "displayURL"]),
 		MaxQueryLength = 25;
 

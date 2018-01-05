@@ -19,10 +19,11 @@ define(function() {
 		BeginningOfStringPct = .1;
 
 
-	function scoreForAbbreviation(
+	function quickScore(
 		itemString,
 		abbreviation,
 		hitMask,
+		noSkipReduction,
 		searchRange,
 		abbreviationRange,
 		fullMatchedRange)
@@ -71,7 +72,8 @@ define(function() {
 			/* DEBUG logRanges(searchRange, hitMask, fullMatchedRange); */
 
 			var remainingSearchRange = new Range(matchedRange.max(), searchRange.max() - matchedRange.max()),
-				remainingScore = scoreForAbbreviation(itemString, abbreviation, hitMask, remainingSearchRange,
+				remainingScore = quickScore(itemString, abbreviation,
+					hitMask, noSkipReduction, remainingSearchRange,
 					new Range(abbreviationRange.location + i, abbreviationRange.length - i),
 					fullMatchedRange);
 
@@ -81,7 +83,7 @@ define(function() {
 				var score = remainingSearchRange.location - searchRange.location,
 					matchStartPercentage = fullMatchedRange.location / itemString.length,
 					isShortString = itemString.length < LongStringLength,
-					useSkipReduction = isShortString || matchStartPercentage < MaxMatchStartPct,
+					useSkipReduction = !noSkipReduction && (isShortString || matchStartPercentage < MaxMatchStartPct),
 					matchStartDiscount = (1 - matchStartPercentage),
 						// default to no match-sparseness discount, for cases
 						// where there are spaces before the matched letters or
@@ -252,5 +254,5 @@ define(function() {
 	}
 
 
-	return scoreForAbbreviation;
+	return quickScore;
 });
