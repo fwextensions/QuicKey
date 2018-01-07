@@ -193,11 +193,16 @@ define("popup/app", [
 			unsuspend)
 		{
 			if (tab) {
-				var updateData = { active: true };
+				var updateData = { active: true },
+					queryLength = this.state.query.length,
+					category = queryLength ? "tabs" : "recents",
+					event = (category == "recents" && this.gotMRUKey) ?
+						"focus-mru" : "focus";
 
 				if (unsuspend && tab.unsuspendURL) {
 						// change to the unsuspended URL
 					updateData.url = tab.unsuspendURL;
+					event = "unsuspend";
 				}
 
 					// switch to the selected tab
@@ -207,6 +212,8 @@ define("popup/app", [
 				if (tab.windowId != chrome.windows.WINDOW_ID_CURRENT) {
 					chrome.windows.update(tab.windowId, { focused: true });
 				}
+
+				this.props.tracker.event(category, event);
 			}
 		},
 
@@ -224,6 +231,7 @@ define("popup/app", [
 				this.setState({
 					matchingItems: this.getMatchingItems(this.state.query)
 				});
+				this.props.tracker.event(this.state.query ? "tabs" : "recents", "close");
 			}
 		},
 
@@ -289,6 +297,7 @@ define("popup/app", [
 					if (item.sessionId) {
 							// this is a closed tab, so restore it
 						chrome.sessions.restore(item.sessionId);
+						this.props.tracker.event("tabs", "restore");
 					} else {
 							// switch to the tab
 						this.focusTab(item, shiftKey);

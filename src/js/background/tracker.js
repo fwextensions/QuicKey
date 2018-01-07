@@ -1,0 +1,101 @@
+define(function() {
+	window.ga = window.ga || function() { (ga.q = ga.q || []).push(arguments) };
+	ga.l = +new Date;
+
+//	ga("create", "UA-108153491-3", "auto");
+//	ga("set", "checkProtocolTask", null);
+//	ga("set", "page", "/background");
+//	ga("send", "pageview");
+
+	const Defaults = {
+			name: "tracker"
+		};
+
+
+	function Tracker(
+		id,
+		fields,
+		dontSendPageview)
+	{
+		var createFields = Object.assign({}, Defaults, fields);
+
+		this.name = createFields.name;
+		this.nameDotSend = this.name + ".send";
+		this.nameDotSet = this.name + ".set";
+
+		ga("create", id, createFields);
+
+			// workaround the extension being in a chrome-extension:// protocol
+		this.set("checkProtocolTask", null);
+
+		if (!dontSendPageview) {
+			this.pageview();
+		}
+	}
+
+
+	Object.assign(Tracker.prototype, {
+		send: function()
+		{
+			ga.apply(window, [this.nameDotSend].concat(Array.from(arguments)));
+		},
+
+
+		set: function(
+			name,
+			value)
+		{
+			if (name && typeof name == "object") {
+				Object.keys(name).forEach(function(key) {
+					ga(this.nameDotSet, key, name[key]);
+				}, this);
+			} else {
+				ga(this.nameDotSet, name, value);
+			}
+		},
+
+
+		event: function(
+			category,
+			action,
+			value)
+		{
+			var event = {
+					hitType: "event",
+					eventCategory: category,
+					eventAction: action
+				};
+
+			if (typeof value != "undefined") {
+				event.eventValue = value;
+			}
+
+			this.send(event);
+		},
+
+
+		pageview: function(
+			name)
+		{
+				// only send the name if there is one, since passing undefined
+				// seems to cause the pageview event not to use the set page name
+			if (name) {
+				this.send("pageview", name);
+			} else {
+				this.send("pageview");
+			}
+		},
+
+
+		timing: function(
+			category,
+			name,
+			value)
+		{
+			this.send("timing", category, name, Math.round(value));
+		}
+	});
+
+
+	return Tracker;
+});

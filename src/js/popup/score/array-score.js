@@ -14,7 +14,7 @@ define(function() {
 					return key;
 				}
 			}),
-			defaultKeyName = keys[0];
+			defaultKeyName = keys[0].key;
 
 
 		function compareScoredStrings(

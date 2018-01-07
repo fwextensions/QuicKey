@@ -7,8 +7,18 @@ require([
 	React,
 	ReactDOM
 ) {
-	console.log("=== startup time", performance.now() - gInitTime, performance.now());
-	window.log && log("=== startup time", performance.now() - gInitTime, performance.now());
+	const query = gKeyCache.join(""),
+		shortcuts = gShortcutCache,
+		platform = gIsMac ? "mac" : "win",
+		now = performance.now();
+
+	console.log("=== startup time", now - gInitTime, now);
+	window.log && log("=== startup time", now - gInitTime, now);
+
+	if (window.tracker) {
+		window.tracker.pageview("/popup");
+		window.tracker.timing("loading", "popup", now);
+	}
 
 	if (gClose) {
 			// the user hit esc before we started loading, so just close
@@ -17,10 +27,6 @@ require([
 
 		return;
 	}
-
-	const query = gKeyCache.join(""),
-		shortcuts = gShortcutCache,
-		platform = /Mac/i.test(navigator.platform) ? "mac" : "win";
 
 		// clean up the globals
 	document.removeEventListener("keydown", gOnKeyDown, false);
@@ -35,7 +41,8 @@ require([
 			React.createElement(App, {
 				initialQuery: query,
 				initialShortcuts: shortcuts,
-				platform: platform
+				platform: platform,
+				tracker: tracker
 			}),
 			document.getElementById("root")
 		);

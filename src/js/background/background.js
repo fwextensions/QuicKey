@@ -1,7 +1,8 @@
 	// if the popup is opened and closed within this time, switch to the
 	// previous tab
 const MaxPopupLifetime = 450,
-	WindowActivatedTimer = 500;
+	WindowActivatedTimer = 500,
+	TrackerID = "UA-108153491-3";
 
 
 var gStartingUp = false;
@@ -58,11 +59,16 @@ console.log("=== onActivated");
 
 require([
 	"background/recent-tabs",
+	"background/tracker",
 	"cp"
 ], function(
 	recentTabs,
+	Tracker,
 	cp
 ) {
+	var tracker;
+
+
 	chrome.tabs.onActivated.addListener(function(event) {
 		if (!gStartingUp) {
 			return cp.tabs.get(event.tabId)
@@ -96,9 +102,9 @@ require([
 
 
 	chrome.commands.onCommand.addListener(function(command) {
-		if (command == "previous-tab") {
+		if (command == "1-previous-tab") {
 			recentTabs.toggleTab(-1);
-		} else if (command == "next-tab") {
+		} else if (command == "2-next-tab") {
 			recentTabs.toggleTab(1);
 		}
 	});
@@ -113,8 +119,32 @@ require([
 					// a double press of the shortcut
 				recentTabs.toggleTab(-1, true);
 			}
+
+				// send a background "pageview", since the popup is now closed,
+				// so that GA will track the time the popup was open
+			tracker.pageview();
 		});
 	});
+
+
+	tracker = new Tracker(TrackerID, null, true);
+	window.tracker = tracker;
+
+	cp.management.getSelf()
+		.then(function(info) {
+			if (info.installType == "development") {
+				tracker.set("campaignSource", "dev");
+			}
+
+				// setting appVersion: info.version seems to cause realtime
+				// events to not appear on the GA site
+			tracker.set({
+				location: "/background.html",
+				page: "/background"
+			});
+			tracker.pageview();
+			tracker.timing("loading", "background", performance.now());
+		});
 });
 
 

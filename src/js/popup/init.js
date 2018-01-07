@@ -2,13 +2,13 @@ var gKeyCache = [],
 	gShortcutCache = [],
 	gClose = false,
 	gOnKeyDown,
-	gInitTime = performance.now();
+	gInitTime = performance.now(),
+	gIsMac = /Mac/i.test(navigator.platform);
 
 
 (function() {
 	const AllowedPattern = /[-'!"#$%&()\*+,\.\/:;<=>?@\[\\\]\^_`{|}~ \w]/,
-		IsMac = /Mac/i.test(navigator.platform),
-		ShortcutModifier = IsMac ? "ctrlKey" : "altKey";
+		ShortcutModifier = gIsMac ? "ctrlKey" : "altKey";
 
 
 	gOnKeyDown = function(
@@ -44,9 +44,10 @@ var gKeyCache = [],
 		// to the TabSelector as the default query when it loads.
 	document.addEventListener("keydown", gOnKeyDown);
 
-	chrome.runtime.getBackgroundPage(function(bg) {
-		window.log = bg.log;
-	});
+	const background = chrome.extension.getBackgroundPage();
+
+	window.log = background.log;
+	window.tracker = background.tracker;
 
 		// connect to the default port so the background page will get the
 		// onDisconnect event when the popup is closed
