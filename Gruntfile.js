@@ -166,7 +166,7 @@ module.exports = function(grunt)
 		var manifest = grunt.file.readJSON(buildManifestPath);
 
 			// we don't need the unsafe-eval policy in the built extension
-		manifest.content_security_policy.replace("'unsafe-eval' ", "");
+		manifest.content_security_policy = manifest.content_security_policy.replace("'unsafe-eval' ", "");
 		grunt.file.write(buildManifestPath, JSON.stringify(manifest, null, "\t"));
 	});
 

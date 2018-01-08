@@ -130,7 +130,8 @@ require([
 
 
 		// create a separate tracker for the background and popup pages, so the
-		// events get tracked on the right page
+		// events get tracked on the right page.  pass true to not do an
+		// automatic pageview on creation.
 	backgroundTracker = new Tracker(TrackerID, { name: "background" }, true);
 	popupTracker = new Tracker(TrackerID, { name: "popup" }, true);
 	window.tracker = popupTracker;

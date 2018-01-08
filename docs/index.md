@@ -136,7 +136,7 @@ Sometimes The Great Suspender seems to forget the page's favicon and just shows 
 
 ## Incognito mode
 
-To switch to incognito tabs as well as normal ones, open the main menu and then go to *More tools > Extensions*, scroll down to the *QuicKey* extension, and check the *Allow in incognito* option.
+To switch to incognito tabs as well as normal ones, open Chrome's main menu and then go to *More tools > Extensions*, scroll down to the *QuicKey* extension, and check the *Allow in incognito* option.
 
 Tabs in incognito mode display the incognito icon, so you can distinguish a normal tab from an incognito one with the same title.
 

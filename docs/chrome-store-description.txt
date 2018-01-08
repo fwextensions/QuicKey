@@ -109,7 +109,7 @@ You can change the alt-A and alt-shift-A shortcuts by right-clicking the QuicKey
 
 To close the selected tab, press ctrl-W (cmd-ctrl-W on macOS). For instance, you could type "docg" to match all of your Google Docs URLs and then quickly close those you no longer need.
 
-When you open *QuicKey*, the 25 most recently closed tabs are listed below the recent tabs and shown in a faded state with an <img src="img/clear.svg" style="height: 13px"> icon.  They are also returned when you type a query, though they're scored lower than open tabs.
+When you open *QuicKey*, the 25 most recently closed tabs are listed below the recent tabs and shown in a faded state with an X icon. They are also returned when you type a query, though they're scored lower than open tabs.
 
 Click a closed tab to reopen it in its original location and with all of its browsing history intact.
 
@@ -155,7 +155,7 @@ Sometimes The Great Suspender seems to forget the page's favicon and just shows 
 
 ★ Incognito mode
 
-To switch to incognito tabs as well as normal ones, open the main menu and then go to More tools > Extensions, scroll down to the QuicKey extension, and check the "Allow in incognito" option.
+To switch to incognito tabs as well as normal ones, open Chrome's main menu and then go to More tools > Extensions, scroll down to the QuicKey extension, and check the "Allow in incognito" option.
 
 Tabs in incognito mode display the incognito icon, so you can distinguish a normal tab from an incognito one with the same title.
 
