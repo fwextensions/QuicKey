@@ -211,7 +211,8 @@ define("popup/app", [
 					chrome.windows.update(tab.windowId, { focused: true });
 				}
 
-				this.props.tracker.event(category, event);
+				this.props.tracker.event(category, event,
+					queryLength ? queryLength : undefined);
 			}
 		},
 

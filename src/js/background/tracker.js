@@ -1,7 +1,8 @@
 define(function() {
 	const Defaults = {
 			name: "tracker"
-		};
+		},
+		PathPattern = /chrome-extension:\/\/[^\n]+\//g;
 
 
 	window.ga = window.ga || function() { (ga.q = ga.q || []).push(arguments) };
@@ -96,7 +97,7 @@ define(function() {
 			error,
 			fatal)
 		{
-			var description = [error.message, error.filename, error.lineno].join("\n");
+			var description = error.error.stack.replace(PathPattern, "");
 
 			this.send("exception", {
 				exDescription: description,

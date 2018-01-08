@@ -8,8 +8,6 @@ const MaxPopupLifetime = 450,
 var gStartingUp = false;
 
 
-console.log("= load");
-
 chrome.runtime.onStartup.addListener(function() {
 	var timer = null;
 
@@ -66,7 +64,8 @@ require([
 	Tracker,
 	cp
 ) {
-	var tracker;
+	var backgroundTracker,
+		popupTracker;
 
 
 	chrome.tabs.onActivated.addListener(function(event) {
@@ -104,10 +103,10 @@ require([
 	chrome.commands.onCommand.addListener(function(command) {
 		if (command == "1-previous-tab") {
 			recentTabs.toggleTab(-1);
-			tracker.event("tabs", "previous");
+			backgroundTracker.event("recents", "previous");
 		} else if (command == "2-next-tab") {
 			recentTabs.toggleTab(1);
-			tracker.event("tabs", "next");
+			backgroundTracker.event("recents", "next");
 		}
 	});
 
@@ -120,41 +119,52 @@ require([
 					// pass true so toggleTab() knows this toggle is coming from
 					// a double press of the shortcut
 				recentTabs.toggleTab(-1, true);
-				tracker.event("tabs", "toggle");
+				backgroundTracker.event("recents", "toggle");
+			} else {
+					// send a background "pageview", since the popup is now closed,
+					// so that GA will track the time the popup was open
+				backgroundTracker.pageview();
 			}
-
-				// send a background "pageview", since the popup is now closed,
-				// so that GA will track the time the popup was open
-			tracker.pageview();
 		});
 	});
 
 
-	tracker = new Tracker(TrackerID, null, true);
-	window.tracker = tracker;
+		// create a separate tracker for the background and popup pages, so the
+		// events get tracked on the right page
+	backgroundTracker = new Tracker(TrackerID, { name: "background" }, true);
+	popupTracker = new Tracker(TrackerID, { name: "popup" }, true);
+	window.tracker = popupTracker;
 
 	cp.management.getSelf()
 		.then(function(info) {
 			if (info.installType == "development") {
-				tracker.set("campaignSource", "dev");
+				backgroundTracker.set("campaignSource", "dev");
+				popupTracker.set("campaignSource", "dev");
 			}
 
 				// setting appVersion: info.version seems to cause realtime
 				// events to not appear on the GA site
-			tracker.set({
+			backgroundTracker.set({
 				location: "/background.html",
-				page: "/background"
+				page: "/background",
+				transport: "beacon"
 			});
-			tracker.pageview();
-			tracker.timing("loading", "background", performance.now());
+			backgroundTracker.pageview();
+			backgroundTracker.timing("loading", "background", performance.now());
+
+			popupTracker.set({
+				location: "/popup.html",
+				page: "/popup",
+				transport: "beacon"
+			});
 		});
+
+	window.addEventListener("error", function(event) {
+		backgroundTracker.exception(event, true);
+	});
 });
 
 
 window.log = function() {
 	console.log.apply(console, arguments);
 };
-
-window.addEventListener("error", function(event) {
-	window.tracker.exception(event, true);
-});

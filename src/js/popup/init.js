@@ -49,13 +49,4 @@ chrome.runtime.connect();
 		// and instantiates the components. the gKeyCache global will be passed
 		// to the TabSelector as the default query when it loads.
 	document.addEventListener("keydown", gOnKeyDown);
-
-	const background = chrome.extension.getBackgroundPage();
-
-	window.log = background.log;
-	window.tracker = background.tracker;
-
-	window.addEventListener("error", function(event) {
-		window.tracker.exception(event, true);
-	});
 })();

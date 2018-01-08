@@ -10,14 +10,30 @@ require([
 	const query = gKeyCache.join(""),
 		shortcuts = gShortcutCache,
 		platform = gIsMac ? "mac" : "win",
-		now = performance.now();
+		now = performance.now(),
+		background = chrome.extension.getBackgroundPage();
+
+	var tracker;
+
+	if (background) {
+		window.log = background.log;
+		tracker = background.tracker;
+	}
+
+	window.addEventListener("error", function(event) {
+		tracker.exception(event, true);
+	});
 
 	console.log("=== startup time", now - gInitTime, now);
 	window.log && log("=== startup time", now - gInitTime, now);
 
-	if (window.tracker) {
-		window.tracker.pageview("/popup");
-		window.tracker.timing("loading", "popup", now);
+	if (tracker) {
+			// send a pageview event after a delay, in case the user is toggling
+			// to the previous tab, in which case we'll barely be rendered
+		setTimeout(function() {
+			tracker.pageview();
+			tracker.timing("loading", "popup", now);
+		}, 600);
 	}
 
 	if (gClose) {

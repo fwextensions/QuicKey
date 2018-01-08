@@ -371,7 +371,7 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 							previousTabIndex = Math.min(data.previousTabIndex + 1, maxIndex);
 						}
 					}
-console.log("==== previous", previousTabIndex);
+//console.log("==== previous", previousTabIndex);
 				}
 
 				newData.previousTabIndex = previousTabIndex;
@@ -388,7 +388,7 @@ console.log("toggleTab previousTabIndex", newData.lastShortcutTabID, previousTab
 				if (data && data.previousTabIndex > -1 && data.lastShortcutTabID) {
 					var previousTabID = data.lastShortcutTabID,
 						previousWindowID = data.tabsByID[previousTabID].windowId;
-console.log("toggleTab then previousTabID", previousTabID, data.previousTabIndex);
+//console.log("toggleTab then previousTabID", previousTabID, data.previousTabIndex);
 
 						// we only want to start the timer if the user triggered
 						// us with the previous/next-tab shortcut, not double-

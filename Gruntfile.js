@@ -71,7 +71,6 @@ module.exports = function(grunt)
 						src: [
 							"css/*.css",
 							"img/**",
-							"js/popup/init.js",
 							"options.html",
 							"manifest.json"
 						]
@@ -109,12 +108,19 @@ module.exports = function(grunt)
 			}
 		},
 
+		uglify: {
+			init: {
+				files: {
+					"build/out/js/popup/init.js": ["src/js/popup/init.js"]
+				}
+			}
+		},
+
 		requirejs: {
 			popup: { options: popupConfig },
 			background: { options: backgroundConfig },
 				// annoyingly, just calling this "options" doesn't work
 			optionsDialog: { options: optionsConfig }
-//			content: { options: baseConfig }
 		}
 	});
 
@@ -173,7 +179,8 @@ module.exports = function(grunt)
 		"sync:out",
 		"cleanupManifest",
 		"checkPopup",
-		"requirejs"
+		"requirejs",
+		"uglify"
 	]);
 
 	grunt.registerTask("pack", [
