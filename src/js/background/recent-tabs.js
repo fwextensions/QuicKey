@@ -265,9 +265,11 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 					});
 
 						// only show the closed tabs if we also have some recent
-						// tabs, so that the user doesn't see just closed tabs
-						// on a new install
-					if (data.tabIDs.length) {
+						// tabs, so that the user doesn't see just closed tabs on
+						// a new install.  have to check for > 1, since even on a
+						// new install or after closing a window, the current tab
+						// will be in the list, which is then removed from the list.
+					if (data.tabIDs.length > 1) {
 						tabs = tabs.concat(closedTabs);
 					}
 
