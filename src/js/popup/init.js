@@ -6,6 +6,12 @@ var gKeyCache = [],
 	gIsMac = /Mac/i.test(navigator.platform);
 
 
+	// connect to the default port so the background page will get the
+	// onDisconnect event when the popup is closed.  do it first thing, in case
+	// the user quickly hits the shortcut again.
+chrome.runtime.connect();
+
+
 (function() {
 	const AllowedPattern = /[-'!"#$%&()\*+,\.\/:;<=>?@\[\\\]\^_`{|}~ \w]/,
 		ShortcutModifier = gIsMac ? "ctrlKey" : "altKey";
@@ -49,7 +55,7 @@ var gKeyCache = [],
 	window.log = background.log;
 	window.tracker = background.tracker;
 
-		// connect to the default port so the background page will get the
-		// onDisconnect event when the popup is closed
-	chrome.runtime.connect();
+	window.addEventListener("error", function(event) {
+		window.tracker.exception(event, true);
+	});
 })();

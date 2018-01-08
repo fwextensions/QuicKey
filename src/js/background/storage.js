@@ -50,7 +50,7 @@ define([
 		data,
 		event)
 	{
-console.log("saving", event, data.tabIDs && data.tabIDs.slice(-4).join(", "), data);
+//console.log("saving", event, data.tabIDs && data.tabIDs.slice(-4).join(", "), data);
 
 		return cp.storage.local.set(data)
 			.then(function() {

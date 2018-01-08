@@ -104,8 +104,10 @@ require([
 	chrome.commands.onCommand.addListener(function(command) {
 		if (command == "1-previous-tab") {
 			recentTabs.toggleTab(-1);
+			tracker.event("tabs", "previous");
 		} else if (command == "2-next-tab") {
 			recentTabs.toggleTab(1);
+			tracker.event("tabs", "next");
 		}
 	});
 
@@ -118,6 +120,7 @@ require([
 					// pass true so toggleTab() knows this toggle is coming from
 					// a double press of the shortcut
 				recentTabs.toggleTab(-1, true);
+				tracker.event("tabs", "toggle");
 			}
 
 				// send a background "pageview", since the popup is now closed,
@@ -151,3 +154,7 @@ require([
 window.log = function() {
 	console.log.apply(console, arguments);
 };
+
+window.addEventListener("error", function(event) {
+	window.tracker.exception(event, true);
+});

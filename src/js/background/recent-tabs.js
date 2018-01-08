@@ -264,7 +264,14 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 						return tab;
 					});
 
-					return tabs.concat(closedTabs);
+						// only show the closed tabs if we also have some recent
+						// tabs, so that the user doesn't see just closed tabs
+						// on a new install
+					if (data.tabIDs.length) {
+						tabs = tabs.concat(closedTabs);
+					}
+
+					return tabs;
 				});
 		});
 	}
@@ -284,7 +291,7 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 						newTabsByID = {},
 						newTabIDs = [],
 						newTabsCount = [].concat(data.newTabsCount,
-							{ l: freshTabs.length, d: Date.now() });
+							{ l: freshTabs.length, d: Date.now() }).slice(-5);
 
 						// create a dictionary of the new tabs by URL
 					freshTabs.forEach(function(tab) {

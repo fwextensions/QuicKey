@@ -39,7 +39,6 @@ define("popup/app", [
 		VeryRecentBoost = .15,
 		RecentBoost = .1,
 		ClosedPenalty = .98,
-		WhitespacePattern = /\s/g,
 		BookmarksQuery = "/b ",
 		HistoryQuery = "/h ",
 		BQuery = "/b",
@@ -172,8 +171,7 @@ define("popup/app", [
 				return this.recents;
 			}
 
-					// remove spaces from the query before scoring the items
-			var scores = scoreItems(this[this.mode], query.replace(WhitespacePattern, "")),
+			var scores = scoreItems(this[this.mode], query),
 				firstScoresDiff = (scores.length > 1 && scores[0].score > MinScore) ?
 					(scores[0].score - scores[1].score) : 0;
 					// drop barely-matching results, keeping a minimum of 3,
@@ -269,20 +267,22 @@ define("popup/app", [
 						index = activeTab.index;
 					}
 
-					cp.tabs.move(tab.id, {
+					return cp.tabs.move(tab.id, {
 						windowId: activeTab.windowId,
 						index: index
 					})
-						.then(function(movedTab) {
-								// use the movedTab from this callback, since
-								// the tab reference we had to it from before is
-								// likely stale.  we also have to call addURLs()
-								// on this new tab reference so it gets the
-								// unsuspendURL added to it if necessary, so that
-								// unsuspending it will work.
-							addURLs(movedTab);
-							self.focusTab(movedTab, unsuspend);
-						});
+				})
+				.then(function(movedTab) {
+						// use the movedTab from this callback, since
+						// the tab reference we had to it from before is
+						// likely stale.  we also have to call addURLs()
+						// on this new tab reference so it gets the
+						// unsuspendURL added to it if necessary, so that
+						// unsuspending it will work.
+					addURLs(movedTab);
+					self.focusTab(movedTab, unsuspend);
+					self.props.tracker.event(self.state.query.length ? "tabs" : "recents",
+						"move-" + (direction ? "right" : "left"));
 				});
 		},
 
@@ -305,12 +305,15 @@ define("popup/app", [
 				} else if (shiftKey) {
 						// open in a new window
 					chrome.windows.create({ url: item.url });
+					this.props.tracker.event(this.mode, "open-new-win");
 				} else if (altKey) {
 						// open in a new tab
 					chrome.tabs.create({ url: item.url });
+					this.props.tracker.event(this.mode, "open-new-tab");
 				} else {
 						// open in the same tab
 					chrome.tabs.update({ url: item.url });
+					this.props.tracker.event(this.mode, "open");
 				}
 
 					// we seem to have to close the window in a timeout so that
@@ -353,10 +356,12 @@ define("popup/app", [
 			originalQuery,
 			query)
 		{
+			var queryToMatch = query || originalQuery;
+
 			this.setState({
-				matchingItems: this.getMatchingItems(query || originalQuery),
+				matchingItems: this.getMatchingItems(queryToMatch),
 				query: originalQuery,
-				selected: query ? 0 : -1
+				selected: queryToMatch ? 0 : -1
 			});
 		},
 
@@ -491,6 +496,7 @@ define("popup/app", [
 				}
 
 				this.gotModifierUp = true;
+				this.gotMRUKey = false;
 			}
 		},
 

@@ -1,15 +1,11 @@
 define(function() {
-	window.ga = window.ga || function() { (ga.q = ga.q || []).push(arguments) };
-	ga.l = +new Date;
-
-//	ga("create", "UA-108153491-3", "auto");
-//	ga("set", "checkProtocolTask", null);
-//	ga("set", "page", "/background");
-//	ga("send", "pageview");
-
 	const Defaults = {
 			name: "tracker"
 		};
+
+
+	window.ga = window.ga || function() { (ga.q = ga.q || []).push(arguments) };
+	ga.l = +new Date;
 
 
 	function Tracker(
@@ -93,6 +89,19 @@ define(function() {
 			value)
 		{
 			this.send("timing", category, name, Math.round(value));
+		},
+
+
+		exception: function(
+			error,
+			fatal)
+		{
+			var description = [error.message, error.filename, error.lineno].join("\n");
+
+			this.send("exception", {
+				exDescription: description,
+				exFatal: fatal
+			});
 		}
 	});
 
