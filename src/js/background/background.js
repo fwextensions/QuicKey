@@ -139,8 +139,12 @@ require([
 	cp.management.getSelf()
 		.then(function(info) {
 			if (info.installType == "development") {
-				backgroundTracker.set("campaignSource", "dev");
-				popupTracker.set("campaignSource", "dev");
+				backgroundTracker.set("campaignName", "dev");
+				backgroundTracker.set("campaignSource", "ext");
+				backgroundTracker.set("campaignMedium", "ext");
+				popupTracker.set("campaignName", "dev");
+				popupTracker.set("campaignSource", "ext");
+				popupTracker.set("campaignMedium", "ext");
 			}
 
 				// setting appVersion: info.version seems to cause realtime

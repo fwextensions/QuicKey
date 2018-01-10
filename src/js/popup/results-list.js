@@ -82,6 +82,7 @@ define([
 			>
 				<ReactVirtualized.List
 					className="results-list"
+					tabIndex={-1}
 					width={Width}
 					height={height}
 					rowCount={itemCount}
