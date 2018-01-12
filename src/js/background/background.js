@@ -2,10 +2,12 @@
 	// previous tab
 const MaxPopupLifetime = 450,
 	WindowActivatedTimer = 500,
+	RestartDelay = 10 * 1000,
 	TrackerID = "UA-108153491-3";
 
 
-var gStartingUp = false;
+var gStartingUp = false,
+	gPopupIsOpen = false;
 
 
 chrome.runtime.onStartup.addListener(function() {
@@ -52,6 +54,21 @@ console.log("=== onActivated");
 
 
 	chrome.tabs.onActivated.addListener(onActivated);
+});
+
+
+chrome.runtime.onUpdateAvailable.addListener(function(details) {
+	function restartExtension()
+	{
+		if (!gPopupIsOpen) {
+			chrome.runtime.reload();
+		} else {
+			setTimeout(restartExtension, RestartDelay);
+		}
+	}
+
+
+	restartExtension();
 });
 
 
@@ -114,7 +131,11 @@ require([
 	chrome.runtime.onConnect.addListener(function(port) {
 		const connectTime = Date.now();
 
+		gPopupIsOpen = true;
+
 		port.onDisconnect.addListener(function() {
+			gPopupIsOpen = false;
+
 			if (Date.now() - connectTime < MaxPopupLifetime) {
 					// pass true so toggleTab() knows this toggle is coming from
 					// a double press of the shortcut

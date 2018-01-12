@@ -97,7 +97,13 @@ define(function() {
 			error,
 			fatal)
 		{
-			var description = error.error.stack.replace(PathPattern, "");
+			var description;
+
+			if (error.error) {
+				description = error.error.stack.replace(PathPattern, "");
+			} else {
+				description = [error.message, error.lineno + ": " + error.filename].join("\n");
+			}
 
 			this.send("exception", {
 				exDescription: description,

@@ -3,7 +3,7 @@ define([
 	"background/storage"
 ], function(
 	cp,
-	storage
+	createStorage
 ) {
 	const MaxTabsLength = 50,
 		MaxSwitchDelay = 750,
@@ -30,10 +30,35 @@ define([
 				"19": "img/icon-19-inverted.png",
 				"38": "img/icon-38-inverted.png"
 			}
-		};
+		},
+		StorageVersion = 2;
 
 
-	var shortcutTimer = null;
+	var shortcutTimer = null,
+		storage = createStorage(StorageVersion,
+			function() {
+				return cp.tabs.query({ active: true, currentWindow: true, windowType: "normal" })
+					.then(function(tabs) {
+						var data = {
+								version: StorageVersion,
+								tabIDs: [],
+								tabsByID: {},
+								previousTabIndex: -1,
+								switchFromShortcut: false,
+								lastShortcutTime: 0,
+								newTabsCount: []
+							},
+							tab = tabs && tabs[0];
+
+						if (tab) {
+							data.tabIDs.push(tab.id);
+							data.tabsByID[tab.id] = tab;
+						}
+
+						return data;
+					});
+			}
+		);
 
 
 	function removeItem(
@@ -133,7 +158,7 @@ define([
 				lastTab,
 				lastTabVisit;
 
-console.log("add", tab.id, tab.title);
+console.log("add", tab.id, tab.title.slice(0, 50));
 
 			if (data.switchFromShortcut) {
 				return { switchFromShortcut: false };
@@ -284,6 +309,7 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 		return storage.set(function(data) {
 			return cp.tabs.query({})
 				.then(function(freshTabs) {
+console.log("=== updateAll", data, freshTabs);
 					var freshTabsByURL = {},
 						tabIDs = data.tabIDs,
 						tabsByID = data.tabsByID,
@@ -320,12 +346,21 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 						}
 					});
 
-					return {
+					var result = {
 						tabIDs: newTabIDs,
 						tabsByID: newTabsByID,
-// TODO: remove newTabsCount when we've verified this works
 						newTabsCount: newTabsCount
 					};
+console.log("updateAll result", result);
+
+					return result;
+
+//					return {
+//						tabIDs: newTabIDs,
+//						tabsByID: newTabsByID,
+//// TODO: remove newTabsCount when we've verified this works
+//						newTabsCount: newTabsCount
+//					};
 				});
 		}, "updateAll");
 	}
