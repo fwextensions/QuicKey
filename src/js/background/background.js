@@ -1,13 +1,32 @@
 	// if the popup is opened and closed within this time, switch to the
 	// previous tab
 const MaxPopupLifetime = 450,
-	WindowActivatedTimer = 500,
+	WindowActivatedDelay = 500,
+	MinTabDwellTime = 750,
 	RestartDelay = 10 * 1000,
 	TrackerID = "UA-108153491-3";
 
 
-var gStartingUp = false,
-	gPopupIsOpen = false;
+var gStartingUp = false;
+
+
+function debounce(
+	func,
+	wait)
+{
+	var timeout;
+
+	return function() {
+		var context = this,
+			args = arguments;
+
+		clearTimeout(timeout);
+		timeout = setTimeout(function() {
+			timeout = null;
+			func.apply(context, args);
+		}, wait);
+	};
+}
 
 
 chrome.runtime.onStartup.addListener(function() {
@@ -49,26 +68,11 @@ console.log("=== onActivated");
 
 			// set a timer to debounce this event, since if many windows are open,
 			// this will get called once for each active tab in each window on startup
-		timer = setTimeout(onLastActivated, WindowActivatedTimer);
+		timer = setTimeout(onLastActivated, WindowActivatedDelay);
 	}
 
 
 	chrome.tabs.onActivated.addListener(onActivated);
-});
-
-
-chrome.runtime.onUpdateAvailable.addListener(function(details) {
-	function restartExtension()
-	{
-		if (!gPopupIsOpen) {
-			chrome.runtime.reload();
-		} else {
-			setTimeout(restartExtension, RestartDelay);
-		}
-	}
-
-
-	restartExtension();
 });
 
 
@@ -82,13 +86,29 @@ require([
 	cp
 ) {
 	var backgroundTracker,
-		popupTracker;
+		popupTracker,
+		popupIsOpen = false,
+		addFromToggle = false;
+
+
+	function addTab(
+		event)
+	{
+		return cp.tabs.get(event.tabId)
+			.then(recentTabs.add);
+	}
+
+	const debouncedAddTab = debounce(addTab, MinTabDwellTime);
 
 
 	chrome.tabs.onActivated.addListener(function(event) {
 		if (!gStartingUp) {
-			return cp.tabs.get(event.tabId)
-				.then(recentTabs.add);
+			if (addFromToggle) {
+				addFromToggle = false;
+				addTab(event);
+			} else {
+				debouncedAddTab(event);
+			}
 		}
 	});
 
@@ -104,13 +124,11 @@ require([
 		// windows, so get the active tab in this window and store it
 	chrome.windows.onFocusChanged.addListener(function(windowID) {
 		if (!gStartingUp && windowID != chrome.windows.WINDOW_ID_NONE) {
+// TODO: debounce this?
 			cp.tabs.query({ active: true, windowId: windowID })
 				.then(function(tabs) {
 					if (tabs.length) {
-							// pass true to let addTab() know that this change
-							// is from alt-tabbing between windows, not switching
-							// tabs within a window
-						recentTabs.add(tabs[0], true);
+						recentTabs.add(tabs[0]);
 					}
 				});
 		}
@@ -131,14 +149,19 @@ require([
 	chrome.runtime.onConnect.addListener(function(port) {
 		const connectTime = Date.now();
 
-		gPopupIsOpen = true;
+		popupIsOpen = true;
 
 		port.onDisconnect.addListener(function() {
-			gPopupIsOpen = false;
+			popupIsOpen = false;
 
 			if (Date.now() - connectTime < MaxPopupLifetime) {
 					// pass true so toggleTab() knows this toggle is coming from
-					// a double press of the shortcut
+					// a double press of the shortcut.  set addFromToggle so that
+					// the onActivated listener calls add immediately instead of
+					// debouncing it.  otherwise, quickly repeated double presses
+					// would be ignored because the tab list wouldn't have been
+					// updated yet.
+				addFromToggle = true;
 				recentTabs.toggleTab(-1, true);
 				backgroundTracker.event("recents", "toggle");
 			} else {
@@ -147,6 +170,23 @@ require([
 				backgroundTracker.pageview();
 			}
 		});
+	});
+
+
+	chrome.runtime.onUpdateAvailable.addListener(function(details) {
+		function restartExtension()
+		{
+			if (!popupIsOpen) {
+console.log("=== reloading");
+				chrome.runtime.reload();
+			} else {
+				setTimeout(restartExtension, RestartDelay);
+			}
+		}
+
+		console.log("onUpdateAvailable", details);
+
+		restartExtension();
 	});
 
 
@@ -188,9 +228,8 @@ require([
 	window.addEventListener("error", function(event) {
 		backgroundTracker.exception(event, true);
 	});
+
+	window.log = function() {
+		console.log.apply(console, arguments);
+	};
 });
-
-
-window.log = function() {
-	console.log.apply(console, arguments);
-};

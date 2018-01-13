@@ -7,7 +7,6 @@ define([
 ) {
 	const MaxTabsLength = 50,
 		MaxSwitchDelay = 750,
-		MinDwellTime = 750,
 		MaxVisitCount = 3,
 		TabKeysHash = {
 			favIconUrl: 1,
@@ -142,8 +141,7 @@ define([
 
 
 	function add(
-		tab,
-		fromFocusChange)
+		tab)
 	{
 		if (!tab) {
 			return;
@@ -155,10 +153,7 @@ define([
 				tabsByID = data.tabsByID,
 				tabData,
 				lastID,
-				lastTab,
-				lastTabVisit;
-
-console.log("add", tab.id, tab.title.slice(0, 50));
+				lastTab;
 
 			if (data.switchFromShortcut) {
 				return { switchFromShortcut: false };
@@ -180,34 +175,7 @@ console.log("add", tab.id, tab.title.slice(0, 50));
 				};
 			}
 
-			if (!fromFocusChange && lastTab && tabIDs.length > 2 &&
-					(Date.now() - last(lastTab.visits) < MinDwellTime)) {
-					// the previously active tab wasn't active for very long,
-					// so remove its last visit time
-				lastTab.visits.pop();
-				tabIDs.pop();
-
-				if (!lastTab.visits.length) {
-						// this tab doesn't have any recent visits, so forget it
-					delete tabsByID[lastID];
-				} else {
-						// reinsert the tab based on its previous visit time
-					lastTabVisit = last(lastTab.visits);
-
-					for (var i = tabIDs.length - 1; i >= 0; i--) {
-						if (lastTabVisit > last(tabsByID[tabIDs[i]].visits)) {
-							tabIDs.splice(i + 1, 0, lastID);
-							break;
-						}
-					}
-
-					if (i == 0 && tabIDs[0] != lastID) {
-							// stick lastTab at the beginning of the array if
-							// its last visit is older than all the other tabs
-						tabIDs.splice(0, 0, lastID);
-					}
-				}
-			}
+console.log("add", tab.id, tab.title.slice(0, 50));
 
 				// make sure the new tab's ID isn't currently in the list and
 				// then push it on the end
@@ -422,6 +390,7 @@ console.log("toggleTab previousTabIndex", newData.lastShortcutTabID, previousTab
 			}
 		}, "toggleTab")
 			.then(function(data) {
+// TODO: does this still need to be in a then?  might not need to return the full data arg
 				if (data && data.previousTabIndex > -1 && data.lastShortcutTabID) {
 					var previousTabID = data.lastShortcutTabID,
 						previousWindowID = data.tabsByID[previousTabID].windowId;
