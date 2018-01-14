@@ -85,17 +85,38 @@ require([
 	Tracker,
 	cp
 ) {
-	var backgroundTracker,
-		popupTracker,
-		popupIsOpen = false,
-		addFromToggle = false;
+	var popupIsOpen = false,
+		addFromToggle = false,
+		lastWindowID,
+		backgroundTracker,
+		popupTracker;
+
+
+	function onTabChanged(
+		event)
+	{
+		if (addFromToggle) {
+				// when we're toggling between tabs, we want to add the tab
+				// immediately because the user chose it, as opposed to
+				// ctrl-tabbing past it
+			addFromToggle = false;
+			addTab(event);
+		} else {
+			debouncedAddTab(event);
+		}
+	}
 
 
 	function addTab(
-		tabID)
+		data)
 	{
-		return cp.tabs.get(tabID)
-			.then(recentTabs.add);
+		if (data.tabId) {
+			return cp.tabs.get(data.tabId)
+				.then(recentTabs.add);
+		} else {
+				// the event parameter is just the tab itself, so add it directly
+			return recentTabs.add(data);
+		}
 	}
 
 	const debouncedAddTab = debounce(addTab, MinTabDwellTime);
@@ -103,19 +124,14 @@ require([
 
 	chrome.tabs.onActivated.addListener(function(event) {
 		if (!gStartingUp) {
-			if (addFromToggle) {
-				addFromToggle = false;
-				addTab(event.tabId);
-			} else {
-				debouncedAddTab(event.tabId);
-			}
+			onTabChanged(event);
 		}
 	});
 
 
-	chrome.tabs.onRemoved.addListener(function(tabID, removeInfo) {
+	chrome.tabs.onRemoved.addListener(function(tabId, removeInfo) {
 		if (!gStartingUp) {
-			recentTabs.remove(tabID, removeInfo);
+			recentTabs.remove(tabId, removeInfo);
 		}
 	});
 
@@ -123,16 +139,16 @@ require([
 		// the onActivated event isn't fired when the user switches between
 		// windows, so get the active tab in this window and store it
 	chrome.windows.onFocusChanged.addListener(function(windowID) {
-		if (!gStartingUp && windowID != chrome.windows.WINDOW_ID_NONE) {
+			// check this event's windowID against the last one we saw and
+			// ignore the event if it's the same.  that happens when the popup
+			// opens and no tab is selected or the user's double-pressing.
+		if (!gStartingUp && windowID != chrome.windows.WINDOW_ID_NONE &&
+				windowID != lastWindowID) {
+			lastWindowID = windowID;
 			cp.tabs.query({ active: true, windowId: windowID })
 				.then(function(tabs) {
 					if (tabs.length) {
-						if (addFromToggle) {
-							addFromToggle = false;
-							addTab(tabs[0].id);
-						} else {
-							debouncedAddTab(tabs[0].id);
-						}
+						onTabChanged(tabs[0]);
 					}
 				});
 		}
@@ -230,7 +246,6 @@ console.log("=== reloading");
 		});
 
 	window.addEventListener("error", function(event) {
-console.error("error", event);
 		backgroundTracker.exception(event, true);
 	});
 
