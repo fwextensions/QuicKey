@@ -1,7 +1,9 @@
 define([
-	"lib/chrome-promise"
+	"lib/chrome-promise",
+	"bluebird"
 ], function(
-	ChromePromise
+	ChromePromise,
+	Promise
 ) {
-	return new ChromePromise();
+	return new ChromePromise({ Promise: Promise });
 });

@@ -8,7 +8,8 @@ require.config({
 		JSXTransformer: "lib/JSXTransformer",
 		"react-virtualized": "lib/react-virtualized",
 		lodash: "lib/lodash",
-		cp: "lib/cp"
+		cp: "lib/cp",
+		bluebird: "lib/bluebird.min"
 	},
 	map: {
 		"react-virtualized": {

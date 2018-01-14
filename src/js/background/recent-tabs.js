@@ -1,7 +1,9 @@
 define([
+	"bluebird",
 	"cp",
 	"background/storage"
 ], function(
+	Promise,
 	cp,
 	createStorage
 ) {
@@ -235,10 +237,8 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 					cp.tabs.query({}),
 					cp.sessions.getRecentlyClosed()
 				])
-				.then(function(results) {
-					var freshTabs = results[0],
- 						closedTabs = results[1],
-						tabsByID = data.tabsByID,
+				.spread(function(freshTabs, closedTabs) {
+					var tabsByID = data.tabsByID,
 						tabs;
 
 						// update the fresh tabs with any recent data we have
