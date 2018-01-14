@@ -92,8 +92,8 @@ define("popup/app", [
 						if (tab.sessionId) {
 								// penalize matching closed tabs
 							tab.recentBoost = ClosedPenalty;
-						} else if (tab.visits.length) {
-							age = now - tab.visits[tab.visits.length - 1];
+						} else if (tab.lastVisit) {
+							age = now - tab.lastVisit;
 
 							if (age < VeryRecentMS) {
 								tab.recentBoost = 1 + VeryRecentBoost;
@@ -122,12 +122,12 @@ define("popup/app", [
 						// filter out just recent and closed tabs that we
 						// have a last visit time for
 					this.recents = tabs
-						.filter(function(tab) { return tab.visits.length })
+						.filter(function(tab) { return tab.lastVisit })
 						.sort(function(a, b) {
 								// sort open tabs before closed ones, and
 								// newer before old
 							if ((a.sessionId && b.sessionId) || (!a.sessionId && !b.sessionId)) {
-								return b.visits[b.visits.length - 1] - a.visits[a.visits.length - 1];
+								return b.lastVisit - a.lastVisit;
 							} else if (a.sessionId) {
 								return 1;
 							} else {

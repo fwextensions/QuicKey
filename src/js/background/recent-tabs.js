@@ -93,7 +93,8 @@ define([
 				return obj;
 			}, {});
 
-		recent.visits = (oldTab && oldTab.visits) || [];
+		recent.lastVisit = (oldTab && (oldTab.lastVisit ||
+			(oldTab.visits && oldTab.visits.length && oldTab.visits.slice(-1)[0]))) || 0;
 
 		return recent;
 	}
@@ -102,8 +103,7 @@ define([
 	function addVisit(
 		tab)
 	{
-		tab.visits.push(Date.now());
-		tab.visits = tab.visits.slice(-MaxVisitCount);
+		tab.lastVisit = Date.now();
 	}
 
 
@@ -251,7 +251,7 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 							tab = createRecent(tabFromSession);
 
 							// session lastModified times are in Unix epoch
-						tab.visits = [session.lastModified * 1000];
+						tab.lastVisit = session.lastModified * 1000;
 						tab.sessionId = tabFromSession.sessionId;
 
 						return tab;

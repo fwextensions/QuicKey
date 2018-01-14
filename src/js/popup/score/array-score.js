@@ -22,8 +22,8 @@ define(function() {
 			b)
 		{
 			if (a.score == b.score) {
-				if (a.visits && b.visits) {
-					return b.visits[b.visits.length - 1] - a.visits[a.visits.length - 1];
+				if (a.lastVisit && b.lastVisit) {
+					return b.lastVisit - a.lastVisit;
 				} else {
 					return a[defaultKeyName].toLocaleLowerCase() < b[defaultKeyName].toLocaleLowerCase() ? -1 : 1;
 				}
