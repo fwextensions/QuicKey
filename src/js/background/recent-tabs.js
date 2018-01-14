@@ -338,7 +338,7 @@ console.log("updateAll result", result);
 		direction,
 		fromDoublePress)
 	{
-		storage.set(function(data) {
+		return storage.set(function(data) {
 			var tabIDs = data.tabIDs,
 				tabIDCount = tabIDs.length,
 				maxIndex = tabIDCount - 1,
@@ -369,6 +369,7 @@ console.log("updateAll result", result);
 						now - data.lastShortcutTime < MaxSwitchDelay) {
 					if (data.previousTabIndex > -1) {
 						if (direction == -1) {
+								// when going backwards, wrap around if necessary
 							previousTabIndex = (data.previousTabIndex - 1 + tabIDCount) % tabIDCount;
 						} else {
 								// don't let the user go past the most recently
@@ -376,25 +377,15 @@ console.log("updateAll result", result);
 							previousTabIndex = Math.min(data.previousTabIndex + 1, maxIndex);
 						}
 					}
-//console.log("==== previous", previousTabIndex);
 				}
 
 				newData.previousTabIndex = previousTabIndex;
-				newData.lastShortcutTabID = data.tabIDs[previousTabIndex];
+				newData.lastShortcutTabID = tabIDs[previousTabIndex];
 console.log("toggleTab previousTabIndex", newData.lastShortcutTabID, previousTabIndex, data.tabsByID[newData.lastShortcutTabID ].title);
 
-				Object.assign(data, newData);
-
-// TODO: always return data to force prev index to -1 if there aren't enough tabs?
-				return data;
-			}
-		}, "toggleTab")
-			.then(function(data) {
-// TODO: does this still need to be in a then?  might not need to return the full data arg
-				if (data && data.previousTabIndex > -1 && data.lastShortcutTabID) {
-					var previousTabID = data.lastShortcutTabID,
+				if (previousTabIndex > -1 && newData.lastShortcutTabID) {
+					var previousTabID = newData.lastShortcutTabID,
 						previousWindowID = data.tabsByID[previousTabID].windowId;
-//console.log("toggleTab then previousTabID", previousTabID, data.previousTabIndex);
 
 						// we only want to start the timer if the user triggered
 						// us with the previous/next-tab shortcut, not double-
@@ -410,7 +401,10 @@ console.log("toggleTab previousTabIndex", newData.lastShortcutTabID, previousTab
 						chrome.windows.update(previousWindowID, { focused: true });
 					}
 				}
-			});
+			}
+
+			return newData;
+		}, "toggleTab");
 	}
 
 

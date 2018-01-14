@@ -92,9 +92,9 @@ require([
 
 
 	function addTab(
-		event)
+		tabID)
 	{
-		return cp.tabs.get(event.tabId)
+		return cp.tabs.get(tabID)
 			.then(recentTabs.add);
 	}
 
@@ -105,9 +105,9 @@ require([
 		if (!gStartingUp) {
 			if (addFromToggle) {
 				addFromToggle = false;
-				addTab(event);
+				addTab(event.tabId);
 			} else {
-				debouncedAddTab(event);
+				debouncedAddTab(event.tabId);
 			}
 		}
 	});
@@ -124,11 +124,15 @@ require([
 		// windows, so get the active tab in this window and store it
 	chrome.windows.onFocusChanged.addListener(function(windowID) {
 		if (!gStartingUp && windowID != chrome.windows.WINDOW_ID_NONE) {
-// TODO: debounce this?
 			cp.tabs.query({ active: true, windowId: windowID })
 				.then(function(tabs) {
 					if (tabs.length) {
-						recentTabs.add(tabs[0]);
+						if (addFromToggle) {
+							addFromToggle = false;
+							addTab(tabs[0].id);
+						} else {
+							debouncedAddTab(tabs[0].id);
+						}
 					}
 				});
 		}
@@ -226,6 +230,7 @@ console.log("=== reloading");
 		});
 
 	window.addEventListener("error", function(event) {
+console.error("error", event);
 		backgroundTracker.exception(event, true);
 	});
 

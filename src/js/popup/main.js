@@ -33,7 +33,7 @@ require([
 		setTimeout(function() {
 			tracker.pageview();
 			tracker.timing("loading", "popup", now);
-		}, 600);
+		}, 750);
 	}
 
 	if (gClose) {
