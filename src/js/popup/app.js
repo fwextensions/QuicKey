@@ -81,6 +81,7 @@ define("popup/app", [
 		componentWillMount: function()
 		{
 			recentTabs.getAll()
+				.bind(this)
 				.then(function(tabs) {
 					var now = Date.now();
 
@@ -115,7 +116,7 @@ define("popup/app", [
 								return tabs;
 							});
 					}, "tabs", "");
-				}.bind(this))
+				})
 				.then(function(tabs) {
 					var initialShortcuts = this.props.initialShortcuts;
 
@@ -151,7 +152,7 @@ define("popup/app", [
 							}
 						}, this);
 					}
-				}.bind(this));
+				});
 		},
 
 

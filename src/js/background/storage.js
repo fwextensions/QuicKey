@@ -1,7 +1,9 @@
 define([
+	"bluebird",
 	"cp",
 	"background/mutex"
 ], function(
+	Promise,
 	cp,
 	Mutex
 ) {
@@ -15,7 +17,7 @@ define([
 		latestVersion,
 		defaultDataCreator)
 	{
-		const storageMutex = new Mutex();
+		const storageMutex = new Mutex(Promise);
 
 		var version = latestVersion,
 			getDefaultData = typeof defaultDataCreator == "function" ?

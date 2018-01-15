@@ -219,21 +219,16 @@ console.log("=== reloading");
 
 	cp.management.getSelf()
 		.then(function(info) {
-			if (info.installType == "development") {
-				backgroundTracker.set("campaignName", "dev");
-				backgroundTracker.set("campaignSource", "ext");
-				backgroundTracker.set("campaignMedium", "ext");
-				popupTracker.set("campaignName", "dev");
-				popupTracker.set("campaignSource", "ext");
-				popupTracker.set("campaignMedium", "ext");
-			}
+			var installType = info.installType == "development" ? "D" : "P";
 
 				// setting appVersion: info.version seems to cause realtime
 				// events to not appear on the GA site
 			backgroundTracker.set({
 				location: "/background.html",
 				page: "/background",
-				transport: "beacon"
+				transport: "beacon",
+				"dimension1": info.version,
+				"dimension2": installType
 			});
 			backgroundTracker.pageview();
 			backgroundTracker.timing("loading", "background", performance.now());
@@ -241,7 +236,9 @@ console.log("=== reloading");
 			popupTracker.set({
 				location: "/popup.html",
 				page: "/popup",
-				transport: "beacon"
+				transport: "beacon",
+				"dimension1": info.version,
+				"dimension2": installType
 			});
 		});
 
