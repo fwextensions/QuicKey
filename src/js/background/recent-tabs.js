@@ -41,7 +41,6 @@ define([
 				return cp.tabs.query({ active: true, currentWindow: true, windowType: "normal" })
 					.then(function(tabs) {
 						var data = {
-								version: StorageVersion,
 								tabIDs: [],
 								tabsByID: {},
 								previousTabIndex: -1,
@@ -311,6 +310,8 @@ console.log("=== updateAll", data, freshTabs);
 							newTabsByID[newTab.id] = newTab;
 							newTabIDs.push(newTab.id);
 							delete freshTabsByURL[oldTab.url];
+						} else {
+console.log("=== missing", oldTab.lastVisit, oldTab.url);
 						}
 					});
 

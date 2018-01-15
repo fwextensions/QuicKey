@@ -13,13 +13,13 @@ define([
 
 	return function createStorage(
 		latestVersion,
-		defaultDataPromise)
+		defaultDataCreator)
 	{
 		const storageMutex = new Mutex();
 
 		var version = latestVersion,
-			getDefaultData = typeof defaultDataPromise == "function" ?
-				defaultDataPromise : emptyDefaultData,
+			getDefaultData = typeof defaultDataCreator == "function" ?
+				defaultDataCreator : emptyDefaultData,
 			dataPromise = getAll();
 
 
@@ -27,37 +27,53 @@ define([
 		{
 				// pass null to get everything in storage
 			return cp.storage.local.get(null)
-				.then(function(data) {
+				.then(function(storage) {
 						// if latestVersion wasn't passed in to the createStorage()
 						// call, default to the version stored in the data to make
 						// it easier to do createStorage().get() in the console
-					version = version || data.version;
+					version = version || storage.version;
 
-					if (!data.version || data.version != version) {
+					if (!storage.data) {
+						delete storage.version;
+
+							// we have to clear the storage to get rid of the
+							// existing top-level keys, then save the existing
+							// data and version
+						return cp.storage.local.clear()
+							.then(function() {
+								return saveStorage(storage);
+							});
+					} else if (!storage.version || storage.version != version) {
 							// this is likely a new install, so get the default storage
 							// data, then make sure to save it, because the recentTabs
 							// handler probably won't return the full set of data. in
 							// that case, the default storage would never get saved,
 							// so we'd get the default storage on every call.
-						return getDefaultData().then(save);
+						return getDefaultData().then(saveStorage);
 					} else {
-						return data;
+						return storage.data;
 					}
 				});
 		}
 
 
-		function save(
-			data,
-			event)
+		function saveStorage(
+			data)
 		{
-			return cp.storage.local.set(data)
-				.then(function() {
-//console.log("SAVED", event, data);
-						// local.set() doesn't return the data, so we need a then
-						// to return it
-					return data;
-				});
+			return cp.storage.local.set({
+				version: version,
+				data: data
+			})
+				.return(data);
+		}
+
+
+
+		function save(
+			data)
+		{
+			return cp.storage.local.set({ data: data })
+				.return(save);
 		}
 
 
@@ -75,7 +91,7 @@ define([
 										// update the promised data from storage
 									Object.assign(data, newData);
 
-									return save(data, event);
+									return save(data);
 								} else {
 									return newData;
 								}
@@ -105,7 +121,7 @@ define([
 		{
 			return storageMutex.lock(function() {
 				return getDefaultData()
-					.then(save);
+					.then(saveStorage);
 			});
 		}
 
