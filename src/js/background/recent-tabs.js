@@ -9,7 +9,6 @@ define([
 ) {
 	const MaxTabsLength = 50,
 		MaxSwitchDelay = 750,
-		MaxVisitCount = 3,
 		TabKeysHash = {
 			favIconUrl: 1,
 			id: 1,

@@ -35,7 +35,10 @@ define([
 						// it easier to do createStorage().get() in the console
 					version = version || storage.version;
 
-					if (!storage.data) {
+						// if this is older storage, make sure there's a version.
+						// otherwise, we'd save empty data in a brand new install
+						// instead of getting the default data.
+					if (!storage.data && storage.version == latestVersion) {
 						delete storage.version;
 
 							// we have to clear the storage to get rid of the
