@@ -152,6 +152,8 @@ define("popup/app", [
 							}
 						}, this);
 					}
+
+					this.props.tracker.set("metric1", tabs.count);
 				});
 		},
 
