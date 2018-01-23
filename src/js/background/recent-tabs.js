@@ -1,11 +1,13 @@
 define([
 	"bluebird",
 	"cp",
-	"background/storage"
+	"background/storage",
+	"popup/data/add-urls"
 ], function(
 	Promise,
 	cp,
-	createStorage
+	createStorage,
+	addURL
 ) {
 	const MaxTabsLength = 50,
 		MaxSwitchDelay = 750,
@@ -286,10 +288,16 @@ console.log("=== updateAll", data, freshTabs);
 						newTabIDs = [],
 						newTabsCount = [].concat(data.newTabsCount,
 							{ l: freshTabs.length, d: Date.now() }).slice(-5);
+console.log("=== existing tabs", tabIDs.length, Object.keys(tabsByID).length, "fresh", freshTabs.length);
 
-						// create a dictionary of the new tabs by URL
+						// create a dictionary of the new tabs by the URL and
+						// unsuspendURL, if any, so that a recent that had been
+						// saved unsuspended and then was later suspended could
+						// match up with the fresh, suspended tab
 					freshTabs.forEach(function(tab) {
+						addURL(tab);
 						freshTabsByURL[tab.url] = tab;
+						tab.unsuspendURL && (freshTabsByURL[tab.unsuspendURL] = tab);
 					});
 
 						// we need to loop on tabIDs instead of just building a
@@ -313,6 +321,7 @@ console.log("=== updateAll", data, freshTabs);
 console.log("=== missing", oldTab.lastVisit, oldTab.url);
 						}
 					});
+console.log("=== newTabIDs", newTabIDs.length);
 
 					var result = {
 						tabIDs: newTabIDs,
