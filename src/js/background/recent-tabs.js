@@ -2,11 +2,13 @@ define([
 	"bluebird",
 	"cp",
 	"background/storage",
+	"background/page-trackers",
 	"popup/data/add-urls"
 ], function(
 	Promise,
 	cp,
 	createStorage,
+	pageTrackers,
 	addURL
 ) {
 	const MaxTabsLength = 50,
@@ -287,7 +289,9 @@ console.log("=== updateAll", data, freshTabs);
 						newTabsByID = {},
 						newTabIDs = [],
 						newTabsCount = [].concat(data.newTabsCount,
-							{ l: freshTabs.length, d: Date.now() }).slice(-5);
+							{ l: freshTabs.length, d: Date.now() }).slice(-5),
+						missingCount = 0,
+						tracker = pageTrackers.background;
 console.log("=== existing tabs", tabIDs.length, Object.keys(tabsByID).length, "fresh", freshTabs.length);
 
 						// create a dictionary of the new tabs by the URL and
@@ -318,10 +322,15 @@ console.log("=== existing tabs", tabIDs.length, Object.keys(tabsByID).length, "f
 							newTabIDs.push(newTab.id);
 							delete freshTabsByURL[oldTab.url];
 						} else {
+							missingCount++;
 console.log("=== missing", oldTab.lastVisit, oldTab.url);
 						}
 					});
 console.log("=== newTabIDs", newTabIDs.length);
+
+					tracker.event("update", "old-recents", tabIDs.length);
+					tracker.event("update", "new-tabs", freshTabs.length);
+					tracker.event("update", "missing-recents", missingCount);
 
 					var result = {
 						tabIDs: newTabIDs,

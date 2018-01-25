@@ -12,9 +12,15 @@ define(function() {
 	function Tracker(
 		id,
 		fields,
+		setFields,
 		dontSendPageview)
 	{
 		var createFields = Object.assign({}, Defaults, fields);
+
+		if (!setFields || typeof setFields != "object") {
+			dontSendPageview = setFields;
+			setFields = null;
+		}
 
 		this.name = createFields.name;
 		this.nameDotSend = this.name + ".send";
@@ -24,6 +30,10 @@ define(function() {
 
 			// workaround the extension being in a chrome-extension:// protocol
 		this.set("checkProtocolTask", null);
+
+		if (setFields) {
+			this.set(setFields);
+		}
 
 		if (!dontSendPageview) {
 			this.pageview();

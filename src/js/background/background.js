@@ -78,11 +78,11 @@ console.log("=== onActivated");
 
 require([
 	"background/recent-tabs",
-	"background/tracker",
+	"background/page-trackers",
 	"cp"
 ], function(
 	recentTabs,
-	Tracker,
+	pageTrackers,
 	cp
 ) {
 	var popupIsOpen = false,
@@ -210,36 +210,23 @@ console.log("=== reloading");
 	});
 
 
-		// create a separate tracker for the background and popup pages, so the
-		// events get tracked on the right page.  pass true to not do an
-		// automatic pageview on creation.
-	backgroundTracker = new Tracker(TrackerID, { name: "background" }, true);
-	popupTracker = new Tracker(TrackerID, { name: "popup" }, true);
+	backgroundTracker = pageTrackers.background;
+	popupTracker = pageTrackers.popup;
 	window.tracker = popupTracker;
 
 	cp.management.getSelf()
 		.then(function(info) {
-			var installType = info.installType == "development" ? "D" : "P";
+			var installType = (info.installType == "development") ? "D" : "P",
+				dimensions = {
+					"dimension1": info.version,
+					"dimension2": installType
+				};
 
-				// setting appVersion: info.version seems to cause realtime
-				// events to not appear on the GA site
-			backgroundTracker.set({
-				location: "/background.html",
-				page: "/background",
-				transport: "beacon",
-				"dimension1": info.version,
-				"dimension2": installType
-			});
+			backgroundTracker.set(dimensions);
+			popupTracker.set(dimensions);
+
 			backgroundTracker.pageview();
 			backgroundTracker.timing("loading", "background", performance.now());
-
-			popupTracker.set({
-				location: "/popup.html",
-				page: "/popup",
-				transport: "beacon",
-				"dimension1": info.version,
-				"dimension2": installType
-			});
 		});
 
 	window.addEventListener("error", function(event) {
