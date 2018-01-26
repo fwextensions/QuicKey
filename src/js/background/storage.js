@@ -78,7 +78,7 @@ define([
 			data)
 		{
 			return cp.storage.local.set({ data: data })
-				.return(save);
+				.return(data);
 		}
 
 

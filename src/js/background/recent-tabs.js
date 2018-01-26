@@ -245,7 +245,21 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 
 						// update the fresh tabs with any recent data we have
 					tabs = freshTabs.map(function(tab) {
-						return createRecent(tab, tabsByID[tab.id]);
+						const oldTab = tabsByID[tab.id],
+							newTab = createRecent(tab, oldTab);
+
+						if (oldTab) {
+								// point the recent tab at the refreshed tab so
+								// that if the tab's URL had changed since the
+								// last time the user focused it, we'll store
+								// the current URL with the recent data.  that
+								// way, when Chrome restarts and we try to match
+								// the saved recents against the new tabs, we'll
+								// be able to match it by URL.
+							tabsByID[tab.id] = newTab;
+						}
+
+						return newTab;
 					});
 
 					closedTabs = closedTabs.map(function(session) {
@@ -267,6 +281,16 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 					if (data.tabIDs.length > 1) {
 						tabs = tabs.concat(closedTabs);
 					}
+
+						// save off the updated recent data.  we don't call
+						// storage.set() for getAll() so that the popup doesn't
+						// have to wait for the data to get stored before it's
+						// returned, so the recents menu renders faster.
+					storage.set(function() {
+						return {
+							tabsByID: tabsByID
+						};
+					});
 
 					return tabs;
 				});
