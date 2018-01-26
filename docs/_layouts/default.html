@@ -70,7 +70,7 @@
         m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
         })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
-        ga('create', '{{ page.google_analytics | site.google_analytics }}', 'auto');
+        ga('create', '{{ page.google_analytics | default: site.google_analytics }}', 'auto');
         ga('send', 'pageview');
     </script>
   {% endif %}
