@@ -2,8 +2,6 @@
 
 image: img/search-results-open.png
 
-google_analytics: UA-108153491-3
-
 ---
 
 <img src="img/search-results-open.png" style="box-shadow: 0px 5px 30px 4px rgba(0, 0, 0, 0.1);" alt="QuicKey search results">
