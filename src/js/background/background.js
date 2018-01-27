@@ -3,8 +3,7 @@
 const MaxPopupLifetime = 450,
 	WindowActivatedDelay = 500,
 	MinTabDwellTime = 750,
-	RestartDelay = 10 * 1000,
-	TrackerID = "UA-108153491-3";
+	RestartDelay = 10 * 1000;
 
 
 var gStartingUp = false;
@@ -34,13 +33,13 @@ chrome.runtime.onStartup.addListener(function() {
 
 	gStartingUp = true;
 
-console.log("== onStartup");
+DEBUG && console.log("== onStartup");
 
 	function onLastActivated()
 	{
 		chrome.tabs.onActivated.removeListener(onActivated);
 
-console.log("==== last onActivated");
+DEBUG && console.log("==== last onActivated");
 
 		require([
 			"background/recent-tabs"
@@ -52,7 +51,7 @@ console.log("==== last onActivated");
 				// will get new IDs when the app reloads each one
 			return recentTabs.updateAll()
 				.then(function() {
-console.log("===== updateAll done");
+DEBUG && console.log("===== updateAll done");
 
 					gStartingUp = false;
 				});
@@ -64,7 +63,7 @@ console.log("===== updateAll done");
 	{
 		clearTimeout(timer);
 
-console.log("=== onActivated");
+DEBUG && console.log("=== onActivated");
 
 			// set a timer to debounce this event, since if many windows are open,
 			// this will get called once for each active tab in each window on startup
@@ -197,14 +196,14 @@ require([
 		function restartExtension()
 		{
 			if (!popupIsOpen) {
-console.log("=== reloading");
+DEBUG && console.log("=== reloading");
 				chrome.runtime.reload();
 			} else {
 				setTimeout(restartExtension, RestartDelay);
 			}
 		}
 
-		console.log("onUpdateAvailable", details);
+		DEBUG && console.log("onUpdateAvailable", details);
 
 		restartExtension();
 	});
@@ -234,6 +233,6 @@ console.log("=== reloading");
 	});
 
 	window.log = function() {
-		console.log.apply(console, arguments);
+		DEBUG && console.log.apply(console, arguments);
 	};
 });

@@ -179,7 +179,7 @@ define([
 				};
 			}
 
-console.log("add", tab.id, tab.title.slice(0, 50));
+DEBUG && console.log("add", tab.id, tab.title.slice(0, 50));
 
 				// make sure the new tab's ID isn't currently in the list and
 				// then push it on the end
@@ -219,7 +219,7 @@ console.log("add", tab.id, tab.title.slice(0, 50));
 				index = tabIDs.indexOf(tabID);
 
 			if (index > -1) {
-console.log("tab closed", tabID, tabsByID[tabID].title);
+DEBUG && console.log("tab closed", tabID, tabsByID[tabID].title);
 				tabIDs.splice(index, 1);
 				delete tabsByID[tabID];
 
@@ -303,7 +303,7 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 		return storage.set(function(data) {
 			return cp.tabs.query({})
 				.then(function(freshTabs) {
-console.log("=== updateAll", data, freshTabs);
+DEBUG && console.log("=== updateAll", data, freshTabs);
 					var freshTabsByURL = {},
 						tabIDs = data.tabIDs,
 						tabsByID = data.tabsByID,
@@ -316,7 +316,7 @@ console.log("=== updateAll", data, freshTabs);
 							{ l: freshTabs.length, d: Date.now() }).slice(-5),
 						missingCount = 0,
 						tracker = pageTrackers.background;
-console.log("=== existing tabs", tabIDs.length, Object.keys(tabsByID).length, "fresh", freshTabs.length);
+DEBUG && console.log("=== existing tabs", tabIDs.length, Object.keys(tabsByID).length, "fresh", freshTabs.length);
 
 						// create a dictionary of the new tabs by the URL and
 						// unsuspendURL, if any, so that a recent that had been
@@ -347,10 +347,10 @@ console.log("=== existing tabs", tabIDs.length, Object.keys(tabsByID).length, "f
 							delete freshTabsByURL[oldTab.url];
 						} else {
 							missingCount++;
-console.log("=== missing", oldTab.lastVisit, oldTab.url);
+DEBUG && console.log("=== missing", oldTab.lastVisit, oldTab.url);
 						}
 					});
-console.log("=== newTabIDs", newTabIDs.length);
+DEBUG && console.log("=== newTabIDs", newTabIDs.length);
 
 					tracker.event("update", "old-recents", tabIDs.length);
 					tracker.event("update", "new-tabs", freshTabs.length);
@@ -361,7 +361,7 @@ console.log("=== newTabIDs", newTabIDs.length);
 						tabsByID: newTabsByID,
 						newTabsCount: newTabsCount
 					};
-console.log("updateAll result", result);
+DEBUG && console.log("updateAll result", result);
 
 					return result;
 
@@ -423,7 +423,7 @@ console.log("updateAll result", result);
 
 				newData.previousTabIndex = previousTabIndex;
 				newData.lastShortcutTabID = tabIDs[previousTabIndex];
-console.log("toggleTab previousTabIndex", newData.lastShortcutTabID, previousTabIndex, data.tabsByID[newData.lastShortcutTabID ].title);
+DEBUG && console.log("toggleTab previousTabIndex", newData.lastShortcutTabID, previousTabIndex, data.tabsByID[newData.lastShortcutTabID ].title);
 
 				if (previousTabIndex > -1 && newData.lastShortcutTabID) {
 					var previousTabID = newData.lastShortcutTabID,

@@ -15,33 +15,34 @@ require([
 
 	var tracker;
 
-	if (background) {
-		window.log = background.log;
-		tracker = background.tracker;
-	}
-
-	window.addEventListener("error", function(event) {
-		tracker.exception(event, true);
-	});
-
-	console.log("=== startup time", now - gInitTime, now);
-	window.log && log("=== startup time", now - gInitTime, now);
-
-	if (tracker) {
-			// send a pageview event after a delay, in case the user is toggling
-			// to the previous tab, in which case we'll barely be rendered
-		setTimeout(function() {
-			tracker.pageview();
-			tracker.timing("loading", "popup", now);
-		}, 750);
-	}
-
 	if (gClose) {
 			// the user hit esc before we started loading, so just close
 			// the popup
 		window.close();
 
 		return;
+	}
+
+	if (background) {
+		window.log = background.log;
+		tracker = background.tracker;
+	}
+
+	DEBUG && console.log("=== popup startup time", now - gInitTime, now);
+	window.log && log("=== popup startup time", now - gInitTime, now);
+
+	if (tracker) {
+			// send a pageview event after a delay, in case the user is toggling
+			// to the previous tab, in which case we'll barely be rendered, and
+			// so don't want to count a pageview
+		setTimeout(function() {
+			tracker.pageview();
+			tracker.timing("loading", "popup", now);
+		}, 750);
+
+		window.addEventListener("error", function(event) {
+			tracker.exception(event, true);
+		});
 	}
 
 		// clean up the globals
