@@ -145,7 +145,7 @@ Tabs in incognito mode display the incognito icon, so you can distinguish a norm
 
 ## Privacy policy
 
-To function, *QuicKey* needs access to your open tabs, bookmarks and history.  The Chrome permissions dialog says *QuicKey* can also change your bookmarks and browsing history on all signed-in devices, but it never will.  It can't access the page content at all and doesn't transmit any information, other than some anonymized Google Analytics metrics.  The "signed-in devices" permission is needed to be able to restore recently closed sessions with full history.
+To function, *QuicKey* needs access to your open tabs, bookmarks and history.  The Chrome permissions dialog says *QuicKey* can also change your bookmarks and browsing history on all signed-in devices, but it never will.  It can't access the page content at all and doesn't transmit any information, other than some anonymized Google Analytics metrics.  The "signed-in devices" permission is required to restore recently closed tabs with their full history.
 
 
 ## Feedback and bugs

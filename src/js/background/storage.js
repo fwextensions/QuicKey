@@ -73,7 +73,6 @@ define([
 		}
 
 
-
 		function save(
 			data)
 		{
