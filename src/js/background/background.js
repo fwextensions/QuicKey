@@ -35,7 +35,8 @@ chrome.runtime.onStartup.addListener(function() {
 
 DEBUG && console.log("== onStartup");
 
-	function onLastActivated()
+
+	function onActivated()
 	{
 		chrome.tabs.onActivated.removeListener(onActivated);
 
@@ -59,19 +60,7 @@ DEBUG && console.log("===== updateAll done");
 	}
 
 
-	function onActivated()
-	{
-		clearTimeout(timer);
-
-DEBUG && console.log("=== onActivated");
-
-			// set a timer to debounce this event, since if many windows are open,
-			// this will get called once for each active tab in each window on startup
-		timer = setTimeout(onLastActivated, WindowActivatedDelay);
-	}
-
-
-	chrome.tabs.onActivated.addListener(onActivated);
+	chrome.tabs.onActivated.addListener(debounce(onActivated, WindowActivatedDelay));
 });
 
 
@@ -86,24 +75,11 @@ require([
 ) {
 	var popupIsOpen = false,
 		addFromToggle = false,
-		lastWindowID,
-		backgroundTracker,
-		popupTracker;
+		backgroundTracker = pageTrackers.background,
+		popupTracker = pageTrackers.popup,
+		lastWindowID;
 
-
-	function onTabChanged(
-		event)
-	{
-		if (addFromToggle) {
-				// when we're toggling between tabs, we want to add the tab
-				// immediately because the user chose it, as opposed to
-				// ctrl-tabbing past it
-			addFromToggle = false;
-			addTab(event);
-		} else {
-			debouncedAddTab(event);
-		}
-	}
+	window.tracker = popupTracker;
 
 
 	function addTab(
@@ -119,6 +95,21 @@ require([
 	}
 
 	const debouncedAddTab = debounce(addTab, MinTabDwellTime);
+
+
+	function onTabChanged(
+		event)
+	{
+		if (addFromToggle) {
+				// when we're toggling between tabs, we want to add the tab
+				// immediately because the user chose it, as opposed to
+				// ctrl-tabbing past it
+			addFromToggle = false;
+			addTab(event);
+		} else {
+			debouncedAddTab(event);
+		}
+	}
 
 
 	chrome.tabs.onActivated.addListener(function(event) {
@@ -168,12 +159,18 @@ require([
 	chrome.runtime.onConnect.addListener(function(port) {
 		const connectTime = Date.now();
 
+		var closedByEsc = false;
+
 		popupIsOpen = true;
+
+		port.onMessage.addListener(function(message) {
+			closedByEsc = (message == "closedByEsc");
+		});
 
 		port.onDisconnect.addListener(function() {
 			popupIsOpen = false;
 
-			if (Date.now() - connectTime < MaxPopupLifetime) {
+			if (!closedByEsc && Date.now() - connectTime < MaxPopupLifetime) {
 					// pass true so toggleTab() knows this toggle is coming from
 					// a double press of the shortcut.  set addFromToggle so that
 					// the onActivated listener calls add immediately instead of
@@ -209,9 +206,15 @@ DEBUG && console.log("=== reloading");
 	});
 
 
-	backgroundTracker = pageTrackers.background;
-	popupTracker = pageTrackers.popup;
-	window.tracker = popupTracker;
+	window.addEventListener("error", function(event) {
+		backgroundTracker.exception(event, true);
+	});
+
+
+	window.log = function() {
+		DEBUG && console.log.apply(console, arguments);
+	};
+
 
 	cp.management.getSelf()
 		.then(function(info) {
@@ -227,12 +230,4 @@ DEBUG && console.log("=== reloading");
 			backgroundTracker.pageview();
 			backgroundTracker.timing("loading", "background", performance.now());
 		});
-
-	window.addEventListener("error", function(event) {
-		backgroundTracker.exception(event, true);
-	});
-
-	window.log = function() {
-		DEBUG && console.log.apply(console, arguments);
-	};
 });

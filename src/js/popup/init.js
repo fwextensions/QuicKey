@@ -3,13 +3,14 @@ var gKeyCache = [],
 	gClose = false,
 	gOnKeyDown,
 	gInitTime = performance.now(),
-	gIsMac = /Mac/i.test(navigator.platform);
+	gIsMac = /Mac/i.test(navigator.platform),
+	gPort;
 
 
 	// connect to the default port so the background page will get the
 	// onDisconnect event when the popup is closed.  do it first thing, in case
 	// the user quickly hits the shortcut again.
-chrome.runtime.connect();
+gPort = chrome.runtime.connect();
 
 
 (function() {

@@ -16,8 +16,11 @@ require([
 	var tracker;
 
 	if (gClose) {
-			// the user hit esc before we started loading, so just close
-			// the popup
+			// the user hit esc before we started loading, so just close the
+			// popup.  however, this seems to never get triggered.  either the
+			// browser hears the esc and closes the popup without us getting
+			// notified, or the input gets focused and then gets the esc event.
+		gPort.postMessage("closedByEsc");
 		window.close();
 
 		return;
@@ -59,7 +62,8 @@ require([
 				initialQuery: query,
 				initialShortcuts: shortcuts,
 				platform: platform,
-				tracker: tracker
+				tracker: tracker,
+				port: gPort
 			}),
 			document.getElementById("root")
 		);

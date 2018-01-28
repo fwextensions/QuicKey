@@ -376,6 +376,7 @@ define("popup/app", [
 
 			if (!query) {
 					// pressing esc in an empty field should close the popup
+				this.props.port.postMessage("closedByEsc");
 				window.close();
 			} else {
 					// there's a default behavior where pressing esc in

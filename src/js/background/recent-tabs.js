@@ -352,6 +352,8 @@ DEBUG && console.log("=== missing", oldTab.lastVisit, oldTab.url);
 					});
 DEBUG && console.log("=== newTabIDs", newTabIDs.length);
 
+					newTabsCount[newTabsCount.length - 1].m = missingCount;
+
 					tracker.event("update", "old-recents", tabIDs.length);
 					tracker.event("update", "new-tabs", freshTabs.length);
 					tracker.event("update", "missing-recents", missingCount);
