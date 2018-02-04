@@ -523,12 +523,14 @@ define("popup/app", [
 				<ResultsList
 					ref={this.handleListRef}
 					ItemComponent={ResultsListItem}
+					mode={this.mode}
 					items={state.matchingItems}
 					query={query}
 					maxItems={MaxItems}
 					selectedIndex={state.selected}
 					setSelectedIndex={this.setSelectedIndex}
 					onItemClicked={this.openItem}
+					onTabClosed={this.closeTab}
 				/>
 			</div>
 		}

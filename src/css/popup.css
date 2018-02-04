@@ -101,7 +101,6 @@ input.search-box::-webkit-search-cancel-button {
 	margin: 0;
 	padding: 0;
 	width: 100%;
-	overflow: overlay !important;
 	outline: none;
 }
 
@@ -115,6 +114,7 @@ input.search-box::-webkit-search-cancel-button {
 	white-space: nowrap;
 	text-overflow: ellipsis;
 	overflow: hidden;
+	position: relative;
 }
 
 .results-list-item.selected {
@@ -176,6 +176,41 @@ input.search-box::-webkit-search-cancel-button {
 
 .results-list-item.suspended div.url {
 	opacity: 0.5;
+}
+
+.results-list-item.tabs.selected:not(.closed):hover {
+	padding-right: 36px;
+}
+
+.results-list-item .close-button {
+	outline: none;
+	display: none;
+}
+
+.results-list-item.tabs.selected:not(.closed):hover .close-button {
+	width: 24px;
+	height: 24px;
+	right: 6px;
+	top: 50%;
+	margin-top: -12px;
+	background-image: url(/img/clear.svg);
+	background-size: 10px 16px;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-color: transparent;
+	border: none;
+	opacity: .6;
+	position: absolute;
+	display: block;
+}
+
+.results-list-item.tabs.selected:hover .close-button:hover {
+	background-color: #dcdcdc;
+	opacity: 1;
+}
+
+.results-list-item.tabs.selected:hover .close-button:hover:active {
+	background-color: #bbb;
 }
 
 

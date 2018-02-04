@@ -49,6 +49,15 @@ define([
 		},
 
 
+		onClose: function(
+			event)
+		{
+				// stop the click from bubbling so the tab doesn't get focused
+			event.stopPropagation();
+			this.props.onTabClosed(this.props.item);
+		},
+
+
 		onMouseMove: function(
 			event)
 		{
@@ -59,7 +68,7 @@ define([
 					// from the item being rendered under the mouse, but we'll
 					// respond to the next one
 				this.ignoreMouse = false;
-			} else if (!this.props.isSelected) {
+			} else if (!props.isSelected) {
 					// the mouse is moving over this item but it's not
 					// selected, which means this is the second mousemove
 					// event and we haven't gotten another mouseenter.  so
@@ -91,6 +100,7 @@ define([
 				].join("\n"),
 				className = [
 					"results-list-item",
+					props.mode,
 					(props.isSelected ? "selected" : ""),
 					(item.unsuspendURL ? "suspended" : ""),
 					(item.incognito ? "incognito" : ""),
@@ -140,6 +150,10 @@ define([
 					text={item.displayURL}
 					score={scores.displayURL}
 					hitMask={hitMasks.displayURL}
+				/>
+				<button className="close-button"
+					title="Close tab"
+					onClick={this.onClose}
 				/>
 			</div>
 		}
