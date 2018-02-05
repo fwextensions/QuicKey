@@ -1,20 +1,25 @@
 define([
-	"storage",
-	"cp"
+	"bluebird",
+	"cp",
+	"background/storage",
+	"background/page-trackers",
+	"popup/data/add-urls"
 ], function(
-	storage,
-	cp
+	Promise,
+	cp,
+	createStorage,
+	pageTrackers,
+	addURL
 ) {
 	const MaxTabsLength = 50,
 		MaxSwitchDelay = 750,
-		MinDwellTime = 750,
-		MaxVisitCount = 3,
 		TabKeysHash = {
 			favIconUrl: 1,
 			id: 1,
 			incognito: 1,
 			title: 1,
 			url: 1,
+			index: 1,
 			windowId: 1
 		},
 		TabKeys = Object.keys(TabKeysHash),
@@ -29,10 +34,34 @@ define([
 				"19": "img/icon-19-inverted.png",
 				"38": "img/icon-38-inverted.png"
 			}
-		};
+		},
+		StorageVersion = 2;
 
 
-	var shortcutTimer = null;
+	var shortcutTimer = null,
+		storage = createStorage(StorageVersion,
+			function() {
+				return cp.tabs.query({ active: true, currentWindow: true, windowType: "normal" })
+					.then(function(tabs) {
+						var data = {
+								tabIDs: [],
+								tabsByID: {},
+								previousTabIndex: -1,
+								switchFromShortcut: false,
+								lastShortcutTime: 0,
+								newTabsCount: []
+							},
+							tab = tabs && tabs[0];
+
+						if (tab) {
+							data.tabIDs.push(tab.id);
+							data.tabsByID[tab.id] = tab;
+						}
+
+						return data;
+					});
+			}
+		);
 
 
 	function removeItem(
@@ -66,7 +95,8 @@ define([
 				return obj;
 			}, {});
 
-		recent.visits = (oldTab && oldTab.visits) || [];
+		recent.lastVisit = (oldTab && (oldTab.lastVisit ||
+			(oldTab.visits && oldTab.visits.length && oldTab.visits.slice(-1)[0]))) || 0;
 
 		return recent;
 	}
@@ -75,8 +105,7 @@ define([
 	function addVisit(
 		tab)
 	{
-		tab.visits.push(Date.now());
-		tab.visits = tab.visits.slice(-MaxVisitCount);
+		tab.lastVisit = Date.now();
 	}
 
 
@@ -116,8 +145,7 @@ define([
 
 
 	function add(
-		tab,
-		fromFocusChange)
+		tab)
 	{
 		if (!tab) {
 			return;
@@ -129,10 +157,7 @@ define([
 				tabsByID = data.tabsByID,
 				tabData,
 				lastID,
-				lastTab,
-				lastTabVisit;
-
-console.log("add", tab.id, tab.title);
+				lastTab;
 
 			if (data.switchFromShortcut) {
 				return { switchFromShortcut: false };
@@ -154,34 +179,7 @@ console.log("add", tab.id, tab.title);
 				};
 			}
 
-			if (!fromFocusChange && lastTab && tabIDs.length > 2 &&
-					(Date.now() - last(lastTab.visits) < MinDwellTime)) {
-					// the previously active tab wasn't active for very long,
-					// so remove its last visit time
-				lastTab.visits.pop();
-				tabIDs.pop();
-
-				if (!lastTab.visits.length) {
-						// this tab doesn't have any recent visits, so forget it
-					delete tabsByID[lastID];
-				} else {
-						// reinsert the tab based on its previous visit time
-					lastTabVisit = last(lastTab.visits);
-
-					for (var i = tabIDs.length - 1; i >= 0; i--) {
-						if (lastTabVisit > last(tabsByID[tabIDs[i]].visits)) {
-							tabIDs.splice(i + 1, 0, lastID);
-							break;
-						}
-					}
-
-					if (i == 0 && tabIDs[0] != lastID) {
-							// stick lastTab at the beginning of the array if
-							// its last visit is older than all the other tabs
-						tabIDs.splice(0, 0, lastID);
-					}
-				}
-			}
+DEBUG && console.log("add", tab.id, tab.title.slice(0, 50));
 
 				// make sure the new tab's ID isn't currently in the list and
 				// then push it on the end
@@ -221,7 +219,7 @@ console.log("add", tab.id, tab.title);
 				index = tabIDs.indexOf(tabID);
 
 			if (index > -1) {
-console.log("tab closed", tabID, tabsByID[tabID].title);
+DEBUG && console.log("tab closed", tabID, tabsByID[tabID].title);
 				tabIDs.splice(index, 1);
 				delete tabsByID[tabID];
 
@@ -237,43 +235,69 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 	function getAll()
 	{
 		return storage.get(function(data) {
-			return cp.windows.getCurrent({ populate: true })
-				.then(function(window) {
-					return window.tabs;
-				})
-//			return cp.tabs.query({})
-				.then(function(freshTabs) {
-					var freshTabsByID = {},
-						tabIDs = data.tabIDs,
-						tabsByID = data.tabsByID,
-						recentTabsByID = {},
-						recentTabs = [];
+			return Promise.all([
+					cp.windows.getCurrent({ populate: true })
+						.then(function(window) {
+							return window.tabs;
+						}),
+					[]
+//					cp.tabs.query({}),
+//					cp.sessions.getRecentlyClosed()
+				])
+				.spread(function(freshTabs, closedTabs) {
+					var tabsByID = data.tabsByID,
+						tabs;
 
-						// create a dictionary of the new tabs by ID
-					freshTabs.forEach(function(tab) {
-						freshTabsByID[tab.id] = tab;
-					});
+						// update the fresh tabs with any recent data we have
+					tabs = freshTabs.map(function(tab) {
+						const oldTab = tabsByID[tab.id],
+							newTab = createRecent(tab, oldTab);
 
-					tabIDs.forEach(function(tabID) {
-						var oldTab = tabsByID[tabID],
-							newTab = freshTabsByID[tabID];
-
-						if (oldTab && newTab) {
-							newTab = createRecent(newTab, oldTab);
-							recentTabsByID[newTab.id] = newTab;
-							recentTabs.push(newTab);
+						if (oldTab) {
+								// point the recent tab at the refreshed tab so
+								// that if the tab's URL had changed since the
+								// last time the user focused it, we'll store
+								// the current URL with the recent data.  that
+								// way, when Chrome restarts and we try to match
+								// the saved recents against the new tabs, we'll
+								// be able to match it by URL.
+							tabsByID[tab.id] = newTab;
 						}
+
+						return newTab;
 					});
 
+					closedTabs = closedTabs.map(function(session) {
+						const tabFromSession = session.tab || session.window.tabs[0],
+							tab = createRecent(tabFromSession);
+
+							// session lastModified times are in Unix epoch
+						tab.lastVisit = session.lastModified * 1000;
+						tab.sessionId = tabFromSession.sessionId;
+
+						return tab;
+					});
+
+						// only show the closed tabs if we also have some recent
+						// tabs, so that the user doesn't see just closed tabs on
+						// a new install.  have to check for > 1, since even on a
+						// new install or after closing a window, the current tab
+						// will be in the list, which is then removed from the list.
+					if (data.tabIDs.length > 1) {
+						tabs = tabs.concat(closedTabs);
+					}
+
+						// save off the updated recent data.  we don't call
+						// storage.set() for getAll() so that the popup doesn't
+						// have to wait for the data to get stored before it's
+						// returned, so the recents menu renders faster.
+					storage.set(function() {
 					return {
-						tabs: freshTabs,
-						recentTabs: recentTabs,
-						recentTabsByID: recentTabsByID
+							tabsByID: tabsByID
 					};
+					});
 
-// TODO: do we need to save the data with the newly pushed lastShortcutTabID?
-//			updateDataFromShortcut(data);
-
+					return tabs;
 				});
 		});
 	}
@@ -284,6 +308,7 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 		return storage.set(function(data) {
 			return cp.tabs.query({})
 				.then(function(freshTabs) {
+DEBUG && console.log("=== updateAll", data, freshTabs);
 					var freshTabsByURL = {},
 						tabIDs = data.tabIDs,
 						tabsByID = data.tabsByID,
@@ -293,11 +318,19 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 						newTabsByID = {},
 						newTabIDs = [],
 						newTabsCount = [].concat(data.newTabsCount,
-							{ l: freshTabs.length, d: Date.now() });
+							{ l: freshTabs.length, d: Date.now() }).slice(-5),
+						missingCount = 0,
+						tracker = pageTrackers.background;
+DEBUG && console.log("=== existing tabs", tabIDs.length, Object.keys(tabsByID).length, "fresh", freshTabs.length);
 
-						// create a dictionary of the new tabs by URL
+						// create a dictionary of the new tabs by the URL and
+						// unsuspendURL, if any, so that a recent that had been
+						// saved unsuspended and then was later suspended could
+						// match up with the fresh, suspended tab
 					freshTabs.forEach(function(tab) {
+						addURL(tab);
 						freshTabsByURL[tab.url] = tab;
+						tab.unsuspendURL && (freshTabsByURL[tab.unsuspendURL] = tab);
 					});
 
 						// we need to loop on tabIDs instead of just building a
@@ -317,15 +350,34 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 							newTabsByID[newTab.id] = newTab;
 							newTabIDs.push(newTab.id);
 							delete freshTabsByURL[oldTab.url];
+						} else {
+							missingCount++;
+DEBUG && console.log("=== missing", oldTab.lastVisit, oldTab.url);
 						}
 					});
+DEBUG && console.log("=== newTabIDs", newTabIDs.length);
 
-					return {
+					newTabsCount[newTabsCount.length - 1].m = missingCount;
+
+					tracker.event("update", "old-recents", tabIDs.length);
+					tracker.event("update", "new-tabs", freshTabs.length);
+					tracker.event("update", "missing-recents", missingCount);
+
+					var result = {
 						tabIDs: newTabIDs,
 						tabsByID: newTabsByID,
-// TODO: remove newTabsCount when we've verified this works
 						newTabsCount: newTabsCount
 					};
+DEBUG && console.log("updateAll result", result);
+
+					return result;
+
+//					return {
+//						tabIDs: newTabIDs,
+//						tabsByID: newTabsByID,
+//// TODO: remove newTabsCount when we've verified this works
+//						newTabsCount: newTabsCount
+//					};
 				});
 		}, "updateAll");
 	}
@@ -335,7 +387,7 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 		direction,
 		fromDoublePress)
 	{
-		storage.set(function(data) {
+		return storage.set(function(data) {
 			var tabIDs = data.tabIDs,
 				tabIDCount = tabIDs.length,
 				maxIndex = tabIDCount - 1,
@@ -366,6 +418,7 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 						now - data.lastShortcutTime < MaxSwitchDelay) {
 					if (data.previousTabIndex > -1) {
 						if (direction == -1) {
+								// when going backwards, wrap around if necessary
 							previousTabIndex = (data.previousTabIndex - 1 + tabIDCount) % tabIDCount;
 						} else {
 								// don't let the user go past the most recently
@@ -373,24 +426,15 @@ console.log("tab closed", tabID, tabsByID[tabID].title);
 							previousTabIndex = Math.min(data.previousTabIndex + 1, maxIndex);
 						}
 					}
-console.log("==== previous", previousTabIndex);
 				}
 
 				newData.previousTabIndex = previousTabIndex;
-				newData.lastShortcutTabID = data.tabIDs[previousTabIndex];
-console.log("toggleTab previousTabIndex", newData.lastShortcutTabID, previousTabIndex, data.tabsByID[newData.lastShortcutTabID ].title);
+				newData.lastShortcutTabID = tabIDs[previousTabIndex];
+DEBUG && console.log("toggleTab previousTabIndex", newData.lastShortcutTabID, previousTabIndex, data.tabsByID[newData.lastShortcutTabID ].title);
 
-				Object.assign(data, newData);
-
-// TODO: always return data to force prev index to -1 if there aren't enough tabs?
-				return data;
-			}
-		}, "toggleTab")
-			.then(function(data) {
-				if (data && data.previousTabIndex > -1 && data.lastShortcutTabID) {
-					var previousTabID = data.lastShortcutTabID,
+				if (previousTabIndex > -1 && newData.lastShortcutTabID) {
+					var previousTabID = newData.lastShortcutTabID,
 						previousWindowID = data.tabsByID[previousTabID].windowId;
-console.log("toggleTab then previousTabID", previousTabID, data.previousTabIndex);
 
 						// we only want to start the timer if the user triggered
 						// us with the previous/next-tab shortcut, not double-
@@ -406,7 +450,10 @@ console.log("toggleTab then previousTabID", previousTabID, data.previousTabIndex
 						chrome.windows.update(previousWindowID, { focused: true });
 					}
 				}
-			});
+	}
+
+			return newData;
+		}, "toggleTab");
 	}
 
 

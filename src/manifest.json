@@ -1,17 +1,18 @@
 {
 	"name": "QuicKey – The quick tab switcher",
 	"short_name": "QuicKey",
-	"version": "0.0.12",
+	"version": "0.0.14",
 	"manifest_version": 2,
-	"description": "Switch tabs with a Quicksilver-style search or a most-recently-used menu",
+	"description": "Add keyboard shortcuts to switch tabs with a Quicksilver-style search or a most-recently-used menu",
 	"author": "John Dunning",
-	"content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+	"content_security_policy": "script-src 'self' 'unsafe-eval' https://www.google-analytics.com; object-src 'self'",
 	"minimum_chrome_version": "45",
 	"permissions": [
 		"tabs",
 		"bookmarks",
 		"history",
 		"storage",
+		"sessions",
 		"chrome://favicon/"
 	],
 	"icons": {
@@ -29,7 +30,11 @@
 	},
 	"background": {
 		"page": "background.html",
-		"persistent": false
+		"persistent": true
+	},
+	"options_ui": {
+		"chrome_style": true,
+		"page": "options.html"
 	},
 	"commands": {
 		"_execute_browser_action": {
@@ -40,7 +45,7 @@
 				"linux": "Alt+Q"
 			}
 		},
-		"previous-tab": {
+		"1-previous-tab": {
 			"suggested_key": {
 				"windows": "Alt+A",
 				"mac": "MacCtrl+A",
@@ -49,7 +54,7 @@
 			},
 			"description": "Switch to the previous tab"
 		},
-		"next-tab": {
+		"2-next-tab": {
 			"suggested_key": {
 				"windows": "Alt+Shift+A",
 				"mac": "MacCtrl+Shift+A",

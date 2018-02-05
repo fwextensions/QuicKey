@@ -40,11 +40,21 @@ define([
 					item.title,
 					item.displayURL,
 					this.props.query,
+					item.recentBoost,
 					_.toPairs(item.scores).map(function(a) { return a.join(": "); }).join("\n")
 				].join("\n"));
 			} else {
 				this.props.onItemClicked(item, event.shiftKey);
 			}
+		},
+
+
+		onClose: function(
+			event)
+		{
+				// stop the click from bubbling so the tab doesn't get focused
+			event.stopPropagation();
+			this.props.onTabClosed(this.props.item);
 		},
 
 
@@ -58,7 +68,7 @@ define([
 					// from the item being rendered under the mouse, but we'll
 					// respond to the next one
 				this.ignoreMouse = false;
-			} else if (!this.props.isSelected) {
+			} else if (!props.isSelected) {
 					// the mouse is moving over this item but it's not
 					// selected, which means this is the second mousemove
 					// event and we haven't gotten another mouseenter.  so
@@ -90,9 +100,11 @@ define([
 				].join("\n"),
 				className = [
 					"results-list-item",
+					props.mode,
 					(props.isSelected ? "selected" : ""),
 					(item.unsuspendURL ? "suspended" : ""),
-					(item.incognito ? "incognito" : "")
+					(item.incognito ? "incognito" : ""),
+					(item.sessionId ? "closed suspended" : "")
 				].join(" "),
 				faviconStyle = {
 					backgroundImage: "url(" + item.faviconURL + ")"
@@ -107,11 +119,13 @@ define([
 				// so trim them
 			tooltip = tooltip.trim();
 
-			if (item.unsuspendURL && item.faviconURL.indexOf(FaviconURL) == 0) {
+			if ((item.unsuspendURL && item.faviconURL.indexOf(FaviconURL) == 0)
+					|| item.sessionId) {
 					// this is a suspended tab, but The Great Suspender has
 					// forgotten the faded favicon for it or has set its own
 					// icon for some reason.  so we get the favicon through
-					// chrome://favicon/ and then fade it ourselves.
+					// chrome://favicon/ and then fade it ourselves.  or it's a
+					// tab from a closed session.
 				faviconStyle.opacity = SuspendedFaviconOpacity;
 			}
 
@@ -136,6 +150,10 @@ define([
 					text={item.displayURL}
 					score={scores.displayURL}
 					hitMask={hitMasks.displayURL}
+				/>
+				<button className="close-button"
+					title="Close tab"
+					onClick={this.onClose}
 				/>
 			</div>
 		}

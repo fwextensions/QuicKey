@@ -50,6 +50,7 @@ define(function() {
 
 		item.displayURL = url.replace(ProtocolPattern, "");
 
-		item.recentBoost = 1;
+			// closed tabs will have recentBoost already set
+		item.recentBoost = isNaN(item.recentBoost) ? 1 : item.recentBoost;
 	}
 });

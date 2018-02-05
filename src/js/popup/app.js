@@ -1,16 +1,16 @@
-define([
+define("popup/app", [
 	"react",
 	"jsx!./search-box",
 	"jsx!./results-list",
 	"jsx!./results-list-item",
 	"cp",
-	"score-items",
-	"get-tabs",
-	"get-bookmarks",
-	"get-history",
-	"add-urls",
-	"handle-keys",
-	"recent-tabs",
+	"./score/score-items",
+	"./data/get-tabs",
+	"./data/get-bookmarks",
+	"./data/get-history",
+	"./data/add-urls",
+	"./shortcuts/handle-keys",
+	"background/recent-tabs",
 	"lodash"
 ], function(
 	React,
@@ -38,7 +38,7 @@ define([
 		RecentMS = HourCount * HourMS,
 		VeryRecentBoost = .15,
 		RecentBoost = .1,
-		WhitespacePattern = /\s/g,
+		ClosedPenalty = .98,
 		BookmarksQuery = "/b ",
 		HistoryQuery = "/h ",
 		BQuery = "/b",
@@ -81,28 +81,20 @@ define([
 		componentWillMount: function()
 		{
 			recentTabs.getAll()
-				.then(function(data) {
-					return this.loadPromisedItems(function() { return getTabs(data.tabs) }, "tabs", "")
-						.then(function(tabs) {
-							data.tabs = tabs;
-
-							return data;
-						});
-				}.bind(this))
-				.then(function(data) {
-					var tabs = data.tabs,
-						recentTabs = data.recentTabs,
-						recentTabsByID = data.recentTabsByID,
-						now = Date.now();
+				.bind(this)
+				.then(function(tabs) {
+					var now = Date.now();
 
 						// boost the scores of recent tabs
 					tabs.forEach(function(tab) {
-						var recentTab = recentTabsByID[tab.id],
-							age,
+						var age,
 							hours;
 
-						if (recentTab) {
-							age = now - recentTab.visits[recentTab.visits.length - 1];
+						if (tab.sessionId) {
+								// penalize matching closed tabs
+							tab.recentBoost = ClosedPenalty;
+						} else if (tab.lastVisit) {
+							age = now - tab.lastVisit;
 
 							if (age < VeryRecentMS) {
 								tab.recentBoost = 1 + VeryRecentBoost;
@@ -114,26 +106,40 @@ define([
 						}
 					});
 
+					return this.loadPromisedItems(function() {
+						return getTabs(tabs)
+							.then(function(tabs) {
+									// run scoreItems() on the tabs so that the
+									// hitMask and scores keys are added to each
+								scoreItems(tabs, "");
+
+								return tabs;
+							});
+					}, "tabs", "");
+				})
+				.then(function(tabs) {
+					var initialShortcuts = this.props.initialShortcuts;
+
+						// filter out just recent and closed tabs that we
+						// have a last visit time for
+					this.recents = tabs
+						.filter(function(tab) { return tab.lastVisit })
+						.sort(function(a, b) {
+								// sort open tabs before closed ones, and
+								// newer before old
+							if ((a.sessionId && b.sessionId) || (!a.sessionId && !b.sessionId)) {
+								return b.lastVisit - a.lastVisit;
+							} else if (a.sessionId) {
+								return 1;
+							} else {
+								return -1;
+							}
+						});
+
 						// set the query again because we may have already
 						// rendered a match on the tabs without the recent boosts,
 						// which may have changed the results
 					this.setQuery(this.state.query);
-
-					return this.loadPromisedItems(function() {
-						return getTabs(recentTabs)
-							.then(function(recents) {
-									// before returning the recents, we need to run scoreItems() on
-									// them so that the hitMask and scores keys are added to them.
-									// we don't for regular tabs because in getMatchingItems(), those
-									// always get scoreItems() called on them before they're rendered.
-								scoreItems(recents, "");
-
-								return recents;
-							});
-					}, "recents", "");
-				}.bind(this))
-				.then(function() {
-					var initialShortcuts = this.props.initialShortcuts;
 
 						// after the recent tabs have been loaded and scored,
 						// apply any shortcuts that recorded during init
@@ -146,7 +152,9 @@ define([
 							}
 						}, this);
 					}
-				}.bind(this));
+
+					this.props.tracker.set("metric1", tabs.count);
+				});
 		},
 
 
@@ -163,13 +171,10 @@ define([
 			if (this.mode == "command" || query == BookmarksQuery || query == HistoryQuery) {
 				return [];
 			} else if (!query && this.mode == "tabs") {
-					// short-circuit the empty query case, since quick-score now
-					// returns 0.9 as the scores for an empty query
 				return this.recents;
 			}
 
-					// remove spaces from the query before scoring the items
-			var scores = scoreItems(this[this.mode], query.replace(WhitespacePattern, "")),
+			var scores = scoreItems(this[this.mode], query),
 				firstScoresDiff = (scores.length > 1 && scores[0].score > MinScore) ?
 					(scores[0].score - scores[1].score) : 0;
 					// drop barely-matching results, keeping a minimum of 3,
@@ -189,11 +194,16 @@ define([
 			unsuspend)
 		{
 			if (tab) {
-				var updateData = { active: true };
+				var updateData = { active: true },
+					queryLength = this.state.query.length,
+					category = queryLength ? "tabs" : "recents",
+					event = (category == "recents" && this.gotMRUKey) ?
+						"focus-mru" : "focus";
 
 				if (unsuspend && tab.unsuspendURL) {
 						// change to the unsuspended URL
 					updateData.url = tab.unsuspendURL;
+					event = "unsuspend";
 				}
 
 					// switch to the selected tab
@@ -203,6 +213,9 @@ define([
 				if (tab.windowId != chrome.windows.WINDOW_ID_CURRENT) {
 					chrome.windows.update(tab.windowId, { focused: true });
 				}
+
+				this.props.tracker.event(category, event,
+					queryLength ? queryLength : undefined);
 			}
 		},
 
@@ -220,6 +233,7 @@ define([
 				this.setState({
 					matchingItems: this.getMatchingItems(this.state.query)
 				});
+				this.props.tracker.event(this.state.query ? "tabs" : "recents", "close");
 			}
 		},
 
@@ -257,20 +271,22 @@ define([
 						index = activeTab.index;
 					}
 
-					cp.tabs.move(tab.id, {
+					return cp.tabs.move(tab.id, {
 						windowId: activeTab.windowId,
 						index: index
 					})
-						.then(function(movedTab) {
-								// use the movedTab from this callback, since
-								// the tab reference we had to it from before is
-								// likely stale.  we also have to call addURLs()
-								// on this new tab reference so it gets the
-								// unsuspendURL added to it if necessary, so that
-								// unsuspending it will work.
-							addURLs(movedTab);
-							self.focusTab(movedTab, unsuspend);
-						});
+				})
+				.then(function(movedTab) {
+						// use the movedTab from this callback, since
+						// the tab reference we had to it from before is
+						// likely stale.  we also have to call addURLs()
+						// on this new tab reference so it gets the
+						// unsuspendURL added to it if necessary, so that
+						// unsuspending it will work.
+					addURLs(movedTab);
+					self.focusTab(movedTab, unsuspend);
+					self.props.tracker.event(self.state.query.length ? "tabs" : "recents",
+						"move-" + (direction ? "right" : "left"));
 				});
 		},
 
@@ -280,32 +296,28 @@ define([
 			shiftKey,
 			altKey)
 		{
-			var recents = this.recents,
-				lastTab;
-
-				// if the query is empty and we have recent tabs tracked, create
-				// a synthetic tab item corresponding to the previous one
-			if (!item && recents.length > 1 && this.mode == "tabs") {
-				lastTab = recents[recents.length - 2];
-				item = {
-					id: lastTab.id,
-					windowId: lastTab.windowId
-				};
-			}
-
 			if (item) {
 				if (this.mode == "tabs") {
-						// switch to the tab
-					this.focusTab(item, shiftKey);
+					if (item.sessionId) {
+							// this is a closed tab, so restore it
+						chrome.sessions.restore(item.sessionId);
+						this.props.tracker.event("tabs", "restore");
+					} else {
+							// switch to the tab
+						this.focusTab(item, shiftKey);
+					}
 				} else if (shiftKey) {
 						// open in a new window
 					chrome.windows.create({ url: item.url });
+					this.props.tracker.event(this.mode, "open-new-win");
 				} else if (altKey) {
 						// open in a new tab
 					chrome.tabs.create({ url: item.url });
+					this.props.tracker.event(this.mode, "open-new-tab");
 				} else {
 						// open in the same tab
 					chrome.tabs.update({ url: item.url });
+					this.props.tracker.event(this.mode, "open");
 				}
 
 					// we seem to have to close the window in a timeout so that
@@ -348,10 +360,12 @@ define([
 			originalQuery,
 			query)
 		{
+			var queryToMatch = query || originalQuery;
+
 			this.setState({
-				matchingItems: this.getMatchingItems(query || originalQuery),
+				matchingItems: this.getMatchingItems(queryToMatch),
 				query: originalQuery,
-				selected: query ? 0 : -1
+				selected: queryToMatch ? 0 : -1
 			});
 		},
 
@@ -362,6 +376,7 @@ define([
 
 			if (!query) {
 					// pressing esc in an empty field should close the popup
+				this.props.port.postMessage("closedByEsc");
 				window.close();
 			} else {
 					// there's a default behavior where pressing esc in
@@ -464,7 +479,6 @@ define([
 		},
 
 
-			// keydown handling is managed in another module
 		onKeyDown: function(
 			event)
 		{
@@ -473,6 +487,7 @@ define([
 				// to true in setSelectedIndex()
 			this.gotMRUKey = false;
 
+				// keydown handling is managed in another module
 			return handleKeys(event, this);
 		},
 
@@ -486,6 +501,7 @@ define([
 				}
 
 				this.gotModifierUp = true;
+				this.gotMRUKey = false;
 			}
 		},
 
@@ -507,12 +523,14 @@ define([
 				<ResultsList
 					ref={this.handleListRef}
 					ItemComponent={ResultsListItem}
+					mode={this.mode}
 					items={state.matchingItems}
 					query={query}
 					maxItems={MaxItems}
 					selectedIndex={state.selected}
 					setSelectedIndex={this.setSelectedIndex}
 					onItemClicked={this.openItem}
+					onTabClosed={this.closeTab}
 				/>
 			</div>
 		}

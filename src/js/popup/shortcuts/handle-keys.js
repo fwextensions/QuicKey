@@ -1,5 +1,5 @@
 define([
-	"shortcut-manager"
+	"./shortcut-manager"
 ], function(
 	ShortcutManager
 ) {

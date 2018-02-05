@@ -1,8 +1,10 @@
 define([
-	"add-urls",
+	"bluebird",
+	"./add-urls",
 	"cp",
 	"lodash"
 ], function(
+	Promise,
 	addURLs,
 	cp,
 	_
@@ -20,9 +22,8 @@ define([
 				currentWindow: true
 			})
 		])
-			.then(function(result) {
-				var tabs = result[0],
-					activeTab = result[1][0],
+			.spread(function(tabs, activeTabs) {
+				var activeTab = activeTabs[0],
 					match;
 
 					// remove the active tab from the array so it doesn't show up in

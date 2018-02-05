@@ -2,13 +2,20 @@ var gKeyCache = [],
 	gShortcutCache = [],
 	gClose = false,
 	gOnKeyDown,
-	gInitTime = performance.now();
+	gInitTime = performance.now(),
+	gIsMac = /Mac/i.test(navigator.platform),
+	gPort;
+
+
+	// connect to the default port so the background page will get the
+	// onDisconnect event when the popup is closed.  do it first thing, in case
+	// the user quickly hits the shortcut again.
+gPort = chrome.runtime.connect();
 
 
 (function() {
 	const AllowedPattern = /[-'!"#$%&()\*+,\.\/:;<=>?@\[\\\]\^_`{|}~ \w]/,
-		IsMac = /Mac/i.test(navigator.platform),
-		ShortcutModifier = IsMac ? "ctrlKey" : "altKey";
+		ShortcutModifier = gIsMac ? "ctrlKey" : "altKey";
 
 
 	gOnKeyDown = function(
@@ -43,12 +50,4 @@ var gKeyCache = [],
 		// and instantiates the components. the gKeyCache global will be passed
 		// to the TabSelector as the default query when it loads.
 	document.addEventListener("keydown", gOnKeyDown);
-
-	chrome.runtime.getBackgroundPage(function(bg) {
-		window.log = bg.log;
-	});
-
-		// connect to the default port so the background page will get the
-		// onDisconnect event when the popup is closed
-	chrome.runtime.connect();
 })();

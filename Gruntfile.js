@@ -36,6 +36,10 @@ module.exports = function(grunt)
 			include: ["require-config", "background/background"],
 			out: "build/out/js/background/background.js"
 		}),
+		optionsConfig = _.defaults({}, baseConfig, {
+			include: ["require-config", "options/options"],
+			out: "build/out/js/options/options.js"
+		}),
 		devManifestPath = "src/manifest.json",
 		buildManifestPath = "build/out/manifest.json",
 		devPopupPath = "src/popup.html",
@@ -67,7 +71,7 @@ module.exports = function(grunt)
 						src: [
 							"css/*.css",
 							"img/**",
-							"js/popup/init.js",
+							"options.html",
 							"manifest.json"
 						]
 					}
@@ -104,20 +108,19 @@ module.exports = function(grunt)
 			}
 		},
 
-		requirejs: {
-			popup: { options: popupConfig },
-			background: { options: backgroundConfig }
-//			content: { options: baseConfig }
-		},
-
-		lodash: {
-			build: {
-				dest: "src/js/lib",
-				options: {
-					exports: "amd",
-					include: "remove,escape,dropRightWhile,memoize"
+		uglify: {
+			init: {
+				files: {
+					"build/out/js/popup/init.js": ["src/js/popup/init.js"]
 				}
 			}
+		},
+
+		requirejs: {
+			popup: { options: popupConfig },
+			background: { options: backgroundConfig },
+				// annoyingly, just calling this "options" doesn't work
+			optionsDialog: { options: optionsConfig }
 		}
 	});
 
@@ -131,7 +134,6 @@ module.exports = function(grunt)
 	grunt.loadNpmTasks("grunt-contrib-uglify");
 	grunt.loadNpmTasks("grunt-sync");
 	grunt.loadNpmTasks("grunt-exec");
-	grunt.loadNpmTasks("grunt-lodash");
 
 	grunt.registerTask("checkPopup", function() {
 		var devPopup = grunt.file.read(devPopupPath),
@@ -163,7 +165,8 @@ module.exports = function(grunt)
 	grunt.registerTask("cleanupManifest", function() {
 		var manifest = grunt.file.readJSON(buildManifestPath);
 
-		delete manifest.content_security_policy;
+			// we don't need the unsafe-eval policy in the built extension
+		manifest.content_security_policy = manifest.content_security_policy.replace("'unsafe-eval' ", "");
 		grunt.file.write(buildManifestPath, JSON.stringify(manifest, null, "\t"));
 	});
 
@@ -176,7 +179,8 @@ module.exports = function(grunt)
 		"sync:out",
 		"cleanupManifest",
 		"checkPopup",
-		"requirejs"
+		"requirejs",
+		"uglify"
 	]);
 
 	grunt.registerTask("pack", [

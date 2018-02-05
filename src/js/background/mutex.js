@@ -1,7 +1,10 @@
 define(function() {
-	function Mutex() {
+	function Mutex(
+		promiseConstructor)
+	{
 		this._locked = false;
 		this._queue = [];
+		this._promiseConstructor = promiseConstructor || Promise;
 	}
 
 
@@ -9,7 +12,7 @@ define(function() {
 		lock: function(
 			task)
 		{
-			return new Promise(function(resolve, reject) {
+			return new this._promiseConstructor(function(resolve, reject) {
 				this._queue.push([task, resolve, reject]);
 
 				if (!this._locked) {
