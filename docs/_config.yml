@@ -5,9 +5,9 @@ gems:
 
 title: QuicKey
 
-description: A Chrome extension that lets you quickly switch tabs or access bookmarks and history via a Quicksilver-style search.
+description: A Chrome extension that adds keyboard shortcuts to switch tabs with a Quicksilver-style search or a most-recently-used (MRU) menu.
 
-tagline: Add keyboard shortcuts to switch tabs with a Quicksilver-style search or a most-recently-used menu
+tagline: Add keyboard shortcuts to switch tabs with a Quicksilver-style search or a most-recently-used (MRU) menu
 
 image: /img/search-box-open.png
 

@@ -16,12 +16,12 @@ If you like to keep lots of tabs open in Chrome, it can quickly become difficult
 
 To toggle between the two most recently used tabs, quickly press the keyboard shortcut twice.  Or navigate the full most recently used (MRU) tab list as [shown below](#mru).
 
-You can also type <b><kbd>/</kbd><kbd>b</kbd></b> to search bookmarks or <b><kbd>/</kbd><kbd>h</kbd></b> to search your browser history.
+You can also type <b><kbd>/</kbd><kbd>b</kbd></b> to search [bookmarks](#bookmarks) or <b><kbd>/</kbd><kbd>h</kbd></b> to search your [browser history](#history).
 
 
 ## Installation
 
-<button id="install" onclick="chrome.webstore.install()">Install Now</button> or go to the [Chrome Web Store](https://chrome.google.com/webstore/detail/quickey-–-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg).
+<button id="install" onclick="chrome.webstore.install()">Install Now</button> or go to the [Chrome Web Store](https://chrome.google.com/webstore/detail/quickey-–-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg) to install *QuicKey*.
 
 Once the extension is installed, you can click the <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> button on the toolbar to open the search box.  But if you're using this extension, you'll probably prefer using the default keyboard shortcut listed above.
 
@@ -32,7 +32,7 @@ You can customize the shortcut key by right-clicking the *QuicKey* icon and sele
 
 Unlike other tab switchers, *QuicKey* uses a [Quicksilver](https://qsapp.com/)-style search algorithm to rank the results, where contiguous matches at the beginning of words are higher in the list, as are matches against capital letters.  So you can type just a few letters to quickly find the right tab.
 
-Use a keyboard shortcut to navigate the tab list:
+Use keyboard shortcuts to navigate the tab list:
 
   * <kbd>enter</kbd>&nbsp;: switch to the selected tab
   * <kbd>↓</kbd> or <kbd>space</kbd>&nbsp;: move down the list
@@ -77,7 +77,7 @@ Opening *QuicKey* displays a list of the last 50 tabs you've visited, in order o
     * Release <kbd>alt</kbd> (or <kbd>ctrl</kbd>) to switch to the selected tab.
     * You can also highlight an item with the mouse, then release <kbd>alt</kbd> to go to that tab.
 
-![MRU tab list](img/mru-tab-list.png)
+![MRU tab list](img/mru-menu.gif)
 
 Which shortcuts to use is up to you.  Double-pressing <b><kbd>alt</kbd><kbd>Q</kbd></b> is nice because there's just one shortcut and you can switch between the two most recently used tabs as quickly as you want.
 
@@ -107,7 +107,7 @@ You can move tabs to the left or right of the current tab, making it easy to pul
 Include <kbd>shift</kbd> in the shortcut to also unsuspend the tab while moving it.  The <kbd>ctrl</kbd> key should be used on both Windows and macOS.
 
 
-## Search bookmarks
+## <a name="bookmarks"></a>Search bookmarks
 
 To find a bookmark, type <b><kbd>/</kbd><kbd>b</kbd><kbd>space</kbd></b> in the search box, and then part of the bookmark's name or URL.
 
@@ -118,7 +118,7 @@ To find a bookmark, type <b><kbd>/</kbd><kbd>b</kbd><kbd>space</kbd></b> in the 
   * Press <b><kbd>shift</kbd><kbd>enter</kbd></b> to open it in a new window.
 
 
-## Search the browser history
+## <a name="history"></a>Search the browser history
 
 To find something in the last 2000 pages of your browser history, type <b><kbd>/</kbd><kbd>h</kbd><kbd>space</kbd></b> in the search box, and then part of the page's name or URL.
 
@@ -145,7 +145,7 @@ Tabs in incognito mode display the incognito icon, so you can distinguish a norm
 
 ## Privacy policy
 
-To function, *QuicKey* needs access to your open tabs, bookmarks and history.  The Chrome permissions dialog says *QuicKey* can also change your bookmarks and browsing history on all signed-in devices, but it never will.  It can't access the page content at all and doesn't transmit any information, other than some anonymized Google Analytics metrics.  The "signed-in devices" permission is required to restore recently closed tabs with their full history.
+To function, *QuicKey* needs access to your open tabs, bookmarks and history.  The Chrome permissions dialog says *QuicKey* can also change your bookmarks and browsing history on all signed-in devices, but it never will (Chrome lumps read and write access together, unfortunately).  It can't access the content of any pages you visit and doesn't transmit any information other than some anonymized Google Analytics metrics.  The "signed-in devices" permission is required only to restore recently closed tabs with their full history.
 
 
 ## Feedback and bugs
