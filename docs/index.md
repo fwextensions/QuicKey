@@ -90,7 +90,7 @@ You can change the <b><kbd>alt</kbd><kbd>A</kbd></b> and <b><kbd>alt</kbd><kbd>s
 
 ## Close and reopen tabs
 
-To close the selected tab, press <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd</kbd><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS).  For instance, you could type `docg` to match all of your Google Docs URLs and then quickly close those you no longer need.
+To close the selected tab, press <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd</kbd><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS).  Or hover over a tab and click the <img src="img/clear.svg" style="height: 13px"> button on the right side of the menu.
 
 When you open *QuicKey*, the 25 most recently closed tabs are listed below the recent tabs and shown in a faded state with an <img src="img/clear.svg" style="height: 13px"> icon.  They are also returned when you type a query, though they're scored lower than open tabs.
 

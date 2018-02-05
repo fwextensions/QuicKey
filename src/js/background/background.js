@@ -193,14 +193,16 @@ require([
 		function restartExtension()
 		{
 			if (!popupIsOpen) {
-DEBUG && console.log("=== reloading");
+console.log("=== reloading for update");
+//DEBUG && console.log("=== reloading");
 				chrome.runtime.reload();
 			} else {
 				setTimeout(restartExtension, RestartDelay);
 			}
 		}
 
-		DEBUG && console.log("onUpdateAvailable", details);
+		console.log("onUpdateAvailable", details);
+//		DEBUG && console.log("onUpdateAvailable", details);
 
 		restartExtension();
 	});

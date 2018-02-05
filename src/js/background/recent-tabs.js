@@ -41,6 +41,8 @@ define([
 	var shortcutTimer = null,
 		storage = createStorage(StorageVersion,
 			function() {
+					// we only want to get the tabs in the current window because
+					// only the currently active tab is "recent" as far as we know
 				return cp.tabs.query({ active: true, currentWindow: true, windowType: "normal" })
 					.then(function(tabs) {
 						var data = {

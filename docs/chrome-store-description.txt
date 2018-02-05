@@ -107,7 +107,7 @@ You can change the alt-A and alt-shift-A shortcuts by right-clicking the QuicKey
 
 ★ Close and reopen tabs
 
-To close the selected tab, press ctrl-W (cmd-ctrl-W on macOS). For instance, you could type "docg" to match all of your Google Docs URLs and then quickly close those you no longer need.
+To close the selected tab, press ctrl-W (cmd-ctrl-W on macOS). Or hover over a tab and click the X button on the right side of the menu. 
 
 When you open *QuicKey*, the 25 most recently closed tabs are listed below the recent tabs and shown in a faded state with an X icon. They are also returned when you type a query, though they're scored lower than open tabs.
 
