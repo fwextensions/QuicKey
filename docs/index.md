@@ -90,9 +90,13 @@ You can change the <b><kbd>alt</kbd><kbd>A</kbd></b> and <b><kbd>alt</kbd><kbd>s
 
 ## Close and reopen tabs
 
-To close the selected tab, press <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd</kbd><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS).  Or hover over a tab and click the <img src="img/clear.svg" style="height: 13px"> button on the right side of the menu.
+To close the selected tab, press <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd</kbd><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS).  Or hover over a tab and click the <img src="img/clear.svg" style="height: 1em"> button on the right side of the menu:
 
-When you open *QuicKey*, the 25 most recently closed tabs are listed below the recent tabs and shown in a faded state with an <img src="img/clear.svg" style="height: 13px"> icon.  They are also returned when you type a query, though they're scored lower than open tabs.
+![Close button](img/close-button.png)
+
+When you open *QuicKey*, the 25 most recently closed tabs are listed below the recent tabs and shown in a faded state with an <img src="img/clear.svg" style="height: 1em"> icon.  They are also returned when you type a query, though they're scored lower than open tabs:
+
+![Closed tab](img/closed-tab.png)
 
 Click a closed tab to reopen it in its original location and with all of its browsing history intact.
 
@@ -129,18 +133,22 @@ The same <b><kbd>ctrl</kbd><kbd>enter</kbd></b> (<b><kbd>cmd</kbd><kbd>enter</kb
 
 ## <a href="https://chrome.google.com/webstore/detail/the-great-suspender/klbibkeccnjlkjkiokjodocebajanakg?hl=en"><img src="img/tgs-icon.png" style="height: 24px;"></a> The Great Suspender integration
 
-If you use the handy extension [The Great Suspender](https://chrome.google.com/webstore/detail/the-great-suspender/klbibkeccnjlkjkiokjodocebajanakg?hl=en) (and you almost certainly do if you have hundreds of tabs open), then suspended tabs will look faded in the list, and the original URL is shown (not that long one that you see in the location bar).  That means if you search for `chrome` or `extension`, you won't simply match all the suspended tabs, which is what happens in other tab search extensions.
+If you use the handy extension [The Great Suspender](https://chrome.google.com/webstore/detail/the-great-suspender/klbibkeccnjlkjkiokjodocebajanakg?hl=en) (and you almost certainly do if you have hundreds of tabs open), then suspended tabs will look faded in the list:
+
+![Suspended tab](img/suspended-tab.png)
+
+The original URL is shown in the menu (not that long one that you see in the location bar), so if you search for `chrome` or `extension`, you won't simply match all the suspended tabs, which is what happens in other tab search extensions.
 
 Press <b><kbd>shift</kbd><kbd>enter</kbd></b> to switch to a tab and unsuspend it in one go. Or shift-click it with the mouse.
-
-Sometimes The Great Suspender seems to forget the page's favicon and just shows its own in the tab.  In that case, *QuicKey* will try to show the correct favicon in its list of tabs.
 
 
 ## Incognito mode
 
 To switch to incognito tabs as well as normal ones, open Chrome's main menu and then go to *More tools > Extensions*, scroll down to the *QuicKey* extension, and check the *Allow in incognito* option.
 
-Tabs in incognito mode display the incognito icon, so you can distinguish a normal tab from an incognito one with the same title.
+Tabs in incognito mode display the incognito icon, so you can distinguish a normal tab from an incognito one with the same title:
+
+![Incognito tab](img/incognito-tab.png)
 
 
 ## Privacy policy
@@ -155,6 +163,6 @@ If you find a bug in *QuicKey* or have a suggestion for a new feature, please [c
 
 ## Credits
 
-The <img src="img/search.svg" style="height: 13px"> and <img src="img/clear.svg" style="height: 16px; vertical-align: middle;"> icons are from the [Octicons](https://octicons.github.com/) set, used under the [MIT License](http://opensource.org/licenses/MIT).
+The <img src="img/search.svg" style="height: 1em"> and <img src="img/clear.svg" style="height: 1em; vertical-align: middle;"> icons are from the [Octicons](https://octicons.github.com/) set, used under the [MIT License](http://opensource.org/licenses/MIT).
 
 The string ranking algorithm is modeled on [Quicksilver](https://github.com/quicksilver/Quicksilver/blob/master/Quicksilver/Code-QuickStepCore/QSense.m)'s code.
