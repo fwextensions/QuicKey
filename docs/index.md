@@ -90,7 +90,7 @@ You can change the <b><kbd>alt</kbd><kbd>A</kbd></b> and <b><kbd>alt</kbd><kbd>s
 
 ## Close and reopen tabs
 
-To close the selected tab, press <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd</kbd><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS).  Or hover over a tab and click the <img src="img/clear.svg" style="height: 1em"> button on the right side of the menu:
+To close the selected tab, press <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd</kbd><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS).  Or hover over a tab and click the close button on the right side of the menu:
 
 ![Close button](img/close-button.png)
 
@@ -137,7 +137,7 @@ If you use the handy extension [The Great Suspender](https://chrome.google.com/w
 
 ![Suspended tab](img/suspended-tab.png)
 
-The original URL is shown in the menu (not that long one that you see in the location bar), so if you search for `chrome` or `extension`, you won't simply match all the suspended tabs, which is what happens in other tab search extensions.
+The original URL is shown in the menu (not that long `chrome-extension://` one you see in the location bar), so if you search for `chrome` or `extension`, you won't simply match all the suspended tabs, which is what happens in other tab search extensions.
 
 Press <b><kbd>shift</kbd><kbd>enter</kbd></b> to switch to a tab and unsuspend it in one go. Or shift-click it with the mouse.
 

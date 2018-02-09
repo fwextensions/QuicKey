@@ -146,7 +146,7 @@ The same ctrl-enter (cmd-enter on macOS) and shift-enter shortcuts will open the
 
 ★ The Great Suspender integration
 
-If you use the handy extension "The Great Suspender", then suspended tabs will look faded in the list, and the original URL is shown (not that long one that you see in the location bar). That means if you search for "chrome" or "extension", you won't simply match all the suspended tabs, which is what happens in other tab search extensions.
+If you use the handy extension "The Great Suspender", then suspended tabs will look faded in the list, and the original URL is shown (not that long chrome-extension:// one you see in the location bar). That means if you search for "chrome" or "extension", you won't simply match all the suspended tabs, which is what happens in other tab search extensions.
 
 Press shift-enter to switch to a tab and unsuspend it in one go. Or shift-click it with the mouse.
 

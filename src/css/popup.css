@@ -128,7 +128,7 @@ input.search-box::-webkit-search-cancel-button {
 }
 
 .results-list-item.closed {
-	background-image: url(/img/clear.svg);
+	background-image: url(/img/closed.svg);
 	background-size: 10px 16px;
 	background-position: 9px 25px;
 }
