@@ -1,7 +1,7 @@
 	// if the popup is opened and closed within this time, switch to the
 	// previous tab
 const MaxPopupLifetime = 450,
-	WindowActivatedDelay = 500,
+	TabActivatedDelay = 750,
 	MinTabDwellTime = 750,
 	RestartDelay = 10 * 1000;
 
@@ -29,14 +29,12 @@ function debounce(
 
 
 chrome.runtime.onStartup.addListener(function() {
-	var timer = null;
-
 	gStartingUp = true;
 
 DEBUG && console.log("== onStartup");
 
 
-	function onActivated()
+	const onActivated = debounce(function()
 	{
 		chrome.tabs.onActivated.removeListener(onActivated);
 
@@ -57,10 +55,18 @@ DEBUG && console.log("===== updateAll done");
 					gStartingUp = false;
 				});
 		});
-	}
+	}, TabActivatedDelay);
 
 
-	chrome.tabs.onActivated.addListener(debounce(onActivated, WindowActivatedDelay));
+		// before Chrome 63 or so, when relaunching the browser, all the previously
+		// open tabs would trigger onActivated events, and we wanted to ignore
+		// those until Chrome settled down.  now it seems like neither tab nor
+		// window activation events are triggered during startup, so fire the
+		// event handler manually, so even if no other events are fired, we're
+		// guaranteed to call updateAll() and flip gStartingUp back to false. 
+	onActivated();
+
+	chrome.tabs.onActivated.addListener(onActivated);
 });
 
 
