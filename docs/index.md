@@ -6,7 +6,7 @@ image: img/search-results-open.png
 
 <img src="img/search-results-open.png" style="box-shadow: 0px 5px 30px 4px rgba(0, 0, 0, 0.1);" alt="QuicKey search results">
 
-If you like to keep lots of tabs open in Chrome, it can quickly become difficult to find the one you want.  The tabs get very small, so you have to hover over each one to see its name in a tooltip.  And there's no overall Windows menu that would let you more easily pick a tab from a list.
+If you like to keep lots of tabs open in Chrome, it can quickly become difficult to find the one you want.  The tabs get very small, so you have to hover over each one to see its name in a tooltip.  And there's no tab menu to let you pick the one you want.
 
 *QuicKey* lets you navigate your hundreds of Chrome tabs by typing just part of a page's title or URL.  No mouse needed!
 
@@ -14,7 +14,7 @@ If you like to keep lots of tabs open in Chrome, it can quickly become difficult
   * Type a few letters.
   * Press enter to switch to the selected tab.
 
-To toggle between the two most recently used tabs, quickly press the keyboard shortcut twice.  Or navigate the full most recently used (MRU) tab list as [shown below](#mru).
+To toggle between the two most recently used tabs, quickly press the keyboard shortcut twice.  Or pick a tab from the most recently used (MRU) list as [shown below](#mru).
 
 You can also type <b><kbd>/</kbd><kbd>b</kbd></b> to search [bookmarks](#bookmarks) or <b><kbd>/</kbd><kbd>h</kbd></b> to search your [browser history](#history).
 

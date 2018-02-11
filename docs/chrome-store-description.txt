@@ -37,7 +37,7 @@ Navigate your hundreds of Chrome tabs by typing just part of a page's title or U
  • Type a few letters
  • Press enter to switch to the selected tab
 
-To toggle between the two most recently used tabs, quickly press the keyboard shortcut twice. Or navigate the full most-recently-used (MRU) tab list as shown below.
+To toggle between the two most recently used tabs, quickly press the keyboard shortcut twice. Or pick a tab from the most-recently-used (MRU) list as shown below.
 
 You can customize the shortcut key by right-clicking the QuicKey icon and selecting Options.
 
@@ -46,7 +46,7 @@ You can customize the shortcut key by right-clicking the QuicKey icon and select
 
 Unlike other tab switchers, QuicKey uses a Quicksilver-style search algorithm to rank the results, where contiguous matches at the beginning of words are higher in the list, as are matches against capital letters. So you can type just a few letters to quickly find the right tab.
 
-Tab search keyboard shortcuts:
+Use keyboard shortcuts to navigate the list:
 
  • enter: switch to the selected tab
  • ↓ or space: move down the list
