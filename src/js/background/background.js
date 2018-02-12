@@ -63,7 +63,7 @@ DEBUG && console.log("===== updateAll done");
 		// those until Chrome settled down.  now it seems like neither tab nor
 		// window activation events are triggered during startup, so fire the
 		// event handler manually, so even if no other events are fired, we're
-		// guaranteed to call updateAll() and flip gStartingUp back to false. 
+		// guaranteed to call updateAll() and flip gStartingUp back to false.
 	onActivated();
 
 	chrome.tabs.onActivated.addListener(onActivated);
