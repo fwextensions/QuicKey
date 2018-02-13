@@ -12,7 +12,7 @@ If you like to keep lots of tabs open in Chrome, it can quickly become difficult
 
   * Press <b><kbd>alt</kbd><kbd>Q</kbd></b> (<b><kbd>ctrl</kbd><kbd>Q</kbd></b> on macOS).
   * Type a few letters.
-  * Press enter to switch to the selected tab.
+  * Press <kbd>enter</kbd> to switch to the selected tab.
 
 To toggle between the two most recently used tabs, quickly press the keyboard shortcut twice.  Or pick a tab from the most recently used (MRU) list as [shown below](#mru).
 
@@ -146,7 +146,7 @@ Press <b><kbd>shift</kbd><kbd>enter</kbd></b> to switch to a tab and unsuspend i
 
 To switch to incognito tabs as well as normal ones, open Chrome's main menu and then go to *More tools > Extensions*, scroll down to the *QuicKey* extension, and check the *Allow in incognito* option.
 
-Tabs in incognito mode display the incognito icon, so you can distinguish a normal tab from an incognito one with the same title:
+Tabs in incognito mode display the incognito icon under the page's favicon, so you can distinguish a normal tab from an incognito one with the same title:
 
 ![Incognito tab](img/incognito-tab.png)
 
