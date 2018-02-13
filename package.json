@@ -24,7 +24,7 @@
     "lodash-cli": "^4.17.4",
     "react": "^15.6.2",
     "react-dom": "^15.6.2",
-    "react-virtualized": "^9.9.0",
+    "react-virtualized": "^9.18.5",
     "requirejs": "^2.3.5"
   },
   "dependencies": {}
