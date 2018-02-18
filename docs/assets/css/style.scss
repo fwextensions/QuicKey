@@ -62,12 +62,12 @@ kbd {
 }
 
 p > b, li > b {
+	font-weight: normal;
 	white-space: nowrap;
 }
 
 b > kbd + kbd {
 	margin-left: 0.3em;
-	font-weight: normal;
 }
 
 a:hover, a:focus {
