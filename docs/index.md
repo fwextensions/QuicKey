@@ -1,6 +1,6 @@
 ---
 
-image: img/search-results-open.png
+image: img/og-image.png
 
 ---
 
@@ -32,7 +32,7 @@ You can customize the shortcut key by right-clicking the *QuicKey* icon and sele
 
 Unlike other tab switchers, *QuicKey* uses a [Quicksilver](https://qsapp.com/)-style search algorithm to rank the results, where contiguous matches at the beginning of words are higher in the list, as are matches against capital letters.  So you can type just a few letters to quickly find the right tab.
 
-Use keyboard shortcuts to navigate the tab list:
+Use keyboard shortcuts to navigate the list of matching tabs:
 
   * <kbd>enter</kbd>&nbsp;: switch to the selected tab
   * <kbd>↓</kbd> or <kbd>space</kbd>&nbsp;: move down the list
