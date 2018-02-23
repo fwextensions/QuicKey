@@ -64,20 +64,22 @@ DEBUG && console.log("===== updateAll done");
 		// window activation events are triggered during startup, so fire the
 		// event handler manually, so even if no other events are fired, we're
 		// guaranteed to call updateAll() and flip gStartingUp back to false.
-	onActivated();
+//	onActivated();
 
 	chrome.tabs.onActivated.addListener(onActivated);
 });
 
 
 require([
+	"cp",
 	"background/recent-tabs",
 	"background/page-trackers",
-	"cp"
+	"background/quickey-storage"
 ], function(
+	cp,
 	recentTabs,
 	pageTrackers,
-	cp
+	storage
 ) {
 	var popupIsOpen = false,
 		addFromToggle = false,
@@ -86,6 +88,13 @@ require([
 		lastWindowID;
 
 	window.tracker = popupTracker;
+	window.recentTabs = recentTabs;
+
+	storage.set(function(data) {
+		return {
+			lastStartupTime: Date.now()
+		};
+	});
 
 
 	function addTab(
@@ -167,6 +176,7 @@ require([
 
 		var closedByEsc = false;
 
+		gStartingUp = false;
 		popupIsOpen = true;
 
 		port.onMessage.addListener(function(message) {
@@ -220,7 +230,8 @@ console.log("=== reloading for update");
 
 
 	window.log = function() {
-		DEBUG && console.log.apply(console, arguments);
+		console.log.apply(console, arguments);
+//		DEBUG && console.log.apply(console, arguments);
 	};
 
 

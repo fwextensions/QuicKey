@@ -14,7 +14,7 @@ define(function() {
 		SkippedScore = 0.15,
 		LongStringLength = 151,
 		MaxMatchStartPct = .15,
-		MinMatchDensityPct = .5,
+		MinMatchDensityPct = .75,
 		MaxMatchDensityPct = .95,
 		BeginningOfStringPct = .1;
 

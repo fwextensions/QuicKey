@@ -10,7 +10,6 @@ define("popup/app", [
 	"./data/get-history",
 	"./data/add-urls",
 	"./shortcuts/handle-keys",
-	"background/recent-tabs",
 	"lodash"
 ], function(
 	React,
@@ -24,7 +23,6 @@ define("popup/app", [
 	getHistory,
 	addURLs,
 	handleKeys,
-	recentTabs,
 	_
 ) {
 	const MinScore = .15,
@@ -80,7 +78,7 @@ define("popup/app", [
 
 		componentWillMount: function()
 		{
-			recentTabs.getAll()
+			this.props.recentTabs.getAll()
 				.bind(this)
 				.then(function(tabs) {
 					var now = Date.now();

@@ -1,15 +1,15 @@
 define([
 	"bluebird",
 	"cp",
-	"background/storage",
+	"background/quickey-storage",
 	"background/page-trackers",
 	"popup/data/add-urls"
 ], function(
 	Promise,
 	cp,
-	createStorage,
+	storage,
 	pageTrackers,
-	addURL
+	addURLs
 ) {
 	const MaxTabsLength = 50,
 		MaxSwitchDelay = 750,
@@ -34,36 +34,10 @@ define([
 				"19": "img/icon-19-inverted.png",
 				"38": "img/icon-38-inverted.png"
 			}
-		},
-		StorageVersion = 2;
+		};
 
 
-	var shortcutTimer = null,
-		storage = createStorage(StorageVersion,
-			function() {
-					// we only want to get the tabs in the current window because
-					// only the currently active tab is "recent" as far as we know
-				return cp.tabs.query({ active: true, currentWindow: true, windowType: "normal" })
-					.then(function(tabs) {
-						var data = {
-								tabIDs: [],
-								tabsByID: {},
-								previousTabIndex: -1,
-								switchFromShortcut: false,
-								lastShortcutTime: 0,
-								newTabsCount: []
-							},
-							tab = tabs && tabs[0];
-
-						if (tab) {
-							data.tabIDs.push(tab.id);
-							data.tabsByID[tab.id] = tab;
-						}
-
-						return data;
-					});
-			}
-		);
+	var shortcutTimer = null;
 
 
 	function removeItem(
@@ -243,7 +217,15 @@ DEBUG && console.log("tab closed", tabID, tabsByID[tabID].title);
 				])
 				.spread(function(freshTabs, closedTabs) {
 					var tabsByID = data.tabsByID,
+						newData = {
+							tabsByID: tabsByID
+						},
 						tabs;
+
+					if (data.lastStartupTime > data.lastUpdateTime) {
+						newData = updateFromFreshTabs(data, freshTabs);
+						tabsByID = newData.tabsByID;
+					}
 
 						// update the fresh tabs with any recent data we have
 					tabs = freshTabs.map(function(tab) {
@@ -264,34 +246,34 @@ DEBUG && console.log("tab closed", tabID, tabsByID[tabID].title);
 						return newTab;
 					});
 
-					closedTabs = closedTabs.map(function(session) {
-						const tabFromSession = session.tab || session.window.tabs[0],
-							tab = createRecent(tabFromSession);
-
-							// session lastModified times are in Unix epoch
-						tab.lastVisit = session.lastModified * 1000;
-						tab.sessionId = tabFromSession.sessionId;
-
-						return tab;
-					});
-
 						// only show the closed tabs if we also have some recent
 						// tabs, so that the user doesn't see just closed tabs on
 						// a new install.  have to check for > 1, since even on a
 						// new install or after closing a window, the current tab
-						// will be in the list, which is then removed from the list.
+						// will be in the list, but is then removed from the list
+						// in getTabs().
 					if (data.tabIDs.length > 1) {
-						tabs = tabs.concat(closedTabs);
+						tabs = tabs.concat(closedTabs.map(function(session) {
+							const tabFromSession = session.tab || session.window.tabs[0],
+								tab = createRecent(tabFromSession);
+
+								// session lastModified times are in Unix epoch
+							tab.lastVisit = session.lastModified * 1000;
+							tab.sessionId = tabFromSession.sessionId;
+
+							return tab;
+						}));
 					}
 
 						// save off the updated recent data.  we don't call
 						// storage.set() for getAll() so that the popup doesn't
 						// have to wait for the data to get stored before it's
-						// returned, so the recents menu renders faster.
+						// returned, to make the recents menu render faster.
 					storage.set(function() {
-						return {
-							tabsByID: tabsByID
-						};
+						return newData;
+//						return {
+//							tabsByID: tabsByID
+//						};
 					});
 
 					return tabs;
@@ -300,81 +282,154 @@ DEBUG && console.log("tab closed", tabID, tabsByID[tabID].title);
 	}
 
 
+	function updateFromFreshTabs(
+		data,
+		freshTabs)
+	{
+DEBUG && console.log("=== updateAll", data, freshTabs);
+		var freshTabsByURL = {},
+			tabIDs = data.tabIDs,
+			tabsByID = data.tabsByID,
+				// start with an empty object so if there are old
+				// tabs lying around that aren't listed in tabIDs
+				// they'll get dropped
+			newTabsByID = {},
+			newTabIDs = [],
+			newTabsCount = [].concat(data.newTabsCount,
+				{ l: freshTabs.length, d: Date.now() }).slice(-5),
+			missingCount = 0,
+			tracker = pageTrackers.background;
+DEBUG && console.log("=== existing tabs", tabIDs.length, Object.keys(tabsByID).length, "fresh", freshTabs.length);
+
+			// create a dictionary of the new tabs by the URL and
+			// unsuspendURL, if any, so that a recent that had been
+			// saved unsuspended and then was later suspended could
+			// match up with the fresh, suspended tab
+		freshTabs.forEach(function(tab) {
+			addURLs(tab);
+			freshTabsByURL[tab.url] = tab;
+			tab.unsuspendURL && (freshTabsByURL[tab.unsuspendURL] = tab);
+		});
+
+			// we need to loop on tabIDs instead of just building a
+			// hash and using Object.keys() to get a new list because
+			// we want to maintain the recency order from tabIDs
+		tabIDs.forEach(function(tabID) {
+			var oldTab = tabsByID[tabID],
+				newTab = freshTabsByURL[oldTab && oldTab.url];
+
+			if (newTab) {
+					// we found the same URL in a new tab, so copy over
+					// the relevant keys and store it in the hash
+					// using the new tab's ID.  also delete the URL
+					// from the hash in case there are duplicate tabs
+					// pointing at the same URL.
+				newTab = createRecent(newTab, oldTab);
+				newTabsByID[newTab.id] = newTab;
+				newTabIDs.push(newTab.id);
+				delete freshTabsByURL[oldTab.url];
+			} else {
+				missingCount++;
+DEBUG && console.log("=== missing", oldTab.lastVisit, oldTab.url);
+			}
+		});
+DEBUG && console.log("=== newTabIDs", newTabIDs.length);
+
+		newTabsCount[newTabsCount.length - 1].m = missingCount;
+
+		tracker.event("update", "old-recents", tabIDs.length);
+		tracker.event("update", "new-tabs", freshTabs.length);
+		tracker.event("update", "missing-recents", missingCount);
+
+		var result = {
+			tabIDs: newTabIDs,
+			tabsByID: newTabsByID,
+			newTabsCount: newTabsCount,
+			lastUpdateTime: Date.now()
+		};
+DEBUG && console.log("updateAll result", result);
+
+		return result;
+	}
+
+
 	function updateAll()
 	{
 		return storage.set(function(data) {
 			return cp.tabs.query({})
 				.then(function(freshTabs) {
-DEBUG && console.log("=== updateAll", data, freshTabs);
-					var freshTabsByURL = {},
-						tabIDs = data.tabIDs,
-						tabsByID = data.tabsByID,
-							// start with an empty object so if there are old
-							// tabs lying around that aren't listed in tabIDs
-							// they'll get dropped
-						newTabsByID = {},
-						newTabIDs = [],
-						newTabsCount = [].concat(data.newTabsCount,
-							{ l: freshTabs.length, d: Date.now() }).slice(-5),
-						missingCount = 0,
-						tracker = pageTrackers.background;
-DEBUG && console.log("=== existing tabs", tabIDs.length, Object.keys(tabsByID).length, "fresh", freshTabs.length);
+					return updateFromFreshTabs(data, freshTabs);
 
-						// create a dictionary of the new tabs by the URL and
-						// unsuspendURL, if any, so that a recent that had been
-						// saved unsuspended and then was later suspended could
-						// match up with the fresh, suspended tab
-					freshTabs.forEach(function(tab) {
-						addURL(tab);
-						freshTabsByURL[tab.url] = tab;
-						tab.unsuspendURL && (freshTabsByURL[tab.unsuspendURL] = tab);
-					});
-
-						// we need to loop on tabIDs instead of just building a
-						// hash and using Object.keys() to get a new list because
-						// we want to maintain the recency order from tabIDs
-					tabIDs.forEach(function(tabID) {
-						var oldTab = tabsByID[tabID],
-							newTab = freshTabsByURL[oldTab && oldTab.url];
-
-						if (newTab) {
-								// we found the same URL in a new tab, so copy over
-								// the relevant keys and store it in the hash
-								// using the new tab's ID.  also delete the URL
-								// from the hash in case there are duplicate tabs
-								// pointing at the same URL.
-							newTab = createRecent(newTab, oldTab);
-							newTabsByID[newTab.id] = newTab;
-							newTabIDs.push(newTab.id);
-							delete freshTabsByURL[oldTab.url];
-						} else {
-							missingCount++;
-DEBUG && console.log("=== missing", oldTab.lastVisit, oldTab.url);
-						}
-					});
-DEBUG && console.log("=== newTabIDs", newTabIDs.length);
-
-					newTabsCount[newTabsCount.length - 1].m = missingCount;
-
-					tracker.event("update", "old-recents", tabIDs.length);
-					tracker.event("update", "new-tabs", freshTabs.length);
-					tracker.event("update", "missing-recents", missingCount);
-
-					var result = {
-						tabIDs: newTabIDs,
-						tabsByID: newTabsByID,
-						newTabsCount: newTabsCount
-					};
-DEBUG && console.log("updateAll result", result);
-
-					return result;
-
-//					return {
+//DEBUG && console.log("=== updateAll", data, freshTabs);
+//					var freshTabsByURL = {},
+//						tabIDs = data.tabIDs,
+//						tabsByID = data.tabsByID,
+//							// start with an empty object so if there are old
+//							// tabs lying around that aren't listed in tabIDs
+//							// they'll get dropped
+//						newTabsByID = {},
+//						newTabIDs = [],
+//						newTabsCount = [].concat(data.newTabsCount,
+//							{ l: freshTabs.length, d: Date.now() }).slice(-5),
+//						missingCount = 0,
+//						tracker = pageTrackers.background;
+//DEBUG && console.log("=== existing tabs", tabIDs.length, Object.keys(tabsByID).length, "fresh", freshTabs.length);
+//
+//						// create a dictionary of the new tabs by the URL and
+//						// unsuspendURL, if any, so that a recent that had been
+//						// saved unsuspended and then was later suspended could
+//						// match up with the fresh, suspended tab
+//					freshTabs.forEach(function(tab) {
+//						addURLs(tab);
+//						freshTabsByURL[tab.url] = tab;
+//						tab.unsuspendURL && (freshTabsByURL[tab.unsuspendURL] = tab);
+//					});
+//
+//						// we need to loop on tabIDs instead of just building a
+//						// hash and using Object.keys() to get a new list because
+//						// we want to maintain the recency order from tabIDs
+//					tabIDs.forEach(function(tabID) {
+//						var oldTab = tabsByID[tabID],
+//							newTab = freshTabsByURL[oldTab && oldTab.url];
+//
+//						if (newTab) {
+//								// we found the same URL in a new tab, so copy over
+//								// the relevant keys and store it in the hash
+//								// using the new tab's ID.  also delete the URL
+//								// from the hash in case there are duplicate tabs
+//								// pointing at the same URL.
+//							newTab = createRecent(newTab, oldTab);
+//							newTabsByID[newTab.id] = newTab;
+//							newTabIDs.push(newTab.id);
+//							delete freshTabsByURL[oldTab.url];
+//						} else {
+//							missingCount++;
+//DEBUG && console.log("=== missing", oldTab.lastVisit, oldTab.url);
+//						}
+//					});
+//DEBUG && console.log("=== newTabIDs", newTabIDs.length);
+//
+//					newTabsCount[newTabsCount.length - 1].m = missingCount;
+//
+//					tracker.event("update", "old-recents", tabIDs.length);
+//					tracker.event("update", "new-tabs", freshTabs.length);
+//					tracker.event("update", "missing-recents", missingCount);
+//
+//					var result = {
 //						tabIDs: newTabIDs,
 //						tabsByID: newTabsByID,
-//// TODO: remove newTabsCount when we've verified this works
 //						newTabsCount: newTabsCount
 //					};
+//DEBUG && console.log("updateAll result", result);
+//
+//					return result;
+//
+////					return {
+////						tabIDs: newTabIDs,
+////						tabsByID: newTabsByID,
+////// TODO: remove newTabsCount when we've verified this works
+////						newTabsCount: newTabsCount
+////					};
 				});
 		}, "updateAll");
 	}

@@ -124,8 +124,18 @@ define([
 		function reset()
 		{
 			return storageMutex.lock(function() {
-				return getDefaultData()
-					.then(saveStorage);
+				return cp.storage.local.clear()
+					.then(getDefaultData)
+					.then(saveStorage)
+					.then(function() {
+							// normally, dataPromise points to the resolved
+							// promise from getAll() that was created when
+							// createStorage() was first called and returns the
+						 	// in-memory version of the data object from storage.
+							// but since we just cleared that, we need to update
+							// the promise to pull the fresh data into memory.
+						dataPromise = getAll();
+					});
 			});
 		}
 

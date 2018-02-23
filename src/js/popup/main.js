@@ -11,9 +11,8 @@ require([
 		shortcuts = gShortcutCache,
 		platform = gIsMac ? "mac" : "win",
 		now = performance.now(),
-		background = chrome.extension.getBackgroundPage();
-
-	var tracker;
+		background = chrome.extension.getBackgroundPage(),
+		tracker = background.tracker;
 
 	if (gClose) {
 			// the user hit esc before we started loading, so just close the
@@ -26,12 +25,8 @@ require([
 		return;
 	}
 
-	if (background) {
-		window.log = background.log;
-		tracker = background.tracker;
-	}
-
 	DEBUG && console.log("=== popup startup time", now - gInitTime, now);
+	window.log = background.log;
 	window.log && log("=== popup startup time", now - gInitTime, now);
 
 	if (tracker) {
@@ -63,6 +58,7 @@ require([
 				initialShortcuts: shortcuts,
 				platform: platform,
 				tracker: tracker,
+				recentTabs: background.recentTabs,
 				port: gPort
 			}),
 			document.getElementById("root")
