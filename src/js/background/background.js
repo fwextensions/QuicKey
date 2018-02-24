@@ -2,6 +2,7 @@
 	// previous tab
 const MaxPopupLifetime = 450,
 	TabActivatedDelay = 750,
+	TabRemovedDelay = 1000,
 	MinTabDwellTime = 750,
 	RestartDelay = 10 * 1000;
 
@@ -40,31 +41,27 @@ DEBUG && console.log("== onStartup");
 
 DEBUG && console.log("==== last onActivated");
 
-		require([
-			"background/recent-tabs"
-		], function(
-			recentTabs
-		) {
+			// we only need to call updateAll() if Chrome is still starting up,
+			// since gStartingUp will be set to false when the popup opens,
+			// which will also update all the tabs
+		if (gStartingUp) {
+			require([
+				"background/recent-tabs"
+			], function(
+				recentTabs
+			) {
 // TODO: move this into a global function set inside the main require()
-				// the stored recent tab data will be out of date, since the tabs
-				// will get new IDs when the app reloads each one
-			return recentTabs.updateAll()
-				.then(function() {
-DEBUG && console.log("===== updateAll done");
+					// the stored recent tab data will be out of date, since the tabs
+					// will get new IDs when the app reloads each one
+				return recentTabs.updateAll()
+					.then(function() {
+	DEBUG && console.log("===== updateAll done");
 
-					gStartingUp = false;
-				});
-		});
+						gStartingUp = false;
+					});
+			});
+		}
 	}, TabActivatedDelay);
-
-
-		// before Chrome 63 or so, when relaunching the browser, all the previously
-		// open tabs would trigger onActivated events, and we wanted to ignore
-		// those until Chrome settled down.  now it seems like neither tab nor
-		// window activation events are triggered during startup, so fire the
-		// event handler manually, so even if no other events are fired, we're
-		// guaranteed to call updateAll() and flip gStartingUp back to false.
-//	onActivated();
 
 	chrome.tabs.onActivated.addListener(onActivated);
 });
@@ -90,6 +87,9 @@ require([
 	window.tracker = popupTracker;
 	window.recentTabs = recentTabs;
 
+
+		// save the current time so recentTabs.getAll() knows whether it needs
+		// to update the stored data
 	storage.set(function(data) {
 		return {
 			lastStartupTime: Date.now()
@@ -134,11 +134,14 @@ require([
 	});
 
 
-	chrome.tabs.onRemoved.addListener(function(tabId, removeInfo) {
+		// debounce the handling of a removed tab since Chrome seems to trigger
+		// the event when shutting down, and we want to ignore those.  hopefully,
+		// Chrome will finish quitting before this handler fires.
+	chrome.tabs.onRemoved.addListener(debounce(function(tabId, removeInfo) {
 		if (!gStartingUp) {
 			recentTabs.remove(tabId, removeInfo);
 		}
-	});
+	}, TabRemovedDelay));
 
 
 		// the onActivated event isn't fired when the user switches between

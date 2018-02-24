@@ -21,7 +21,7 @@ define([
 							switchFromShortcut: false,
 							lastShortcutTime: 0,
 							lastStartupTime: 0,
-							lastUpdateTime: -1,
+							lastUpdateTime: 0,
 							newTabsCount: []
 						},
 						tab = tabs && tabs[0];
