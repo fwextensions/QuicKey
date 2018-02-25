@@ -3,6 +3,7 @@
 	"name": "QuicKey – The quick tab switcher",
 	"short_name": "QuicKey",
 	"version": "0.0.15",
+	"default_locale": "en",
 	"description": "Add keyboard shortcuts to switch tabs with a Quicksilver-style search or a most-recently-used menu",
 	"author": "John Dunning",
 	"content_security_policy": "script-src 'self' 'unsafe-eval' https://www.google-analytics.com; object-src 'self'",

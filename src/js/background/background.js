@@ -30,11 +30,6 @@ function debounce(
 
 
 chrome.runtime.onStartup.addListener(function() {
-	gStartingUp = true;
-
-DEBUG && console.log("== onStartup");
-
-
 	const onActivated = debounce(function()
 	{
 		chrome.tabs.onActivated.removeListener(onActivated);
@@ -55,7 +50,7 @@ DEBUG && console.log("==== last onActivated");
 					// will get new IDs when the app reloads each one
 				return recentTabs.updateAll()
 					.then(function() {
-	DEBUG && console.log("===== updateAll done");
+DEBUG && console.log("===== updateAll done");
 
 						gStartingUp = false;
 					});
@@ -63,6 +58,9 @@ DEBUG && console.log("==== last onActivated");
 		}
 	}, TabActivatedDelay);
 
+DEBUG && console.log("== onStartup");
+
+	gStartingUp = true;
 	chrome.tabs.onActivated.addListener(onActivated);
 });
 
@@ -179,6 +177,10 @@ require([
 
 		var closedByEsc = false;
 
+			// in newer versions of Chrome, reopened tabs don't trigger an
+			// onActivated event, so the handler set in onStartup won't fire
+			// until the first tab is manually activated.  set gStartingUp to
+			// false here in case the user opens the menu before that happens.
 		gStartingUp = false;
 		popupIsOpen = true;
 

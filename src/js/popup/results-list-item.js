@@ -13,6 +13,7 @@ define([
 ) {
 	const MaxTitleLength = 70,
 		MaxURLLength = 75,
+		MinMouseMoveCount = 1,
 		SuspendedFaviconOpacity = .5,
 		FaviconURL = "chrome://favicon/";
 
@@ -26,7 +27,7 @@ define([
 
 
 	var ResultsListItem = React.createClass({
-		ignoreMouse: true,
+		mouseMoveCount: 0,
 
 
 		onClick: function(
@@ -53,6 +54,7 @@ define([
 			event)
 		{
 				// stop the click from bubbling so the tab doesn't get focused
+				// just before it's closed
 			event.stopPropagation();
 			this.props.onTabClosed(this.props.item);
 		},
@@ -63,17 +65,19 @@ define([
 		{
 			var props = this.props;
 
-			if (this.ignoreMouse) {
-					// we'll swallow this first mousemove, since it's probably
-					// from the item being rendered under the mouse, but we'll
-					// respond to the next one
-				this.ignoreMouse = false;
-			} else if (!props.isSelected) {
+			if (this.mouseMoveCount > MinMouseMoveCount && !props.isSelected) {
 					// the mouse is moving over this item but it's not
-					// selected, which means this is the second mousemove
+					// selected, which means this is the third mousemove
 					// event and we haven't gotten another mouseenter.  so
 					// force this item to be selected.
 				props.setSelectedIndex(props.index);
+			} else {
+					// we want to swallow the first two mousemove events because
+					// the item that's rendered under the mouse when the popup
+					// first opens gets at least one mousemove.  on a high-DPI
+					// screen, it sometimes gets a second one, which was causing
+					// the menu item to be accidentally selected.
+				this.mouseMoveCount++;
 			}
 		},
 
@@ -81,7 +85,7 @@ define([
 		onMouseEnter: function(
 			event)
 		{
-			if (!this.ignoreMouse) {
+			if (this.mouseMoveCount > MinMouseMoveCount) {
 				this.props.setSelectedIndex(this.props.index);
 			}
 		},

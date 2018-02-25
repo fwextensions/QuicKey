@@ -437,7 +437,7 @@ DEBUG && console.log("toggleTab previousTabIndex", newData.lastShortcutTabID, pr
 	}
 
 
-	function dump()
+	function printAll()
 	{
 		cp.storage.local.get(null)
 			.then(function(storage) {
@@ -457,38 +457,12 @@ DEBUG && console.log("toggleTab previousTabIndex", newData.lastShortcutTabID, pr
 	}
 
 
-	function dumpRecents()
-	{
-		getAll()
-			.then(function(tabs) {
-				var recents = tabs
-					.filter(function(tab) { return tab.lastVisit })
-					.sort(function(a, b) {
-							// sort open tabs before closed ones, and
-							// newer before old
-						if ((a.sessionId && b.sessionId) || (!a.sessionId && !b.sessionId)) {
-							return b.lastVisit - a.lastVisit;
-						} else if (a.sessionId) {
-							return 1;
-						} else {
-							return -1;
-						}
-					});
-
-				recents.slice(0, 20).forEach(function(tab) {
-					console.log("%c   ", `font-size: 14px; background: url(${tab.favIconUrl}) no-repeat; background-size: contain`, `${tab.id}: ${tab.lastVisit}: ${tab.title.slice(0, 100)}`);
-				});
-			});
-	}
-
-
 	return {
 		add: add,
 		remove: remove,
 		getAll: getAll,
 		updateAll: updateAll,
 		toggleTab: toggleTab,
-		dump: dump,
-		dumpRecents: dumpRecents
+		printAll: printAll
 	};
 });
