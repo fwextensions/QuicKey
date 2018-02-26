@@ -235,8 +235,7 @@ console.log("=== reloading for update");
 
 
 	window.log = function() {
-		console.log.apply(console, arguments);
-//		DEBUG && console.log.apply(console, arguments);
+		DEBUG && console.log.apply(console, arguments);
 	};
 
 
