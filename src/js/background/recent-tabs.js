@@ -293,7 +293,9 @@ DEBUG && console.log("tab closed", tabID, tabsByID[tabID].title);
 						},
 						tabs;
 
-					if (data.lastStartupTime > data.lastUpdateTime) {
+						// lastUpdateTime shouldn't be undefined, but just in case
+					if (isNaN(data.lastUpdateTime) ||
+							data.lastStartupTime > data.lastUpdateTime) {
 DEBUG && console.log("====== calling updateFromFreshTabs");
 						newData = updateFromFreshTabs(data, freshTabs);
 						tabsByID = newData.tabsByID;
@@ -448,7 +450,9 @@ DEBUG && console.log("toggleTab previousTabIndex", newData.lastShortcutTabID, pr
 					const tab = tabsByID[tabID];
 
 					if (tab) {
-						console.log("%c   ", `font-size: 14px; background: url(${tab.favIconUrl}) no-repeat; background-size: contain`, `${tabID}: ${tab.lastVisit}: ${tab.title.slice(0, 100)}`);
+						console.log("%c   ", "font-size: 14px; background: url(" +
+							tab.favIconUrl + ") no-repeat; background-size: contain",
+							tabID + ": " + tab.lastVisit + ": " + tab.title.slice(0, 100));
 					} else {
 						console.log("MISSING", tabID);
 					}

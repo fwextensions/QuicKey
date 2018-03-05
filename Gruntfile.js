@@ -3,7 +3,9 @@ const _ = require("lodash");
 
 module.exports = function(grunt)
 {
-	var baseConfig = {
+	var extensionFullName = "QuicKey – The quick tab switcher",
+		extensionShortName = "QuicKey",
+		baseConfig = {
 			mainConfigFile: "src/js/require-config.js",
 			baseUrl: "src/js",
 				// make sure the jsx plugin is excluded, so the JSXTransformer
@@ -155,6 +157,12 @@ module.exports = function(grunt)
 		version[2] = parseInt(version[2]) + 1;
 		versionString = version.join(".");
 		manifest.version = versionString;
+
+			// set the name back to the full name and icon tooltip that was
+			// overridden in the cleanupManifest task
+		manifest.name = extensionFullName;
+		manifest.browser_action.default_title = extensionShortName;
+
 		grunt.file.write(buildManifestPath, JSON.stringify(manifest, null, "\t"));
 
 		manifest = grunt.file.readJSON(devManifestPath);
@@ -167,6 +175,10 @@ module.exports = function(grunt)
 
 			// we don't need the unsafe-eval policy in the built extension
 		manifest.content_security_policy = manifest.content_security_policy.replace("'unsafe-eval' ", "");
+
+		manifest.browser_action.default_title = manifest.name =
+			extensionShortName + " OUT " + new Date().toLocaleString();
+
 		grunt.file.write(buildManifestPath, JSON.stringify(manifest, null, "\t"));
 	});
 
@@ -187,8 +199,12 @@ module.exports = function(grunt)
 		"build",
 		"incrementVersion",
 		"clean:out",
-		"compress",
-		"exec:pack"
+		"compress"
+	]);
+
+	grunt.registerTask("pack-test", [
+		"build",
+		"compress"
 	]);
 
 	grunt.registerTask("default", [

@@ -1,6 +1,6 @@
 {
 	"manifest_version": 2,
-	"name": "QuicKey – The quick tab switcher",
+	"name": "QuicKey DEV",
 	"short_name": "QuicKey",
 	"version": "0.0.15",
 	"description": "Add keyboard shortcuts to switch tabs with a Quicksilver-style search or a most-recently-used menu",
@@ -25,7 +25,7 @@
 			"19": "img/icon-19.png",
 			"38": "img/icon-38.png"
 		},
-		"default_title": "QuicKey",
+		"default_title": "QuicKey DEV",
 		"default_popup": "popup.html"
 	},
 	"background": {

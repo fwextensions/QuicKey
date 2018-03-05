@@ -23,7 +23,7 @@ You can also type <b><kbd>/</kbd><kbd>b</kbd></b> to search [bookmarks](#bookmar
 
 <button id="install" onclick="chrome.webstore.install()">Install Now</button> or go to the [Chrome Web Store](https://chrome.google.com/webstore/detail/quickey-–-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg) to install *QuicKey*.
 
-Once the extension is installed, you can click the <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> button on the toolbar to open the search box.  But if you're using this extension, you'll probably prefer using the default keyboard shortcut listed above.
+Once the extension is installed, you can click the <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> button on the toolbar to open the search box.  But if you like this extension, you'll probably prefer using the default keyboard shortcut listed above.
 
 You can customize the shortcut key by right-clicking the *QuicKey* icon and selecting *Options*.
 
@@ -79,7 +79,7 @@ Opening *QuicKey* displays a list of the last 50 tabs you've visited, in order o
 
 ![MRU tab list](img/mru-menu.gif)
 
-Which shortcuts to use is up to you.  Double-pressing <b><kbd>alt</kbd><kbd>Q</kbd></b> is nice because there's just one shortcut and you can switch between the two most recently used tabs as quickly as you want.
+Which shortcuts to use is up to you.  Double-pressing <b><kbd>alt</kbd><kbd>Q</kbd></b> is nice because there's just one shortcut and you can switch between the two most recently used tabs as quickly as you want.  (You can also double-click the *QuicKey* icon for the same effect.)
 
 <b><kbd>alt</kbd><kbd>A</kbd></b> lets you quickly navigate to even older tabs, though the timing can be a little tricky.
 
@@ -153,7 +153,17 @@ Tabs in incognito mode display the incognito icon under the page's favicon, so y
 
 ## Privacy policy
 
-To function, *QuicKey* needs access to your open tabs, bookmarks and history.  The Chrome permissions dialog says *QuicKey* can also change your bookmarks and browsing history on all signed-in devices, but it never will (Chrome lumps read and write access together, unfortunately).  It can't access the content of any pages you visit and doesn't transmit any information other than some anonymized Google Analytics metrics.  The "signed-in devices" permission is required only to restore recently closed tabs with their full history.
+When first installed, *QuicKey* asks for these permissions:
+
+- *Read and change your browsing history on all signed-in devices*
+
+    *QuicKey* uses this permission to let you search the titles and URLs of the open tabs, as well as pages from your history. The "all signed-in devices" part is there only so that recently closed tabs can be restored with their full history.
+
+- *Read and change your bookmarks*
+
+    *QuicKey* uses this permission to let you search the titles and URLs of your bookmarked pages. It will never change your bookmarks.
+
+*QuicKey* can't access the content of any pages you visit and doesn't transmit any information other than some anonymized Google Analytics metrics.
 
 
 ## Feedback and bugs

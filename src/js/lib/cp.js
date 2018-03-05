@@ -5,5 +5,12 @@ define([
 	ChromePromise,
 	Promise
 ) {
-	return new ChromePromise({ Promise: Promise });
+	var background = chrome.extension.getBackgroundPage(),
+		cp = background.cp;
+
+	if (!cp) {
+		cp = background.cp = new ChromePromise({ Promise: Promise });
+	}
+
+	return cp;
 });
