@@ -79,7 +79,7 @@ Opening *QuicKey* displays a list of the last 50 tabs you've visited, in order o
 
 ![MRU tab list](img/mru-menu.gif)
 
-Which shortcuts to use is up to you.  Double-pressing <b><kbd>alt</kbd><kbd>Q</kbd></b> is nice because there's just one shortcut and you can switch between the two most recently used tabs as quickly as you want.  (You can also double-click the *QuicKey* icon for the same effect.)
+Which shortcuts to use is up to you.  Double-pressing <b><kbd>alt</kbd><kbd>Q</kbd></b> is nice because there's just one shortcut and you can switch between the two most recently used tabs as quickly as you want.  (You can also double-click the *QuicKey* icon to toggle tabs.)
 
 <b><kbd>alt</kbd><kbd>A</kbd></b> lets you quickly navigate to even older tabs, though the timing can be a little tricky.
 
@@ -144,7 +144,9 @@ Press <b><kbd>shift</kbd><kbd>enter</kbd></b> to switch to a tab and unsuspend i
 
 ## Incognito mode
 
-To switch to incognito tabs as well as normal ones, open Chrome's main menu and then go to *More tools > Extensions*, scroll down to the *QuicKey* extension, and check the *Allow in incognito* option.
+To switch to incognito tabs as well as normal ones, open Chrome's main menu and then go to *More tools > Extensions*, scroll down to the *QuicKey* extension, and check the *Allow in incognito* option:
+
+![Incognito option](img/incognito-option.png)
 
 Tabs in incognito mode display the incognito icon under the page's favicon, so you can distinguish a normal tab from an incognito one with the same title:
 
@@ -163,7 +165,7 @@ When first installed, *QuicKey* asks for these permissions:
 
     *QuicKey* uses this permission to let you search the titles and URLs of your bookmarked pages. It will never change your bookmarks.
 
-*QuicKey* can't access the content of any pages you visit and doesn't transmit any information other than some anonymized Google Analytics metrics.
+*QuicKey* can't access the content of any pages you visit and doesn't transmit any information other than some anonymized metrics.
 
 
 ## Feedback and bugs

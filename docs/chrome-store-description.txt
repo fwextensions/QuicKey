@@ -96,7 +96,7 @@ Opening QuicKey displays a list of the last 50 tabs you've visited, in order of 
     • You can also highlight an item with the
        mouse, then release alt to go to that tab.
 
-Which shortcuts to use is up to you. Double-pressing alt-Q is nice because there's just one shortcut and you can switch between the two recent tabs as quickly as you want. (You can also double-click the QuicKey icon for the same effect.)
+Which shortcuts to use is up to you. Double-pressing alt-Q is nice because there's just one shortcut and you can switch between the two recent tabs as quickly as you want. (You can also double-click the QuicKey icon to toggle tabs.)
 
 alt-A lets you navigate to even older tabs, though the timing can be a little tricky.
 
@@ -179,7 +179,7 @@ When first installed, QuicKey asks for these permissions:
       bookmarked pages. It will never change
       your bookmarks.
 
-QuicKey can't access the content of any pages you visit and doesn't transmit any information other than some anonymized Google Analytics metrics.
+QuicKey can't access the content of any pages you visit and doesn't transmit any information other than some anonymized metrics.
 
 
 ★ Support and source code
