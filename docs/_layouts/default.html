@@ -23,6 +23,16 @@
     <!--[if lt IE 9]>
     <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
+
+    <script type="text/javascript">
+      function handleInstall(
+      	source)
+      {
+      	chrome.webstore.install(null, function() { ga("send", "event", "install", source); },
+          function() { ga("send", "event", "install-skip", source); });
+//      	chrome.webstore.install(null, function() { ga("send", "event", "install", source); });
+      }
+    </script>
   </head>
   <body>
     <div class="wrapper">
@@ -32,7 +42,7 @@
         <h1 style="font-style: italic;">{{ site.title | default: site.github.repository_name }}</h1>
         <p>{{ site.tagline | site.description | default: site.github.project_tagline }}</p>
 
-        <p style="margin: 2em 0;"><button id="install" onclick="chrome.webstore.install()">Install Now</button></p>
+        <p style="margin: 2em 0;"><button id="install" onclick="handleInstall('left-pane')">Install Now</button></p>
 
         <p><a href="https://chrome.google.com/webstore/detail/quickey-–-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg"><img src="/QuicKey/img/webstore.png" alt="QuicKey in the Chrome Webstore" style="width: 248px;"/></a></p>
 
