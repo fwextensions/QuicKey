@@ -21,7 +21,7 @@ You can also type <b><kbd>/</kbd><kbd>b</kbd></b> to search [bookmarks](#bookmar
 
 ## Installation
 
-<button id="install" onclick="handleInstall('body')">Install Now</button> or go to the [Chrome Web Store](https://chrome.google.com/webstore/detail/quickey-–-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg) to install *QuicKey*.
+<p class="install"><button onclick="handleInstall(1)">Install Now</button> or go to the [Chrome Web Store](https://chrome.google.com/webstore/detail/quickey-–-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg) to install *QuicKey*.</p>
 
 Once the extension is installed, you can click the <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> button on the toolbar to open the search box.  But if you like this extension, you'll probably prefer using the default keyboard shortcut listed above.
 
