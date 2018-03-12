@@ -5,7 +5,7 @@ define([
 	cp,
 	createStorage
 ) {
-	const StorageVersion = 2;
+	const StorageVersion = 3;
 
 
 	return createStorage(StorageVersion,
@@ -19,14 +19,21 @@ define([
 							tabsByID: {},
 							previousTabIndex: -1,
 							switchFromShortcut: false,
+							lastShortcutTabID: null,
 							lastShortcutTime: 0,
 							lastStartupTime: 0,
-							lastUpdateTime: 0,
-							newTabsCount: []
+							lastUpdateTime: 0
 						},
 						tab = tabs && tabs[0];
 
 					if (tab) {
+							// store now as the last visit of the current tab so
+							// that if the user switches to a different tab, this
+							// one will be shown as a recent one in the menu.
+							// ideally, this would be added via recentTabs.add(),
+							// but that module also depends on this one, so there
+							// would be a circular reference. 
+						tab.lastVisit = Date.now();
 						data.tabIDs.push(tab.id);
 						data.tabsByID[tab.id] = tab;
 					}

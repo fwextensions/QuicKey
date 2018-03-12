@@ -45,7 +45,6 @@ DEBUG && console.log("==== last onActivated");
 			], function(
 				recentTabs
 			) {
-// TODO: move this into a global function set inside the main require()
 					// the stored recent tab data will be out of date, since the tabs
 					// will get new IDs when the app reloads each one
 				return recentTabs.updateAll()

@@ -71,8 +71,7 @@ define([
 				return obj;
 			}, {});
 
-		recent.lastVisit = (oldTab && (oldTab.lastVisit ||
-			(oldTab.visits && oldTab.visits.length && oldTab.visits.slice(-1)[0]))) || 0;
+		recent.lastVisit = (oldTab && oldTab.lastVisit) || 0;
 
 		return recent;
 	}
@@ -98,8 +97,6 @@ DEBUG && console.log("=== updateFromFreshTabs", data, freshTabs);
 				// they'll get dropped
 			newTabsByID = {},
 			newTabIDs = [],
-			newTabsCount = [].concat(data.newTabsCount,
-				{ l: freshTabs.length, d: Date.now() }).slice(-5),
 			missingCount = 0,
 			tracker = pageTrackers.background;
 DEBUG && console.log("=== existing tabs", tabIDs.length, Object.keys(tabsByID).length, "fresh", freshTabs.length);
@@ -138,8 +135,6 @@ DEBUG && console.log("=== missing", oldTab.lastVisit, oldTab.url);
 		});
 DEBUG && console.log("=== newTabIDs", newTabIDs.length);
 
-		newTabsCount[newTabsCount.length - 1].m = missingCount;
-
 		tracker.event("update", "old-recents", tabIDs.length);
 		tracker.event("update", "new-tabs", freshTabs.length);
 		tracker.event("update", "missing-recents", missingCount);
@@ -147,7 +142,6 @@ DEBUG && console.log("=== newTabIDs", newTabIDs.length);
 		var result = {
 			tabIDs: newTabIDs,
 			tabsByID: newTabsByID,
-			newTabsCount: newTabsCount,
 			lastUpdateTime: Date.now()
 		};
 DEBUG && console.log("updateAll result", result);
@@ -314,6 +308,7 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 								// way, when Chrome restarts and we try to match
 								// the saved recents against the new tabs, we'll
 								// be able to match it by URL.
+// TODO: store a copy here so that keys added to this tab data in the popup aren't saved to storage
 							tabsByID[tab.id] = newTab;
 						}
 
