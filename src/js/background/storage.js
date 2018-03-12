@@ -48,10 +48,10 @@ define([
 							.then(function() {
 								return saveStorage(storage);
 							});
-					} else if (!storage.version || storage.version != version) {
+					} else if (storage.version !== version) {
 							// this is likely a new install, so get the default storage
 							// data, then make sure to save it, because the recentTabs
-							// handler probably won't return the full set of data. in
+							// handler probably won't return the full set of data.  in
 							// that case, the default storage would never get saved,
 							// so we'd get the default storage on every call.
 						return getDefaultData().then(saveStorage);
@@ -83,8 +83,7 @@ define([
 
 		function doTask(
 			task,
-			saveResult,
-			event)
+			saveResult)
 		{
 			return storageMutex.lock(function() {
 				return dataPromise

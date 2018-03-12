@@ -99,7 +99,16 @@ require([
 	{
 		if (data.tabId) {
 			return cp.tabs.get(data.tabId)
-				.then(recentTabs.add);
+				.then(recentTabs.add)
+				.catch(function(error) {
+						// ignore the "No tab with id:" errors, which will happen
+						// closing a window with multiple tabs.  since addTab()
+						// is debounced and will fire after the window is closed,
+						// the tab no longer exists at that point.
+					if (error && error.message && error.message.indexOf("No tab") != 0) {
+						backgroundTracker.exception(error);
+					}
+				});
 		} else {
 				// the event parameter is just the tab itself, so add it directly
 			return recentTabs.add(data);
@@ -213,16 +222,12 @@ require([
 		function restartExtension()
 		{
 			if (!popupIsOpen) {
-console.log("=== reloading for update");
-//DEBUG && console.log("=== reloading");
+DEBUG && console.log("=== reloading");
 				chrome.runtime.reload();
 			} else {
 				setTimeout(restartExtension, RestartDelay);
 			}
 		}
-
-		console.log("onUpdateAvailable", details);
-//		DEBUG && console.log("onUpdateAvailable", details);
 
 		restartExtension();
 	});

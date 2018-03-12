@@ -130,7 +130,7 @@ DEBUG && console.log("=== existing tabs", tabIDs.length, Object.keys(tabsByID).l
 				delete freshTabsByURL[oldTab.url];
 			} else {
 				missingCount++;
-DEBUG && console.log("=== missing", oldTab.lastVisit, oldTab.url);
+DEBUG && console.log("=== missing", tabID, oldTab && oldTab.lastVisit, oldTab && oldTab.url);
 			}
 		});
 DEBUG && console.log("=== newTabIDs", newTabIDs.length);
