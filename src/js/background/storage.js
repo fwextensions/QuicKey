@@ -19,7 +19,7 @@ define([
 	{
 		const storageMutex = new Mutex(Promise);
 
-		var version = latestVersion,
+		var version = latestVersion || 1,
 			getDefaultData = typeof defaultDataCreator == "function" ?
 				defaultDataCreator : emptyDefaultData,
 			dataPromise = getAll();
@@ -30,31 +30,13 @@ define([
 				// pass null to get everything in storage
 			return cp.storage.local.get(null)
 				.then(function(storage) {
-						// if latestVersion wasn't passed in to the createStorage()
-						// call, default to the version stored in the data to make
-						// it easier to do createStorage().get() in the console
-					version = version || storage.version;
-
-						// if this is older storage, make sure there's a version.
-						// otherwise, we'd save empty data in a brand new install
-						// instead of getting the default data.
-					if (!storage.data && storage.version == latestVersion) {
-						delete storage.version;
-
-							// we have to clear the storage to get rid of the
-							// existing top-level keys, then save the existing
-							// data and version
-						return cp.storage.local.clear()
-							.then(function() {
-								return saveStorage(storage);
-							});
-					} else if (storage.version !== version) {
-							// this is likely a new install, so get the default storage
-							// data, then make sure to save it, because the recentTabs
-							// handler probably won't return the full set of data.  in
-							// that case, the default storage would never get saved,
-							// so we'd get the default storage on every call.
-						return getDefaultData().then(saveStorage);
+					if (storage.version !== version) {
+							// this is likely a new install, so reset the storage
+							// to the default.  we need to do this without locking
+							// the mutex because doTask() locks it and then calls
+							// this promise, so if we called the locking reset
+							// from here, it would never complete.
+						return resetWithoutLocking();
 					} else {
 						return storage.data;
 					}
@@ -62,7 +44,7 @@ define([
 		}
 
 
-		function saveStorage(
+		function saveWithVersion(
 			data)
 		{
 			return cp.storage.local.set({
@@ -81,6 +63,23 @@ define([
 		}
 
 
+		function resetWithoutLocking()
+		{
+			return cp.storage.local.clear()
+				.then(getDefaultData)
+				.then(saveWithVersion)
+				.then(function(data) {
+						// normally, dataPromise points to the resolved
+						// promise from getAll() that was created when
+						// createStorage() was first called and returns the
+						// in-memory version of the data object from storage.
+						// but since we just cleared that, we need to update
+						// the promise to point to the fresh data in memory.
+					return dataPromise = Promise.resolve(data);
+				});
+		}
+
+
 		function doTask(
 			task,
 			saveResult)
@@ -91,7 +90,13 @@ define([
 						return Promise.resolve(task(data))
 							.then(function(newData) {
 								if (newData && saveResult) {
-										// update the promised data from storage
+										// since all the values are stored on the
+										// .data key of the storage instead of at
+										// the topmost level, we need to update
+										// that object with the changed data
+										// before calling save().  otherwise, we'd
+										// lose any values that weren't changed
+										// and returned by the task function.
 									Object.assign(data, newData);
 
 									return save(data);
@@ -105,37 +110,22 @@ define([
 
 
 		function set(
-			task,
-			event)
+			task)
 		{
-			return doTask(task, true, event);
+			return doTask(task, true);
 		}
 
 
 		function get(
-			task,
-			event)
+			task)
 		{
-			return doTask(task, false, event);
+			return doTask(task, false);
 		}
 
 
 		function reset()
 		{
-			return storageMutex.lock(function() {
-				return cp.storage.local.clear()
-					.then(getDefaultData)
-					.then(saveStorage)
-					.then(function() {
-							// normally, dataPromise points to the resolved
-							// promise from getAll() that was created when
-							// createStorage() was first called and returns the
-						 	// in-memory version of the data object from storage.
-							// but since we just cleared that, we need to update
-							// the promise to pull the fresh data into memory.
-						dataPromise = getAll();
-					});
-			});
+			return storageMutex.lock(resetWithoutLocking);
 		}
 
 

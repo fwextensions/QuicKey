@@ -23,7 +23,12 @@ define([
 			})
 		])
 			.spread(function(tabs, activeTabs) {
-				var activeTab = activeTabs[0],
+					// there should normally be an active tab, unless we've
+					// refreshed the open popup via devtools, which seemed to
+					// return a normal active tab in Chrome pre-65.  default to
+					// an empty object so the .id access below won't throw
+					// an exception.
+				var activeTab = activeTabs[0] || {},
 					match;
 
 					// remove the active tab from the array so it doesn't show up in
