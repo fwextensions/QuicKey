@@ -151,6 +151,7 @@ define("popup/app", [
 						}, this);
 					}
 
+this.props.tracker.event("popup", "recents", this.recents.length);
 					this.props.tracker.set("metric1", tabs.count);
 				});
 		},
