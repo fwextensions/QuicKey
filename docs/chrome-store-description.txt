@@ -2,7 +2,9 @@
 
 Switch tabs with a Quicksilver-style search or a most-recently-used menu
 
-Add keyboard shortcuts to switch tabs with a Quicksilver-style search or a most-recently-used menu
+Add keyboard shortcuts to switch tabs with a Quicksilver-style search or a most recently used menu
+Add keyboard shortcuts in Chrome to switch tabs with a Quicksilver-style search or a most recently used menu
+
 Switch tabs using the keyboard and a Quicksilver-style search or a most-recently-used menu
 Use keyboard shortcuts to switch tabs using a Quicksilver-style search or a most-recently-used menu
 Keep your hands on the keyboard and switch tabs using a Quicksilver search or a most-recently-used menu
@@ -31,7 +33,7 @@ Switch tabs with a Quicksilver-style search or a most recently used (MRU) tab li
 
 # Description
 
-Navigate your hundreds of Chrome tabs by typing just part of a page's title or URL!
+No mouse needed!
 
  • Press alt-Q (ctrl-Q on macOS)
  • Type a few letters

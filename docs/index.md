@@ -4,11 +4,9 @@ image: img/og-image.png
 
 ---
 
-<img src="img/search-results-open.png" style="box-shadow: 0px 5px 30px 4px rgba(0, 0, 0, 0.1);" alt="QuicKey search results">
+<img src="img/search-results-open.png" style="box-shadow: 0px 5px 30px 4px rgba(0, 0, 0, 0.1); margin-bottom: 2em;" alt="QuicKey search results">
 
-If you like to keep lots of tabs open in Chrome, it can quickly become difficult to find the one you want.  The tabs get very small, so you have to hover over each one to see its name in a tooltip.  And there's no tab menu to let you pick the one you want.
-
-*QuicKey* lets you navigate your hundreds of Chrome tabs by typing just part of a page's title or URL.  No mouse needed!
+#### *QuicKey* lets you navigate all of your Chrome tabs by typing just part of a page's title or URL.  No mouse needed!
 
   * Press <b><kbd>alt</kbd><kbd>Q</kbd></b> (<b><kbd>ctrl</kbd><kbd>Q</kbd></b> on macOS).
   * Type a few letters.
@@ -54,12 +52,12 @@ Recently used tabs get a slight boost in the search results ranking, so getting 
 
 Opening *QuicKey* displays a list of the last 50 tabs you've visited, in order of recency.  Click a tab to switch to it, or use one of the keyboard shortcuts below to navigate the recently used tab history:
 
-<br>
+<p style="margin-bottom: 0;">&nbsp;</p>
 
   * **To switch to the previously active tab:**
       * Quickly double-press the <b><kbd>alt</kbd><kbd>Q</kbd></b> or <b><kbd>ctrl</kbd><kbd>Q</kbd></b> shortcut.
 
-<br>
+<p style="margin-bottom: 0;">&nbsp;</p>
 
   * **To navigate farther back in the MRU list:**
     * Press <b><kbd>alt</kbd><kbd>A</kbd></b> (<b><kbd>ctrl</kbd><kbd>A</kbd></b> on macOS) once to switch to the previous tab.  The *QuicKey* icon will invert for .75 seconds: <b><img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> ➤ <img src="img/icon-38-inverted.png" style="height: 19px; vertical-align: text-bottom;"></b>.
@@ -68,7 +66,7 @@ Opening *QuicKey* displays a list of the last 50 tabs you've visited, in order o
     * Pause to let the icon revert to normal: <b><img src="img/icon-38-inverted.png" style="height: 19px; vertical-align: text-bottom;"> ➤ <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"></b>.
     * Press <b><kbd>alt</kbd><kbd>A</kbd></b> again to switch back to the tab you initially started on.
 
-<br>
+<p style="margin-bottom: 0;">&nbsp;</p>
 
   * **To pick a recent tab from the MRU menu:**
     * Press the shortcut but keep holding the <kbd>alt</kbd> key (<kbd>ctrl</kbd> key on macOS).

@@ -291,7 +291,6 @@ DEBUG && console.log("tab closed", tabID, tabsByID[tabID].title);
 					if (isNaN(data.lastUpdateTime) ||
 							data.lastStartupTime > data.lastUpdateTime) {
 DEBUG && console.log("====== calling updateFromFreshTabs");
-pageTrackers.background.event("update", "getAll", (data.lastStartupTime || 0) - data.lastUpdateTime);
 
 						newData = updateFromFreshTabs(data, freshTabs);
 						tabsByID = newData.tabsByID;
@@ -356,8 +355,6 @@ pageTrackers.background.event("update", "getAll", (data.lastStartupTime || 0) - 
 			return cp.tabs.query({})
 				.then(function(freshTabs) {
 DEBUG && console.log("=== updateAll");
-pageTrackers.background.event("update", "updateAll");
-
 					return updateFromFreshTabs(data, freshTabs);
 				});
 		}, "updateAll");
