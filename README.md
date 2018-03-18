@@ -1,6 +1,6 @@
-# *QuicKey*
-
 <img src="docs/img/search-results-open.png" width="525" alt="QuicKey search results">
+
+# *QuicKey*
 
 #### *QuicKey* lets you navigate all of your Chrome tabs by typing just part of a page's title or URL.  No mouse needed!
 
@@ -169,6 +169,6 @@ If you find a bug in *QuicKey* or have a suggestion for a new feature, please [c
 
 ## Credits
 
-The <img src="docs/img/search.svg" height="19"> and <img src="docs/img/clear.svg" height="19"> icons are from the [Octicons](https://octicons.github.com/) set, used under the [MIT License](http://opensource.org/licenses/MIT).
+The <img src="docs/img/search.svg" height="13"> and <img src="docs/img/clear.svg" height="16"> icons are from the [Octicons](https://octicons.github.com/) set, used under the [MIT License](http://opensource.org/licenses/MIT).
 
 The string ranking algorithm is modeled on [Quicksilver](https://github.com/quicksilver/Quicksilver/blob/master/Quicksilver/Code-QuickStepCore/QSense.m)'s code.
