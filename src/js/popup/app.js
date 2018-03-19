@@ -3,6 +3,7 @@ define("popup/app", [
 	"jsx!./search-box",
 	"jsx!./results-list",
 	"jsx!./results-list-item",
+	"jsx!./message-item",
 	"cp",
 	"./score/score-items",
 	"./data/get-tabs",
@@ -16,6 +17,7 @@ define("popup/app", [
 	SearchBox,
 	ResultsList,
 	ResultsListItem,
+	MessageItem,
 	cp,
 	scoreItems,
 	getTabs,
@@ -41,7 +43,11 @@ define("popup/app", [
 		HistoryQuery = "/h ",
 		BQuery = "/b",
 		HQuery = "/h",
-		CommandQuery = "/";
+		CommandQuery = "/",
+		NoRecentTabsMessage = [{
+			message: "Recently used tabs will appear here as you continue browsing in Chrome.",
+			faviconURL: "img/alert.svg"
+		}];
 
 
 	var App = React.createClass({
@@ -151,8 +157,7 @@ define("popup/app", [
 						}, this);
 					}
 
-this.props.tracker.event("popup", "recents", this.recents.length);
-					this.props.tracker.set("metric1", tabs.count);
+					this.props.tracker.set("metric1", tabs.length);
 				});
 		},
 
@@ -508,7 +513,16 @@ this.props.tracker.event("popup", "recents", this.recents.length);
 		render: function()
 		{
 			var state = this.state,
-				query = state.query;
+				query = state.query,
+				items = state.matchingItems,
+				ItemComponent = ResultsListItem;
+
+			if (!items.length && this.mode == "tabs") {
+					// show a message about recents not appearing until the user
+					// switches tabs more
+				ItemComponent = MessageItem;
+				items = NoRecentTabsMessage;
+			}
 
 			return <div className={this.props.platform}>
 				<SearchBox
@@ -521,9 +535,9 @@ this.props.tracker.event("popup", "recents", this.recents.length);
 				/>
 				<ResultsList
 					ref={this.handleListRef}
-					ItemComponent={ResultsListItem}
+					ItemComponent={ItemComponent}
 					mode={this.mode}
-					items={state.matchingItems}
+					items={items}
 					query={query}
 					maxItems={MaxItems}
 					selectedIndex={state.selected}

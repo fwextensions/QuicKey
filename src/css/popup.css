@@ -18,6 +18,7 @@ html, body {
 
 body {
 	-webkit-user-select: none;
+	user-select: none;
 	cursor: default;
 	overflow: hidden;
 }
@@ -63,7 +64,7 @@ input.search-box::-webkit-search-cancel-button {
 	position: absolute;
 	border: none;
 	background: none;
-		/* rules below are from the input placeholder CSS */
+		/* rules below are copied from the input placeholder CSS */
 	line-height: initial;
 	white-space: pre;
 	word-wrap: normal;
@@ -211,6 +212,24 @@ input.search-box::-webkit-search-cancel-button {
 
 .results-list-item.tabs.selected:hover .close-button:hover:active {
 	background-color: #bbb;
+}
+
+.results-list-item.message {
+	padding: 0;
+	display: flex;
+	align-items: center;
+}
+
+.results-list-item.message div.title {
+	background-position: 6px 1px;
+	background-size: 16px 16px;
+	background-repeat: no-repeat;
+	padding: 1px 6px 2px 28px;
+	height: auto;
+	line-height: 120%;
+	white-space: normal;
+	opacity: 0.5;
+	flex: 1;
 }
 
 
