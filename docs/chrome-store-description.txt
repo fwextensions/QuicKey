@@ -98,7 +98,7 @@ Opening QuicKey displays a list of the last 50 tabs you've visited, in order of 
     • You can also highlight an item with the
        mouse, then release alt to go to that tab.
 
-Which shortcuts to use is up to you. Double-pressing alt-Q is nice because there's just one shortcut and you can switch between the two recent tabs as quickly as you want. (You can also double-click the QuicKey icon to toggle the most recent tabs.)
+Which shortcuts to use is up to you. Double-pressing alt-Q is nice because there's just one shortcut and you can switch between the two recent tabs as quickly as you want. (You can also double-click the QuicKey icon to toggle between the most recent tabs.)
 
 alt-A lets you navigate to even older tabs, though the timing can be a little tricky.
 
