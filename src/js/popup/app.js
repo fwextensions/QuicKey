@@ -140,6 +140,10 @@ define("popup/app", [
 							}
 						});
 
+					if (!this.recents.length) {
+						this.recents = NoRecentTabsMessage;
+					}
+
 						// set the query again because we may have already
 						// rendered a match on the tabs without the recent boosts,
 						// which may have changed the results
@@ -175,6 +179,12 @@ define("popup/app", [
 			if (this.mode == "command" || query == BookmarksQuery || query == HistoryQuery) {
 				return [];
 			} else if (!query && this.mode == "tabs") {
+//				if (this.recents.length) {
+//					return this.recents;
+//				} else {
+//					return NoRecentTabsMessage;
+//				}
+
 				return this.recents;
 			}
 
@@ -517,12 +527,16 @@ define("popup/app", [
 				items = state.matchingItems,
 				ItemComponent = ResultsListItem;
 
-			if (!items.length && this.mode == "tabs") {
-					// show a message about recents not appearing until the user
-					// switches tabs more
+			if (items === NoRecentTabsMessage) {
 				ItemComponent = MessageItem;
-				items = NoRecentTabsMessage;
 			}
+
+//			if (!items.length && this.mode == "tabs") {
+//					// show a message about recents not appearing until the user
+//					// switches tabs more
+//				ItemComponent = MessageItem;
+//				items = NoRecentTabsMessage;
+//			}
 
 			return <div className={this.props.platform}>
 				<SearchBox

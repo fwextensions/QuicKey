@@ -56,8 +56,8 @@
 		},
 		"2-next-tab": {
 			"suggested_key": {
-				"windows": "Alt+Shift+A",
-				"mac": "MacCtrl+Shift+A",
+				"windows": "Alt+S",
+				"mac": "MacCtrl+S",
 				"chromeos": "Alt+Shift+A",
 				"linux": "Alt+Shift+A"
 			},
