@@ -179,12 +179,6 @@ define("popup/app", [
 			if (this.mode == "command" || query == BookmarksQuery || query == HistoryQuery) {
 				return [];
 			} else if (!query && this.mode == "tabs") {
-//				if (this.recents.length) {
-//					return this.recents;
-//				} else {
-//					return NoRecentTabsMessage;
-//				}
-
 				return this.recents;
 			}
 
@@ -525,18 +519,9 @@ define("popup/app", [
 			var state = this.state,
 				query = state.query,
 				items = state.matchingItems,
-				ItemComponent = ResultsListItem;
-
-			if (items === NoRecentTabsMessage) {
-				ItemComponent = MessageItem;
-			}
-
-//			if (!items.length && this.mode == "tabs") {
-//					// show a message about recents not appearing until the user
-//					// switches tabs more
-//				ItemComponent = MessageItem;
-//				items = NoRecentTabsMessage;
-//			}
+					// use a special component if there aren't any recents
+				ItemComponent = (items === NoRecentTabsMessage) ? MessageItem :
+					ResultsListItem;
 
 			return <div className={this.props.platform}>
 				<SearchBox

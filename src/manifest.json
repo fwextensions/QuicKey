@@ -39,27 +39,21 @@
 	"commands": {
 		"_execute_browser_action": {
 			"suggested_key": {
-				"windows": "Alt+Q",
-				"mac": "MacCtrl+Q",
-				"chromeos": "Alt+Q",
-				"linux": "Alt+Q"
+				"default": "Alt+Q",
+				"mac": "MacCtrl+Q"
 			}
 		},
 		"1-previous-tab": {
 			"suggested_key": {
-				"windows": "Alt+A",
-				"mac": "MacCtrl+A",
-				"chromeos": "Alt+A",
-				"linux": "Alt+A"
+				"default": "Alt+A",
+				"mac": "MacCtrl+A"
 			},
 			"description": "Switch to the previous tab"
 		},
 		"2-next-tab": {
 			"suggested_key": {
-				"windows": "Alt+S",
-				"mac": "MacCtrl+S",
-				"chromeos": "Alt+Shift+A",
-				"linux": "Alt+Shift+A"
+				"default": "Alt+S",
+				"mac": "MacCtrl+S"
 			},
 			"description": "Switch to the next tab"
 		}
