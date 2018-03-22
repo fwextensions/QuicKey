@@ -83,7 +83,7 @@ Opening QuicKey displays a list of the last 50 tabs you've visited, in order of 
        icon will invert for .75 seconds.
     • Press alt-A while the icon is inverted to
        switch to older tabs, once for each tab.
-    • Press alt-shift-A to move to newer tabs.
+    • Press alt-S to move to newer tabs.
     • Pause to let the icon revert to normal.
     • Press alt-A again to switch back to the
        tab you initially started on.
@@ -104,7 +104,7 @@ alt-A lets you navigate to even older tabs, though the timing can be a little tr
 
 Selecting from the MRU menu provides the closest experience to a typical alt-tab menu, but you need to use a different key to navigate while the menu is open.
 
-You can change the alt-A and alt-shift-A shortcuts by right-clicking the QuicKey icon and selecting Options. Look for the "Switch to previous/next tab" shortcuts.
+You can change the alt-A and alt-S shortcuts by right-clicking the QuicKey icon and selecting Options. Look for the "Switch to previous/next tab" shortcuts.
 
 
 ★ Close and reopen tabs

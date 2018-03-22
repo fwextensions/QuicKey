@@ -58,7 +58,7 @@ Opening *QuicKey* displays a list of the last 50 tabs you've visited, in order o
   * **To navigate farther back in the MRU list:**
     * Press <b><kbd>alt</kbd><kbd>A</kbd></b> (<b><kbd>ctrl</kbd><kbd>A</kbd></b> on macOS) once to switch to the previous tab.  The *QuicKey* icon will invert for .75 seconds: <b><img src="docs/img/icon-38.png" height="19"> ➤ <img src="docs/img/icon-38-inverted.png" height="19"></b>.
     * Press <b><kbd>alt</kbd><kbd>A</kbd></b> again while the icon is inverted to switch to older tabs, once for each tab.
-    * Press <b><kbd>alt</kbd><kbd>shift</kbd><kbd>A</kbd></b> to move to newer tabs.
+    * Press <b><kbd>alt</kbd><kbd>S</kbd></b> to move to newer tabs.
     * Pause to let the icon revert to normal: <b><img src="docs/img/icon-38-inverted.png" height="19"> ➤ <img src="docs/img/icon-38.png" height="19"></b>.
     * Press <b><kbd>alt</kbd><kbd>A</kbd></b> again to switch back to the tab you initially started on.
 
@@ -79,7 +79,7 @@ Which shortcuts to use is up to you.  Double-pressing <b><kbd>alt</kbd><kbd>Q</k
 
 Selecting from the MRU menu by holding down the <kbd>alt</kbd> key provides the closest experience to a typical <b><kbd>alt</kbd><kbd>tab</kbd></b> menu, but you need to use a different key to navigate the list while the menu is open (due to limitations in Chrome extensions).
 
-You can change the <b><kbd>alt</kbd><kbd>A</kbd></b> and <b><kbd>alt</kbd><kbd>shift</kbd><kbd>A</kbd></b> shortcuts by right-clicking the *QuicKey* icon and selecting *Options*.  Look for the *Switch to previous/next tab* shortcuts.
+You can change the <b><kbd>alt</kbd><kbd>A</kbd></b> and <b><kbd>alt</kbd><kbd>S</kbd></b> shortcuts by right-clicking the *QuicKey* icon and selecting *Options*.  Look for the *Switch to previous/next tab* shortcuts.
 
 
 ## Close and reopen tabs
