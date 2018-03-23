@@ -142,7 +142,11 @@ Press <b><kbd>shift</kbd><kbd>enter</kbd></b> to switch to a tab and unsuspend i
 
 ## Incognito mode
 
-To switch to incognito tabs as well as normal ones, open Chrome's main menu and then go to *More tools > Extensions*, scroll down to the *QuicKey* extension, and check the *Allow in incognito* option:
+To switch to incognito tabs as well as normal ones, open Chrome's main menu and then go to *More tools > Extensions*, scroll down to the *QuicKey* extension, and then click the *DETAILS* button:
+
+![Incognito option](img/extensions-entry.png)
+
+On the next page, click the toggle button next to the *Allow in incognito* option:
 
 ![Incognito option](img/incognito-option.png)
 
