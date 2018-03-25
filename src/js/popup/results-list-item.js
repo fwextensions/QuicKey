@@ -65,11 +65,15 @@ define([
 		{
 			var props = this.props;
 
-			if (this.mouseMoveCount > MinMouseMoveCount && !props.isSelected) {
+			if ((props.selectedIndex > 0 || this.mouseMoveCount > MinMouseMoveCount)
+					&& !props.isSelected) {
 					// the mouse is moving over this item but it's not
 					// selected, which means this is the third mousemove
 					// event and we haven't gotten another mouseenter.  so
-					// force this item to be selected.
+					// force this item to be selected.  also select it when an
+					// item beyond the first one is selected, which means this
+					// mousemove isn't happening right after the menu was rendered
+					// under the mouse, since the selection has already changed.
 				props.setSelectedIndex(props.index);
 			} else {
 					// we want to swallow the first two mousemove events because
@@ -85,8 +89,10 @@ define([
 		onMouseEnter: function(
 			event)
 		{
-			if (this.mouseMoveCount > MinMouseMoveCount) {
-				this.props.setSelectedIndex(this.props.index);
+			var props = this.props;
+
+			if (props.selectedIndex > 0 || this.mouseMoveCount > MinMouseMoveCount) {
+				props.setSelectedIndex(props.index);
 			}
 		},
 

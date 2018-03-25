@@ -146,7 +146,7 @@ To switch to incognito tabs as well as normal ones, open Chrome's main menu and 
 
 ![Incognito option](img/extensions-entry.png)
 
-On the next page, click the toggle button next to the *Allow in incognito* option:
+On the next page, scroll down and click the toggle button next to the *Allow in incognito* option:
 
 ![Incognito option](img/incognito-option.png)
 

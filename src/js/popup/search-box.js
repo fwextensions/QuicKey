@@ -1,8 +1,10 @@
 define([
 	"jsx!./input",
+	"lib/handle-ref",
 	"react"
 ], function(
 	Input,
+	handleRef,
 	React
 ) {
 	function Placeholder(
@@ -31,11 +33,7 @@ define([
 		},
 
 
-		handleRef: function(
-			inputComponent)
-		{
-			this.searchBox = inputComponent;
-		},
+		handleRef: handleRef("searchBox"),
 
 
 		render: function()

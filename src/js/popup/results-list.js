@@ -1,9 +1,11 @@
 define([
 	"react",
-	"react-virtualized"
+	"react-virtualized",
+	"lib/handle-ref"
 ], function(
 	React,
-	ReactVirtualized
+	ReactVirtualized,
+	handleRef
 ) {
 	const RowHeight = 45,
 		Width = 490;
@@ -12,6 +14,7 @@ define([
 	var ResultsList = React.createClass({
 		startIndex: 0,
 		stopIndex: 0,
+		list: null,
 
 
 		scrollByPage: function(
@@ -38,6 +41,16 @@ define([
 
 			props.setSelectedIndex(selectedIndex);
 		},
+
+
+		scrollToRow: function(
+			index)
+		{
+			this.list.scrollToRow(index);
+		},
+
+
+		handleListRef: handleRef("list"),
 
 
 		onRowsRendered: function(
@@ -81,6 +94,7 @@ define([
 				style={style}
 			>
 				<ReactVirtualized.List
+					ref={this.handleListRef}
 					className="results-list"
 					tabIndex={-1}
 					width={Width}

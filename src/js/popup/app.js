@@ -11,6 +11,7 @@ define("popup/app", [
 	"./data/get-history",
 	"./data/add-urls",
 	"./shortcuts/handle-keys",
+	"lib/handle-ref",
 	"lodash"
 ], function(
 	React,
@@ -25,6 +26,7 @@ define("popup/app", [
 	getHistory,
 	addURLs,
 	handleKeys,
+	handleRef,
 	_
 ) {
 	const MinScore = .15,
@@ -387,11 +389,6 @@ define("popup/app", [
 				this.props.port.postMessage("closedByEsc");
 				window.close();
 			} else {
-					// there's a default behavior where pressing esc in
-					// a search field clears the input, but we want to
-					// control what it gets cleared to
-				event.preventDefault();
-
 					// if we're searching for bookmarks or history,
 					// reset the query to just /b or /h, rather than
 					// clearing it, unless it's already that, in which
@@ -408,6 +405,10 @@ define("popup/app", [
 					query = HistoryQuery;
 				}
 
+					// scroll the list back to the first row, which wouldn't
+					// happen by default if we just cleared the query, since in
+					// that case there's no selected item to scroll to
+				this.resultsList.scrollToRow(0);
 				this.onQueryChange({ target: { value: query }});
 			}
 		},
@@ -440,13 +441,7 @@ define("popup/app", [
 		},
 
 
-		handleListRef: function(
-			resultsList)
-		{
-				// we need this ref because handleKeys calls
-				// resultsList.scrollByPage() to respond to page up/down keys
-			this.resultsList = resultsList;
-		},
+		handleListRef: handleRef("resultsList"),
 
 
 		onQueryChange: function(
