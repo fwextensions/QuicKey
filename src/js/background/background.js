@@ -7,7 +7,11 @@ const MaxPopupLifetime = 450,
 	RestartDelay = 10 * 1000;
 
 
-var gStartingUp = false;
+var gStartingUp = false,
+	gResolveInstalledPromise,
+	gInstalledPromise = new Promise(function(resolve) {
+		gResolveInstalledPromise = resolve;
+	});
 
 
 function debounce(
@@ -61,6 +65,11 @@ DEBUG && console.log("== onStartup");
 
 	gStartingUp = true;
 	chrome.tabs.onActivated.addListener(onActivated);
+});
+
+
+chrome.runtime.onInstalled.addListener(function(event) {
+	gResolveInstalledPromise(event && event.reason);
 });
 
 
@@ -256,5 +265,15 @@ DEBUG && console.log("=== reloading");
 
 			backgroundTracker.pageview();
 			backgroundTracker.timing("loading", "background", performance.now());
+		})
+		.then(function() {
+				// pause the chain to wait for the installed promise to resolve,
+				// which it will never do if the event doesn't fire.  if it does,
+				// it should do so before we get here, but we use a promise just
+				// in case it doesn't for some reason.
+			return gInstalledPromise;
+		})
+		.then(function(reason) {
+			backgroundTracker.event("extension", reason);
 		});
 });
