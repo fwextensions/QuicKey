@@ -10,11 +10,10 @@ When first installed, *QuicKey* asks for these permissions:
 
     *QuicKey* uses this permission to let you search the titles and URLs of your bookmarked pages. It will never change your bookmarks.
 
-*QuicKey* doesn't request the *Read and modify all your data on all websites you visit* permission required by many extensions, so it can't read or modify the content of any pages you visit. It doesn't transmit any information other than some anonymized Google Analytics metrics.
+*QuicKey* does not request the *Read and modify all your data on all websites you visit* permission that many extensions require, so it can't read or modify the content of any pages you visit. It doesn't transmit any information other than some anonymized Google Analytics metrics.
 
 The complete *QuicKey* source code is available for inspection on [GitHub](https://github.com/fwextensions/QuicKey).
 
-<br>
 <br>
 
 [Return to the *QuicKey* homepage](/QuicKey/)
