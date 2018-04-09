@@ -83,7 +83,7 @@ Which shortcuts to use is up to you.  Double-pressing <b><kbd>alt</kbd><kbd>Q</k
 
 Selecting from the MRU menu by holding down the <kbd>alt</kbd> key provides the closest experience to a typical <b><kbd>alt</kbd><kbd>tab</kbd></b> menu, but you need to use a different key to navigate the list while the menu is open (due to limitations in Chrome extensions).
 
-You can change the <b><kbd>alt</kbd><kbd>A</kbd></b> and <b><kbd>alt</kbd><kbd>S</kbd></b> shortcuts by right-clicking the *QuicKey* icon and selecting *Options*.  Look for the *Switch to previous/next tab* shortcuts.
+You can change the <b><kbd>alt</kbd><kbd>A</kbd></b> and <b><kbd>alt</kbd><kbd>S</kbd></b> shortcuts by right-clicking the *QuicKey* icon and selecting *Options*.  Look for the *Switch to the previous/next tab* shortcuts.
 
 
 ## Close and reopen tabs
@@ -161,13 +161,13 @@ When first installed, *QuicKey* asks for these permissions:
 
 - *Read and change your browsing history on all signed-in devices*
 
-    *QuicKey* uses this permission to let you search the titles and URLs of the open tabs, as well as pages from your history. The "all signed-in devices" part is there only so that recently closed tabs can be restored with their full history.
+    *QuicKey* uses this permission to let you search the titles and URLs of the open tabs, as well as pages from your history. The *"all signed-in devices"* part is there only so that recently closed tabs can be restored with their full history.
 
 - *Read and change your bookmarks*
 
     *QuicKey* uses this permission to let you search the titles and URLs of your bookmarked pages. It will never change your bookmarks.
 
-*QuicKey* can't access the content of any pages you visit and doesn't transmit any information other than some anonymized metrics.
+*QuicKey* can't access the content of any pages you visit and doesn't transmit any information other than some anonymized Google Analytics metrics.
 
 
 ## Feedback and bugs

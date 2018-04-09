@@ -104,7 +104,7 @@ alt-A lets you navigate to even older tabs, though the timing can be a little tr
 
 Selecting from the MRU menu provides the closest experience to a typical alt-tab menu, but you need to use a different key to navigate while the menu is open.
 
-You can change the alt-A and alt-S shortcuts by right-clicking the QuicKey icon and selecting Options. Look for the "Switch to previous/next tab" shortcuts.
+You can change the alt-A and alt-S shortcuts by right-clicking the QuicKey icon and selecting Options. Look for the "Switch to the previous/next tab" shortcuts.
 
 
 ★ Close and reopen tabs
@@ -181,7 +181,7 @@ When first installed, QuicKey asks for these permissions:
       bookmarked pages. It will never change
       your bookmarks.
 
-QuicKey can't access the content of any pages you visit and doesn't transmit any information other than some anonymized metrics.
+QuicKey can't access the content of any pages you visit and doesn't transmit any information other than some anonymized Google Analytics metrics.
 
 
 ★ Support and source code

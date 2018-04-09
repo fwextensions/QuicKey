@@ -79,7 +79,7 @@ Which shortcuts to use is up to you.  Double-pressing <b><kbd>alt</kbd><kbd>Q</k
 
 Selecting from the MRU menu by holding down the <kbd>alt</kbd> key provides the closest experience to a typical <b><kbd>alt</kbd><kbd>tab</kbd></b> menu, but you need to use a different key to navigate the list while the menu is open (due to limitations in Chrome extensions).
 
-You can change the <b><kbd>alt</kbd><kbd>A</kbd></b> and <b><kbd>alt</kbd><kbd>S</kbd></b> shortcuts by right-clicking the *QuicKey* icon and selecting *Options*.  Look for the *Switch to previous/next tab* shortcuts.
+You can change the <b><kbd>alt</kbd><kbd>A</kbd></b> and <b><kbd>alt</kbd><kbd>S</kbd></b> shortcuts by right-clicking the *QuicKey* icon and selecting *Options*.  Look for the *Switch to the previous/next tab* shortcuts.
 
 
 ## Close and reopen tabs
@@ -138,9 +138,14 @@ Press <b><kbd>shift</kbd><kbd>enter</kbd></b> to switch to a tab and unsuspend i
 
 ## Incognito mode
 
-To switch to incognito tabs as well as normal ones, open Chrome's main menu and then go to *More tools > Extensions*, scroll down to the *QuicKey* extension, and check the *Allow in incognito* option:
+To switch to incognito tabs as well as normal ones, open Chrome's main menu and then go to *More tools > Extensions*, scroll down to the *QuicKey* extension, and then click the *DETAILS* button:
 
-<img src="docs/img/incognito-option.png" width="685" alt="Incognito option">
+<img src="docs/img/extensions-entry.png" width="519" alt="Incognito option">
+
+On the next page, scroll down and click the toggle button next to the *Allow in incognito* option:
+
+<img src="docs/img/incognito-option.png" width="624" alt="Incognito option">
+![Incognito option](img/incognito-option.png)
 
 Tabs in incognito mode display the incognito icon under the page's favicon, so you can distinguish a normal tab from an incognito one with the same title:
 
@@ -159,7 +164,7 @@ When first installed, *QuicKey* asks for these permissions:
 
     *QuicKey* uses this permission to let you search the titles and URLs of your bookmarked pages. It will never change your bookmarks.
 
-*QuicKey* can't access the content of any pages you visit and doesn't transmit any information other than some anonymized metrics.
+*QuicKey* can't access the content of any pages you visit and doesn't transmit any information other than some anonymized Google Analytics metrics.
 
 
 ## Feedback and bugs
