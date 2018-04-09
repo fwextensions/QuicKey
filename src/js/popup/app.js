@@ -47,7 +47,7 @@ define("popup/app", [
 		HQuery = "/h",
 		CommandQuery = "/",
 		NoRecentTabsMessage = [{
-			message: "Recently used tabs will appear here as you continue browsing in Chrome.",
+			message: "Recently used tabs will appear here as you continue browsing",
 			faviconURL: "img/alert.svg"
 		}];
 
