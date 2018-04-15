@@ -18,6 +18,7 @@ image: img/og-image.png
 <script src="assets/js/glide.js"></script>
 <script>
 	new Glide(".glide", {
+		type: "carousel",
 		gap: 0,
 		autoplay: 6000,
 		hoverpause: true

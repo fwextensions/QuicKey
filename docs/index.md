@@ -4,7 +4,26 @@ image: img/og-image.png
 
 ---
 
-<img src="img/search-results-open.png" style="box-shadow: 0px 5px 30px 4px rgba(0, 0, 0, 0.1); margin-bottom: 2em;" alt="QuicKey search results">
+<div class="glide">
+  <div class="glide__track" data-glide-el="track">
+    <ul class="glide__slides">
+      <li class="glide__slide"><img src="img/screenshot-1.png"></li>
+      <li class="glide__slide"><img src="img/screenshot-2.png"></li>
+      <li class="glide__slide"><img src="img/screenshot-3.png"></li>
+      <li class="glide__slide"><img src="img/screenshot-4.png"></li>
+    </ul>
+  </div>
+</div>
+
+<script src="assets/js/glide.js"></script>
+<script>
+	new Glide(".glide", {
+		type: "carousel",
+		gap: 0,
+		autoplay: 6000,
+		hoverpause: true
+	}).mount();
+</script>
 
 #### *QuicKey* lets you navigate all of your Chrome tabs by typing just part of a page's title or URL.  No mouse needed!
 
