@@ -3,6 +3,8 @@
 
 @import "{{ site.theme }}";
 
+@import "glide.core.min.css";
+
 body {
 	color: #444;
 	font-family: "Segoe UI", "Trebuchet MS", sans-serif;
@@ -90,4 +92,12 @@ a:hover, a:focus {
 
 li > ul {
 	margin-bottom: 0;
+}
+
+.glide {
+	max-width: 100%;
+}
+
+.glide__slide img {
+	max-width: 100%;
 }
