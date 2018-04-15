@@ -97,6 +97,7 @@ li > ul {
 .glide {
 	max-width: 100%;
 	margin-bottom: 3em;
+	line-height: 0;
 }
 
 .glide__slides {
@@ -105,4 +106,16 @@ li > ul {
 
 .glide__slide img {
 	max-width: 100%;
+}
+
+.glide--swipeable {
+	cursor: grab;
+	cursor: -moz-grab;
+	cursor: -webkit-grab;
+}
+
+.glide--dragging {
+	cursor: grabbing;
+	cursor: -moz-grabbing;
+	cursor: -webkit-grabbing;
 }

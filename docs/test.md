@@ -19,7 +19,7 @@ image: img/og-image.png
 <script>
 	new Glide(".glide", {
 		gap: 0,
-		autoplay: 4000,
+		autoplay: 6000,
 		hoverpause: true
 	}).mount();
 </script>
