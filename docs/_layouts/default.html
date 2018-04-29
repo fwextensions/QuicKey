@@ -32,9 +32,9 @@
         <h1 style="font-style: italic;">{{ site.title | default: site.github.repository_name }}</h1>
         <p>{{ site.tagline | site.description | default: site.github.project_tagline }}</p>
 
-        <p class="install" style="margin: 2em 0;"><button onclick="installExtension(0)">Install Now</button></p>
+        <p class="install" style="margin: 3em 0;"><button onclick="installExtension(0)">Add to Chrome <span>It's free!</span></button></p>
 
-        <p><a href="https://chrome.google.com/webstore/detail/quickey-–-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg"><img src="/QuicKey/img/webstore.png" alt="QuicKey in the Chrome Webstore" style="width: 248px;"/></a></p>
+        <p><a href="https://chrome.google.com/webstore/detail/quickey-–-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg"><img src="/QuicKey/img/webstore.png" alt="QuicKey in the Chrome Webstore" style="width: 165px;"/></a></p>
 
         {% if site.github.is_project_page %}
           <p class="view"><a href="{{ site.github.repository_url }}">View the project on GitHub <small>{{ github_name }}</small></a></p>
@@ -84,11 +84,11 @@
             function() { ga("send", "event", "install", "add", buttonLocation); },
             function() { ga("send", "event", "install", "cancel", buttonLocation); }
           );
-        }
+        };
 
         if (!(window.chrome && window.chrome.webstore && window.chrome.webstore.install)) {
           var elements = document.getElementsByClassName("install");
-          
+
           for (var i = 0; i < elements.length; i++) {
             elements[i].style.display = "none";
           }

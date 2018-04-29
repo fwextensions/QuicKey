@@ -38,7 +38,7 @@ You can also type <b><kbd>/</kbd><kbd>b</kbd></b> to search [bookmarks](#bookmar
 
 ## Installation
 
-<p class="install"><button onclick="installExtension(1)">Install Now</button> or go to the <a href="https://chrome.google.com/webstore/detail/quickey-–-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg">Chrome Web Store</a> to install <em>QuicKey</em>.</p>
+<p class="install"><button onclick="installExtension(1)">Add to Chrome</button> or go to the <a href="https://chrome.google.com/webstore/detail/quickey-–-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg">Chrome Web Store</a> to install <em>QuicKey</em>.</p>
 
 Once the extension is installed, you can click the <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> button on the toolbar to open the search box.  But if you like this extension, you'll probably prefer using the default keyboard shortcut listed above.
 
@@ -89,8 +89,8 @@ Opening *QuicKey* displays a list of the last 50 tabs you've visited, in order o
 
   * **To pick a recent tab from the MRU menu:**
     * Press the shortcut but keep holding the <kbd>alt</kbd> key (<kbd>ctrl</kbd> key on macOS).
-    * Press <kbd>W</kbd> to move down through the list of recent tabs.
-    * Press <b><kbd>shift</kbd><kbd>W</kbd></b> to move up.
+    * Press <kbd>W</kbd> or <kbd>↓</kbd> to move down through the list of recent tabs.
+    * Press <b><kbd>shift</kbd><kbd>W</kbd></b> or <kbd>↑</kbd> to move up.
     * Release <kbd>alt</kbd> (or <kbd>ctrl</kbd>) to switch to the selected tab.
     * You can also highlight an item with the mouse, then release <kbd>alt</kbd> to go to that tab.
 
@@ -100,7 +100,8 @@ Which shortcuts to use is up to you.  Double-pressing <b><kbd>alt</kbd><kbd>Q</k
 
 <b><kbd>alt</kbd><kbd>A</kbd></b> lets you quickly navigate to even older tabs, though the timing can be a little tricky.
 
-Selecting from the MRU menu by holding down the <kbd>alt</kbd> key provides the closest experience to a typical <b><kbd>alt</kbd><kbd>tab</kbd></b> menu, but you need to use a different key to navigate the list while the menu is open (due to limitations in Chrome extensions).
+Selecting from the MRU menu by holding down the <kbd>alt</kbd> key provides the closest experience to a typical <b><kbd>alt</kbd><kbd>tab</kbd></b> menu, but you need to use <kbd>W</kbd> instead of <kbd>tab</kbd> a different key to navigate the list while the menu is open (due to limitations in Chrome extensions).
+
 
 You can change the <b><kbd>alt</kbd><kbd>A</kbd></b> and <b><kbd>alt</kbd><kbd>S</kbd></b> shortcuts by right-clicking the *QuicKey* icon and selecting *Options*.  Look for the *Switch to the previous/next tab* shortcuts.
 

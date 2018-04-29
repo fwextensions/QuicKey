@@ -91,9 +91,9 @@ Opening QuicKey displays a list of the last 50 tabs you've visited, in order of 
  ➤ To pick a recent tab from the MRU list:
     • Press the shortcut but keep holding the
        alt key (ctrl key on macOS).
-    • Press W to move down through the
+    • Press W or ↓ to move down through the
        list of recent tabs.
-    • Press shift-W to move up.
+    • Press shift-W or ↑ to move up.
     • Release alt to switch to the selected tab.
     • You can also highlight an item with the
        mouse, then release alt to go to that tab.
