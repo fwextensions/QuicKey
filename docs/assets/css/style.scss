@@ -27,7 +27,6 @@ footer {
 	clear: both;
 }
 
-
 button {
 	padding: 0.6em 1.5em 0.7em;
 	font: inherit;
@@ -107,6 +106,18 @@ a:hover, a:focus {
 
 li > ul {
 	margin-bottom: 0;
+}
+
+.no-install .install {
+	display: none;
+}
+
+.chrome-store {
+	width: 165px;
+}
+
+.no-install .chrome-store {
+	width: 248px;
 }
 
 .glide {
