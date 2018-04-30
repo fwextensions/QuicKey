@@ -40,7 +40,7 @@ You can also type <b><kbd>/</kbd><kbd>b</kbd></b> to search [bookmarks](#bookmar
 
 <p class="install"><button onclick="installExtension(1)">Add to Chrome</button> or go to the <a href="https://chrome.google.com/webstore/detail/quickey-–-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg">Chrome Web Store</a> to install <em>QuicKey</em>.</p>
 
-<p class="install-fallback" style="display: none">Go to the <a href="https://chrome.google.com/webstore/detail/quickey-–-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg">Chrome Web Store</a> using the Chrome browser to install <em>QuicKey</em>.</p>
+<p class="install-fallback" style="display: none">Go to the <a href="https://chrome.google.com/webstore/detail/quickey-–-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg">Chrome Web Store</a> in Chrome to install <em>QuicKey</em>.</p>
 
 Once the extension is installed, you can click the <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> button on the toolbar to open the search box.  But if you like this extension, you'll probably prefer using the default keyboard shortcut listed above.
 
