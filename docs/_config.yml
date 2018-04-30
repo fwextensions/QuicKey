@@ -17,8 +17,9 @@ google_analytics: UA-108153491-1
 
 twitter:
   username: fwextensions
-  creator: fwextensions
 
-author: John Dunning
+author:
+  name: John Dunning
+  twitter: fwextensions
 
 rootPath: /QuicKey
