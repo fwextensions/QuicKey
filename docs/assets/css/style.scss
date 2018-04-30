@@ -112,6 +112,10 @@ li > ul {
 	display: none;
 }
 
+.no-install .install-fallback {
+	display: block !important;
+}
+
 .chrome-store {
 	width: 165px;
 }
