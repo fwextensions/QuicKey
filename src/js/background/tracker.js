@@ -5,7 +5,10 @@ define(function() {
 		PathPattern = /chrome-extension:\/\/[^\n]+\//g;
 
 
-	window.ga = window.ga || function() { (ga.q = ga.q || []).push(arguments) };
+		// create a local ga var pointing at the global ga so that this module
+		// can be loaded in a node context when we build the static popup HTML
+	var ga = (window.ga = window.ga || function() { (ga.q = ga.q || []).push(arguments) });
+
 	ga.l = +new Date;
 
 

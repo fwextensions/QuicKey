@@ -1,20 +1,33 @@
-define(function() {
+define([
+	"bluebird"
+], function(
+	Promise
+) {
+	function promiseNoop()
+	{
+		return Promise.resolve([]);
+	}
+
+
 	return {
 		management: {
 			getSelf: function()
 			{
-				return {
-					then: function(
-						cb)
-					{
-						cb({});
-					}
-				}
+				return Promise.resolve({});
 			}
 		},
-
 		tabs: {
-			query: function() {}
+			query: promiseNoop
+		},
+		sessions: {
+			getRecentlyClosed: promiseNoop
+		},
+		storage: {
+			local: {
+				get: promiseNoop,
+				set: promiseNoop,
+				clear: promiseNoop
+			}
 		}
 	};
 });

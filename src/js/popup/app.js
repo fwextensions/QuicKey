@@ -12,6 +12,7 @@ define("popup/app", [
 	"./data/add-urls",
 	"./shortcuts/handle-keys",
 	"lib/handle-ref",
+	"lib/copy-to-clipboard",
 	"lodash"
 ], function(
 	React,
@@ -27,6 +28,7 @@ define("popup/app", [
 	addURLs,
 	handleKeys,
 	handleRef,
+	copyTextToClipboard,
 	_
 ) {
 	const MinScore = .15,
@@ -333,6 +335,20 @@ define("popup/app", [
 					// we seem to have to close the window in a timeout so that
 					// the hover state of the button gets cleared
 				setTimeout(function() { window.close(); }, 0);
+			}
+		},
+
+
+		copyItemURL: function(
+			item,
+			includeTitle)
+		{
+			var text = "";
+
+			if (item) {
+				text = (includeTitle ? item.title + "\n" : "") +
+					(item.unsuspendURL || item.url);
+				copyTextToClipboard(text);
 			}
 		},
 
