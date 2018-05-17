@@ -1,10 +1,12 @@
 <!doctype html>
 <html lang="{{ site.lang | default: "en-US" }}">
   <head>
+	<title>QuicKey | Jump between recent tabs in Chrome via keyboard or menu</title>
+
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
 
-    {% seo %}
+    {% seo title=false %}
     <meta property="og:title" content="QuicKey – The quick tab switcher" />
     <meta property="og:type" content="website" />
 
@@ -29,7 +31,7 @@
       <header>
         <p><img src="/QuicKey/img/icon-300.png" alt="QuicKey" style="width: 120px; margin-left: -6px;" /></p>
 
-        <h1 style="font-style: italic;">{{ site.title | default: site.github.repository_name }}</h1>
+        <h1 style="font-style: italic;">{{ page.title | site.title | default: site.github.repository_name }}</h1>
         <p>{{ site.tagline | site.description | default: site.github.project_tagline }}</p>
 
         <p class="install" style="margin: 3em 0;"><button onclick="installExtension(0)">Add to Chrome <span>It's free!</span></button></p>

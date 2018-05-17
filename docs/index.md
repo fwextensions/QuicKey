@@ -1,5 +1,6 @@
 ---
 
+title: QuicKey
 image: img/og-image.png
 
 ---
@@ -189,7 +190,7 @@ When first installed, *QuicKey* asks for these permissions:
 
     *QuicKey* uses this permission to let you search the titles and URLs of your bookmarked pages. It will never change your bookmarks.
 
-*QuicKey* can't access the content of any pages you visit and doesn't transmit any information other than some anonymized Google Analytics metrics.
+*QuicKey* can't access or manipulate the content of any pages you visit and doesn't transmit any information other than some anonymized Google Analytics metrics.
 
 
 ## Feedback and bugs

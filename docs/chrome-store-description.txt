@@ -1,5 +1,46 @@
 # Tag line
 
+
+## Chrome store description from manifest
+
+Add keyboard shortcuts to switch tabs with a Quicksilver-style search or a most recently used menu
+
+
+## Website title
+
+QuicKey | Jump between recent tabs in Chrome via keyboard or menu
+QuicKey | Quickly jump to recent tabs in Chrome via keyboard or menu
+QuicKey | Jump to recent tabs via keyboard or menu
+QuicKey | Jump to recent tabs in Chrome via keyboard or menu
+QuicKey | The fastest way to find recent tabs in Chrome via keyboard or menu
+QuicKey | The fastest way to jump to recent tabs via keyboard or menu
+
+QuicKey – The quick tab switcher
+QuicKey – The quick tab manager
+
+
+## Website description
+
+Have dozens of tabs open? Quickly jump between them with QuicKey, a Chrome extension that adds keyboard shortcuts to switch tabs using a Quicksilver-style search or a most recently used (MRU) menu.
+Have dozens of tabs open? Quickly jump between them with QuicKey, a Chrome extension that adds keyboard shortcuts to switch tabs with a Quicksilver-style search or a most recently used (MRU) menu.
+
+Quickly navigate all your open tabs with QuicKey, a Chrome extension that adds keyboard shortcuts to switch tabs with a Quicksilver-style search or a most recently used (MRU) menu.
+Switch tabs instantly!
+
+A Chrome extension that adds keyboard shortcuts to switch tabs with a Quicksilver-style search or a most recently used (MRU) menu.
+
+
+## Search result
+
+QuicKey | Jump bewteen recent tabs in Chrome via keyboard or menu
+https://fwextensions.github.io/QuicKey/
+Have dozens of open tabs? Quickly jump between them with QuicKey, a Chrome extension that adds keyboard shortcuts to switch tabs with a Quicksilver-style search or a most recently used (MRU) menu.
+
+Stop hunting for that tab and start jumping!
+
+
+## Old
+
 Switch tabs with a Quicksilver-style search or a most-recently-used menu
 
 Add keyboard shortcuts to switch tabs with a Quicksilver-style search or a most recently used menu
@@ -181,7 +222,7 @@ When first installed, QuicKey asks for these permissions:
       bookmarked pages. It will never change
       your bookmarks.
 
-QuicKey can't access the content of any pages you visit and doesn't transmit any information other than some anonymized Google Analytics metrics.
+QuicKey can't access or manipulate the content of any pages you visit and doesn't transmit any information other than some anonymized Google Analytics metrics.
 
 
 ★ Support and source code
