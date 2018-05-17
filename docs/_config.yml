@@ -3,9 +3,9 @@ theme: jekyll-theme-minimal
 gems:
   - jekyll-seo-tag
 
-title: QuicKey
+title: QuicKey | Jump between recent tabs in Chrome via keyboard or menu
 
-description: A Chrome extension that adds keyboard shortcuts to switch tabs with a Quicksilver-style search or a most recently used (MRU) menu.
+description: Have dozens of tabs open? Quickly jump between them with QuicKey, a Chrome extension that adds keyboard shortcuts to switch tabs with a Quicksilver-style search or a most recently used (MRU) menu.
 
 tagline: Add keyboard shortcuts to switch tabs with a Quicksilver-style search or a most recently used (MRU) menu
 
