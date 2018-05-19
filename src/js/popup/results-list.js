@@ -68,9 +68,10 @@ define([
 			data)
 		{
 			var props = this.props,
-				item = props.items[data.index];
+				item = props.items[data.index],
+				ItemComponent = item.component || props.itemComponent;
 
-			return <props.ItemComponent
+			return <ItemComponent
 				key={data.key}
 				item={item}
 				index={data.index}

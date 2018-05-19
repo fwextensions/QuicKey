@@ -14,26 +14,33 @@ define([
 		string,
 		hitMask)
 	{
+		var substrings,
+			wrappedString;
+
 		if (!query) {
-			return string;
+				// in the case of an empty query, we still have to escape the
+				// full string, since it could contain angle brackets and we use
+				// dangerouslySetInnerHTML below
+			wrappedString = _.escape(string);
+		} else {
+			substrings = hitMask.map(function(hitIndex, i) {
+						// escape the part before the bold char, so that any brackets
+						// in the title or URL don't get interpreted
+					var prefix = _.escape(string.slice((hitMask[i - 1] + 1) || 0, hitIndex)),
+						boldChar = string[hitIndex] && "<b>" + string[hitIndex] + "</b>";
+
+						// use an empty string if didn't find the boldChar, so we
+						// don't append "undefined"
+					return prefix + (boldChar || "");
+				});
+
+				// add the part of the string after the last char match.  if the
+				// hit mask is empty, slice(NaN) will return the whole string.
+			substrings.push(_.escape(string.slice(_.last(hitMask) + 1)));
+			wrappedString = substrings.join("");
 		}
 
-		var strings = hitMask.map(function(index, i) {
-					// escape the part before the bold char, so that any brackets
-					// in the title or URL don't get interpreted
-				var prefix = _.escape(string.slice((hitMask[i - 1] + 1) || 0, index)),
-					boldChar = string[index] && "<b>" + string[index] + "</b>";
-
-					// use an empty string if didn't find the boldChar, so we
-					// don't append "undefined"
-				return prefix + (boldChar || "");
-			});
-
-			// add the part of the string after the last char match.  if the
-			// hit mask is empty, slice(NaN) will return the whole string.
-		strings.push(_.escape(string.slice(_.last(hitMask) + 1)));
-
-		return strings.join("");
+		return wrappedString;
 	}, function(query, string) {
 			// by default, memoize uses just the first arg as a key, but that's the
 			// same for all titles/urls.  so combine them to generate something unique.

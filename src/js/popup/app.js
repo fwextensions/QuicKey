@@ -50,7 +50,8 @@ define("popup/app", [
 		CommandQuery = "/",
 		NoRecentTabsMessage = [{
 			message: "Recently used tabs will appear here as you continue browsing",
-			faviconURL: "img/alert.svg"
+			faviconURL: "img/alert.svg",
+			component: MessageItem
 		}];
 
 
@@ -529,10 +530,7 @@ define("popup/app", [
 		{
 			var state = this.state,
 				query = state.query,
-				items = state.matchingItems,
-					// use a special component if there aren't any recents
-				ItemComponent = (items === NoRecentTabsMessage) ? MessageItem :
-					ResultsListItem;
+				items = state.matchingItems;
 
 			return <div className={this.props.platform}>
 				<SearchBox
@@ -545,11 +543,11 @@ define("popup/app", [
 				/>
 				<ResultsList
 					ref={this.handleListRef}
-					ItemComponent={ItemComponent}
-					mode={this.mode}
 					items={items}
-					query={query}
 					maxItems={MaxItems}
+					itemComponent={ResultsListItem}
+					mode={this.mode}
+					query={query}
 					selectedIndex={state.selected}
 					setSelectedIndex={this.setSelectedIndex}
 					onItemClicked={this.openItem}

@@ -30,7 +30,7 @@ define([
 				// pass null to get everything in storage
 			return cp.storage.local.get(null)
 				.then(function(storage) {
-					if (storage.version !== version) {
+					if (!storage || storage.version !== version) {
 							// this is likely a new install, so reset the storage
 							// to the default.  we need to do this without locking
 							// the mutex because doTask() locks it and then calls
@@ -38,7 +38,7 @@ define([
 							// from here, it would never complete.
 						return resetWithoutLocking();
 					} else {
-						return storage.data;
+						return storage.data || {};
 					}
 				});
 		}

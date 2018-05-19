@@ -361,6 +361,37 @@ DEBUG && console.log("=== updateAll");
 	}
 
 
+	function getRecentsFromHistory()
+	{
+		return Promise.all([
+			cp.tabs.query({}),
+			cp.history.search({
+					text: "",
+					startTime: 0,
+					endTime: Date.now(),
+					maxResults: 350
+				})
+		])
+			.spread(function(tabs, historyItems) {
+				var historyByURL = {};
+
+				historyItems.forEach(function(item) {
+					var url = item.url;
+
+					historyByURL[url] = historyByURL[url] || item;
+				});
+
+				return tabs.map(function(tab) {
+					var url = tab.url,
+						historyItem = historyByURL[url],
+						lastVisit = historyItem && Math.round(historyItem.lastVisitTime) || 0;
+
+					return createRecent(tab, { lastVisit: lastVisit });
+				});
+			});
+	}
+
+
 	function toggleTab(
 		direction,
 		fromDoublePress)
@@ -460,7 +491,8 @@ DEBUG && console.log("toggleTab previousTabIndex", newData.lastShortcutTabID, pr
 	return {
 		add: add,
 		remove: remove,
-		getAll: getAll,
+		getAll: getRecentsFromHistory,
+//		getAll: getAll,
 		updateAll: updateAll,
 		toggleTab: toggleTab,
 		printAll: printAll
