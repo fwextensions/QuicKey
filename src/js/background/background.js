@@ -159,6 +159,15 @@ require([
 	}, TabRemovedDelay));
 
 
+		// tabs seem to get replaced with new IDs when they're auto-discarded by
+		// Chrome, so we want to update any recency data for them
+	chrome.tabs.onReplaced.addListener(function(newID, oldID) {
+		if (!gStartingUp) {
+			recentTabs.replace(oldID, newID);
+		}
+	});
+
+
 		// the onActivated event isn't fired when the user switches between
 		// windows, so get the active tab in this window and store it
 	chrome.windows.onFocusChanged.addListener(function(windowID) {

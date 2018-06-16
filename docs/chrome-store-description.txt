@@ -152,7 +152,7 @@ You can change the alt-A and alt-S shortcuts by right-clicking the QuicKey icon 
 
 To close the selected tab, press ctrl-W (cmd-ctrl-W on macOS). Or hover over a tab and click the X button on the right side of the menu.
 
-When you open QuicKey, the 25 most recently closed tabs are listed below the recent tabs and shown in a faded state with an X icon. They are also returned when you type a query, though they're scored lower than open tabs.
+When you open QuicKey, the 25 most recently closed tabs are listed below the recent tabs and shown in a faded state with an X icon. They are also returned when you type a query, though their score is discounted compared to open tabs.
 
 Click a closed tab to reopen it in its original location and with all of its browsing history intact.
 
@@ -199,6 +199,16 @@ Press shift-enter to switch to a tab and unsuspend it in one go. Or shift-click 
 To switch to incognito tabs as well as normal ones, open Chrome's main menu and then go to More tools > Extensions, scroll down to the QuicKey extension, and then click the DETAILS button. On the next page, scroll down and click the toggle button next to the "Allow in incognito" option.
 
 Tabs in incognito mode display the incognito icon, so you can distinguish a normal tab from an incognito one with the same title.
+
+
+★ Copy a tab's URL or title
+
+You can also copy the URL and title of the selected tab, bookmark or history item:
+
+ • Press ctrl-C (cmd-C on macOS) to copy just
+    the URL.
+ • Press ctrl-shift-C to copy both the item's
+    title and its URL, one per line.
 
 
 ★ Privacy policy

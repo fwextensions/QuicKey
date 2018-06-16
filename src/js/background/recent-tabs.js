@@ -273,6 +273,31 @@ DEBUG && console.log("tab closed", tabID, tabsByID[tabID].title);
 	}
 
 
+	function replace(
+		oldID,
+		newID)
+	{
+		return storage.set(function(data) {
+			var tabIDs = data.tabIDs,
+				tabsByID = data.tabsByID,
+				index = tabIDs.indexOf(oldID);
+
+			if (index > -1) {
+DEBUG && console.log("tab replaced", oldID, tabsByID[oldID].title);
+				tabIDs[index] = newID;
+				tabsByID[newID] = tabsByID[oldID];
+				tabsByID[newID].id = newID;
+				delete tabsByID[oldID];
+
+				return {
+					tabIDs: tabIDs,
+					tabsByID: tabsByID
+				};
+			}
+		}, "replaceTab");
+	}
+
+
 	function getAll()
 	{
 		return storage.get(function(data) {
@@ -460,6 +485,7 @@ DEBUG && console.log("toggleTab previousTabIndex", newData.lastShortcutTabID, pr
 	return {
 		add: add,
 		remove: remove,
+		replace: replace,
 		getAll: getAll,
 		updateAll: updateAll,
 		toggleTab: toggleTab,

@@ -1,6 +1,7 @@
 define(function() {
-	const SuspendedURLPattern = /^chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=(.+)$/,
-		ProtocolPattern = /^((chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=)?(https?|file|chrome):\/\/(www\.)?)|(chrome-extension:\/\/[^/]+\/)/,
+		// assume any extension URL that begins with suspended.html is from TGS
+	const SuspendedURLPattern = /^chrome-extension:\/\/[^/]+\/suspended\.html#(?:.*&)?uri=(.+)$/,
+		ProtocolPattern = /^((chrome-extension:\/\/[^/]+\/suspended\.html#(?:.*&)?uri=)?(https?|file|chrome):\/\/(www\.)?)|(chrome-extension:\/\/[^/]+\/)/,
 		TGSIconPath = "chrome-extension://klbibkeccnjlkjkiokjodocebajanakg/img/",
 		FaviconURL = "chrome://favicon/";
 

@@ -504,7 +504,7 @@ define("popup/app", [
 		{
 				// reset this on every keyDown so we know if the user had typed
 				// an alt-W or alt-shift-W before releasing alt.  it will get set
-				// to true in setSelectedIndex()
+				// to true in setSelectedIndex().
 			this.gotMRUKey = false;
 
 				// keydown handling is managed in another module
