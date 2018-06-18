@@ -14,12 +14,8 @@ define([
 	const MaxTabsLength = 50,
 		MaxSwitchDelay = 750,
 		TabKeysHash = {
-			favIconUrl: 1,
 			id: 1,
-			incognito: 1,
-			title: 1,
 			url: 1,
-			index: 1,
 			windowId: 1
 		},
 		TabKeys = Object.keys(TabKeysHash),
@@ -144,7 +140,7 @@ DEBUG && console.log("=== newTabIDs", newTabIDs.length);
 			tabsByID: newTabsByID,
 			lastUpdateTime: Date.now()
 		};
-DEBUG && console.log("updateAll result", result);
+DEBUG && console.log("updateFromFreshTabs result", result);
 
 		return result;
 	}
@@ -323,8 +319,8 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 
 						// update the fresh tabs with any recent data we have
 					tabs = freshTabs.map(function(tab) {
-						const oldTab = tabsByID[tab.id],
-							newTab = createRecent(tab, oldTab);
+						const oldTab = tabsByID[tab.id];
+						var lastVisit = 0;
 
 						if (oldTab) {
 								// point the recent tab at the refreshed tab so
@@ -334,11 +330,13 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 								// way, when Chrome restarts and we try to match
 								// the saved recents against the new tabs, we'll
 								// be able to match it by URL.
-// TODO: store a copy here so that keys added to this tab data in the popup aren't saved to storage
-							tabsByID[tab.id] = newTab;
+							tabsByID[tab.id] = createRecent(tab, oldTab);
+							lastVisit = tabsByID[tab.id].lastVisit;
 						}
 
-						return newTab;
+						tab.lastVisit = lastVisit;
+
+						return tab;
 					});
 
 						// only show the closed tabs if we also have some recent
@@ -349,14 +347,12 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 						// in getTabs().
 					if (data.tabIDs.length > 1) {
 						tabs = tabs.concat(closedTabs.map(function(session) {
-							const tabFromSession = session.tab || session.window.tabs[0],
-								tab = createRecent(tabFromSession);
+							const tabFromSession = session.tab || session.window.tabs[0];
 
 								// session lastModified times are in Unix epoch
-							tab.lastVisit = session.lastModified * 1000;
-							tab.sessionId = tabFromSession.sessionId;
+							tabFromSession.lastVisit = session.lastModified * 1000;
 
-							return tab;
+							return tabFromSession;
 						}));
 					}
 
