@@ -31,18 +31,18 @@ Chrome's *Keyboard shortcuts* screen normally blocks you from using <b><kbd>ctrl
 
 4. Copy this block of code:
 
-        chrome.developerPrivate.updateExtensionCommand({
-            extensionId: "ldlghkoiihaelfnggonhjnfiabmaficg",
-            commandName: "1-previous-tab",
-            keybinding: "Ctrl+Tab"
-        });
-        chrome.developerPrivate.updateExtensionCommand({
-            extensionId: "ldlghkoiihaelfnggonhjnfiabmaficg",
-            commandName: "2-next-tab",
-            keybinding: "Ctrl+Shift+Tab"
-        });
+       chrome.developerPrivate.updateExtensionCommand({
+           extensionId: "ldlghkoiihaelfnggonhjnfiabmaficg",
+           commandName: "1-previous-tab",
+           keybinding: "Ctrl+Tab"
+       });
+       chrome.developerPrivate.updateExtensionCommand({
+           extensionId: "ldlghkoiihaelfnggonhjnfiabmaficg",
+           commandName: "2-next-tab",
+           keybinding: "Ctrl+Shift+Tab"
+       });
 
-    <button onclick="copyCode()">Copy to Clipboard</button>
+    <button class="copy" onclick="copyCode()">Copy to Clipboard</button>
 
 5. Click into the console area of DevTools and paste the code next to the >.
 
@@ -89,7 +89,6 @@ The other shortcuts listed above continue to work, so you can still press <b><kb
 
         copyFrom.textContent = document.getElementsByClassName("highlight")[1].textContent;
         body.appendChild(copyFrom);
-        copyFrom.focus();
         copyFrom.select();
         result = document.execCommand("copy");
         body.removeChild(copyFrom);
