@@ -41,7 +41,7 @@ Chrome's *Keyboard shortcuts* screen normally blocks you from using <b><kbd>ctrl
             keybinding: "Ctrl+Shift+Tab"
         });
 
-        <button onclick="copyCode()">Copy to Clipboard</button>
+    <button onclick="copyCode()">Copy to Clipboard</button>
 
 5. Click into the console area of DevTools and paste the code next to the >.
 
