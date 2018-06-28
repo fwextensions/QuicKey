@@ -36,6 +36,18 @@ define([
 	var shortcutTimer = null;
 
 
+	function titleOrURL(
+		tab,
+		length)
+	{
+		if (!tab) {
+			return "NO TAB";
+		} else {
+			return (tab.title || tab.url).slice(0, length || 50);
+		}
+	}
+
+
 	function removeItem(
 		array,
 		item)
@@ -216,7 +228,7 @@ DEBUG && console.log("updateFromFreshTabs result", result);
 				};
 			}
 
-DEBUG && console.log("add", tab.id, tab.title.slice(0, 50));
+DEBUG && console.log("add", tab.id, titleOrURL(tab));
 
 				// make sure the new tab's ID isn't currently in the list and
 				// then push it on the end
@@ -256,7 +268,7 @@ DEBUG && console.log("add", tab.id, tab.title.slice(0, 50));
 				index = tabIDs.indexOf(tabID);
 
 			if (index > -1) {
-DEBUG && console.log("tab closed", tabID, tabsByID[tabID].title);
+DEBUG && console.log("tab closed", tabID, titleOrURL(tabsByID[tabID]));
 				tabIDs.splice(index, 1);
 				delete tabsByID[tabID];
 
@@ -276,20 +288,27 @@ DEBUG && console.log("tab closed", tabID, tabsByID[tabID].title);
 		return storage.set(function(data) {
 			var tabIDs = data.tabIDs,
 				tabsByID = data.tabsByID,
-				index = tabIDs.indexOf(oldID);
+				index = tabIDs.indexOf(oldID),
+				oldTab = tabsByID[oldID],
+				newData = {};
+
+			if (oldTab) {
+					// delete the tab from tabsByID even if it's not in tabIDs
+				delete tabsByID[oldID];
+				newData.tabsByID = tabsByID;
+			}
 
 			if (index > -1) {
-DEBUG && console.log("tab replaced", oldID, tabsByID[oldID].title);
+DEBUG && console.log("tab replaced", oldID, titleOrURL(oldTab));
 				tabIDs[index] = newID;
-				tabsByID[newID] = tabsByID[oldID];
+				tabsByID[newID] = oldTab;
 				tabsByID[newID].id = newID;
-				delete tabsByID[oldID];
 
-				return {
-					tabIDs: tabIDs,
-					tabsByID: tabsByID
-				};
+				newData.tabIDs = tabIDs;
+				newData.tabsByID = tabsByID;
 			}
+
+			return newData;
 		}, "replaceTab");
 	}
 
@@ -429,11 +448,10 @@ DEBUG && console.log("=== updateAll");
 
 				newData.previousTabIndex = previousTabIndex;
 				newData.lastShortcutTabID = tabIDs[previousTabIndex];
-DEBUG && console.log("toggleTab previousTabIndex", newData.lastShortcutTabID, previousTabIndex, data.tabsByID[newData.lastShortcutTabID ].title);
+DEBUG && console.log("toggleTab previousTabIndex", newData.lastShortcutTabID, previousTabIndex, titleOrURL(data.tabsByID[newData.lastShortcutTabID]));
 
-				if (previousTabIndex > -1 && newData.lastShortcutTabID) {
-					var previousTabID = newData.lastShortcutTabID,
-						previousWindowID = data.tabsByID[previousTabID].windowId;
+				if (newData.lastShortcutTabID) {
+					var previousTabID = newData.lastShortcutTabID;
 
 						// we only want to start the timer if the user triggered
 						// us with the previous/next-tab shortcut, not double-
@@ -443,11 +461,31 @@ DEBUG && console.log("toggleTab previousTabIndex", newData.lastShortcutTabID, pr
 						startShortcutTimer();
 					}
 
-					chrome.tabs.update(previousTabID, { active: true });
+					return cp.tabs.update(previousTabID, { active: true })
+						.then(function() {
+								// if the previous tab's data is not in tabsByID,
+								// this throw an exception that will be caught
+								// below and the bad tab ID will be removed
+							const previousWindowID = data.tabsByID[previousTabID].windowId;
 
-					if (previousWindowID != chrome.windows.WINDOW_ID_CURRENT) {
-						chrome.windows.update(previousWindowID, { focused: true });
-					}
+							if (previousWindowID != chrome.windows.WINDOW_ID_CURRENT) {
+								return cp.windows.update(previousWindowID, { focused: true });
+							}
+						})
+						.catch(function(error) {
+DEBUG && console.error(error);
+
+								// we got an error either because the previous
+								// tab is no longer around or its data is not in
+								// tabsByID, so remove it and update newData so
+								// that the fixed data is saved when it's returned
+							tabIDs.splice(previousTabIndex, 1);
+							delete data.tabsByID[previousTabID];
+
+							newData.tabIDs = tabIDs;
+							newData.tabsByID = data.tabsByID;
+						})
+						.return(newData);
 				}
 			}
 
@@ -463,17 +501,24 @@ DEBUG && console.log("toggleTab previousTabIndex", newData.lastShortcutTabID, pr
 				var data = storage.data,
 					tabsByID = data.tabsByID;
 
-				data.tabIDs.slice(-20).reverse().forEach(function(tabID) {
-					const tab = tabsByID[tabID];
-
-					if (tab) {
-						console.log("%c   ", "font-size: 14px; background: url(" +
-							tab.favIconUrl + ") no-repeat; background-size: contain",
-							tabID + ": " + tab.lastVisit + ": " + tab.title.slice(0, 100));
-					} else {
-						console.log("MISSING", tabID);
-					}
-				});
+				Promise.all(data.tabIDs.slice(-20).reverse().map(function(tabID) {
+					return cp.tabs.get(tabID)
+						.catch(function(error) {
+							return tabID;
+						});
+					})
+				)
+					.then(function(tabs) {
+						tabs.forEach(function(tab) {
+							if (isNaN(tab)) {
+								console.log("%c   ", "font-size: 14px; background: url(" +
+									tab.favIconUrl + ") no-repeat; background-size: contain",
+									tab.id + ": " + tabsByID[tab.id].lastVisit + ": " + titleOrURL(tab));
+							} else {
+								console.log("MISSING", tab);
+							}
+						});
+					});
 			});
 	}
 
