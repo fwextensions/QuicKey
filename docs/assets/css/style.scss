@@ -27,6 +27,11 @@ footer {
 	clear: both;
 }
 
+code {
+	font-size: smaller;
+	line-height: 100%;
+}
+
 button {
 	padding: 0.6em 1.5em 0.7em;
 	font: inherit;
@@ -56,6 +61,12 @@ button span {
 	font-weight: normal;
 	padding-left: .2em;
 	opacity: .5;
+}
+
+
+button.copy {
+	font-size: smaller;
+	padding: 0.25em 0.8em .3em;
 }
 
 header button {
