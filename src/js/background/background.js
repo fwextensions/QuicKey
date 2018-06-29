@@ -189,10 +189,10 @@ require([
 
 	chrome.commands.onCommand.addListener(function(command) {
 		if (command == "1-previous-tab") {
-			recentTabs.toggleTab(-1);
+			recentTabs.navigate(-1);
 			backgroundTracker.event("recents", "previous");
 		} else if (command == "2-next-tab") {
-			recentTabs.toggleTab(1);
+			recentTabs.navigate(1);
 			backgroundTracker.event("recents", "next");
 		}
 	});
@@ -218,14 +218,14 @@ require([
 			popupIsOpen = false;
 
 			if (!closedByEsc && Date.now() - connectTime < MaxPopupLifetime) {
-					// pass true so toggleTab() knows this toggle is coming from
+					// pass true so navigate() knows this event is coming from
 					// a double press of the shortcut.  set addFromToggle so that
 					// the onActivated listener calls add immediately instead of
 					// debouncing it.  otherwise, quickly repeated double presses
 					// would be ignored because the tab list wouldn't have been
 					// updated yet.
 				addFromToggle = true;
-				recentTabs.toggleTab(-1, true);
+				recentTabs.navigate(-1, true);
 				backgroundTracker.event("recents", "toggle");
 			} else {
 					// send a background "pageview", since the popup is now closed,

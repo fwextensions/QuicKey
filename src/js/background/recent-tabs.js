@@ -43,7 +43,7 @@ define([
 		if (!tab) {
 			return "NO TAB";
 		} else {
-			return (tab.title || tab.url).slice(0, length || 50);
+			return (tab.title || tab.url).slice(0, length || 75);
 		}
 	}
 
@@ -401,96 +401,112 @@ DEBUG && console.log("=== updateAll");
 	}
 
 
-	function toggleTab(
+	function navigate(
 		direction,
 		fromDoublePress)
 	{
-		return storage.set(function(data) {
+		var now = Date.now(),
+				// set a flag so we know when the previous tab is re-activated
+				// that it was caused by us, not the user, so that it doesn't
+				// remove tabs based on dwell time.  but only do that if the
+				// user is toggling the tab via the previous/next-tab shortcut
+				// and not by double-pressing the popup shortcut.  use 0 as
+				// the lastShortcutTime in that case so if the user quickly
+				// does the double-press twice, it will just toggle instead
+				// of pushing further back in the stack.
+			newData = {
+				switchFromShortcut: !fromDoublePress,
+				lastShortcutTime: fromDoublePress ? 0 : now,
+				previousTabIndex: -1
+			};
+
+
+		function switchTabs(
+			data)
+		{
 			var tabIDs = data.tabIDs,
 				tabIDCount = tabIDs.length,
 				maxIndex = tabIDCount - 1,
-				now = Date.now(),
-					// set a flag so we know when the previous tab is re-activated
-					// that it was caused by us, not the user, so that it doesn't
-					// remove tabs based on dwell time.  but only do that if the
-					// user is toggling the tab via the previous/next-tab shortcut
-					// and not by double-pressing the popup shortcut.  use 0 as
-					// the lastShortcutTime in that case so if the user quickly
-					// does the double-press twice, it will just toggle instead
-					// of pushing further back in the stack.
-				newData = {
-					switchFromShortcut: !fromDoublePress,
-					lastShortcutTime: fromDoublePress ? 0 : now,
-					previousTabIndex: -1
-				},
 					// set the tab index assuming this toggle isn't happening
 					// during the 750ms window since the last shortcut fired.  if
 					// the user is going forward, don't let them go past the most
-					// recently used tab.
-				previousTabIndex = (direction == -1) ?
-					(maxIndex + direction + tabIDCount) % tabIDCount :
-					maxIndex;
+					// recently used tab, which is the last one.
+				previousTabIndex = Math.min(maxIndex + direction, maxIndex),
+				previousTabID;
 
-			if (tabIDCount > 1) {
-				if (tabIDCount > 2 && !isNaN(data.lastShortcutTime) &&
-						now - data.lastShortcutTime < MaxSwitchDelay) {
-					if (data.previousTabIndex > -1) {
-						if (direction == -1) {
-								// when going backwards, wrap around if necessary
-							previousTabIndex = (data.previousTabIndex - 1 + tabIDCount) % tabIDCount;
-						} else {
-								// don't let the user go past the most recently
-								// used tab
-							previousTabIndex = Math.min(data.previousTabIndex + 1, maxIndex);
-						}
+			if (tabIDCount > 2 && !isNaN(data.lastShortcutTime) &&
+					now - data.lastShortcutTime < MaxSwitchDelay) {
+				if (data.previousTabIndex > -1) {
+					if (direction == -1) {
+							// when going backwards, wrap around if necessary
+						previousTabIndex = (data.previousTabIndex - 1 + tabIDCount) % tabIDCount;
+					} else {
+							// don't let the user go past the most recently
+							// used tab
+						previousTabIndex = Math.min(data.previousTabIndex + 1, maxIndex);
 					}
-				}
-
-				newData.previousTabIndex = previousTabIndex;
-				newData.lastShortcutTabID = tabIDs[previousTabIndex];
-DEBUG && console.log("toggleTab previousTabIndex", newData.lastShortcutTabID, previousTabIndex, titleOrURL(data.tabsByID[newData.lastShortcutTabID]));
-
-				if (newData.lastShortcutTabID) {
-					var previousTabID = newData.lastShortcutTabID;
-
-						// we only want to start the timer if the user triggered
-						// us with the previous/next-tab shortcut, not double-
-						// pressing the popup shortcut, so that the tab activation
-						// will immediately reorder the tabIDs array in add() above
-					if (!fromDoublePress) {
-						startShortcutTimer();
-					}
-
-					return cp.tabs.update(previousTabID, { active: true })
-						.then(function() {
-								// if the previous tab's data is not in tabsByID,
-								// this throw an exception that will be caught
-								// below and the bad tab ID will be removed
-							const previousWindowID = data.tabsByID[previousTabID].windowId;
-
-							if (previousWindowID != chrome.windows.WINDOW_ID_CURRENT) {
-								return cp.windows.update(previousWindowID, { focused: true });
-							}
-						})
-						.catch(function(error) {
-DEBUG && console.error(error);
-
-								// we got an error either because the previous
-								// tab is no longer around or its data is not in
-								// tabsByID, so remove it and update newData so
-								// that the fixed data is saved when it's returned
-							tabIDs.splice(previousTabIndex, 1);
-							delete data.tabsByID[previousTabID];
-
-							newData.tabIDs = tabIDs;
-							newData.tabsByID = data.tabsByID;
-						})
-						.return(newData);
 				}
 			}
 
-			return newData;
-		}, "toggleTab");
+			previousTabID = tabIDs[previousTabIndex];
+DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabIndex, titleOrURL(data.tabsByID[previousTabID]));
+
+				// if there's only one tab, this will be undefined and we'll just
+				// return newData as-is below
+			if (previousTabID) {
+				newData.previousTabIndex = previousTabIndex;
+				newData.lastShortcutTabID = previousTabID;
+
+				return cp.tabs.update(previousTabID, { active: true })
+					.then(function() {
+							// if the previous tab's data is not in tabsByID,
+							// this throws an exception that will be caught
+							// below and the bad tab ID will be removed
+						const previousWindowID = data.tabsByID[previousTabID].windowId;
+
+							// we only want to start the timer if the user triggered
+							// us with the previous/next-tab shortcut, not double-
+							// pressing the popup shortcut, so that the tab activation
+							// will immediately reorder the tabIDs array in add() above.
+							// and only if we haven't thrown an exception due to a bad tab.
+						if (!fromDoublePress) {
+							startShortcutTimer();
+						}
+
+						if (previousWindowID != chrome.windows.WINDOW_ID_CURRENT) {
+							return cp.windows.update(previousWindowID, { focused: true });
+						}
+					})
+					.catch(function(error) {
+							// we got an error either because the previous
+							// tab is no longer around or its data is not in
+							// tabsByID, so remove it and update newData so
+							// that the fixed data is saved when it's returned.
+							// the current tab has now shifted into that position,
+							// so set data.previousTabIndex to that so when we
+							// recurse below, the next iteration will calculate
+							// the previous tab starting from there.
+						tabIDs.splice(previousTabIndex, 1);
+						delete data.tabsByID[previousTabID];
+						data.previousTabIndex = previousTabIndex;
+
+						newData.tabIDs = tabIDs;
+						newData.tabsByID = data.tabsByID;
+
+DEBUG && console.error(error);
+
+						return switchTabs(data);
+					})
+					.return(newData);
+			} else {
+				return newData;
+			}
+		}
+
+
+			// we break the tab switching into a function so it can call itself
+			// recursively if it hits a bad tab while navigating
+		return storage.set(switchTabs, "navigate");
 	}
 
 
@@ -529,7 +545,7 @@ DEBUG && console.error(error);
 		replace: replace,
 		getAll: getAll,
 		updateAll: updateAll,
-		toggleTab: toggleTab,
+		navigate: navigate,
 		printAll: printAll
 	};
 });
