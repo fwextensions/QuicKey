@@ -378,7 +378,7 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 								return tabFromSession;
 							})
 							.filter(function(tab) {
-								const existingTab = closedTabsByURL[tab.url];
+								const existingTab = tab.url in closedTabsByURL;
 
 								closedTabsByURL[tab.url] = true;
 
