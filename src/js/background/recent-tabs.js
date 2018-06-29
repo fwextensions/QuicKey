@@ -158,25 +158,6 @@ DEBUG && console.log("updateFromFreshTabs result", result);
 	}
 
 
-	function updateDataFromShortcut()
-	{
-		return storage.set(function(data) {
-			const lastShortcutTabID = data.lastShortcutTabID,
-				lastShortcutTab = data.tabsByID[lastShortcutTabID];
-
-			if (!isNaN(lastShortcutTabID) && lastShortcutTab) {
-				removeItem(data.tabIDs, lastShortcutTabID);
-				data.tabIDs.push(lastShortcutTabID);
-				addVisit(lastShortcutTab)
-			}
-
-			data.lastShortcutTabID = null;
-
-			return data;
-		}, "updateDataFromShortcut");
-	}
-
-
 	function startShortcutTimer()
 	{
 		chrome.browserAction.setIcon(InvertedIconPaths);
@@ -188,8 +169,6 @@ DEBUG && console.log("updateFromFreshTabs result", result);
 	function onShortcutTimerDone()
 	{
 		chrome.browserAction.setIcon(IconPaths);
-
-		return updateDataFromShortcut();
 	}
 
 
@@ -208,10 +187,6 @@ DEBUG && console.log("updateFromFreshTabs result", result);
 				lastID,
 				lastTab;
 
-			if (data.switchFromShortcut) {
-				return { switchFromShortcut: false };
-			}
-
 			lastID = last(tabIDs);
 			lastTab = tabsByID[lastID];
 
@@ -221,11 +196,7 @@ DEBUG && console.log("updateFromFreshTabs result", result);
 					// happen just from opening the extension and then
 					// closing it without doing anything.  or we switched to
 					// the tab using the keyboard shortcut.
-// TODO: do we need to save lastShortcutTabID here?  might be faster not to
-				return {
-					switchFromShortcut: false,
-					lastShortcutTabID: null
-				};
+				return;
 			}
 
 DEBUG && console.log("add", tab.id, titleOrURL(tab));
@@ -247,9 +218,7 @@ DEBUG && console.log("add", tab.id, titleOrURL(tab));
 
 			return {
 				tabIDs: tabIDs,
-				tabsByID: tabsByID,
-				switchFromShortcut: false,
-				lastShortcutTabID: null
+				tabsByID: tabsByID
 			};
 		}, "addTab");
 	}
@@ -419,16 +388,11 @@ DEBUG && console.log("=== updateAll");
 		fromDoublePress)
 	{
 		var now = Date.now(),
-				// set a flag so we know when the previous tab is re-activated
-				// that it was caused by us, not the user, so that it doesn't
-				// remove tabs based on dwell time.  but only do that if the
-				// user is toggling the tab via the previous/next-tab shortcut
-				// and not by double-pressing the popup shortcut.  use 0 as
-				// the lastShortcutTime in that case so if the user quickly
-				// does the double-press twice, it will just toggle instead
-				// of pushing further back in the stack.
+				// if the user is double-pressing the popup shortcut, use 0 as
+				// the lastShortcutTime so if they quickly do the double-press
+				// twice within 750ms, it will just toggle instead of pushing
+				// further back in the stack
 			newData = {
-				switchFromShortcut: !fromDoublePress,
 				lastShortcutTime: fromDoublePress ? 0 : now,
 				previousTabIndex: -1
 			};
@@ -440,39 +404,31 @@ DEBUG && console.log("=== updateAll");
 			var tabIDs = data.tabIDs,
 				tabIDCount = tabIDs.length,
 				maxIndex = tabIDCount - 1,
-					// set the tab index assuming this toggle isn't happening
-					// during the 750ms window since the last shortcut fired.  if
-					// the user is going forward, don't let them go past the most
-					// recently used tab, which is the last one.
-				previousTabIndex = Math.min(maxIndex + direction, maxIndex),
+				previousTabIndex,
 				previousTabID;
 
-				// we can only navigate to older tabs within the 750ms window if
-				// there are at least 3 tabs
-			if (tabIDCount > 2 && !isNaN(data.lastShortcutTime) &&
-					now - data.lastShortcutTime < MaxSwitchDelay) {
-				if (data.previousTabIndex > -1) {
-					if (direction == -1) {
-							// when going backwards, wrap around if necessary
-						previousTabIndex = (data.previousTabIndex - 1 + tabIDCount) % tabIDCount;
-					} else {
-							// don't let the user go past the most recently
-							// used tab
-						previousTabIndex = Math.min(data.previousTabIndex + 1, maxIndex);
-					}
+			if (now - data.lastShortcutTime < MaxSwitchDelay && data.previousTabIndex > -1) {
+				if (direction == -1) {
+						// when going backwards, wrap around if necessary
+					previousTabIndex = (data.previousTabIndex - 1 + tabIDCount) % tabIDCount;
+				} else {
+						// don't let the user go past the most recently used tab
+					previousTabIndex = Math.min(data.previousTabIndex + 1, maxIndex);
 				}
+			} else if (direction == -1) {
+					// if the user is not actively navigating, we want to ignore
+					// alt-S keypresses so the icon doesn't invert for no reason
+				previousTabIndex = maxIndex - 1;
 			}
 
+				// if there's only one tab or the user pressed alt-S while not
+				// navigating, this will be undefined and we'll just return
+				// newData as-is below
 			previousTabID = tabIDs[previousTabIndex];
-DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabIndex, titleOrURL(data.tabsByID[previousTabID]));
 
-				// if there's only one tab, this will be undefined and we'll just
-				// return newData as-is below.  if it's the same as the current
-				// tab ID, that means the user hit the forward tab shortcut without
-				// being in the navigation window, so just ignore that.
-			if (previousTabID && previousTabID != tabIDs[maxIndex]) {
+			if (previousTabID) {
+DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabIndex, titleOrURL(data.tabsByID[previousTabID]));
 				newData.previousTabIndex = previousTabIndex;
-				newData.lastShortcutTabID = previousTabID;
 
 				return cp.tabs.update(previousTabID, { active: true })
 					.then(function() {
@@ -509,7 +465,6 @@ DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabInde
 
 						newData.tabIDs = tabIDs;
 						newData.tabsByID = data.tabsByID;
-
 DEBUG && console.error(error);
 
 						return switchTabs(data);

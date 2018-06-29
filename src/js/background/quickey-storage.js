@@ -20,8 +20,6 @@ define([
 							tabIDs: [],
 							tabsByID: {},
 							previousTabIndex: -1,
-							switchFromShortcut: false,
-							lastShortcutTabID: null,
 							lastShortcutTime: 0,
 							lastStartupTime: 0,
 							lastUpdateTime: 0,
@@ -47,7 +45,12 @@ define([
 		updaters: {
 			"3": function(data)
 			{
+					// add installTime in v4
 				data.installTime = Date.now();
+
+					// we no longer need these values
+				delete data.switchFromShortcut;
+				delete data.lastShortcutTabID;
 
 				return [4, data];
 			}
