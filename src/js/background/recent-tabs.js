@@ -325,6 +325,7 @@ DEBUG && console.log("tab replaced", oldID, titleOrURL(oldTab));
 						newData = {
 							tabsByID: tabsByID
 						},
+						closedTabsByURL = {},
 						tabs;
 
 						// lastUpdateTime shouldn't be undefined, but just in case
@@ -365,14 +366,26 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 						// will be in the list, but is then removed from the list
 						// in getTabs().
 					if (data.tabIDs.length > 1) {
-						tabs = tabs.concat(closedTabs.map(function(session) {
-							const tabFromSession = session.tab || session.window.tabs[0];
+							// convert the sessions to tab objects and dedupe
+							// them by URL, keeping the most recent version of each
+						closedTabs = closedTabs
+							.map(function(session) {
+								const tabFromSession = session.tab || session.window.tabs[0];
 
-								// session lastModified times are in Unix epoch
-							tabFromSession.lastVisit = session.lastModified * 1000;
+									// session lastModified times are in Unix epoch
+								tabFromSession.lastVisit = session.lastModified * 1000;
 
-							return tabFromSession;
-						}));
+								return tabFromSession;
+							})
+							.filter(function(tab) {
+								const existingTab = closedTabsByURL[tab.url];
+
+								closedTabsByURL[tab.url] = true;
+
+								return !existingTab;
+							});
+
+						tabs = tabs.concat(closedTabs);
 					}
 
 						// save off the updated recent data.  we don't call
@@ -434,6 +447,8 @@ DEBUG && console.log("=== updateAll");
 				previousTabIndex = Math.min(maxIndex + direction, maxIndex),
 				previousTabID;
 
+				// we can only navigate to older tabs within the 750ms window if
+				// there are at least 3 tabs
 			if (tabIDCount > 2 && !isNaN(data.lastShortcutTime) &&
 					now - data.lastShortcutTime < MaxSwitchDelay) {
 				if (data.previousTabIndex > -1) {
@@ -452,8 +467,10 @@ DEBUG && console.log("=== updateAll");
 DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabIndex, titleOrURL(data.tabsByID[previousTabID]));
 
 				// if there's only one tab, this will be undefined and we'll just
-				// return newData as-is below
-			if (previousTabID) {
+				// return newData as-is below.  if it's the same as the current
+				// tab ID, that means the user hit the forward tab shortcut without
+				// being in the navigation window, so just ignore that.
+			if (previousTabID && previousTabID != tabIDs[maxIndex]) {
 				newData.previousTabIndex = previousTabIndex;
 				newData.lastShortcutTabID = previousTabID;
 
