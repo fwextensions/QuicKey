@@ -142,6 +142,19 @@ require([
 	}
 
 
+	function handleCommand(
+		command)
+	{
+		if (command == "1-previous-tab") {
+			recentTabs.navigate(-1);
+			backgroundTracker.event("recents", "previous");
+		} else if (command == "2-next-tab") {
+			recentTabs.navigate(1);
+			backgroundTracker.event("recents", "next");
+		}
+	}
+
+
 	chrome.tabs.onActivated.addListener(function(event) {
 		if (!gStartingUp) {
 			onTabChanged(event);
@@ -188,12 +201,20 @@ require([
 
 
 	chrome.commands.onCommand.addListener(function(command) {
-		if (command == "1-previous-tab") {
-			recentTabs.navigate(-1);
-			backgroundTracker.event("recents", "previous");
-		} else if (command == "2-next-tab") {
-			recentTabs.navigate(1);
-			backgroundTracker.event("recents", "next");
+		if (!gStartingUp) {
+			handleCommand(command);
+		} else {
+				// as below in the onConnect handler, the user is interacting
+				// with the extension before the last onActivated event happened,
+				// so we're clearly not starting up anymore.  since the onActivated
+				// handler didn't call updateAll(), we need to do that before
+				// handling the command.  otherwise, the stored tab IDs are likely
+				// to be out of sync with the reopened tabs and navigation will fail.
+			gStartingUp = false;
+			recentTabs.updateAll()
+				.then(function() {
+					handleCommand(command);
+				});
 		}
 	});
 
