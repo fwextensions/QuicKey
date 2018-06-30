@@ -90,7 +90,7 @@ Opening *QuicKey* displays a list of the last 50 tabs you've visited, in order o
 
 <p style="margin-bottom: 0;">&nbsp;</p>
 
-  * **To pick a recent tab from the MRU menu:**
+  * <a name="mru-gif"></a>**To pick a recent tab from the MRU menu:**
     * Press the shortcut but keep holding the <kbd>alt</kbd> key (<kbd>ctrl</kbd> key on macOS).
     * Press <kbd>W</kbd> or <kbd>↓</kbd> to move down through the list of recent tabs.
     * Press <b><kbd>shift</kbd><kbd>W</kbd></b> or <kbd>↑</kbd> to move up.
