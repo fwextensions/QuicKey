@@ -75,16 +75,15 @@ This option lets you quickly press and release <b><kbd>ctrl</kbd><kbd>tab</kbd><
 
 2. Download and install [AutoHotkey](https://www.autohotkey.com/download/ahk-install.exe), a Windows utility for remapping keys.
 
-3. Open your PC's startup folder:
-  - Press <b><kbd>Win</kbd><kbd>R</kbd></b> to open the *Run* dialog.
-  - Type `shell:startup`.
-  - Press <kbd>enter</kbd>
+3. Press <b><kbd>Win</kbd><kbd>R</kbd></b> to open the *Run* dialog.
 
-<br>
+4. Type `shell:startup`.
 
-4. Download [`ctrl-tab.ahk`](ctrl-tab.ahk), an AutoHotkey script that sets up the keyboard shortcuts for *QuicKey*.
+5. Press <kbd>enter</kbd> to open your PC's startup folder.
 
-5. Drag the `ctrl-tab.ahk` file to the startup folder and double-click it.
+6. Download [ctrl-tab.ahk](ctrl-tab.ahk), an AutoHotkey script that sets up the keyboard shortcuts for *QuicKey*.
+
+7. Drag the `ctrl-tab.ahk` file to the startup folder and then double-click it.
 
 Now switch between a few different tabs in Chrome using the mouse (since *QuicKey* was just installed, it won't have any recent tab history).  Then press and release <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to the previous tab.
 
