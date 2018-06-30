@@ -17,7 +17,7 @@ SetWinDelay, 0          ; Changed to 0 upon recommendation of documentation
 
 WindowTitle               := "Google Chrome"
 DeveloperToolsWindowTitle := "Developer Tools"
-TicksToOpenPopup          := 400
+TicksToOpenPopup          := 500
 TicksToToggleTab          := 450
 MinUpDownTicks            := 200
 OpenedTickCount           := 0

@@ -69,7 +69,7 @@ If you later change your mind and want to remove these shortcuts, just go back i
 
 ## <a name="option-2"></a>Option 2: Use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to a tab via a menu (Windows only)
 
-This option lets you quickly press and release <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to the previous tab, while also showing a menu of recent tabs if you hold down <kbd>ctrl</kbd>, providing the closest experience to Firefox.
+This option provides the closest experience to Firefox.  It lets you quickly press and release <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to the previous tab, while also showing a menu of recent tabs if you hold down <kbd>ctrl</kbd>.
 
 1. [Install QuicKey](https://chrome.google.com/webstore/detail/quickey-%E2%80%93-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg).
 
@@ -77,7 +77,7 @@ This option lets you quickly press and release <b><kbd>ctrl</kbd><kbd>tab</kbd><
 
 3. Press <b><kbd>Win</kbd><kbd>R</kbd></b> to open the *Run* dialog.
 
-4. Type `shell:startup`.
+4. Type `shell:startup` into the dialog.
 
 5. Press <kbd>enter</kbd> to open your PC's startup folder.
 
