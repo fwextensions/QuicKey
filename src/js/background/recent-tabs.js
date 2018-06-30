@@ -18,22 +18,7 @@ define([
 			url: 1,
 			windowId: 1
 		},
-		TabKeys = Object.keys(TabKeysHash),
-		IconPaths = {
-			path: {
-				"19": "img/icon-19.png",
-				"38": "img/icon-38.png"
-			}
-		},
-		InvertedIconPaths = {
-			path: {
-				"19": "img/icon-19-inverted.png",
-				"38": "img/icon-38-inverted.png"
-			}
-		};
-
-
-	var shortcutTimer = null;
+		TabKeys = Object.keys(TabKeysHash);
 
 
 	function titleOrURL(
@@ -155,20 +140,6 @@ DEBUG && console.log("=== newTabIDs", newTabIDs.length);
 DEBUG && console.log("updateFromFreshTabs result", result);
 
 		return result;
-	}
-
-
-	function startShortcutTimer()
-	{
-		chrome.browserAction.setIcon(InvertedIconPaths);
-		clearTimeout(shortcutTimer);
-		shortcutTimer = setTimeout(onShortcutTimerDone, MaxSwitchDelay);
-	}
-
-
-	function onShortcutTimerDone()
-	{
-		chrome.browserAction.setIcon(IconPaths);
 	}
 
 
@@ -436,15 +407,6 @@ DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabInde
 							// this throws an exception that will be caught
 							// below and the bad tab ID will be removed
 						const previousWindowID = data.tabsByID[previousTabID].windowId;
-
-							// we only want to start the timer if the user triggered
-							// us with the previous/next-tab shortcut, not double-
-							// pressing the popup shortcut, so that the tab activation
-							// will immediately reorder the tabIDs array in add() above.
-							// and only if we haven't thrown an exception due to a bad tab.
-						if (!fromDoublePress) {
-							startShortcutTimer();
-						}
 
 						if (previousWindowID != chrome.windows.WINDOW_ID_CURRENT) {
 							return cp.windows.update(previousWindowID, { focused: true });

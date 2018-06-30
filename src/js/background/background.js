@@ -1,10 +1,22 @@
 	// if the popup is opened and closed within this time, switch to the
 	// previous tab
 const MaxPopupLifetime = 450,
-	TabActivatedDelay = 750,
+	TabActivatedOnStartupDelay = 750,
 	TabRemovedDelay = 1000,
 	MinTabDwellTime = 750,
-	RestartDelay = 10 * 1000;
+	RestartDelay = 10 * 1000,
+	IconPaths = {
+		path: {
+			"19": "img/icon-19.png",
+			"38": "img/icon-38.png"
+		}
+	},
+	InvertedIconPaths = {
+		path: {
+			"19": "img/icon-19-inverted.png",
+			"38": "img/icon-38-inverted.png"
+		}
+	};
 
 
 var gStartingUp = false,
@@ -59,7 +71,7 @@ DEBUG && console.log("===== updateAll done");
 					});
 			});
 		}
-	}, TabActivatedDelay);
+	}, TabActivatedOnStartupDelay);
 
 DEBUG && console.log("== onStartup");
 
@@ -88,6 +100,7 @@ require([
 		addFromToggle = false,
 		backgroundTracker = pageTrackers.background,
 		popupTracker = pageTrackers.popup,
+		shortcutTimer,
 		lastWindowID;
 
 	window.tracker = popupTracker;
@@ -137,6 +150,7 @@ require([
 			addFromToggle = false;
 			addTab(event);
 		} else {
+			startInversionTimer();
 			debouncedAddTab(event);
 		}
 	}
@@ -152,6 +166,20 @@ require([
 			recentTabs.navigate(1);
 			backgroundTracker.event("recents", "next");
 		}
+	}
+
+
+	function startInversionTimer()
+	{
+		chrome.browserAction.setIcon(InvertedIconPaths);
+		clearTimeout(shortcutTimer);
+		shortcutTimer = setTimeout(onInversionTimerDone, MinTabDwellTime);
+	}
+
+
+	function onInversionTimerDone()
+	{
+		chrome.browserAction.setIcon(IconPaths);
 	}
 
 
