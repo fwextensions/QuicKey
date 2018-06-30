@@ -29,7 +29,7 @@ Chrome's *Keyboard shortcuts* screen normally blocks you from using <b><kbd>ctrl
 
 2. Right-click the *QuicKey* icon <img src="../img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> and select *Options* from the menu.
 
-    <img src="../img/options-in-menu.png" style="width: 225px;">
+    <img src="../img/options-in-menu.png" style="width: 208px;">
 
 3. After the *Keyboard shortcuts* page opens, press <b><kbd>ctrl</kbd><kbd>shift</kbd><kbd>J</kbd></b> on Windows/Linux or <b><kbd>cmd</kbd><kbd>opt</kbd><kbd>J</kbd></b> on macOS to open the Chrome DevTools.
 
@@ -76,9 +76,10 @@ This option lets you quickly press and release <b><kbd>ctrl</kbd><kbd>tab</kbd><
 2. Download and install [AutoHotkey](https://www.autohotkey.com/download/ahk-install.exe), a Windows utility for remapping keys.
 
 3. Open your PC's startup folder:
-    * Press <b><kbd>Win</kbd><kbd>R</kbd></b> to open the *Run* dialog.
-    * Type `shell:startup`.
-    * Press <kbd>enter</kbd>
+  - Press <b><kbd>Win</kbd><kbd>R</kbd></b> to open the *Run* dialog.
+  - Type `shell:startup`.
+  - Press <kbd>enter</kbd>
+
 
 4. Download [`ctrl-tab.ahk`](ctrl-tab.ahk), an AutoHotkey script that sets up the keyboard shortcuts for *QuicKey*.
 
