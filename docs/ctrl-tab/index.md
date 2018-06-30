@@ -71,16 +71,11 @@ If you later change your mind and want to remove these shortcuts, just go back i
 
 This option lets you quickly press and release <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to the previous tab, while also showing a menu of recent tabs if you hold down <kbd>ctrl</kbd>, providing the closest experience to Firefox.
 
-<b><kbd>ctrl</kbd><kbd>tab</kbd></b>
-
-
-
 1. [Install QuicKey](https://chrome.google.com/webstore/detail/quickey-%E2%80%93-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg).
 
 2. Download and install [AutoHotkey](https://www.autohotkey.com/download/ahk-install.exe), a Windows utility for remapping keys.
 
 3. Open your PC's startup folder:
-
     * Press <b><kbd>Win</kbd><kbd>R</kbd></b> to open the *Run* dialog.
     * Type `shell:startup`.
     * Press <kbd>enter</kbd>
