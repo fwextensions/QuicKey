@@ -29,11 +29,11 @@ Chrome's *Keyboard shortcuts* screen normally blocks you from using <b><kbd>ctrl
 
 2. Right-click the *QuicKey* icon <img src="../img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> and select *Options* from the menu.
 
-<img src="../img/options-in-menu.png" style="width: 225px;">
+    <img src="../img/options-in-menu.png" style="width: 225px;">
 
 3. After the *Keyboard shortcuts* page opens, press <b><kbd>ctrl</kbd><kbd>shift</kbd><kbd>J</kbd></b> on Windows/Linux or <b><kbd>cmd</kbd><kbd>opt</kbd><kbd>J</kbd></b> on macOS to open the Chrome DevTools.
 
-<img src="../img/console-open.png">
+    <img src="../img/console-open.png">
 
 4. Copy this block of code:
 
@@ -52,11 +52,11 @@ Chrome's *Keyboard shortcuts* screen normally blocks you from using <b><kbd>ctrl
 
 5. Click into the console area of DevTools and paste the code next to the >.
 
-<img src="../img/code-pasted.png">
+    <img src="../img/code-pasted.png">
 
 6. Press <kbd>enter</kbd> to run it.
 
-<img src="../img/ctrl-tab-selected.png">
+    <img src="../img/ctrl-tab-selected.png">
 
 That's it!
 
