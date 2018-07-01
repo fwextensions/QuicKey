@@ -75,7 +75,7 @@ This option provides the closest experience to Firefox.  It lets you quickly pre
 
 2. Download and install [AutoHotkey](https://www.autohotkey.com/download/ahk-install.exe), a Windows utility for remapping keys.
 
-3. Press <b><kbd>Win</kbd><kbd>R</kbd></b> to open the *Run* dialog.
+3. Press <b><kbd>Win</kbd><kbd>R</kbd></b> to open the *Run* dialog.  (Or click the Start menu, type "run", and pick the first result.)
 
 4. Type `shell:startup` into the dialog.
 
@@ -83,7 +83,7 @@ This option provides the closest experience to Firefox.  It lets you quickly pre
 
 6. Download [ctrl-tab.ahk](ctrl-tab.ahk), an AutoHotkey script that sets up the keyboard shortcuts for *QuicKey*.
 
-7. Drag the `ctrl-tab.ahk` file to the startup folder and then double-click it.
+7. Drag the `ctrl-tab.ahk` file to your startup folder and then double-click it.
 
 Now switch between a few different tabs in Chrome using the mouse (since *QuicKey* was just installed, it won't have any recent tab history).  Then press and release <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to the previous tab.
 
