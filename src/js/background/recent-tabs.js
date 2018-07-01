@@ -128,9 +128,11 @@ DEBUG && console.log("=== missing", tabID, oldTab && oldTab.lastVisit, oldTab &&
 		});
 DEBUG && console.log("=== newTabIDs", newTabIDs.length);
 
-		tracker.event("update", "old-recents", tabIDs.length);
-		tracker.event("update", "new-tabs", freshTabs.length);
-		tracker.event("update", "missing-recents", missingCount);
+			// use timing() instead of event() so that we can get a histogram in
+			// GA of the different values, which is hard with events
+		tracker.timing("update", "old-recents", tabIDs.length);
+		tracker.timing("update", "new-tabs", freshTabs.length);
+		tracker.timing("update", "missing-recents", missingCount);
 
 		var result = {
 			tabIDs: newTabIDs,
@@ -265,6 +267,7 @@ DEBUG && console.log("tab replaced", oldID, titleOrURL(oldTab));
 						newData = {
 							tabsByID: tabsByID
 						},
+						freshTabsByURL = {},
 						closedTabsByURL = {},
 						tabs;
 
@@ -295,6 +298,7 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 						}
 
 						tab.lastVisit = lastVisit;
+						freshTabsByURL[tab.url] = 1;
 
 						return tab;
 					});
@@ -318,9 +322,10 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 								return tabFromSession;
 							})
 							.filter(function(tab) {
-								const existingTab = tab.url in closedTabsByURL;
+								const url = tab.url,
+									existingTab = url in closedTabsByURL || url in freshTabsByURL;
 
-								closedTabsByURL[tab.url] = true;
+								closedTabsByURL[url] = true;
 
 								return !existingTab;
 							});
