@@ -449,14 +449,17 @@ DEBUG && console.error(error);
 	}
 
 
-	function printAll()
+	function print(
+		count)
 	{
+		count = count || 20;
+
 		cp.storage.local.get(null)
 			.then(function(storage) {
 				var data = storage.data,
 					tabsByID = data.tabsByID;
 
-				Promise.all(data.tabIDs.slice(-20).reverse().map(function(tabID) {
+				Promise.all(data.tabIDs.slice(-count).reverse().map(function(tabID) {
 					return cp.tabs.get(tabID)
 						.catch(function(error) {
 							return tabID;
@@ -467,7 +470,7 @@ DEBUG && console.error(error);
 						tabs.forEach(function(tab) {
 							if (isNaN(tab)) {
 								console.log("%c   ", "font-size: 14px; background: url(" +
-									tab.favIconUrl + ") no-repeat; background-size: contain",
+									tab.favIconUrl + ") top center / contain no-repeat",
 									tab.id + ": " + tabsByID[tab.id].lastVisit + ": " + titleOrURL(tab));
 							} else {
 								console.log("MISSING", tab);
@@ -485,6 +488,6 @@ DEBUG && console.error(error);
 		getAll: getAll,
 		updateAll: updateAll,
 		navigate: navigate,
-		printAll: printAll
+		print: print
 	};
 });
