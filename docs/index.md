@@ -129,7 +129,7 @@ You can move tabs to the left or right of the current tab, making it easy to pul
   * Press <b><kbd>ctrl</kbd><kbd>[</kbd></b> to move the selected tab to the left of the current one.
   * Press <b><kbd>ctrl</kbd><kbd>]</kbd></b> to move it to the right.
 
-Include <kbd>shift</kbd> in the shortcut to also unsuspend the tab while moving it.  The <kbd>ctrl</kbd> key should be used on both Windows and macOS.
+Include <kbd>shift</kbd> in the shortcut to also unsuspend the tab while moving it.  The <kbd>ctrl</kbd> key should be used on both Windows and macOS.  Note that you cannot move tabs between normal and incognito windows.
 
 
 ## <a name="bookmarks"></a>Search bookmarks
@@ -190,7 +190,7 @@ When first installed, *QuicKey* asks for these permissions:
 
     *QuicKey* uses this permission to let you search the titles and URLs of your bookmarked pages. It will never change your bookmarks.
 
-*QuicKey* can't access or manipulate the content of any pages you visit and doesn't transmit any information other than some anonymized Google Analytics metrics.
+*QuicKey* can't access or manipulate the content of any pages you visit and doesn't transmit any information other than some anonymized Google Analytics usage metrics.
 
 
 ## Feedback and bugs

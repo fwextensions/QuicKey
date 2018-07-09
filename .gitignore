@@ -2,7 +2,8 @@
 /build/out/manifest.json
 /build/out/css
 /build/out/img
-/build/out/js
+/build/out/js/*
+!/build/out/js/defines.js
 /test
 /To do.md
 /build/out.zip
