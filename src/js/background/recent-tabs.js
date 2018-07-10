@@ -298,7 +298,7 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 						}
 
 						tab.lastVisit = lastVisit;
-						freshTabsByURL[tab.url] = 1;
+						freshTabsByURL[tab.url] = true;
 
 						return tab;
 					});
