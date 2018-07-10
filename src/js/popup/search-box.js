@@ -54,7 +54,7 @@ define([
 					ref={this.handleRef}
 					className="search-box"
 					tabIndex="0"
-					placeholder="Search for a tab title or URL, or type / for more"
+					placeholder="Search for a tab title or URL, or type / for more options"
 					spellCheck={false}
 					autoFocus={true}
 					value={query}

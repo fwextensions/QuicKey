@@ -1,8 +1,9 @@
 define(function() {
-	const SuspendedURLPattern = /^chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=(.+)$/,
-		ProtocolPattern = /^((chrome-extension:\/\/klbibkeccnjlkjkiokjodocebajanakg\/suspended\.html#(?:.*&)?uri=)?(https?|file|chrome):\/\/(www\.)?)|(chrome-extension:\/\/[^/]+\/)/,
+		// assume any extension URL that begins with suspended.html is from TGS
+	const SuspendedURLPattern = /^chrome-extension:\/\/[^/]+\/suspended\.html#(?:.*&)?uri=(.+)$/,
+		ProtocolPattern = /^((chrome-extension:\/\/[^/]+\/suspended\.html#(?:.*&)?uri=)?(https?|file|chrome):\/\/(www\.)?)|(chrome-extension:\/\/[^/]+\/)/,
 		TGSIconPath = "chrome-extension://klbibkeccnjlkjkiokjodocebajanakg/img/",
-		FaviconURL = "chrome://favicon/";
+		FaviconURLPrefix = "chrome://favicon/";
 
 
 	return function addURLs(
@@ -28,7 +29,7 @@ define(function() {
 			// to put its own icon in there if the background page wasn't available,
 			// so default to the chrome:// URL in that case.
 		item.faviconURL = (item.favIconUrl && item.favIconUrl.indexOf(TGSIconPath) != 0) ?
-			item.favIconUrl : FaviconURL + (item.unsuspendURL || url);
+			item.favIconUrl : FaviconURLPrefix + (item.unsuspendURL || url);
 
 			// add a clean displayURL to each tab that we can score against and
 			// show in the item.  unfortunately, decodeURIComponent() will throw

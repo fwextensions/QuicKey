@@ -1,10 +1,22 @@
 	// if the popup is opened and closed within this time, switch to the
 	// previous tab
 const MaxPopupLifetime = 450,
-	TabActivatedDelay = 750,
+	TabActivatedOnStartupDelay = 750,
 	TabRemovedDelay = 1000,
 	MinTabDwellTime = 750,
-	RestartDelay = 10 * 1000;
+	RestartDelay = 10 * 1000,
+	IconPaths = {
+		path: {
+			"19": "img/icon-19.png",
+			"38": "img/icon-38.png"
+		}
+	},
+	InvertedIconPaths = {
+		path: {
+			"19": "img/icon-19-inverted.png",
+			"38": "img/icon-38-inverted.png"
+		}
+	};
 
 
 var gStartingUp = false,
@@ -59,7 +71,7 @@ DEBUG && console.log("===== updateAll done");
 					});
 			});
 		}
-	}, TabActivatedDelay);
+	}, TabActivatedOnStartupDelay);
 
 DEBUG && console.log("== onStartup");
 
@@ -88,6 +100,7 @@ require([
 		addFromToggle = false,
 		backgroundTracker = pageTrackers.background,
 		popupTracker = pageTrackers.popup,
+		shortcutTimer,
 		lastWindowID;
 
 	window.tracker = popupTracker;
@@ -137,8 +150,36 @@ require([
 			addFromToggle = false;
 			addTab(event);
 		} else {
+			startInversionTimer();
 			debouncedAddTab(event);
 		}
+	}
+
+
+	function handleCommand(
+		command)
+	{
+		if (command == "1-previous-tab") {
+			recentTabs.navigate(-1);
+			backgroundTracker.event("recents", "previous");
+		} else if (command == "2-next-tab") {
+			recentTabs.navigate(1);
+			backgroundTracker.event("recents", "next");
+		}
+	}
+
+
+	function startInversionTimer()
+	{
+		chrome.browserAction.setIcon(InvertedIconPaths);
+		clearTimeout(shortcutTimer);
+		shortcutTimer = setTimeout(onInversionTimerDone, MinTabDwellTime);
+	}
+
+
+	function onInversionTimerDone()
+	{
+		chrome.browserAction.setIcon(IconPaths);
 	}
 
 
@@ -157,6 +198,15 @@ require([
 			recentTabs.remove(tabId, removeInfo);
 		}
 	}, TabRemovedDelay));
+
+
+		// tabs seem to get replaced with new IDs when they're auto-discarded by
+		// Chrome, so we want to update any recency data for them
+	chrome.tabs.onReplaced.addListener(function(newID, oldID) {
+		if (!gStartingUp) {
+			recentTabs.replace(oldID, newID);
+		}
+	});
 
 
 		// the onActivated event isn't fired when the user switches between
@@ -179,12 +229,20 @@ require([
 
 
 	chrome.commands.onCommand.addListener(function(command) {
-		if (command == "1-previous-tab") {
-			recentTabs.toggleTab(-1);
-			backgroundTracker.event("recents", "previous");
-		} else if (command == "2-next-tab") {
-			recentTabs.toggleTab(1);
-			backgroundTracker.event("recents", "next");
+		if (!gStartingUp) {
+			handleCommand(command);
+		} else {
+				// as below in the onConnect handler, the user is interacting
+				// with the extension before the last onActivated event happened,
+				// so we're clearly not starting up anymore.  since the onActivated
+				// handler didn't call updateAll(), we need to do that before
+				// handling the command.  otherwise, the stored tab IDs are likely
+				// to be out of sync with the reopened tabs and navigation will fail.
+			gStartingUp = false;
+			recentTabs.updateAll()
+				.then(function() {
+					handleCommand(command);
+				});
 		}
 	});
 
@@ -209,14 +267,14 @@ require([
 			popupIsOpen = false;
 
 			if (!closedByEsc && Date.now() - connectTime < MaxPopupLifetime) {
-					// pass true so toggleTab() knows this toggle is coming from
+					// pass true so navigate() knows this event is coming from
 					// a double press of the shortcut.  set addFromToggle so that
 					// the onActivated listener calls add immediately instead of
 					// debouncing it.  otherwise, quickly repeated double presses
 					// would be ignored because the tab list wouldn't have been
 					// updated yet.
 				addFromToggle = true;
-				recentTabs.toggleTab(-1, true);
+				recentTabs.navigate(-1, true);
 				backgroundTracker.event("recents", "toggle");
 			} else {
 					// send a background "pageview", since the popup is now closed,

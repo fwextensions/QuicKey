@@ -31,6 +31,8 @@ define([
 				function(event) { moveTab(1, event.shiftKey); }],
 			[["win:ctrl+w", "mac:cmd+ctrl+w"],
 				function() { self.closeTab(selectedTab()); }],
+			[["win:ctrl+c", "win:ctrl+shift+c", "mac:cmd+c", "mac:cmd+shift+c"],
+				function(event) { self.copyItemURL(selectedTab(), event.shiftKey); }],
 			["Escape",
 				function(event) { self.clearQuery(event.target.value); }],
 			[["Space", "shift+Space"],

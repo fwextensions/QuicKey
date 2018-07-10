@@ -1,7 +1,7 @@
 (function() {
 	function openConfigureCommands()
 	{
-		chrome.tabs.update({url: "chrome://extensions/configureCommands"});
+		chrome.tabs.update({ url: "chrome://extensions/configureCommands" });
 	}
 
 

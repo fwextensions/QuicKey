@@ -115,9 +115,11 @@ To close the selected tab, press <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd
 
 ![Close button](img/close-button.png)
 
-When you open *QuicKey*, the 25 most recently closed tabs are listed below the recent tabs and shown in a faded state with an <img src="img/clear.svg" style="height: 1em"> icon.  They are also returned when you type a query, though they're scored lower than open tabs:
+When you open *QuicKey*, the 25 most recently closed tabs are listed below the recent tabs and shown in a faded state with an <img src="img/clear.svg" style="height: 1em"> icon:
 
 ![Closed tab](img/closed-tab.png)
+
+They are also returned when you type a query, though their score is discounted compared to open tabs.
 
 Click a closed tab to reopen it in its original location and with all of its browsing history intact.
 
@@ -176,6 +178,14 @@ On the next page, scroll down and click the toggle button next to the *Allow in 
 Tabs in incognito mode display the incognito icon under the page's favicon, so you can distinguish a normal tab from an incognito one with the same title:
 
 ![Incognito tab](img/incognito-tab.png)
+
+
+## Copy a tab's URL or title
+
+You can also copy the URL and title of the selected tab, bookmark or history item:
+
+  * Press <b><kbd>ctrl</kbd><kbd>C</kbd></b> (<b><kbd>cmd</kbd><kbd>C</kbd></b> on macOS) to copy just the URL.
+  * Press <b><kbd>ctrl</kbd><kbd>shift</kbd><kbd>C</kbd></b> to copy both the item's title and its URL, with a line break in between.
 
 
 ## Privacy policy

@@ -22,6 +22,11 @@ if (!match) {
 	return "error";
 }
 
+	// create a fake navigator global, which init and shortcut-manager can check
+navigator = {
+	platform: "windows"
+};
+
 	// we have to wrap the bare object in parens to eval it
 config = eval("(" + match[1] + ")");
 
@@ -29,7 +34,10 @@ config = eval("(" + match[1] + ")");
 	// the App component outside of a browser
 config.paths = _.assign(config.paths, {
 	cp: "../../build/mock/cp",
-	"check-modifiers": "../../build/mock/check-modifiers"
+		// the mock tracker needs to create a window global and then require
+		// the original tracker module
+	"original-tracker": "background/tracker",
+	"background/tracker": "../../build/mock/tracker"
 });
 
 	// we're running in the top level directory, so add src to get to the
@@ -43,13 +51,19 @@ requirejs.config(config);
 	// writing of the rendered HTML inside the required module
 requirejs([
 	"jsx!popup/app",
+	"background/recent-tabs"
 ], function(
-	App
+	App,
+	recentTabs
 ) {
 	var html = ReactDOMServer.renderToString(React.createElement(App, {
 			tabs: [],
 			initialQuery: "",
-			platform: "win"
+			platform: "win",
+			tracker: {
+				set: function() {}
+			},
+			recentTabs: recentTabs
 		})),
 			// insert the rendered HTML into the root node in the template
 			// popup.html file
@@ -58,6 +72,6 @@ requirejs([
 		// we only want to change the source file if the rendered markup has changed
 	if (newHTML !== currentHTML) {
 		fs.writeFileSync("./src/popup.html", newHTML, "utf8");
-		console.log("popup.html updated");
+		console.log("\n\n===== popup.html updated =====\n\n");
 	}
 });

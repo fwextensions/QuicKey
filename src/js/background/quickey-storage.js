@@ -5,11 +5,13 @@ define([
 	cp,
 	createStorage
 ) {
-	const StorageVersion = 3;
+	const StorageVersion = 4;
 
 
-	return createStorage(StorageVersion,
-		function() {
+	return createStorage({
+		version: StorageVersion,
+		getDefaultData: function()
+		{
 				// we only want to get the tabs in the current window because
 				// only the currently active tab is "recent" as far as we know
 			return cp.tabs.query({ active: true, currentWindow: true, windowType: "normal" })
@@ -18,11 +20,10 @@ define([
 							tabIDs: [],
 							tabsByID: {},
 							previousTabIndex: -1,
-							switchFromShortcut: false,
-							lastShortcutTabID: null,
 							lastShortcutTime: 0,
 							lastStartupTime: 0,
-							lastUpdateTime: 0
+							lastUpdateTime: 0,
+							installTime: Date.now()
 						},
 						tab = tabs && tabs[0];
 
@@ -32,7 +33,7 @@ define([
 							// one will be shown as a recent one in the menu.
 							// ideally, this would be added via recentTabs.add(),
 							// but that module also depends on this one, so there
-							// would be a circular reference. 
+							// would be a circular reference.
 						tab.lastVisit = Date.now();
 						data.tabIDs.push(tab.id);
 						data.tabsByID[tab.id] = tab;
@@ -40,6 +41,19 @@ define([
 
 					return data;
 				});
+		},
+		updaters: {
+			"3": function(data)
+			{
+					// add installTime in v4
+				data.installTime = Date.now();
+
+					// we no longer need these values
+				delete data.switchFromShortcut;
+				delete data.lastShortcutTabID;
+
+				return [4, data];
+			}
 		}
-	);
+	});
 });

@@ -12,6 +12,7 @@ define("popup/app", [
 	"./data/add-urls",
 	"./shortcuts/handle-keys",
 	"lib/handle-ref",
+	"lib/copy-to-clipboard",
 	"lodash"
 ], function(
 	React,
@@ -27,6 +28,7 @@ define("popup/app", [
 	addURLs,
 	handleKeys,
 	handleRef,
+	copyTextToClipboard,
 	_
 ) {
 	const MinScore = .15,
@@ -48,7 +50,8 @@ define("popup/app", [
 		CommandQuery = "/",
 		NoRecentTabsMessage = [{
 			message: "Recently used tabs will appear here as you continue browsing",
-			faviconURL: "img/alert.svg"
+			faviconURL: "img/alert.svg",
+			component: MessageItem
 		}];
 
 
@@ -337,6 +340,20 @@ define("popup/app", [
 		},
 
 
+		copyItemURL: function(
+			item,
+			includeTitle)
+		{
+			var text = "";
+
+			if (item) {
+				text = (includeTitle ? item.title + "\n" : "") +
+					(item.unsuspendURL || item.url);
+				copyTextToClipboard(text);
+			}
+		},
+
+
 		modifySelected: function(
 			delta,
 			mruKey)
@@ -487,7 +504,7 @@ define("popup/app", [
 		{
 				// reset this on every keyDown so we know if the user had typed
 				// an alt-W or alt-shift-W before releasing alt.  it will get set
-				// to true in setSelectedIndex()
+				// to true in setSelectedIndex().
 			this.gotMRUKey = false;
 
 				// keydown handling is managed in another module
@@ -513,10 +530,7 @@ define("popup/app", [
 		{
 			var state = this.state,
 				query = state.query,
-				items = state.matchingItems,
-					// use a special component if there aren't any recents
-				ItemComponent = (items === NoRecentTabsMessage) ? MessageItem :
-					ResultsListItem;
+				items = state.matchingItems;
 
 			return <div className={this.props.platform}>
 				<SearchBox
@@ -529,11 +543,11 @@ define("popup/app", [
 				/>
 				<ResultsList
 					ref={this.handleListRef}
-					ItemComponent={ItemComponent}
-					mode={this.mode}
 					items={items}
-					query={query}
 					maxItems={MaxItems}
+					itemComponent={ResultsListItem}
+					mode={this.mode}
+					query={query}
 					selectedIndex={state.selected}
 					setSelectedIndex={this.setSelectedIndex}
 					onItemClicked={this.openItem}

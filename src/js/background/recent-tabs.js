@@ -14,30 +14,23 @@ define([
 	const MaxTabsLength = 50,
 		MaxSwitchDelay = 750,
 		TabKeysHash = {
-			favIconUrl: 1,
 			id: 1,
-			incognito: 1,
-			title: 1,
 			url: 1,
-			index: 1,
 			windowId: 1
 		},
-		TabKeys = Object.keys(TabKeysHash),
-		IconPaths = {
-			path: {
-				"19": "img/icon-19.png",
-				"38": "img/icon-38.png"
-			}
-		},
-		InvertedIconPaths = {
-			path: {
-				"19": "img/icon-19-inverted.png",
-				"38": "img/icon-38-inverted.png"
-			}
-		};
+		TabKeys = Object.keys(TabKeysHash);
 
 
-	var shortcutTimer = null;
+	function titleOrURL(
+		tab,
+		length)
+	{
+		if (!tab) {
+			return "NO TAB";
+		} else {
+			return (tab.title || tab.url).slice(0, length || 75);
+		}
+	}
 
 
 	function removeItem(
@@ -135,53 +128,20 @@ DEBUG && console.log("=== missing", tabID, oldTab && oldTab.lastVisit, oldTab &&
 		});
 DEBUG && console.log("=== newTabIDs", newTabIDs.length);
 
-		tracker.event("update", "old-recents", tabIDs.length);
-		tracker.event("update", "new-tabs", freshTabs.length);
-		tracker.event("update", "missing-recents", missingCount);
+			// use timing() instead of event() so that we can get a histogram in
+			// GA of the different values, which is hard with events
+		tracker.timing("update", "old-recents", tabIDs.length);
+		tracker.timing("update", "new-tabs", freshTabs.length);
+		tracker.timing("update", "missing-recents", missingCount);
 
 		var result = {
 			tabIDs: newTabIDs,
 			tabsByID: newTabsByID,
 			lastUpdateTime: Date.now()
 		};
-DEBUG && console.log("updateAll result", result);
+DEBUG && console.log("updateFromFreshTabs result", result);
 
 		return result;
-	}
-
-
-	function updateDataFromShortcut()
-	{
-		return storage.set(function(data) {
-			const lastShortcutTabID = data.lastShortcutTabID,
-				lastShortcutTab = data.tabsByID[lastShortcutTabID];
-
-			if (!isNaN(lastShortcutTabID) && lastShortcutTab) {
-				removeItem(data.tabIDs, lastShortcutTabID);
-				data.tabIDs.push(lastShortcutTabID);
-				addVisit(lastShortcutTab)
-			}
-
-			data.lastShortcutTabID = null;
-
-			return data;
-		}, "updateDataFromShortcut");
-	}
-
-
-	function startShortcutTimer()
-	{
-		chrome.browserAction.setIcon(InvertedIconPaths);
-		clearTimeout(shortcutTimer);
-		shortcutTimer = setTimeout(onShortcutTimerDone, MaxSwitchDelay);
-	}
-
-
-	function onShortcutTimerDone()
-	{
-		chrome.browserAction.setIcon(IconPaths);
-
-		return updateDataFromShortcut();
 	}
 
 
@@ -200,10 +160,6 @@ DEBUG && console.log("updateAll result", result);
 				lastID,
 				lastTab;
 
-			if (data.switchFromShortcut) {
-				return { switchFromShortcut: false };
-			}
-
 			lastID = last(tabIDs);
 			lastTab = tabsByID[lastID];
 
@@ -213,14 +169,10 @@ DEBUG && console.log("updateAll result", result);
 					// happen just from opening the extension and then
 					// closing it without doing anything.  or we switched to
 					// the tab using the keyboard shortcut.
-// TODO: do we need to save lastShortcutTabID here?  might be faster not to
-				return {
-					switchFromShortcut: false,
-					lastShortcutTabID: null
-				};
+				return;
 			}
 
-DEBUG && console.log("add", tab.id, tab.title.slice(0, 50));
+DEBUG && console.log("add", tab.id, titleOrURL(tab));
 
 				// make sure the new tab's ID isn't currently in the list and
 				// then push it on the end
@@ -239,9 +191,7 @@ DEBUG && console.log("add", tab.id, tab.title.slice(0, 50));
 
 			return {
 				tabIDs: tabIDs,
-				tabsByID: tabsByID,
-				switchFromShortcut: false,
-				lastShortcutTabID: null
+				tabsByID: tabsByID
 			};
 		}, "addTab");
 	}
@@ -260,7 +210,7 @@ DEBUG && console.log("add", tab.id, tab.title.slice(0, 50));
 				index = tabIDs.indexOf(tabID);
 
 			if (index > -1) {
-DEBUG && console.log("tab closed", tabID, tabsByID[tabID].title);
+DEBUG && console.log("tab closed", tabID, titleOrURL(tabsByID[tabID]));
 				tabIDs.splice(index, 1);
 				delete tabsByID[tabID];
 
@@ -270,6 +220,38 @@ DEBUG && console.log("tab closed", tabID, tabsByID[tabID].title);
 				};
 			}
 		}, "removeTab");
+	}
+
+
+	function replace(
+		oldID,
+		newID)
+	{
+		return storage.set(function(data) {
+			var tabIDs = data.tabIDs,
+				tabsByID = data.tabsByID,
+				index = tabIDs.indexOf(oldID),
+				oldTab = tabsByID[oldID],
+				newData = {};
+
+			if (oldTab) {
+					// delete the tab from tabsByID even if it's not in tabIDs
+				delete tabsByID[oldID];
+				newData.tabsByID = tabsByID;
+			}
+
+			if (index > -1) {
+DEBUG && console.log("tab replaced", oldID, titleOrURL(oldTab));
+				tabIDs[index] = newID;
+				tabsByID[newID] = oldTab;
+				tabsByID[newID].id = newID;
+
+				newData.tabIDs = tabIDs;
+				newData.tabsByID = tabsByID;
+			}
+
+			return newData;
+		}, "replaceTab");
 	}
 
 
@@ -285,6 +267,8 @@ DEBUG && console.log("tab closed", tabID, tabsByID[tabID].title);
 						newData = {
 							tabsByID: tabsByID
 						},
+						freshTabsByURL = {},
+						closedTabsByURL = {},
 						tabs;
 
 						// lastUpdateTime shouldn't be undefined, but just in case
@@ -298,8 +282,8 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 
 						// update the fresh tabs with any recent data we have
 					tabs = freshTabs.map(function(tab) {
-						const oldTab = tabsByID[tab.id],
-							newTab = createRecent(tab, oldTab);
+						const oldTab = tabsByID[tab.id];
+						var lastVisit = 0;
 
 						if (oldTab) {
 								// point the recent tab at the refreshed tab so
@@ -309,11 +293,14 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 								// way, when Chrome restarts and we try to match
 								// the saved recents against the new tabs, we'll
 								// be able to match it by URL.
-// TODO: store a copy here so that keys added to this tab data in the popup aren't saved to storage
-							tabsByID[tab.id] = newTab;
+							tabsByID[tab.id] = createRecent(tab, oldTab);
+							lastVisit = tabsByID[tab.id].lastVisit;
 						}
 
-						return newTab;
+						tab.lastVisit = lastVisit;
+						freshTabsByURL[tab.url] = true;
+
+						return tab;
 					});
 
 						// only show the closed tabs if we also have some recent
@@ -323,16 +310,27 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 						// will be in the list, but is then removed from the list
 						// in getTabs().
 					if (data.tabIDs.length > 1) {
-						tabs = tabs.concat(closedTabs.map(function(session) {
-							const tabFromSession = session.tab || session.window.tabs[0],
-								tab = createRecent(tabFromSession);
+							// convert the sessions to tab objects and dedupe
+							// them by URL, keeping the most recent version of each
+						closedTabs = closedTabs
+							.map(function(session) {
+								const tabFromSession = session.tab || session.window.tabs[0];
 
-								// session lastModified times are in Unix epoch
-							tab.lastVisit = session.lastModified * 1000;
-							tab.sessionId = tabFromSession.sessionId;
+									// session lastModified times are in Unix epoch
+								tabFromSession.lastVisit = session.lastModified * 1000;
 
-							return tab;
-						}));
+								return tabFromSession;
+							})
+							.filter(function(tab) {
+								const url = tab.url,
+									existingTab = url in closedTabsByURL || url in freshTabsByURL;
+
+								closedTabsByURL[url] = true;
+
+								return !existingTab;
+							});
+
+						tabs = tabs.concat(closedTabs);
 					}
 
 						// save off the updated recent data.  we don't call
@@ -361,98 +359,124 @@ DEBUG && console.log("=== updateAll");
 	}
 
 
-	function toggleTab(
+	function navigate(
 		direction,
 		fromDoublePress)
 	{
-		return storage.set(function(data) {
+		var now = Date.now(),
+				// if the user is double-pressing the popup shortcut, use 0 as
+				// the lastShortcutTime so if they quickly do the double-press
+				// twice within 750ms, it will just toggle instead of pushing
+				// further back in the stack
+			newData = {
+				lastShortcutTime: fromDoublePress ? 0 : now,
+				previousTabIndex: -1
+			};
+
+
+		function switchTabs(
+			data)
+		{
 			var tabIDs = data.tabIDs,
 				tabIDCount = tabIDs.length,
 				maxIndex = tabIDCount - 1,
-				now = Date.now(),
-					// set a flag so we know when the previous tab is re-activated
-					// that it was caused by us, not the user, so that it doesn't
-					// remove tabs based on dwell time.  but only do that if the
-					// user is toggling the tab via the previous/next-tab shortcut
-					// and not by double-pressing the popup shortcut.  use 0 as
-					// the lastShortcutTime in that case so if the user quickly
-					// does the double-press twice, it will just toggle instead
-					// of pushing further back in the stack.
-				newData = {
-					switchFromShortcut: !fromDoublePress,
-					lastShortcutTime: fromDoublePress ? 0 : now,
-					previousTabIndex: -1
-				},
-					// set the tab index assuming this toggle isn't happening
-					// during the 750ms window since the last shortcut fired.  if
-					// the user is going forward, don't let them go past the most
-					// recently used tab.
-				previousTabIndex = (direction == -1) ?
-					(maxIndex + direction + tabIDCount) % tabIDCount :
-					maxIndex;
+				previousTabIndex,
+				previousTabID;
 
-			if (tabIDCount > 1) {
-				if (tabIDCount > 2 && !isNaN(data.lastShortcutTime) &&
-						now - data.lastShortcutTime < MaxSwitchDelay) {
-					if (data.previousTabIndex > -1) {
-						if (direction == -1) {
-								// when going backwards, wrap around if necessary
-							previousTabIndex = (data.previousTabIndex - 1 + tabIDCount) % tabIDCount;
-						} else {
-								// don't let the user go past the most recently
-								// used tab
-							previousTabIndex = Math.min(data.previousTabIndex + 1, maxIndex);
-						}
-					}
+			if (now - data.lastShortcutTime < MaxSwitchDelay && data.previousTabIndex > -1) {
+				if (direction == -1) {
+						// when going backwards, wrap around if necessary
+					previousTabIndex = (data.previousTabIndex - 1 + tabIDCount) % tabIDCount;
+				} else {
+						// don't let the user go past the most recently used tab
+					previousTabIndex = Math.min(data.previousTabIndex + 1, maxIndex);
 				}
-
-				newData.previousTabIndex = previousTabIndex;
-				newData.lastShortcutTabID = tabIDs[previousTabIndex];
-DEBUG && console.log("toggleTab previousTabIndex", newData.lastShortcutTabID, previousTabIndex, data.tabsByID[newData.lastShortcutTabID ].title);
-
-				if (previousTabIndex > -1 && newData.lastShortcutTabID) {
-					var previousTabID = newData.lastShortcutTabID,
-						previousWindowID = data.tabsByID[previousTabID].windowId;
-
-						// we only want to start the timer if the user triggered
-						// us with the previous/next-tab shortcut, not double-
-						// pressing the popup shortcut, so that the tab activation
-						// will immediately reorder the tabIDs array in add() above
-					if (!fromDoublePress) {
-						startShortcutTimer();
-					}
-
-					chrome.tabs.update(previousTabID, { active: true });
-
-					if (previousWindowID != chrome.windows.WINDOW_ID_CURRENT) {
-						chrome.windows.update(previousWindowID, { focused: true });
-					}
-				}
+			} else if (direction == -1) {
+					// if the user is not actively navigating, we want to ignore
+					// alt-S keypresses so the icon doesn't invert for no reason
+				previousTabIndex = maxIndex - 1;
 			}
 
-			return newData;
-		}, "toggleTab");
+				// if there's only one tab or the user pressed alt-S while not
+				// navigating, this will be undefined and we'll just return
+				// newData as-is below
+			previousTabID = tabIDs[previousTabIndex];
+
+			if (previousTabID) {
+DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabIndex, titleOrURL(data.tabsByID[previousTabID]));
+				newData.previousTabIndex = previousTabIndex;
+
+				return cp.tabs.update(previousTabID, { active: true })
+					.then(function() {
+							// if the previous tab's data is not in tabsByID,
+							// this throws an exception that will be caught
+							// below and the bad tab ID will be removed
+						const previousWindowID = data.tabsByID[previousTabID].windowId;
+
+						if (previousWindowID != chrome.windows.WINDOW_ID_CURRENT) {
+							return cp.windows.update(previousWindowID, { focused: true });
+						}
+					})
+					.catch(function(error) {
+							// we got an error either because the previous
+							// tab is no longer around or its data is not in
+							// tabsByID, so remove it and update newData so
+							// that the fixed data is saved when it's returned.
+							// the current tab has now shifted into that position,
+							// so set data.previousTabIndex to that so when we
+							// recurse below, the next iteration will calculate
+							// the previous tab starting from there.
+						tabIDs.splice(previousTabIndex, 1);
+						delete data.tabsByID[previousTabID];
+						data.previousTabIndex = previousTabIndex;
+
+						newData.tabIDs = tabIDs;
+						newData.tabsByID = data.tabsByID;
+DEBUG && console.error(error);
+
+						return switchTabs(data);
+					})
+					.return(newData);
+			} else {
+				return newData;
+			}
+		}
+
+
+			// we break the tab switching into a function so it can call itself
+			// recursively if it hits a bad tab while navigating
+		return storage.set(switchTabs, "navigate");
 	}
 
 
-	function printAll()
+	function print(
+		count)
 	{
+		count = count || 20;
+
 		cp.storage.local.get(null)
 			.then(function(storage) {
 				var data = storage.data,
 					tabsByID = data.tabsByID;
 
-				data.tabIDs.slice(-20).reverse().forEach(function(tabID) {
-					const tab = tabsByID[tabID];
-
-					if (tab) {
-						console.log("%c   ", "font-size: 14px; background: url(" +
-							tab.favIconUrl + ") no-repeat; background-size: contain",
-							tabID + ": " + tab.lastVisit + ": " + tab.title.slice(0, 100));
-					} else {
-						console.log("MISSING", tabID);
-					}
-				});
+				Promise.all(data.tabIDs.slice(-count).reverse().map(function(tabID) {
+					return cp.tabs.get(tabID)
+						.catch(function(error) {
+							return tabID;
+						});
+					})
+				)
+					.then(function(tabs) {
+						tabs.forEach(function(tab) {
+							if (isNaN(tab)) {
+								console.log("%c   ", "font-size: 14px; background: url(" +
+									tab.favIconUrl + ") top center / contain no-repeat",
+									tab.id + ": " + tabsByID[tab.id].lastVisit + ": " + titleOrURL(tab));
+							} else {
+								console.log("MISSING", tab);
+							}
+						});
+					});
 			});
 	}
 
@@ -460,9 +484,10 @@ DEBUG && console.log("toggleTab previousTabIndex", newData.lastShortcutTabID, pr
 	return {
 		add: add,
 		remove: remove,
+		replace: replace,
 		getAll: getAll,
 		updateAll: updateAll,
-		toggleTab: toggleTab,
-		printAll: printAll
+		navigate: navigate,
+		print: print
 	};
 });

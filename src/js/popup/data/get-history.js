@@ -5,7 +5,8 @@ define([
 	addURLs,
 	cp
 ) {
-	const RequestedCount = 2000;
+	const RequestedItemCount = 2000,
+		LoopItemCount = 1000;
 
 
 	function loop(
@@ -23,14 +24,14 @@ define([
 			ids = {};
 
 		return loop(function() {
-			var endTime = history.length &&
-					history[history.length - 1].lastVisitTime || Date.now();
+			var endTime = (history.length && history[history.length - 1].lastVisitTime) ||
+					Date.now();
 
 			return cp.history.search({
 				text: "",
 				startTime: 0,
 				endTime: endTime,
-				maxResults: 1000
+				maxResults: LoopItemCount
 			})
 				.then(function(historyItems) {
 					var initialHistoryLength = history.length;
@@ -39,7 +40,7 @@ define([
 						var id = item.id;
 
 							// history will often return duplicate items
-						if (!ids[id] && history.length < RequestedCount) {
+						if (!ids[id] && history.length < RequestedItemCount) {
 							addURLs(item);
 							history.push(item);
 							ids[id] = true;
@@ -48,7 +49,7 @@ define([
 
 						// only loop if we found some new items in the last call
 						// and we haven't reached the limit yet
-					if (history.length > initialHistoryLength && history.length < RequestedCount) {
+					if (history.length > initialHistoryLength && history.length < RequestedItemCount) {
 						return true;
 					} else {
 						return history;
