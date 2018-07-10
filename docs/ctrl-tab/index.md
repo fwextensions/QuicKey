@@ -16,7 +16,7 @@ Do you wish Chrome had the same <b><kbd>ctrl</kbd><kbd>tab</kbd></b> tab navigat
   - Press and release <kbd>tab</kbd> repeatedly to select older tabs in the menu
   - Release <kbd>ctrl</kbd> to switch to the selected tab
 
-Chrome extensions can't provide this functionality all by themselves, unfortunately.  With a little work, however, it *is* possible to achieve both these features with *QuicKey*, though the second one requires some additional Windows-only software.  (*QuicKey* does support [keyboard-driven selection](/QuicKey/#mru-gif) of a tab from a menu without any additional setup; it's just that you can't use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> as the shortcut without some manual workarounds.)
+Chrome extensions can't provide this functionality all by themselves, unfortunately.  With a little work, however, it *is* possible to achieve both these features with *QuicKey*, though the second one requires some additional Windows-only software.  (*QuicKey* does support [keyboard-driven selection](/QuicKey/#mru-gif) of a tab from a menu without any additional setup; it's just that you can't use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> as the shortcut without these manual workarounds.)
 
 You can use either of the options below, but don't use both.  Following the steps in [Option 1](#option-1) will prevent [Option 2](#option-2) from working correctly.
 

@@ -165,7 +165,7 @@ You can move tabs to the left or right of the current tab, making it easy to pul
     left of the current one.
  • Press ctrl-] to move it to the right.
 
-Include shift in the shortcut to also unsuspend the tab while moving it. The ctrl key should be used on both Windows and macOS.
+Include shift in the shortcut to also unsuspend the tab while moving it. The ctrl key should be used on both Windows and macOS. Note that you cannot move tabs between normal and incognito windows.
 
 
 ★ Search bookmarks
@@ -201,7 +201,7 @@ To switch to incognito tabs as well as normal ones, open Chrome's main menu and 
 Tabs in incognito mode display the incognito icon, so you can distinguish a normal tab from an incognito one with the same title.
 
 
-★ Copy a tab's URL or title
+★ Copy a URL or title
 
 You can also copy the URL and title of the selected tab, bookmark or history item:
 
@@ -238,5 +238,7 @@ QuicKey can't access or manipulate the content of any pages you visit and doesn'
 ★ Support and source code
 
 For more information, go to https://fwextensions.github.io/QuicKey/
+
+View the release history at https://fwextensions.github.io/QuicKey/releases
 
 The QuicKey source code is at https://github.com/fwextensions/QuicKey

@@ -180,7 +180,7 @@ Tabs in incognito mode display the incognito icon under the page's favicon, so y
 ![Incognito tab](img/incognito-tab.png)
 
 
-## Copy a tab's URL or title
+## Copy a URL or title
 
 You can also copy the URL and title of the selected tab, bookmark or history item:
 
@@ -206,6 +206,11 @@ When first installed, *QuicKey* asks for these permissions:
 ## Feedback and bugs
 
 If you find a bug in *QuicKey* or have a suggestion for a new feature, please [create a new issue](https://github.com/fwextensions/QuicKey/issues/new) on its GitHub page.
+
+
+## Release history
+
+View the changes in [previous releases](./releases).
 
 
 ## Credits
