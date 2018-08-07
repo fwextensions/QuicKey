@@ -15,9 +15,8 @@ SetKeyDelay, -1, -1     ; No delay at all will occur after each keystroke sent b
 SetWinDelay, 0          ; Changed to 0 upon recommendation of documentation
 
 
-WindowTitle               := "Google Chrome"
+ChromeTitle               := "Google Chrome"
 DeveloperToolsWindowTitle := "Developer Tools"
-TicksToOpenPopup          := 500
 TicksToToggleTab          := 450
 MinUpDownTicks            := 200
 OpenedTickCount           := 0
@@ -32,27 +31,50 @@ HasPopupWindowSize()
 }
 
 
+IsPopupActive()
+{
+	global ChromeTitle, DeveloperToolsWindowTitle
+
+	return WinActive("ahk_class Chrome_WidgetWin_1") and !WinActive(ChromeTitle) and !WinActive(DeveloperToolsWindowTitle) and HasPopupWindowSize()
+}
+
+
 #IfWinActive ahk_exe Chrome.exe
 
 ; Ctrl+Tab
 ^Tab::
 {
-    IfWinActive % WindowTitle
+	if WinActive(ChromeTitle)
     {
         SawCtrlTab := 1
 
         Send !{q}
         OpenedTickCount := A_TickCount
-		Sleep TicksToOpenPopup
 
-		; the QuicKey popup might have been closed while we were sleeping
-		if WinActive("ahk_class Chrome_WidgetWin_1") and !WinActive(WindowTitle) and !WinActive(DeveloperToolsWindowTitle) and HasPopupWindowSize()
-		{
-	        Send {Down}
+		Loop {
+			; check for the popup window every 100ms
+			Sleep 100
+
+			if !SawCtrlTab
+			{
+				; if this is no longer 1, it means ctrl up was heard while we
+				; were sleeping, so exit
+				Exit
+			} else if IsPopupActive() {
+				; now that we've seen the popup, give the JS some time to load
+				Sleep 300
+
+				; check that the popup is still active before sending the down
+				; arrow, since it might have closed while we were sleeping, and
+				; then it would scroll the previously active window
+				if IsPopupActive() {
+			        Send {Down}
+		        }
+
+				Exit
+			}
 		}
-    }
-    else
-    {
+    } else {
         Send {Down}
     }
 
@@ -63,13 +85,11 @@ HasPopupWindowSize()
 ; Ctrl+Shift+Tab
 ^+Tab::
 {
-    IfWinActive % WindowTitle
+	if WinActive(ChromeTitle)
     {
         Send !{q}
         OpenedTickCount := A_TickCount
-    }
-    else
-    {
+    } else {
         Send {Up}
     }
 
@@ -102,7 +122,7 @@ HasPopupWindowSize()
 	        return
 	    }
 
-	    if WinActive("ahk_class Chrome_WidgetWin_1") and !WinActive(WindowTitle) and !WinActive(DeveloperToolsWindowTitle) and HasPopupWindowSize()
+		if IsPopupActive()
 	    {
 	        Send {Enter}
 	    }
@@ -114,7 +134,7 @@ HasPopupWindowSize()
 #IfWinActive
 
 
-#If WinActive("ahk_exe Chrome.exe") and WinActive("ahk_class Chrome_WidgetWin_1") and !WinActive(WindowTitle) and !WinActive(DeveloperToolsWindowTitle) and HasPopupWindowSize()
+#If WinActive("ahk_exe Chrome.exe") and IsPopupActive()
 
 ; Ctrl+Right, Ctrl+Shift+Right, Ctrl+Shift+Down
 ^Right::
