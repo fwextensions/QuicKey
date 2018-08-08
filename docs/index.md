@@ -35,7 +35,10 @@ comments: true
 
 To toggle between the two most recently used tabs, quickly press the keyboard shortcut twice.  Or pick a tab from the most recently used (MRU) list as [shown below](#mru).
 
-You can also type <b><kbd>/</kbd><kbd>b</kbd></b> to search [bookmarks](#bookmarks) or <b><kbd>/</kbd><kbd>h</kbd></b> to search your [browser history](#history).
+
+## Use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> as a QuicKey shortcut!
+
+With a little extra work, you can even use the Holy Grail of tab navigation shortcuts — <b><kbd>ctrl</kbd><kbd>tab</kbd></b> — for *QuicKey*.  [Learn how](ctrl-tab).
 
 
 ## Installation
@@ -46,7 +49,7 @@ You can also type <b><kbd>/</kbd><kbd>b</kbd></b> to search [bookmarks](#bookmar
 
 Once the extension is installed, you can click the <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> button on the toolbar to open the search box.  But if you like this extension, you'll probably prefer using the default keyboard shortcut listed above.
 
-You can customize the shortcut key by right-clicking the *QuicKey* icon and selecting *Options*.
+You can customize the shortcut key by right-clicking the *QuicKey* icon and selecting *Options*.  Or manually add a <b><kbd>ctrl</kbd><kbd>tab</kbd></b> [keyboard shortcut](ctrl-tab).
 
 
 ## Search for a tab quickly

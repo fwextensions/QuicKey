@@ -5,7 +5,7 @@ comments: true
 
 ---
 
-# Using <b><kbd>ctrl</kbd><kbd>tab</kbd></b> as a QuicKey shortcut
+# Use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> as a QuicKey shortcut
 
 Do you wish Chrome had the same <b><kbd>ctrl</kbd><kbd>tab</kbd></b> tab navigation as Firefox?  There are two key features Chrome is missing:
 
@@ -70,6 +70,8 @@ If you later change your mind and want to remove these shortcuts, just go back i
 
 ## <a name="option-2"></a>Option 2: Use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to a tab via a menu (Windows only)
 
+![mru-menu](../img/ctrl-tab-mru.png)
+
 This option provides the closest experience to Firefox.  It lets you quickly press and release <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to the previous tab, while also showing a menu of recent tabs if you hold down <kbd>ctrl</kbd>.
 
 1. [Install QuicKey](https://chrome.google.com/webstore/detail/quickey-%E2%80%93-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg).
@@ -91,6 +93,8 @@ Now switch between a few different tabs in Chrome using the mouse (since *QuicKe
 If you press <b><kbd>ctrl</kbd><kbd>tab</kbd></b> and keep holding <kbd>ctrl</kbd>, a menu of recent tabs will open.  Press <kbd>tab</kbd> to move the selection down in the list, <b><kbd>shift</kbd><kbd>tab</kbd></b> to move up.  When the desired tab is selected, release <kbd>ctrl</kbd> to switch to it.
 
 The other default shortcuts continue to work, so you can still press <b><kbd>alt</kbd><kbd>Q</kbd></b> to open *QuicKey* and search for a tab by name or URL instead of picking a recent one.
+
+Note that with either option above, you'll lose the <b><kbd>ctrl</kbd><kbd>tab</kbd></b> and <b><kbd>ctrl</kbd><kbd>shift</kbd><kbd>tab</kbd></b> keyboard shortcuts to move the next or previous tab within the current window.  On Windows and Linux, you can use <b><kbd>ctrl</kbd><kbd>pg dn</kbd>/<kbd>pg up</kbd></b> to move to the next/previous tab, and on macOS you can use <b><kbd>cmd</kbd><kbd>opt</kbd><kbd>right arrow</kbd>/<kbd>left arrow</kbd></b>.
 
 
 <script>
