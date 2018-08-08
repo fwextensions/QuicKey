@@ -80,9 +80,7 @@ This option provides the closest experience to Firefox.  It lets you quickly pre
 
 3. Press <b><kbd>Win</kbd><kbd>R</kbd></b> to open the *Run* dialog.  (Or click the Start menu, type "run", and pick the first result.)
 
-4. Type `shell:startup` into the dialog.
-
-5. Press <kbd>enter</kbd> to open your PC's startup folder.
+4. Type `shell:startup` into the dialog and press <kbd>enter</kbd> to open your PC's startup folder.
 
 6. Download [`quickey-ctrl-tab.ahk`](quickey-ctrl-tab.ahk), an AutoHotkey script that sets up the keyboard shortcuts for *QuicKey*.
 
