@@ -2,6 +2,7 @@
 
 title: QuicKey
 image: img/og-image.png
+comments: true
 
 ---
 
