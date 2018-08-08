@@ -1,6 +1,7 @@
 ---
 
 title: QuicKey
+comments: true
 
 ---
 
@@ -19,5 +20,9 @@ title: QuicKey
 
 ## 1.0.0 - 2018-04-09
 
-* Public Chrome store release.
+* First searchable Chrome store release.
 
+
+## Older releases
+
+Available on [GitHub](https://github.com/fwextensions/QuicKey/releases).

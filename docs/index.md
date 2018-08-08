@@ -203,6 +203,8 @@ When first installed, *QuicKey* asks for these permissions:
 
 *QuicKey* can't access or manipulate the content of any pages you visit and doesn't transmit any information other than some anonymized Google Analytics usage metrics.
 
+For the technically-minded, you can inspect *QuicKey*'s code on [GitHub](https://github.com/fwextensions/QuicKey).
+
 
 ## Feedback and bugs
 
