@@ -20,6 +20,10 @@ section	{
 	width: 525px;
 }
 
+section.comments {
+	margin-top: 4em;
+}
+
 footer {
 	float: right;
 	position: static;
@@ -100,6 +104,10 @@ b > kbd + kbd {
 a:hover, a:focus {
 	font-weight: normal;
 	text-decoration: underline;
+}
+
+a code {
+	color: inherit;
 }
 
 @media print, screen and (max-width: 960px) {
