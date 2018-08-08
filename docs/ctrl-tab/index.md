@@ -1,6 +1,7 @@
 ---
 
 title: QuicKey
+comments: true
 
 ---
 
@@ -81,9 +82,9 @@ This option provides the closest experience to Firefox.  It lets you quickly pre
 
 5. Press <kbd>enter</kbd> to open your PC's startup folder.
 
-6. Download [ctrl-tab.ahk](ctrl-tab.ahk), an AutoHotkey script that sets up the keyboard shortcuts for *QuicKey*.
+6. Download [`quickey-ctrl-tab.ahk`](quickey-ctrl-tab.ahk), an AutoHotkey script that sets up the keyboard shortcuts for *QuicKey*.
 
-7. Drag the `ctrl-tab.ahk` file to your startup folder and then double-click it.
+7. Drag the `quickey-ctrl-tab.ahk` file to your startup folder and then double-click it.
 
 Now switch between a few different tabs in Chrome using the mouse (since *QuicKey* was just installed, it won't have any recent tab history).  Then press and release <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to the previous tab.
 
