@@ -76,17 +76,17 @@ Switch tabs with a Quicksilver-style search or a most recently used (MRU) tab li
 
 No mouse needed!
 
- • Press alt-Q (ctrl-Q on macOS)
+ • Press ALT-Q (CTRL-Q on macOS)
  • Type a few letters
- • Press enter to switch to the selected tab
+ • Press ENTER to switch to the selected tab
 
-★ Use ctrl-tab as the keyboard shortcut
+★ Use CTRL-TAB as the keyboard shortcut
 
-With a little extra work, you can make QuicKey respond to the Holy Grail of keyboard shortcuts: ctrl-tab.
+With a little extra work, you can make QuicKey respond to the Holy Grail of keyboard shortcuts: CTRL-TAB.
 
 Learn how at https://fwextensions.github.io/QuicKey/ctrl-tab/
 
-You can customize the shortcut keys (other than ctrl-tab) by right-clicking the QuicKey icon and selecting Options.
+You can customize the shortcut keys (other than CTRL-TAB) by right-clicking the QuicKey icon and selecting Options.
 
 
 ★ Search for a tab quickly
@@ -95,14 +95,14 @@ Unlike other tab switchers, QuicKey uses a Quicksilver-style search algorithm to
 
 Use keyboard shortcuts to navigate the list:
 
- • enter: switch to the selected tab
- • ↓ or space: move down the list
- • ↑ or shift-space: move up the list
- • pg dn: page down the list
- • pg up: page up the list
- • end: go to the bottom of the list
- • home: go to the top of the list
- • esc: clear the search or close the menu
+ • ENTER: switch to the selected tab
+ • ↓ or SPACE: move down the list
+ • ↑ or SHIFT-SPACE: move up the list
+ • PG DN: page down the list
+ • PG UP: page up the list
+ • END: go to the bottom of the list
+ • HOME: go to the top of the list
+ • ESC: clear the search or close the menu
 
 If you type more than 25 letters, which should be plenty to find the right tab, QuicKey switches to an exact string search to stay fast.
 
@@ -119,42 +119,43 @@ Recently used tabs get a slight boost in the search results ranking, so getting 
 Opening QuicKey displays a list of the last 50 tabs you've visited, in order of recency. Click a tab to switch to it, or use one of the keyboard shortcuts below to navigate the recently used tab history:
 
  ➤ To switch to the previously active tab:
-    • Quickly double-press the alt-Q or ctrl-Q
-       shortcut.
+    • Quickly double-press the ALT-Q or
+       CTRL-Q shortcut.
 
  ➤ To navigate farther back in the MRU list:
-    • Press alt-A (ctrl-A on macOS) once to
+    • Press ALT-A (CTRL-A on macOS) once to
        switch to the previous tab. The QuicKey
        icon will invert for .75 seconds.
-    • Press alt-A while the icon is inverted to
+    • Press ALT-A while the icon is inverted to
        switch to older tabs, once for each tab.
-    • Press alt-S to move to newer tabs.
+    • Press ALT-S to move to newer tabs.
     • Pause to let the icon revert to normal.
-    • Press alt-A again to switch back to the
+    • Press ALT-A again to switch back to the
        tab you initially started on.
 
  ➤ To pick a recent tab from the MRU list:
     • Press the shortcut but keep holding the
-       alt key (ctrl key on macOS).
+       ALT key (CTRL key on macOS).
     • Press W or ↓ to move down through the
        list of recent tabs.
-    • Press shift-W or ↑ to move up.
-    • Release alt to switch to the selected tab.
+    • Press SHIFT-W or ↑ to move up.
+    • Release ALT to switch to the selected tab.
     • You can also highlight an item with the
-       mouse, then release alt to go to that tab.
+       mouse, then release ALT to go to that
+       tab.
 
-Which shortcuts to use is up to you. Double-pressing alt-Q is nice because there's just one shortcut and you can switch between the two recent tabs as quickly as you want. (You can also double-click the QuicKey icon to toggle between the most recent tabs.)
+Which shortcuts to use is up to you. Double-pressing ALT-Q is nice because there's just one shortcut and you can switch between the two recent tabs as quickly as you want. (You can also double-click the QuicKey icon to toggle between the most recent tabs.)
 
-alt-A lets you navigate to even older tabs, though the timing can be a little tricky.
+ALT-A lets you navigate to even older tabs, though the timing can sometimes be finicky.
 
-Selecting from the MRU menu provides the closest experience to a typical alt-tab menu, but you need to use a different key to navigate while the menu is open.
+Selecting from the MRU menu provides the closest experience to a typical ALT-TAB menu, but you need to use a different key to navigate while the menu is open.
 
-You can change the alt-A and alt-S shortcuts by right-clicking the QuicKey icon and selecting Options. Look for the "Switch to the previous/next tab" shortcuts.
+You can change the ALT-A and ALT-S shortcuts by right-clicking the QuicKey icon and selecting Options. Look for the "Switch to the previous/next tab" shortcuts.
 
 
 ★ Close and reopen tabs
 
-To close the selected tab, press ctrl-W (cmd-ctrl-W on macOS). Or hover over a tab and click the X button on the right side of the menu.
+To close the selected tab, press CTRL-W (CMD-CTRL-W on macOS). Or hover over a tab and click the X button on the right side of the menu.
 
 When you open QuicKey, the 25 most recently closed tabs are listed below the recent tabs and shown in a faded state with an X icon. They are also returned when you type a query, though their score is discounted compared to open tabs.
 
@@ -165,22 +166,22 @@ Click a closed tab to reopen it in its original location and with all of its bro
 
 You can move tabs to the left or right of the current tab, making it easy to pull tabs from other windows into the current one, or to rearrange tabs without using the mouse.
 
- • Press ctrl-[ to move the selected tab to the
-    left of the current one.
- • Press ctrl-] to move it to the right.
+ • Press CTRL-[ to move the selected tab to
+    the left of the current one.
+ • Press CTRL-] to move it to the right.
 
-Include shift in the shortcut to also unsuspend the tab while moving it. The ctrl key should be used on both Windows and macOS. Note that you cannot move tabs between normal and incognito windows.
+Include SHIFT in the shortcut to also unsuspend the tab while moving it. The CTRL key should be used on both Windows and macOS. Note that you cannot move tabs between normal and incognito windows.
 
 
 ★ Search bookmarks
 
 To find a bookmark, type "/b" in the search box, then a space, and then part of the bookmark's name or URL.
 
- • Press enter to open it in the current tab.
- • Press ctrl-enter (cmd-enter on macOS)
+ • Press ENTER to open it in the current tab.
+ • Press CTRL-ENTER (CMD-ENTER on macOS)
     to open it in a new tab in the current
     window.
- • Press shift-enter to open it in a new
+ • Press SHIFT-ENTER to open it in a new
     window.
 
 
@@ -188,14 +189,14 @@ To find a bookmark, type "/b" in the search box, then a space, and then part of 
 
 To find something in the last 2000 pages of your browser history, type "/h" in the search box, then a space, and then part of the page's name or URL.
 
-The same ctrl-enter (cmd-enter on macOS) and shift-enter shortcuts will open the visited page in a new tab or window.
+The same CTRL-ENTER (CMD-ENTER on macOS) and SHIFT-ENTER shortcuts will open the visited page in a new tab or window.
 
 
 ★ The Great Suspender integration
 
 If you use the handy extension "The Great Suspender", then suspended tabs will look faded in the list, and the original URL is shown (not that long chrome-extension:// one you see in the location bar). That means if you search for "chrome" or "extension", you won't simply match all the suspended tabs, which is what happens in other tab search extensions.
 
-Press shift-enter to switch to a tab and unsuspend it in one go. Or shift-click it with the mouse.
+Press SHIFT-ENTER to switch to a tab and unsuspend it in one go. Or shift-click it with the mouse.
 
 
 ★ Incognito mode
@@ -209,9 +210,9 @@ Tabs in incognito mode display the incognito icon, so you can distinguish a norm
 
 You can also copy the URL and title of the selected tab, bookmark or history item:
 
- • Press ctrl-C (cmd-C on macOS) to copy just
-    the URL.
- • Press ctrl-shift-C to copy both the item's
+ • Press CTRL-C (CMD-C on macOS) to copy
+    just the URL.
+ • Press CTRL-SHIFT-C to copy both the item's
     title and its URL, one per line.
 
 
