@@ -3,9 +3,6 @@ theme: jekyll-theme-minimal
 gems:
   - jekyll-seo-tag
 
-plugins:
-  - jekyll-redirect-from
-
 url: https://fwextensions.github.io/QuicKey
 
 title: QuicKey | Jump between recent tabs in Chrome via keyboard or menu
