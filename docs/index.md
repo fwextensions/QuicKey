@@ -38,7 +38,7 @@ To toggle between the two most recently used tabs, quickly press the keyboard sh
 
 ## Use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> as a QuicKey shortcut!
 
-With a little extra work, you can even use the Holy Grail of tab navigation shortcuts — <b><kbd>ctrl</kbd><kbd>tab</kbd></b> — for *QuicKey*.  [Learn how](ctrl-tab).
+With a little extra work, you can even make *QuicKey* respond to the Holy Grail of keyboard shortcuts: <b><kbd>ctrl</kbd><kbd>tab</kbd></b>.  [Learn how](ctrl-tab).
 
 
 ## Installation
