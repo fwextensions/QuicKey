@@ -82,7 +82,7 @@ No mouse needed!
 
 ★ Use ctrl-tab as the keyboard shortcut
 
-With a little extra work, you can even make QuicKey respond to the Holy Grail of keyboard shortcuts: ctrl-tab.
+With a little extra work, you can make QuicKey respond to the Holy Grail of keyboard shortcuts: ctrl-tab.
 
 Learn how at https://fwextensions.github.io/QuicKey/ctrl-tab/
 

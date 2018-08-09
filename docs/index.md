@@ -36,7 +36,7 @@ comments: true
 To toggle between the two most recently used tabs, quickly press the keyboard shortcut twice.  Or pick a tab from the most recently used (MRU) list as [shown below](#mru).
 
 
-## Use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> as a QuicKey shortcut!
+## Use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> as a QuicKey shortcut
 
 With a little extra work, you can even make *QuicKey* respond to the Holy Grail of keyboard shortcuts: <b><kbd>ctrl</kbd><kbd>tab</kbd></b>.  [Learn how](ctrl-tab).
 
