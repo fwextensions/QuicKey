@@ -80,9 +80,13 @@ No mouse needed!
  • Type a few letters
  • Press enter to switch to the selected tab
 
-To toggle between the two most recently used tabs, quickly press the keyboard shortcut twice. Or pick a tab from the most recently used (MRU) list as shown below.
+★ Use ctrl-tab as the keyboard shortcut
 
-You can customize the shortcut key by right-clicking the QuicKey icon and selecting Options.
+With a little extra work, you can even make QuicKey respond to the Holy Grail of keyboard shortcuts: ctrl-tab.
+
+Learn how at https://fwextensions.github.io/QuicKey/ctrl-tab/
+
+You can customize the shortcut keys (other than ctrl-tab) by right-clicking the QuicKey icon and selecting Options.
 
 
 ★ Search for a tab quickly

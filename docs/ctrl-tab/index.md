@@ -2,6 +2,7 @@
 
 title: QuicKey
 comments: true
+redirect_from: "/ct"
 
 ---
 
