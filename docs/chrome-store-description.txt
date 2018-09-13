@@ -171,10 +171,9 @@ Include SHIFT in the shortcut to also unsuspend the tab while moving it. The CTR
 To find a bookmark, type "/b" in the search box, then a space, and then part of the bookmark's name or URL.
 
  • Press ENTER to open it in the current tab.
- • Press CTRL-ENTER (CMD-ENTER on macOS) to open it in a new tab in the current
-    window.
- • Press SHIFT-ENTER to open it in a new
-    window.
+ • Press CTRL-ENTER (CMD-ENTER on macOS) to open it in a new tab in the
+    current window.
+ • Press SHIFT-ENTER to open it in a new window.
 
 
 ★ Search the browser history
