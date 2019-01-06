@@ -151,6 +151,8 @@ define(function() {
 
 			info.key = baseKey;
 
+				// we only want to look at the event's keyCode for A-Z and 0-9,
+				// where the charCode is the same as the keyCode
 			if (UseKeyCodePattern.test(baseKey)) {
 				info.keyCode = baseKey.toUpperCase().charCodeAt(0);
 			}
