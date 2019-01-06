@@ -5,11 +5,11 @@ define(function() {
 		win: !IsMac
 	};
 	const ShiftedKeyAliases = {
-		106: '*',
-		107: '+',
-		109: '-',
-		110: '.',
-		111: '/',
+		106: '*',	// numpad
+		107: '+',	// numpad
+		109: '-',	// numpad
+		110: '.',	// numpad
+		111: '/',	// numpad
 		186: ';',
 		187: '=',
 		188: ',',
@@ -39,6 +39,7 @@ define(function() {
 		space: " "
 	};
 	const PlatformPattern = /^([^:]+):(.+)/;
+	const UseKeyCodePattern = /^[a-z0-9]$/;
 	const ModifierSeparator = /[-+ ]/;
 
 
@@ -150,7 +151,7 @@ define(function() {
 
 			info.key = baseKey;
 
-			if (baseKey.length == 1) {
+			if (UseKeyCodePattern.test(baseKey)) {
 				info.keyCode = baseKey.toUpperCase().charCodeAt(0);
 			}
 
