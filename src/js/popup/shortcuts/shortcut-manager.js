@@ -1,43 +1,45 @@
 define(function() {
-	const IsMac = /Mac/i.test(navigator.platform),
-		Platforms = {
-			mac: IsMac,
-			win: !IsMac
-		},
-		ShiftedKeyAliases = {
-			106: '*',
-			107: '+',
-			109: '-',
-			110: '.',
-			111 : '/',
-			186: ';',
-			187: '=',
-			188: ',',
-			189: '-',
-			190: '.',
-			191: '/',
-			192: '`',
-			219: '[',
-			220: '\\',
-			221: ']',
-			222: '\''
-		},
-		Modifiers = {
-			alt: 1,
-			ctrl: 1,
-			shift: 1,
-			meta: 1
-		},
-		Aliases = {
-			option: "alt",
-			opt: "alt",
-			command: "meta",
-			cmd: "meta",
-			mod: IsMac ? "meta" : "ctrl",
-			space: " "
-		},
-		PlatformPattern = /^([^:]+):(.+)/,
-		ModifierSeparator = /[-+ ]/;
+	const IsMac = /Mac/i.test(navigator.platform);
+	const Platforms = {
+		mac: IsMac,
+		win: !IsMac
+	};
+	const ShiftedKeyAliases = {
+		106: '*',
+		107: '+',
+		109: '-',
+		110: '.',
+		111: '/',
+		186: ';',
+		187: '=',
+		188: ',',
+		189: '-',
+		190: '.',
+		191: '/',
+		192: '`',
+		219: '[',
+		220: '\\',
+		221: ']',
+		222: '\''
+	};
+	const Modifiers = {
+		alt: 1,
+		ctrl: 1,
+		shift: 1,
+		meta: 1
+	};
+	const Aliases = {
+		option: "alt",
+		opt: "alt",
+		command: "meta",
+		cmd: "meta",
+		windows: "meta",
+		win: "meta",
+		mod: IsMac ? "meta" : "ctrl",
+		space: " "
+	};
+	const PlatformPattern = /^([^:]+):(.+)/;
+	const ModifierSeparator = /[-+ ]/;
 
 
 	function ShortcutManager(
@@ -62,14 +64,16 @@ define(function() {
 		{
 				// convert shortcuts to an array if necessary
 			[].concat(shortcuts).forEach(function(shortcut) {
-				var info = this.extractShortcutInfo(shortcut);
+				const info = this.extractShortcutInfo(shortcut);
 
 					// only store the binding if no platform was specified, or
 					// if it's the same as the current platform
 				if (!info.platform || Platforms[info.platform]) {
-					(this.bindings[info.key] || (this.bindings[info.key] = [])).push({
+					const keyIndex = info.keyCode || info.key;
+
+					(this.bindings[keyIndex] || (this.bindings[keyIndex] = [])).push({
 						key: info.key,
-						modifierString: info.modifiers.join("+"),
+						modifiers: info.modifiers,
 						callback: callback
 					});
 				}
@@ -82,31 +86,32 @@ define(function() {
 		{
 				// map a shifted key to its unshifted char if necessary, and
 				// switch to lowercase for matching
-			var key = (ShiftedKeyAliases[event.which] || event.key).toLowerCase(),
-				modifierString = this.getEventModifiers(event),
-				possibleMatches = this.bindings[key] || [],
-				handledKey = false;
+			const key = ShiftedKeyAliases[event.keyCode] || event.key.toLowerCase();
+			const modifiers = this.getEventModifiers(event);
+			const possibleMatches = this.bindings[event.keyCode] || this.bindings[key] || [];
 
-			possibleMatches.forEach(function(binding) {
-				if (!handledKey && binding.modifierString == modifierString) {
+			for (let i = 0, len = possibleMatches.length; i < len; i++) {
+				const binding = possibleMatches[i];
+
+				if (binding.modifiers == modifiers) {
 						// the callback can return true to not do the standard
 						// handling, which is to call preventDefault()
 					if (!binding.callback(event)) {
 						event.preventDefault();
 					}
 
-					handledKey = true;
+					return true;
 				}
-			});
+			}
 
-			return handledKey;
+			return false;
 		},
 
 
 		getEventModifiers: function(
 			event)
 		{
-			var modifiers = [];
+			const modifiers = [];
 
 				// add the modifiers in a sorted order so we don't have to call
 				// sort() when joining them below
@@ -122,15 +127,13 @@ define(function() {
 		extractShortcutInfo: function(
 			shortcut)
 		{
-			var platformMatch = shortcut.match(PlatformPattern),
-				info = {
-					platform: platformMatch && platformMatch[1],
-					modifiers: []
-				},
-				shortcutString = platformMatch ? platformMatch[2] : shortcut,
-				keys = shortcutString.split(ModifierSeparator);
-
-			keys = keys.map(function(key) {
+			const platformMatch = shortcut.match(PlatformPattern);
+			const info = {
+				platform: platformMatch && platformMatch[1],
+			};
+			const modifiers = [];
+			const shortcutString = platformMatch ? platformMatch[2] : shortcut;
+			const keys = shortcutString.split(ModifierSeparator).map(function(key) {
 					// lowercase all the key names so we'll match even if a
 					// modifier was written as Ctrl, and we want regular keys
 					// lowercase anyway to handle shift shortcuts and capslock
@@ -138,18 +141,22 @@ define(function() {
 				key = Aliases[key] || key;
 
 				if (Modifiers[key]) {
-					info.modifiers.push(key);
+					modifiers.push(key);
 				}
 
 				return key;
 			});
+			const baseKey = keys[keys.length - 1];
 
-				// the main key should be last
-			info.key = keys.pop();
+			info.key = baseKey;
 
-				// sort the modifiers so we don't have to do it every time we
-				// handle a key event
-			info.modifiers = info.modifiers.sort();
+			if (baseKey.length == 1) {
+				info.keyCode = baseKey.toUpperCase().charCodeAt(0);
+			}
+
+				// sort the modifiers so they match what's returned by
+				// getEventModifiers()
+			info.modifiers = modifiers.sort().join("+");
 
 			return info;
 		},
