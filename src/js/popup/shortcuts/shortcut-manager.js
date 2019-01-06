@@ -91,7 +91,9 @@ define(function() {
 			const modifiers = this.getEventModifiers(event);
 			const possibleMatches = this.bindings[event.keyCode] || this.bindings[key] || [];
 
-			for (let i = 0, len = possibleMatches.length; i < len; i++) {
+				// let would be better here, but the version of Uglify we're
+				// using can't handle it :|
+			for (var i = 0, len = possibleMatches.length; i < len; i++) {
 				const binding = possibleMatches[i];
 
 				if (binding.modifiers == modifiers) {
