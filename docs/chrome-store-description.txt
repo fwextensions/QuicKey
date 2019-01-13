@@ -221,12 +221,14 @@ When first installed, QuicKey asks for these permissions:
       QuicKey uses this permission to let you search the titles and URLs of
       your bookmarked pages. It will never change your bookmarks.
 
-QuicKey can't access or manipulate the content of any pages you visit and doesn't transmit any information other than some anonymized Google Analytics metrics.
+QuicKey can't access or manipulate the content of any pages you visit and doesn't transmit any information other than some anonymized Google Analytics usage metrics.
 
 
 ★ Support and source code
 
 For more information, go to https://fwextensions.github.io/QuicKey/
+
+To report a bug or request a feature, go to https://github.com/fwextensions/QuicKey/issues/new
 
 View the release history at https://fwextensions.github.io/QuicKey/releases
 
