@@ -10,9 +10,12 @@ define("popup/app", [
 	"./data/get-bookmarks",
 	"./data/get-history",
 	"./data/add-urls",
-	"./shortcuts/handle-keys",
+	"./shortcuts/popup-shortcuts",
 	"lib/handle-ref",
 	"lib/copy-to-clipboard",
+	"background/recent-tabs",
+	"background/settings",
+	"background/constants",
 	"lodash"
 ], function(
 	React,
@@ -26,9 +29,12 @@ define("popup/app", [
 	getBookmarks,
 	getHistory,
 	addURLs,
-	handleKeys,
+	shortcuts,
 	handleRef,
 	copyTextToClipboard,
+	recentTabs,
+	settings,
+	k,
 	_
 ) {
 	const MinScore = .15,
@@ -68,6 +74,7 @@ define("popup/app", [
 		gotMRUKey: true,
 		mruModifier: "Alt",
 		resultsList: null,
+		settings: settings.getDefaults(),
 
 
 		getInitialState: function()
@@ -75,7 +82,13 @@ define("popup/app", [
 			var props = this.props,
 				query = props.initialQuery;
 
-			this.mruModifier = props.platform == "mac" ? "Control" : "Alt";
+			settings.get()
+				.bind(this)
+				.then(function(settings) {
+					this.settings = settings;
+					this.mruModifier = settings.chromeShortcuts.popupModifierEventName;
+					shortcuts.update(settings);
+				});
 
 			return {
 				query: query,
@@ -89,7 +102,7 @@ define("popup/app", [
 
 		componentWillMount: function()
 		{
-			this.props.recentTabs.getAll()
+			recentTabs.getAll()
 				.bind(this)
 				.then(function(tabs) {
 					var now = Date.now();
@@ -155,12 +168,15 @@ define("popup/app", [
 					this.setQuery(this.state.query);
 
 						// after the recent tabs have been loaded and scored,
-						// apply any shortcuts that recorded during init
+						// apply any shortcuts that were recorded during init
 					if (initialShortcuts.length) {
+						const shiftMRUKey = this.settings.shortcuts[k.Shortcuts.MRUSelect];
+						const mruKey = shiftMRUKey.toLocaleLowerCase();
+
 						initialShortcuts.forEach(function(shortcut) {
-							if (shortcut == "w") {
+							if (shortcut == mruKey) {
 								this.modifySelected(1, true);
-							} else if (shortcut == "W") {
+							} else if (shortcut == shiftMRUKey) {
 								this.modifySelected(-1, true);
 							}
 						}, this);
@@ -189,7 +205,7 @@ define("popup/app", [
 
 			var scores = scoreItems(this[this.mode], query),
 				firstScoresDiff = (scores.length > 1 && scores[0].score > MinScore) ?
-					(scores[0].score - scores[1].score) : 0;
+					(scores[0].score - scores[1].score) : 0,
 					// drop barely-matching results, keeping a minimum of 3,
 					// unless there's a big difference in scores between the
 					// first two items, which may mean we need a longer tail
@@ -344,11 +360,10 @@ define("popup/app", [
 			item,
 			includeTitle)
 		{
-			var text = "";
-
 			if (item) {
-				text = (includeTitle ? item.title + "\n" : "") +
+				const text = (includeTitle ? item.title + "\n" : "") +
 					(item.unsuspendURL || item.url);
+
 				copyTextToClipboard(text);
 			}
 		},
@@ -401,7 +416,7 @@ define("popup/app", [
 		{
 			var query = this.state.query;
 
-			if (!query) {
+			if (!query || this.settings[k.EscBehavior.Key] == k.EscBehavior.Close) {
 					// pressing esc in an empty field should close the popup
 				this.props.port.postMessage("closedByEsc");
 				window.close();
@@ -508,7 +523,7 @@ define("popup/app", [
 			this.gotMRUKey = false;
 
 				// keydown handling is managed in another module
-			return handleKeys(event, this);
+			return shortcuts.handleEvent(event, this);
 		},
 
 

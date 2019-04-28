@@ -1,7 +1,7 @@
 define([
 	"bluebird",
 	"cp",
-	"background/mutex"
+	"./mutex"
 ], function(
 	Promise,
 	cp,
@@ -13,16 +13,22 @@ define([
 	}
 
 
+	function returnData(
+		data)
+	{
+		return data;
+	}
+
+
 	return function createStorage(
 		options)
 	{
 		const storageMutex = new Mutex(Promise);
-
-		var version = options.version || 1,
-			getDefaultData = typeof options.getDefaultData == "function" ?
-				options.getDefaultData : emptyDefaultData,
-			updaters = options.updaters,
-			dataPromise = getAll();
+		const version = options.version || 1;
+		const getDefaultData = typeof options.getDefaultData == "function" ?
+			options.getDefaultData : emptyDefaultData;
+		const updaters = options.updaters;
+		var dataPromise = getAll();
 
 
 		function getAll()
@@ -50,7 +56,7 @@ define([
 			storage)
 		{
 			while (updaters[storage.version]) {
-				const updatedData = updaters[storage.version](storage.data);
+				const updatedData = updaters[storage.version](storage.data, storage.version);
 
 				storage.version = updatedData[0];
 				storage.data = updatedData[1];
@@ -105,14 +111,15 @@ define([
 
 		function doTask(
 			task,
+			thisArg,
 			saveResult)
 		{
 			return storageMutex.lock(function() {
 				return dataPromise
 					.then(function(data) {
-						return Promise.resolve(task(data))
+						return Promise.resolve(task.call(thisArg, data))
 							.then(function(newData) {
-								if (newData && saveResult) {
+								if (saveResult && newData) {
 										// since all the values are stored on the
 										// .data key of the storage instead of at
 										// the topmost level, we need to update
@@ -133,16 +140,21 @@ define([
 
 
 		function set(
-			task)
+			task,
+			thisArg)
 		{
-			return doTask(task, true);
+			return doTask(task, thisArg, true);
 		}
 
 
 		function get(
-			task)
+			task,
+			thisArg)
 		{
-			return doTask(task, false);
+				// if a function isn't passed in, use a noop function that will
+				// just return the data as a promise, so the caller can handle
+				// it in a then() chain
+			return doTask(task || returnData, thisArg, false);
 		}
 
 

@@ -93,25 +93,22 @@ require([
 ], function(
 	cp,
 	recentTabs,
-	pageTrackers,
+	trackers,
 	storage
 ) {
-	var popupIsOpen = false,
-		addFromToggle = false,
-		backgroundTracker = pageTrackers.background,
-		popupTracker = pageTrackers.popup,
-		shortcutTimer,
-		lastWindowID;
-
-	window.tracker = popupTracker;
-	window.recentTabs = recentTabs;
+	const backgroundTracker = trackers.background;
+	var popupIsOpen = false;
+	var addFromToggle = false;
+	var shortcutTimer;
+	var lastWindowID;
 
 
 		// save the current time so recentTabs.getAll() knows whether it needs
 		// to update the stored data
 	storage.set(function(data) {
 		return {
-			lastStartupTime: Date.now()
+			lastStartupTime: Date.now(),
+			lastUsedVersion: chrome.runtime.getManifest().version
 		};
 	});
 
@@ -319,7 +316,8 @@ DEBUG && console.log("=== reloading");
 				};
 
 			backgroundTracker.set(dimensions);
-			popupTracker.set(dimensions);
+			trackers.popup.set(dimensions);
+			trackers.options.set(dimensions);
 
 			backgroundTracker.pageview();
 			backgroundTracker.timing("loading", "background", performance.now());

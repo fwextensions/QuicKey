@@ -1,18 +1,20 @@
 require([
-	"jsx!popup/app",
 	"react",
-	"react-dom"
+	"react-dom",
+	"jsx!popup/app",
+	"background/page-trackers"
 ], function(
-	App,
 	React,
-	ReactDOM
+	ReactDOM,
+	App,
+	trackers
 ) {
-	const query = gKeyCache.join(""),
-		shortcuts = gShortcutCache,
-		platform = gIsMac ? "mac" : "win",
-		now = performance.now(),
-		background = chrome.extension.getBackgroundPage(),
-		tracker = background.tracker;
+	const query = gKeyCache.join("");
+	const shortcuts = gShortcutCache;
+	const platform = /Mac/i.test(navigator.platform) ? "mac" : "win";
+	const now = performance.now();
+	const background = chrome.extension.getBackgroundPage();
+	const tracker = trackers.popup;
 
 	if (gClose) {
 			// the user hit esc before we started loading, so just close the
@@ -58,7 +60,6 @@ require([
 				initialShortcuts: shortcuts,
 				platform: platform,
 				tracker: tracker,
-				recentTabs: background.recentTabs,
 				port: gPort
 			}),
 			document.getElementById("root")

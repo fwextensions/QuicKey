@@ -47,7 +47,7 @@ define(function() {
 	Object.assign(Tracker.prototype, {
 		send: function()
 		{
-			ga.apply(window, [this.nameDotSend].concat(Array.from(arguments)));
+			ga.apply(window, [this.nameDotSend, ...arguments]);
 		},
 
 

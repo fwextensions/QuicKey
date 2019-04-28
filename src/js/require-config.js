@@ -9,6 +9,7 @@ require.config({
 		"react-virtualized": "lib/react-virtualized",
 		lodash: "lib/lodash",
 		cp: "lib/cp",
+		shared: "lib/shared",
 		bluebird: "lib/bluebird.min"
 	},
 	map: {

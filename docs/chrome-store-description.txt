@@ -92,7 +92,7 @@ You can customize the shortcut keys (other than CTRL-TAB) by right-clicking the 
 
 ★ Search for a tab quickly
 
-Unlike other tab switchers, QuicKey uses a Quicksilver-style search algorithm to rank the results, where contiguous matches at the beginning of words are higher in the list, as are matches against capital letters. So you can type just a few letters to quickly find the right tab.
+Unlike other tab switchers, QuicKey uses a Quicksilver-style search algorithm to rank the results, where contiguous matches at the beginning of words are higher in the list, as are matches against capital letters. So you only have to type a few letters to quickly find the right tab.
 
 Use keyboard shortcuts to navigate the list:
 

@@ -1,12 +1,11 @@
 /* ===========================================================================
-    Popup
+	Popup
    =========================================================================== */
 
 * {
 	box-sizing: border-box;
 	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
 		sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-	font-size: 14px;
 }
 
 html, body {
@@ -17,6 +16,7 @@ html, body {
 }
 
 body {
+	font-size: 14px;
 	-webkit-user-select: none;
 	user-select: none;
 	cursor: default;
@@ -25,7 +25,7 @@ body {
 
 
 /* ===========================================================================
-    Search box
+	Search box
    =========================================================================== */
 
 .search-box, .command-placeholder {
@@ -86,7 +86,7 @@ input.search-box::-webkit-search-cancel-button {
 
 
 /* ===========================================================================
-    Results list
+	Results list
    =========================================================================== */
 
 .results-list-container {
@@ -129,9 +129,9 @@ input.search-box::-webkit-search-cancel-button {
 }
 
 .results-list-item.closed {
-	background-image: url(/img/closed.svg);
-	background-size: 10px 16px;
-	background-position: 9px 25px;
+	background-image: url(/img/history.svg);
+	background-size: 16px 16px;
+	background-position: 5px 25px;
 }
 
 .results-list-item .favicon {
@@ -142,6 +142,10 @@ input.search-box::-webkit-search-cancel-button {
 	background-size: cover;
 	background-repeat: no-repeat;
 	position: absolute;
+}
+
+.results-list-item.closed .favicon {
+	opacity: 0.4;
 }
 
 .results-list-item div {
@@ -165,18 +169,20 @@ input.search-box::-webkit-search-cancel-button {
 	opacity: 0.7;
 }
 
-	/* we need to set the font-size of the b elements in the URL because they
-	   default to 14px due to the * selector */
-.results-list-item div.url b {
-	font-size: 12px;
-}
-
 .results-list-item.suspended div.title {
 	opacity: 0.7;
 }
 
 .results-list-item.suspended div.url {
 	opacity: 0.5;
+}
+
+.results-list-item.closed div.title {
+	opacity: 0.6;
+}
+
+.results-list-item.closed div.url {
+	opacity: 0.45;
 }
 
 .results-list-item.tabs.selected:not(.closed):hover {
@@ -234,7 +240,7 @@ input.search-box::-webkit-search-cancel-button {
 
 
 /* ===========================================================================
-    Results list scrollbar
+	Results list scrollbar
    =========================================================================== */
 
 ::-webkit-scrollbar {

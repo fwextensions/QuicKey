@@ -1,15 +1,19 @@
 define([
 	"bluebird",
 	"cp",
-	"background/quickey-storage",
-	"background/page-trackers",
-	"popup/data/add-urls"
+	"shared",
+	"popup/data/add-urls",
+	"./quickey-storage",
+	"./page-trackers",
+	"./constants",
 ], function(
 	Promise,
 	cp,
+	shared,
+	addURLs,
 	storage,
 	pageTrackers,
-	addURLs
+	k
 ) {
 	const MaxTabsLength = 50,
 		MaxSwitchDelay = 750,
@@ -258,18 +262,23 @@ DEBUG && console.log("tab replaced", oldID, titleOrURL(oldTab));
 	function getAll()
 	{
 		return storage.get(function(data) {
-			return Promise.all([
-					cp.tabs.query({}),
-					cp.sessions.getRecentlyClosed()
-				])
+			const promises = [cp.tabs.query({})];
+
+			if (data.settings[k.IncludeClosedTabs.Key]) {
+				promises.push(cp.sessions.getRecentlyClosed());
+			} else {
+				promises.push([]);
+			}
+
+			return Promise.all(promises)
 				.spread(function(freshTabs, closedTabs) {
-					var tabsByID = data.tabsByID,
-						newData = {
-							tabsByID: tabsByID
-						},
-						freshTabsByURL = {},
-						closedTabsByURL = {},
-						tabs;
+					const freshTabsByURL = {};
+					const closedTabsByURL = {};
+					var tabsByID = data.tabsByID;
+					var newData = {
+						tabsByID: tabsByID
+					};
+					var tabs;
 
 						// lastUpdateTime shouldn't be undefined, but just in case
 					if (isNaN(data.lastUpdateTime) ||
@@ -312,8 +321,7 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 					if (data.tabIDs.length > 1) {
 							// convert the sessions to tab objects and dedupe
 							// them by URL, keeping the most recent version of each
-						closedTabs = closedTabs
-							.map(function(session) {
+						tabs = tabs.concat(closedTabs.map(function(session) {
 								const tabFromSession = session.tab || session.window.tabs[0];
 
 									// session lastModified times are in Unix epoch
@@ -322,15 +330,15 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 								return tabFromSession;
 							})
 							.filter(function(tab) {
-								const url = tab.url,
-									existingTab = url in closedTabsByURL || url in freshTabsByURL;
+								const url = tab.url;
+								const existingTab = url in closedTabsByURL ||
+									url in freshTabsByURL;
 
 								closedTabsByURL[url] = true;
 
 								return !existingTab;
-							});
-
-						tabs = tabs.concat(closedTabs);
+							})
+						);
 					}
 
 						// save off the updated recent data.  we don't call
@@ -481,7 +489,7 @@ DEBUG && console.error(error);
 	}
 
 
-	return {
+	return shared("recentTabs", {
 		add: add,
 		remove: remove,
 		replace: replace,
@@ -489,5 +497,5 @@ DEBUG && console.error(error);
 		updateAll: updateAll,
 		navigate: navigate,
 		print: print
-	};
+	});
 });

@@ -15,9 +15,13 @@ define([
 			},
 			{
 				key: "displayURL",
-				score: function() {
+				score: function(
+					itemString,
+					abbreviation,
+					hitMask)
+				{
 						// add true to not discount spaces and capitals in the URL
-					return quickScore.apply(null, Array.from(arguments).concat(true));
+					return quickScore(itemString, abbreviation, hitMask, true);
 				}
 			}
 		]),

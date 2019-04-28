@@ -119,11 +119,11 @@ To close the selected tab, press <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd
 
 ![Close button](img/close-button.png)
 
-When you open *QuicKey*, the 25 most recently closed tabs are listed below the recent tabs and shown in a faded state with an <img src="img/clear.svg" style="height: 1em"> icon:
+When you open *QuicKey*, the 25 most recently closed tabs are listed below the recent tabs and shown in a faded state with a <img src="img/history.svg" style="height: 1em"> icon:
 
 ![Closed tab](img/closed-tab.png)
 
-They are also returned when you type a query, though their score is discounted compared to open tabs.
+They are also returned when you type a query, though their score is discounted compared to open tabs.  Showing closed tabs in the search results can be disabled on the *QuicKey* options page.
 
 Click a closed tab to reopen it in its original location and with all of its browsing history intact.
 
@@ -171,11 +171,13 @@ Press <b><kbd>shift</kbd><kbd>enter</kbd></b> to switch to a tab and unsuspend i
 
 ## Incognito mode
 
-To switch to incognito tabs as well as normal ones, open Chrome's main menu and then go to *More tools > Extensions*, scroll down to the *QuicKey* extension, and then click the *DETAILS* button:
+To switch to incognito tabs as well as normal ones, right-click the *QuicKey* icon <img src="../img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> and select *Options* from the menu:
 
-![Incognito option](img/extensions-entry.png)
+<img src="../img/options-in-menu.png" style="width: 208px;">
 
-On the next page, scroll down and click the toggle button next to the *Allow in incognito* option:
+Scroll to the very bottom of the *QuicKey Options* page and then click the *Change incognito settings* button.
+
+In the extensions page that opens, scroll down to the *Allow in incognito* option and click the toggle button:
 
 ![Incognito option](img/incognito-option.png)
 
@@ -190,6 +192,17 @@ You can also copy the URL and title of the selected tab, bookmark or history ite
 
   * Press <b><kbd>ctrl</kbd><kbd>C</kbd></b> (<b><kbd>cmd</kbd><kbd>C</kbd></b> on macOS) to copy just the URL.
   * Press <b><kbd>ctrl</kbd><kbd>shift</kbd><kbd>C</kbd></b> to copy both the item's title and its URL, with a line break in between.
+
+
+## Options
+
+To customize how *QuicKey* behaves, right-click its icon <img src="../img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> and select *Options* from the menu:
+
+<img src="../img/options-in-menu.png" style="width: 208px;">
+
+On the *QuicKey Options* page, you can change the behavior of the <kbd>space</kbd> and <kbd>esc</kbd> keys, hide closed tabs from the search results, and customize many of the keyboard shortcuts described above.
+
+If you change the keyboard shortcut for showing the *QuicKey* menu to something other than the default <b><kbd>alt</kbd><kbd>Q</kbd></b> of if you have a non-US keyboard, you'll probably want to also change the key that's used to navigate down the list of recently used tabs (which defaults to <kbd>W</kbd>).  For instance, if you change the shortcut to <b><kbd>alt</kbd><kbd>Z</kbd></b>, you might want to change the navigation key to <kbd>X</kbd>, which is right next door.  To change the key, go to the *Options* page, click in the first keyboard shortcut picker, and then press <kbd>X</kbd>.      
 
 
 ## Privacy policy
@@ -221,6 +234,6 @@ View the changes in [previous releases](./releases).
 
 ## Credits
 
-The <img src="img/search.svg" style="height: 1em"> and <img src="img/clear.svg" style="height: 1em; vertical-align: middle;"> icons are from the [Octicons](https://octicons.github.com/) set, used under the [MIT License](http://opensource.org/licenses/MIT).
+The <img src="img/search.svg" style="height: 1em"> and <img src="img/clear.svg" style="height: 1em; vertical-align: middle;"> icons are from the [Octicons](https://octicons.github.com/) set, used under the [MIT License](http://opensource.org/licenses/MIT).  The <img src="img/history.svg" style="height: 1em"> icon is from the [Material Icons](https://material.io/tools/icons/) set, used under the [Apache License](https://www.apache.org/licenses/LICENSE-2.0.html).
 
 The string ranking algorithm is modeled on [Quicksilver](https://github.com/quicksilver/Quicksilver/blob/master/Quicksilver/Code-QuickStepCore/QSense.m)'s code.

@@ -1,51 +1,65 @@
-const _ = require("lodash");
-
-
 module.exports = function(grunt)
 {
-	var extensionFullName = "QuicKey – The quick tab switcher",
-		extensionShortName = "QuicKey",
-		baseConfig = {
-			mainConfigFile: "src/js/require-config.js",
-			baseUrl: "src/js",
-				// make sure the jsx plugin is excluded, so the JSXTransformer
-				// isn't included
-			exclude: ["jsx"],
-//			optimize: "none",
-			wrap: true,
-			inlineText: true,
-			preserveLicenseComments: true,
-			name: "../../build/almond",
-			onBuildWrite: function (moduleName, path, singleContents)
+	const extensionFullName = "QuicKey – The quick tab switcher";
+	const extensionShortName = "QuicKey";
+		// exclude the jsx plugin so the JSXTransformer isn't included
+	const commonModules = [
+		"jsx",
+		"common/react",
+		"common/base"
+	];
+	const modulesConfig = {
+		mainConfigFile: "src/js/require-config.js",
+		baseUrl: "src/js",
+		dir: "build/rjs",
+		skipDirOptimize: true,
+		optimize: "none",
+		wrap: false,
+		inlineText: true,
+		preserveLicenseComments: true,
+		verbose: true,
+		debug: true,
+		modules: [
 			{
-					// we're inlining the text and not including the text plugin,
-					// since it's part of jsx, so get rid of the text! and jsx!
-					// prefixes. otherwise, require will complain about not
-					// finding the text module.
-				return singleContents.replace(/jsx!|text!/g, "");
+				name: "common/react"
+			},
+			{
+				name: "common/base"
+			},
+			{
+				name: "popup/main",
+				exclude: commonModules,
+					// we have to include the require-config file, since it
+					// maps the names used by ReactVirtualized for React and
+					// ReactDOM to those used by the rest of the app, and
+					// the optimizer doesn't include that map by default.
+					// we only need that for the main module.
+				include: ["require-config"]
+			},
+			{
+				name: "background/background",
+				exclude: commonModules
+			},
+			{
+				name: "options/main",
+				exclude: commonModules
 			}
-		},
-		popupConfig = _.defaults({}, baseConfig, {
-				// specify the location of the main module.  we also have to
-				// include the require-config file, since it maps the names
-				// used by ReactVirtualized for React and ReactDOM to those
-				// used by the rest of the app, and the optimizer doesn't include
-				// that map by default.
-			include: ["require-config", "popup/main"],
-			out: "build/out/js/popup/main.js"
-		}),
-		backgroundConfig = _.defaults({}, baseConfig, {
-			include: ["require-config", "background/background"],
-			out: "build/out/js/background/background.js"
-		}),
-		optionsConfig = _.defaults({}, baseConfig, {
-			include: ["require-config", "options/options"],
-			out: "build/out/js/options/options.js"
-		}),
-		devManifestPath = "src/manifest.json",
-		buildManifestPath = "build/out/manifest.json",
-		devPopupPath = "src/popup.html",
-		buildPopupPath = "build/out/popup.html";
+		],
+		onBuildWrite: function(
+			moduleName,
+			path,
+			singleContents) {
+				// we're inlining the text and not including the text plugin,
+				// since it's part of jsx, so get rid of the text! and jsx!
+				// prefixes. otherwise, require will complain about not
+				// finding the text or jsx modules.
+			return singleContents.replace(/jsx!|text!/g, "");
+		}
+	};
+	const devManifestPath = "src/manifest.json";
+	const buildManifestPath = "build/out/manifest.json";
+	const devPopupPath = "src/popup.html";
+	const buildPopupPath = "build/out/popup.html";
 
 	grunt.initConfig({
 		verbose: true,
@@ -54,6 +68,9 @@ module.exports = function(grunt)
 			out: [
 				"build/out/out.crx",
 				"release/*"
+			],
+			rjs: [
+				"build/rjs"
 			]
 		},
 
@@ -77,10 +94,19 @@ module.exports = function(grunt)
 							"manifest.json"
 						]
 					}
-				],
-				verbose: true
+				]
 			},
-			verbose: true
+			build: {
+				files: [
+					{
+						cwd: "build/rjs/",
+						dest: "build/",
+						src: [
+							"build.txt"
+						]
+					}
+				]
+			}
 		},
 
 		exec: {
@@ -110,19 +136,31 @@ module.exports = function(grunt)
 			}
 		},
 
-		uglify: {
-			init: {
+		babel: {
+			options: {
+				shouldPrintComment: (val) => /@license|@preserve|\/\*!/.test(val),
+				comments: false,
+				minified: true,
+				compact: true,
+				sourceMaps: false
+			},
+			rjs: {
 				files: {
-					"build/out/js/popup/init.js": ["src/js/popup/init.js"]
+					"build/out/js/common/almond.js": "build/almond.js",
+					"build/out/js/common/base.js": "build/rjs/common/base.js",
+					"build/out/js/common/react.js": "build/rjs/common/react.js",
+					"build/out/js/background/background.js": "build/rjs/background/background.js",
+					"build/out/js/popup/init.js": "src/js/popup/init.js",
+					"build/out/js/popup/main.js": "build/rjs/popup/main.js",
+					"build/out/js/options/main.js": "build/rjs/options/main.js"
 				}
 			}
 		},
 
 		requirejs: {
-			popup: { options: popupConfig },
-			background: { options: backgroundConfig },
-				// annoyingly, just calling this "options" doesn't work
-			optionsDialog: { options: optionsConfig }
+			modulesConfig: {
+				options: modulesConfig
+			}
 		}
 	});
 
@@ -133,15 +171,15 @@ module.exports = function(grunt)
 	grunt.loadNpmTasks("grunt-contrib-clean");
 	grunt.loadNpmTasks("grunt-contrib-copy");
 	grunt.loadNpmTasks("grunt-contrib-compress");
-	grunt.loadNpmTasks("grunt-contrib-uglify");
 	grunt.loadNpmTasks("grunt-sync");
 	grunt.loadNpmTasks("grunt-exec");
+	grunt.loadNpmTasks("grunt-babel");
 
 	grunt.registerTask("checkPopup", function() {
-		var devPopup = grunt.file.read(devPopupPath),
-			devBody = devPopup.slice(devPopup.indexOf("<body>")),
-			buildPopup = grunt.file.read(buildPopupPath),
-			buildBody = buildPopup.slice(buildPopup.indexOf("<body>"));
+		const devPopup = grunt.file.read(devPopupPath);
+		const devBody = devPopup.slice(devPopup.indexOf("<body>"));
+		const buildPopup = grunt.file.read(buildPopupPath);
+		const buildBody = buildPopup.slice(buildPopup.indexOf("<body>"));
 
 		if (devBody !== buildBody) {
 			grunt.fail.fatal("Source and build popup.html don't match:\n\nSource:\n" +
@@ -150,9 +188,9 @@ module.exports = function(grunt)
 	});
 
 	grunt.registerTask("incrementVersion", function() {
-		var manifest = grunt.file.readJSON(buildManifestPath),
-			version = manifest.version.split("."),
-			versionString;
+		let manifest = grunt.file.readJSON(buildManifestPath);
+		let version = manifest.version.split(".");
+		let versionString;
 
 		version[2] = parseInt(version[2]) + 1;
 		versionString = version.join(".");
@@ -171,7 +209,7 @@ module.exports = function(grunt)
 	});
 
 	grunt.registerTask("cleanupManifest", function() {
-		var manifest = grunt.file.readJSON(buildManifestPath);
+		const manifest = grunt.file.readJSON(buildManifestPath);
 
 			// we don't need the unsafe-eval policy in the built extension
 		manifest.content_security_policy = manifest.content_security_policy.replace("'unsafe-eval' ", "");
@@ -192,7 +230,9 @@ module.exports = function(grunt)
 		"cleanupManifest",
 		"checkPopup",
 		"requirejs",
-		"uglify"
+		"babel",
+		"sync:build",
+		"clean:rjs"
 	]);
 
 	grunt.registerTask("pack", [

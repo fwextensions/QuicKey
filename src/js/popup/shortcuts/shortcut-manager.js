@@ -31,6 +31,7 @@ define(function() {
 	const Aliases = {
 		option: "alt",
 		opt: "alt",
+		control: "ctrl",
 		command: "meta",
 		cmd: "meta",
 		windows: "meta",

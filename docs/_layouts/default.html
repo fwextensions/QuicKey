@@ -101,15 +101,9 @@
         window.installExtension = function(
           buttonLocation)
         {
-          chrome.webstore.install(null,
-            function() { ga("send", "event", "install", "add", buttonLocation); },
-            function() { ga("send", "event", "install", "cancel", buttonLocation); }
-          );
+          window.open("https://chrome.google.com/webstore/detail/quickey-–-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg");
+          ga("send", "event", "install", "add", buttonLocation);
         };
-
-        if (!(window.chrome && window.chrome.webstore && window.chrome.webstore.install)) {
-          document.body.className = "no-install";
-        }
       })();
     </script>
   </body>

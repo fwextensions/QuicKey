@@ -12,15 +12,18 @@
     "build-popup": "node build/scripts/build-popup.js"
   },
   "devDependencies": {
+    "@babel/core": "^7.4.3",
+    "@babel/preset-env": "^7.4.3",
+    "babel-preset-minify": "^0.5.0",
     "grunt": "^0.4.5",
+    "grunt-babel": "^8.0.0",
     "grunt-cli": "^1.2.0",
     "grunt-contrib-clean": "^0.6.0",
     "grunt-contrib-compress": "^0.12.0",
     "grunt-contrib-copy": "^0.7.0",
     "grunt-contrib-requirejs": "^0.4.4",
-    "grunt-contrib-uglify": "^0.11.0",
     "grunt-exec": "^0.4.6",
-    "grunt-sync": "^0.2.2",
+    "grunt-sync": "^0.8.0",
     "lodash": "^2.4.1",
     "lodash-cli": "^4.17.4",
     "react": "^15.6.2",
@@ -28,5 +31,7 @@
     "react-virtualized": "^9.18.5",
     "requirejs": "^2.3.5"
   },
-  "dependencies": {}
+  "dependencies": {
+    "core-js": "^3.0.1"
+  }
 }
