@@ -90,7 +90,6 @@ module.exports = function(grunt)
 						src: [
 							"css/*.css",
 							"img/**",
-							"options.html",
 							"manifest.json"
 						]
 					}
