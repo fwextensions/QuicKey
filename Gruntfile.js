@@ -92,6 +92,11 @@ module.exports = function(grunt)
 							"img/**",
 							"manifest.json"
 						]
+					},
+					{
+						cwd: "build/prod/",
+						dest: "build/out/",
+						src: ["**"]
 					}
 				]
 			},
