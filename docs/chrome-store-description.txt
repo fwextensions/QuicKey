@@ -114,7 +114,7 @@ Recently used tabs get a slight boost in the search results ranking, so getting 
 
  ➤ NOTE: When first installed, QuicKey doesn't know which tabs have been
       recently used, but as you use Chrome, it will start adding tabs to the
-      MRU list.
+      most recently used (MRU) list.
 
 Opening QuicKey displays a list of the last 50 tabs you've visited, in order of recency. Click a tab to switch to it, or use one of the keyboard shortcuts below to navigate the recently used tab history:
 
@@ -122,10 +122,10 @@ Opening QuicKey displays a list of the last 50 tabs you've visited, in order of 
     • Quickly double-press the ALT-Q or CTRL-Q shortcut.
 
  ➤ To navigate farther back in the MRU list:
-    • Press ALT-A (CTRL-A on macOS) once to switch to the previous tab. The
-       QuicKey icon will invert for .75 seconds.
+    • Press ALT-A (CTRL-A on macOS) once to switch to the previous tab.
+      The QuicKey icon will invert for .75 seconds.
     • Press ALT-A while the icon is inverted to switch to older tabs, once
-       for each tab.
+      for each tab.
     • Press ALT-S to move to newer tabs.
     • Pause to let the icon revert to normal.
     • Press ALT-A again to switch back to the tab you initially started on.
@@ -136,24 +136,31 @@ Opening QuicKey displays a list of the last 50 tabs you've visited, in order of 
     • Press SHIFT-W or ↑ to move up.
     • Release ALT to switch to the selected tab.
     • You can also highlight an item with the mouse, then release ALT to
-       go to that tab.
+      go to that tab.
 
-Which shortcuts to use is up to you. Double-pressing ALT-Q is nice because there's just one shortcut and you can switch between the two recent tabs as quickly as you want. (You can also double-click the QuicKey icon to toggle between the most recent tabs.)
+Which shortcuts to use is up to you. Double-pressing ALT-Q is nice because there's just one shortcut and you can switch between the two most recently used tabs as quickly as you want. (You can also double-click the QuicKey icon to toggle between the most recent tabs.)
 
 ALT-A lets you navigate to even older tabs, though the timing can sometimes be finicky.
 
-Selecting from the MRU menu provides the closest experience to a typical ALT-TAB menu, but you need to use a different key to navigate while the menu is open.
+Selecting from the MRU menu by holding down the ALT key provides the closest experience to a typical ALT-TAB menu, but you need to use a different key to navigate while the menu is open.
 
-You can change the ALT-A and ALT-S shortcuts by right-clicking the QuicKey icon and selecting Options. Look for the "Switch to the previous/next tab" shortcuts.
+You can change the ALT-A and ALT-S shortcuts by right-clicking the QuicKey icon and selecting Options. Then scroll down and click "Change Chrome shortcuts". Look for the "Switch to the previous/next tab" shortcuts.
+
+
+★ Custom shortcuts and other options
+
+To customize how QuicKey behaves, right-click its icon on the toolbar and select Options. On the QuicKey Options page, you can change the behavior of the SPACE and ESC keys, hide closed tabs from the search results, and customize many of the keyboard shortcuts described here.
+
+If you change the keyboard shortcut for showing the QuicKey menu to something other than the default ALT-Q or if you have a non-US keyboard, you'll probably want to also change the key that's used to navigate down the list of recently used tabs (which defaults to W). For instance, if you change the shortcut to ALT-Z, you might want to change the navigation key to X, which is right next door. To change it, go to the Options page, click in the first keyboard shortcut picker, and press X.
 
 
 ★ Close and reopen tabs
 
 To close the selected tab, press CTRL-W (CMD-CTRL-W on macOS). Or hover over a tab and click the X button on the right side of the menu.
 
-When you open QuicKey, the 25 most recently closed tabs are listed below the recent tabs and shown in a faded state with an X icon. They are also returned when you type a query, though their score is discounted compared to open tabs.
+When you open QuicKey, the 25 most recently closed tabs are listed below the recent tabs and shown in a faded state with a clock icon. They are also returned when you type a query, though their score is discounted compared to open tabs. Click a closed tab to reopen it in its original location and with all of its browsing history intact.
 
-Click a closed tab to reopen it in its original location and with all of its browsing history intact.
+If you don't want closed tabs to be shown, open the QuicKey Options page and uncheck "Include recently closed tabs in the search results".
 
 
 ★ Move tabs
@@ -171,8 +178,8 @@ Include SHIFT in the shortcut to also unsuspend the tab while moving it. The CTR
 To find a bookmark, type "/b" in the search box, then a space, and then part of the bookmark's name or URL.
 
  • Press ENTER to open it in the current tab.
- • Press CTRL-ENTER (CMD-ENTER on macOS) to open it in a new tab in the
-    current window.
+ • Press CTRL-ENTER (CMD-ENTER on macOS) to open it in a new tab in
+   the current window.
  • Press SHIFT-ENTER to open it in a new window.
 
 
@@ -192,9 +199,9 @@ Press SHIFT-ENTER to switch to a tab and unsuspend it in one go. Or shift-click 
 
 ★ Incognito mode
 
-To switch to incognito tabs as well as normal ones, open Chrome's main menu and then go to More tools > Extensions, scroll down to the QuicKey extension, and then click the DETAILS button. On the next page, scroll down and click the toggle button next to the "Allow in incognito" option.
+To switch to incognito tabs as well as normal ones, right-click the QuicKey icon and select Options from the menu. Scroll to the very bottom of the QuicKey Options page and then click the "Change incognito settings" button. On the extensions page that opens, scroll down to the "Allow in incognito" option and click the toggle button next to it.
 
-Tabs in incognito mode display the incognito icon, so you can distinguish a normal tab from an incognito one with the same title.
+Tabs in incognito mode display the incognito icon under the page's favicon, so you can distinguish a normal tab from an incognito one with the same title.
 
 
 ★ Copy a URL or title
@@ -202,7 +209,8 @@ Tabs in incognito mode display the incognito icon, so you can distinguish a norm
 You can also copy the URL and title of the selected tab, bookmark or history item:
 
  • Press CTRL-C (CMD-C on macOS) to copy just the URL.
- • Press CTRL-SHIFT-C to copy both the item's title and its URL, one per line.
+ • Press CTRL-SHIFT-C (CMD-SHIFT-C on macOS) to copy both the item's
+   title and its URL, one per line.
 
 
 ★ Privacy policy
@@ -222,6 +230,8 @@ When first installed, QuicKey asks for these permissions:
       your bookmarked pages. It will never change your bookmarks.
 
 QuicKey can't access or manipulate the content of any pages you visit and doesn't transmit any information other than some anonymized Google Analytics usage metrics.
+
+If you right-click the QuicKey icon on the toolbar, there's a message saying "Can't read or change site's data", which is a bit misleading, since it can't read or change *any* site's data, not just the current one.
 
 
 ★ Support and source code

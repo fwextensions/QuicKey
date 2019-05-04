@@ -42,7 +42,6 @@ define([
 	}
 
 
-
 	return {
 		customizable: [
 			{
