@@ -38,18 +38,6 @@ define([
 		},
 
 
-		getNavigateKeyInfo: function()
-		{
-			const {chromeShortcuts} = this.props;
-
-			return [
-				chromeShortcuts.popupModifiers[0],
-					// don't allow space as a navigation key
-				new RegExp("[ " + chromeShortcuts.popupKey + "]", "i")
-			];
-		},
-
-
 		handleChangeShortcutsClick: function()
 		{
 			this.openExtensionsTab("shortcuts");
@@ -78,10 +66,11 @@ define([
 				// special-case the navigate button, which depends on the current
 				// Chrome keyboard shortcut for showing the QuicKey popup
 			if (shortcut.id == k.Shortcuts.MRUSelect) {
-				const [labelInfo, validatorInfo] = this.getNavigateKeyInfo();
+				const {popupModifiers, popupKey} = this.props.chromeShortcuts;
+				const modifier = popupModifiers[0];
 
-				label = shortcut.createLabel(labelInfo);
-				validator = shortcut.createValidator(validatorInfo);
+				label = shortcut.createLabel(modifier);
+				validator = shortcut.createValidator(modifier, popupKey);
 			}
 
 			return <li className="shortcut-setting"

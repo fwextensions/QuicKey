@@ -53,16 +53,19 @@ define([
 				{
 					return <span>Select the next tab while
 						holding <b>{modifier}</b> (include <b>shift</b> to
-						select previous tab)</span>
+						select the previous tab)</span>
 				},
 				createValidator: function(
-					chromeKeyPattern)
+					modifier,
+					chromeKey)
 				{
+						// don't allow space as a navigation key
+					const chromeKeyPattern = new RegExp("[ " + chromeKey + "]", "i");
+
 					return function(
 						key,
 						modifiers,
-						baseKey,
-						shortcut)
+						baseKey)
 					{
 						const matchesChromeKey = chromeKeyPattern.test(key);
 						const isKeyAllowed = (!matchesChromeKey && modifiers.length == 0);
@@ -70,13 +73,13 @@ define([
 						return {
 							isKeyAllowed: isKeyAllowed,
 							isShortcutValid: isKeyAllowed && baseKey,
-							errorMessage: matchesChromeKey &&
-								<span><b>{key.toUpperCase()}</b> is already in use for opening the QuicKey menu</span>
+							errorMessage: (matchesChromeKey &&
+								<span><b>{key.toUpperCase()}</b> is already in use for opening the QuicKey menu</span>) ||
+								(modifiers.length &&
+								<span>This key is used with <b>{modifier}</b> to navigate the QuicKey menu</span>)
 						};
 					};
-				},
-					// this shortcut should just be a normal key with no modifiers
-				allowedModifiers: /^$/
+				}
 			},
 			{
 				id: k.Shortcuts.CloseTab,
