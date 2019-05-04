@@ -8,6 +8,12 @@ comments: true
 # Release history
 
 
+## 1.0.2 - 2019-01-06
+
+* Fix: keyboard shortcuts like <b><kbd>ctrl</kbd><kbd>W</kbd></b> to navigate 
+the menu did not work with non-QWERTY keyboards.
+ 
+
 ## 1.0.1 - 2018-07-09
 
 * Add: <b><kbd>ctrl</kbd><kbd>C</kbd></b> keyboard shortcut (<b><kbd>cmd</kbd><kbd>C</kbd></b> on macOS) to copy the selected item's URL, and <b><kbd>ctrl</kbd><kbd>shift</kbd><kbd>C</kbd></b> to copy the title and URL.
