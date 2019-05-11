@@ -1,7 +1,12 @@
-module.exports = function(grunt)
-{
-	const extensionFullName = "QuicKey – The quick tab switcher";
-	const extensionShortName = "QuicKey";
+const fs = require("fs");
+const merge = require("deepmerge");
+const createWebstore = require("chrome-webstore-upload");
+
+
+module.exports = function(grunt) {
+	require("load-grunt-tasks")(grunt);
+
+
 		// exclude the jsx plugin so the JSXTransformer isn't included
 	const commonModules = [
 		"jsx",
@@ -48,7 +53,8 @@ module.exports = function(grunt)
 		onBuildWrite: function(
 			moduleName,
 			path,
-			singleContents) {
+			singleContents)
+		{
 				// we're inlining the text and not including the text plugin,
 				// since it's part of jsx, so get rid of the text! and jsx!
 				// prefixes. otherwise, require will complain about not
@@ -56,17 +62,29 @@ module.exports = function(grunt)
 			return singleContents.replace(/jsx!|text!/g, "");
 		}
 	};
-	const devManifestPath = "src/manifest.json";
 	const buildManifestPath = "build/out/manifest.json";
 	const devPopupPath = "src/popup.html";
 	const buildPopupPath = "build/out/popup.html";
-
-	grunt.initConfig({
+	const extensionInfo = {
+		quickey: {
+			fullName: "QuicKey – The quick tab switcher",
+			shortName: "QuicKey",
+			extensionID: "ldlghkoiihaelfnggonhjnfiabmaficg",
+			srcManifestPath: "src/manifest.json",
+		},
+		qktest: {
+			fullName: "QK Test",
+			shortName: "QK Test",
+			extensionID: "ddbinmabfeaibekibbpbnblmkddlkhpo",
+			srcManifestPath: "build/qktest-manifest.json",
+		}
+	};
+	const config = {
 		verbose: true,
 
 		clean: {
 			out: [
-				"build/out/out.crx",
+				"build/out/*",
 				"release/*"
 			],
 			rjs: [
@@ -78,6 +96,14 @@ module.exports = function(grunt)
 			crx: {
 				src: "build/out.crx",
 				dest: "release/QuicKey.crx"
+			},
+			quickey: {
+				src: extensionInfo.quickey.srcManifestPath,
+				dest: "build/out/manifest.json"
+			},
+			qktest: {
+				src: extensionInfo.qktest.srcManifestPath,
+				dest: "build/out/manifest.json"
 			}
 		},
 
@@ -118,15 +144,14 @@ module.exports = function(grunt)
 				command: '"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" ' +
 					"--pack-extension=C:\\Projects\\Tools\\KeyTab\\keytab-extension\\build\\out " +
 					'--pack-extension-key="C:\\Projects\\Tools\\KeyTab\\keytab-extension\\QuicKey.pem"',
-				callback: function()
-				{
+				callback: function() {
 					grunt.task.run(["copy:crx"]);
 				}
 			}
 		},
 
 		compress: {
-			main: {
+			quickey: {
 				options: {
 					archive: "release/QuicKey.zip"
 				},
@@ -137,6 +162,38 @@ module.exports = function(grunt)
 						src: "**"
 					}
 				]
+			},
+			qktest: {
+				options: {
+					archive: "release/QK Test.zip"
+				},
+				files: [
+					{
+						expand: true,
+						cwd: "build/out/",
+						src: "**"
+					}
+				]
+			}
+		},
+
+		confirm: {
+			publish: {
+				options: {
+					question: function()
+					{
+						const target = this.args[0] || "quickey";
+
+						return `Publish ${target}?  Type "${target}" to continue.\n`;
+					},
+					proceed: function(
+						answer)
+					{
+						const target = this.args[0] || "quickey";
+
+						return answer === target;
+					}
+				}
 			}
 		},
 
@@ -166,18 +223,16 @@ module.exports = function(grunt)
 				options: modulesConfig
 			}
 		}
-	});
+	};
+
+	grunt.initConfig(config);
 
 	// the lodash grunt task doesn't seem to work
 	// node node_modules\lodash-cli\bin\lodash include=remove,escape,dropRightWhile,toPairs,memoize,pull exports=amd
 
-	grunt.loadNpmTasks("grunt-contrib-requirejs");
-	grunt.loadNpmTasks("grunt-contrib-clean");
-	grunt.loadNpmTasks("grunt-contrib-copy");
-	grunt.loadNpmTasks("grunt-contrib-compress");
-	grunt.loadNpmTasks("grunt-sync");
-	grunt.loadNpmTasks("grunt-exec");
-	grunt.loadNpmTasks("grunt-babel");
+	grunt.registerTask("time", function() {
+		console.log("Started at", new Date().toLocaleString());
+	});
 
 	grunt.registerTask("checkPopup", function() {
 		const devPopup = grunt.file.read(devPopupPath);
@@ -191,8 +246,11 @@ module.exports = function(grunt)
 		}
 	});
 
-	grunt.registerTask("incrementVersion", function() {
-		let manifest = grunt.file.readJSON(buildManifestPath);
+	function incrementVersion(
+		manifestPath,
+		overrides = {})
+	{
+		let manifest = grunt.file.readJSON(manifestPath);
 		let version = manifest.version.split(".");
 		let versionString;
 
@@ -200,16 +258,42 @@ module.exports = function(grunt)
 		versionString = version.join(".");
 		manifest.version = versionString;
 
+		manifest = merge(manifest, overrides);
+
+		grunt.file.write(manifestPath, JSON.stringify(manifest, null, "\t"));
+
+		return versionString;
+	}
+
+	function incrementVersionAndSrc(
+		buildManifestPath,
+		srcManifestPath,
+		overrides = {})
+	{
+		const versionString = incrementVersion(buildManifestPath, overrides);
+		const srcManifest = grunt.file.readJSON(srcManifestPath);
+
+		srcManifest.version = versionString;
+		grunt.file.write(srcManifestPath, JSON.stringify(srcManifest, null, "\t"));
+
+		console.log(`Updated ${srcManifestPath} to version ${versionString}.`);
+	}
+
+	grunt.registerTask("incrementVersion", function(target = "quickey") {
 			// set the name back to the full name and icon tooltip that was
 			// overridden in the cleanupManifest task
-		manifest.name = extensionFullName;
-		manifest.browser_action.default_title = extensionShortName;
+		const {fullName, shortName, srcManifestPath} = extensionInfo[target];
 
-		grunt.file.write(buildManifestPath, JSON.stringify(manifest, null, "\t"));
-
-		manifest = grunt.file.readJSON(devManifestPath);
-		manifest.version = versionString;
-		grunt.file.write(devManifestPath, JSON.stringify(manifest, null, "\t"));
+		incrementVersionAndSrc(
+			buildManifestPath,
+			srcManifestPath,
+			{
+				name: fullName,
+				browser_action: {
+					default_title: shortName
+				}
+			}
+		);
 	});
 
 	grunt.registerTask("cleanupManifest", function() {
@@ -219,37 +303,85 @@ module.exports = function(grunt)
 		manifest.content_security_policy = manifest.content_security_policy.replace("'unsafe-eval' ", "");
 
 		manifest.browser_action.default_title = manifest.name =
-			extensionShortName + " OUT " + new Date().toLocaleString();
+			`${manifest.short_name} OUT ${new Date().toLocaleString()}`;
 
 		grunt.file.write(buildManifestPath, JSON.stringify(manifest, null, "\t"));
 	});
 
-	grunt.registerTask("time", function() {
-		console.log("Started at", new Date().toLocaleString());
+	function publish(
+		extensionID,
+		zipStream)
+	{
+		const clientInfo = grunt.file.readJSON("keys/client.json");
+		const refreshInfo = grunt.file.readJSON("keys/refresh-token.json");
+		const webstore = createWebstore({
+			extensionId: extensionID,
+			clientId: clientInfo.installed.client_id,
+			clientSecret: clientInfo.installed.client_secret,
+			refreshToken: refreshInfo.refresh_token
+		});
+
+		return webstore.fetchToken()
+			.then(token => {
+				return webstore.uploadExisting(zipStream, token)
+					.then((response) => {
+						if (response.uploadState == "SUCCESS") {
+							console.log(`Extension uploaded (${extensionID}).`);
+
+							return webstore.publish("default", token)
+								.then(({statusDetail}) => console.log(`Publish status: ${statusDetail}`));
+						} else {
+							console.error(response);
+						}
+					});
+			})
+			.catch(console.error);
+	}
+
+	grunt.registerTask("upload", function(target = "quickey") {
+		const done = this.async();
+		const zipStream = fs.createReadStream(config.compress[target].options.archive);
+		const extensionID = extensionInfo[target].extensionID;
+
+		publish(extensionID, zipStream)
+			.then(done);
 	});
 
-	grunt.registerTask("build", [
-		"time",
-		"sync:out",
-		"cleanupManifest",
-		"checkPopup",
-		"requirejs",
-		"babel",
-		"sync:build",
-		"clean:rjs"
-	]);
+	grunt.registerTask("build", function(target = "quickey") {
+		grunt.task.run([
+			"time",
+			"sync:out",
+			"copy:" + target,
+			"cleanupManifest",
+			"checkPopup",
+			"requirejs",
+			"babel",
+			"sync:build",
+			"clean:rjs"
+		]);
+	});
 
-	grunt.registerTask("pack", [
-		"build",
-		"incrementVersion",
-		"clean:out",
-		"compress"
-	]);
+	grunt.registerTask("pack", function(target = "quickey") {
+		grunt.task.run([
+			"clean:out",
+			"build:" + target,
+			"incrementVersion:" + target,
+			"compress:" + target
+		]);
+	});
 
 	grunt.registerTask("pack-test", [
 		"build",
-		"compress"
+		"compress:quickey"
 	]);
+
+	grunt.registerTask("publish", function(target = "quickey") {
+		grunt.task.run([
+			"pack:" + target,
+			"confirm:publish:" + target,
+			"upload:" + target
+		]);
+	});
 
 	grunt.registerTask("default", [
 		"build"
