@@ -361,19 +361,21 @@ module.exports = function(grunt) {
 		]);
 	});
 
-	grunt.registerTask("pack", function(target = "quickey") {
-		grunt.task.run([
+	grunt.registerTask("pack", function(target = "quickey", test) {
+		const tasks = [
 			"clean:out",
 			"build:" + target,
 			"incrementVersion:" + target,
 			"compress:" + target
-		]);
-	});
+		];
 
-	grunt.registerTask("pack-test", [
-		"build",
-		"compress:quickey"
-	]);
+		if (test == "test") {
+				// don't increment the version in the manifest
+			tasks.splice(2, 1);
+		}
+
+		grunt.task.run(tasks);
+	});
 
 	grunt.registerTask("publish", function(target = "quickey") {
 		grunt.task.run([

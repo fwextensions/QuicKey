@@ -28,6 +28,16 @@ define([
 			verticalAlign: "bottom"
 		}}
 	/>;
+	const UpgradeMessage = <div className="update-message">
+		<h3>
+			QuicKey now offers a number of options and customizable keyboard
+			shortcuts. Check them out below!
+		</h3>
+		<h4>
+			You can always reopen this page by right-clicking the QuicKey icon
+			and selecting <i>Options</i>.
+		</h4>
+	</div>;
 
 
 	const OptionsApp = React.createClass({
@@ -103,7 +113,12 @@ define([
 			const {settings, onChange} = props;
 
 			return <main>
-				<h1>QuicKey Options</h1>
+				{
+					new URLSearchParams(window.location.search).has("update") &&
+					UpgradeMessage
+				}
+				<h1 className="quickey">QuicKey Options</h1>
+
 
 				<h2>Search box</h2>
 				<Controls.RadioGroup

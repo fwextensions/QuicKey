@@ -88,9 +88,11 @@ define([
 					data,
 					version)
 				{
-						// add includeClosedTabs option and lastUsedVersion in v6
+						// add includeClosedTabs option and lastUsedVersion in
+						// v6.  leave lastUsedVersion empty so the background
+						// code can tell this was an update from an older version.
 					data.settings[k.IncludeClosedTabs.Key] = DefaultSettings[k.IncludeClosedTabs.Key];
-					data.lastUsedVersion = chrome.runtime.getManifest().version;
+					data.lastUsedVersion = "";
 
 					return [increment(version), data];
 				}

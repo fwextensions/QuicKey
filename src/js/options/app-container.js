@@ -86,7 +86,8 @@ define([
 				// show default values that then change when the current
 				// settings are returned asynchronously
 			return <div className={this.platform}>
-				{settings &&
+				{
+					settings &&
 					<OptionsApp
 						settings={settings}
 						shortcuts={shortcuts}
