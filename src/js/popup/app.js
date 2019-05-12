@@ -272,31 +272,40 @@ define("popup/app", [
 			direction,
 			unsuspend)
 		{
-			var self = this;
-
 				// get the current active tab, in case the user had closed the
 				// previously active tab
 			cp.tabs.query({
 				active: true,
 				currentWindow: true
 			})
+				.bind(this)
 				.then(function(activeTabs) {
-					var activeTab = activeTabs[0],
-							// if the active tab is at 0, and we want to move
-							// another tab to the left of it, force that index
-							// to be 0, which shifts the active tab to index: 1
-						index = Math.max(0, activeTab.index + direction);
+					const activeTab = activeTabs[0];
+						// if the active tab is at 0, and we want to move
+						// another tab to the left of it, force that index
+						// to be 0, which shifts the active tab to index: 1
+					let index = Math.max(0, activeTab.index + direction);
 
-						// if the moved tab is in the same window and is to the
-						// left of the active one and the user wants to move it
-						// to the right, then just set index to the active tab's
-						// position, since removing the moved tab will shift the
-						// active one to the left.  or if the user wants to move
-						// a tab from another window to the active tab's left,
-						// use its index, which will shift it to the right of the
-						// moved tab.
-					if ((tab.windowId == activeTab.windowId && tab.index < activeTab.index && direction > 0) ||
-							direction < 0) {
+
+					if (tab.windowId == activeTab.windowId) {
+						if (index == tab.index) {
+								// the tab's already where the user is trying to
+								// move it, so do nothing
+							return;
+						} else if (tab.index < activeTab.index && direction > 0) {
+								// the moved tab is in the same window and is
+								// to the left of the active one and the user
+								// wants to move it to the right, so just set
+								// index to the active tab's position, since
+								// removing the moved tab will shift the active
+								// one's index to the left before the moved one
+								// is re-inserted
+							index = activeTab.index;
+						}
+					} else if (direction < 0) {
+							// the user wants to move a tab from another window
+							// to the active tab's left, so use its index, which
+							// will shift it to the right of the moved tab
 						index = activeTab.index;
 					}
 
@@ -313,8 +322,9 @@ define("popup/app", [
 						// unsuspendURL added to it if necessary, so that
 						// unsuspending it will work.
 					addURLs(movedTab);
-					self.focusTab(movedTab, unsuspend);
-					self.props.tracker.event(self.state.query.length ? "tabs" : "recents",
+
+					this.focusTab(movedTab, unsuspend);
+					this.props.tracker.event(self.state.query.length ? "tabs" : "recents",
 						"move-" + (direction ? "right" : "left"));
 				});
 		},
