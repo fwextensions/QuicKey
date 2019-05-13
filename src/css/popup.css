@@ -29,6 +29,7 @@ body {
    =========================================================================== */
 
 .search-box, .command-placeholder {
+	font-size: 14px;
 	font-weight: bold;
 	width: 490px;
 	height: 25px;
