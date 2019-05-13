@@ -29,12 +29,10 @@ define([
 		}}
 	/>;
 	const UpgradeMessage = <div className="update-message">
-		<h3>
-			QuicKey now offers a number of options and customizable keyboard
+		<h3>QuicKey now offers a number of options and customizable keyboard
 			shortcuts. Check them out below!
 		</h3>
-		<h4>
-			You can always reopen this page by right-clicking the QuicKey icon
+		<h4>You can always reopen this page by right-clicking the QuicKey icon
 			and selecting <i>Options</i>.
 		</h4>
 	</div>;
@@ -63,6 +61,12 @@ define([
 		handleChangeIncognitoClick: function()
 		{
 			this.openExtensionsTab("?id=" + chrome.runtime.id);
+		},
+
+
+		handleSupportClick: function()
+		{
+			chrome.tabs.create({ url: "https://fwextensions.github.io/QuicKey/support/" });
 		},
 
 
@@ -198,6 +202,15 @@ define([
 				<button className="key"
 					onClick={this.handleChangeIncognitoClick}
 				>Change incognito setting</button>
+
+				<h2>Feedback and support</h2>
+				<p>If you have a question, found a bug or thought of a new
+					feature you'd like to see, please visit the support page and
+					leave a comment.
+				</p>
+				<button className="key"
+					onClick={this.handleSupportClick}
+				>Open support page</button>
 			</main>
 		}
 	});

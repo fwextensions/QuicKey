@@ -221,9 +221,9 @@ If you right-click the *QuicKey* icon on the toolbar, there's a message saying *
 For the technically-minded, you can inspect *QuicKey*'s code on [GitHub](https://github.com/fwextensions/QuicKey).
 
 
-## Feedback and bugs
+## Feedback and support
 
-If you find a bug in *QuicKey* or have a suggestion for a new feature, please [create a new issue](https://github.com/fwextensions/QuicKey/issues/new) on its GitHub page.
+If you find a bug in *QuicKey* or have a suggestion for a new feature, please visit the [support page](./support).
 
 
 ## Release history

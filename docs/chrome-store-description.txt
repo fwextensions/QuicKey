@@ -238,7 +238,7 @@ If you right-click the QuicKey icon on the toolbar, there's a message saying "Ca
 
 For more information, go to https://fwextensions.github.io/QuicKey/
 
-To report a bug or request a feature, go to https://github.com/fwextensions/QuicKey/issues/new
+To report a bug or request a feature, go to https://fwextensions.github.io/QuicKey/support/
 
 View the release history at https://fwextensions.github.io/QuicKey/releases
 
