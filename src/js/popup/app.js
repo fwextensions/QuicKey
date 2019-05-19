@@ -324,7 +324,7 @@ define("popup/app", [
 					addURLs(movedTab);
 
 					this.focusTab(movedTab, unsuspend);
-					this.props.tracker.event(self.state.query.length ? "tabs" : "recents",
+					this.props.tracker.event(this.state.query.length ? "tabs" : "recents",
 						"move-" + (direction ? "right" : "left"));
 				});
 		},

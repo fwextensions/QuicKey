@@ -97,21 +97,6 @@ require([
 	let lastUsedVersion;
 
 
-		// save the current time so recentTabs.getAll() knows whether it needs
-		// to update the stored data
-	storage.set(data => {
-			// save the lastUsedVersion before we return the current version
-			// below, so the onInstalled promise handler knows whether to open
-			// the options page
-		({lastUsedVersion} = data);
-
-		return {
-			lastStartupTime: Date.now(),
-			lastUsedVersion: chrome.runtime.getManifest().version
-		};
-	});
-
-
 	function addTab(
 		data)
 	{
@@ -293,7 +278,23 @@ require([
 	};
 
 
-	cp.management.getSelf()
+	storage.set(data => {
+			// save the lastUsedVersion in a global before we return the current
+			// version below, so the onInstalled promise handler knows whether
+			// to open the options page.  of course, to do that, we need to make
+			// sure that promise is handled as part of the chain started from
+			// getting the lastUsedVersion.  otherwise, the onInstalled promise
+			// below would always think it was being updated.
+		({lastUsedVersion} = data);
+
+			// save the current time so recentTabs.getAll() knows whether it
+			// needs to update the stored data
+		return {
+			lastStartupTime: Date.now(),
+			lastUsedVersion: chrome.runtime.getManifest().version
+		};
+	})
+		.then(() => cp.management.getSelf())
 		.then(info => {
 			const installType = (info.installType == "development") ? "D" : "P";
 			const dimensions = {
@@ -324,7 +325,7 @@ require([
 					url: chrome.extension.getURL("options.html?update")
 				});
 				backgroundTracker.event("extension", "open-options");
-DEBUG && console.log("== updated");
+DEBUG && console.log("== updated and opened options");
 			}
 		});
 });
