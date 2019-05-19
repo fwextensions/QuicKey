@@ -183,8 +183,9 @@ module.exports = function(grunt) {
 					question: function()
 					{
 						const target = this.args[0] || "quickey";
+						const manifest = grunt.file.readJSON(extensionInfo[target].srcManifestPath);
 
-						return `Publish ${target}?  Type "${target}" to continue.\n`;
+						return `Publish v${manifest.version} of ${target}?  Type "${target}" to continue.\n`;
 					},
 					proceed: function(
 						answer)

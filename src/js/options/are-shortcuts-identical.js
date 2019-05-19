@@ -10,7 +10,7 @@ define([
 	function getKeys(
 		shortcut)
 	{
-		const keys = (shortcut || "").split(ShortcutSeparator).map(function(key) {
+		const keys = String(shortcut).split(ShortcutSeparator).map(function(key) {
 			const lcKey = key.toLowerCase();
 
 			return ModifierAliases[lcKey] || lcKey;

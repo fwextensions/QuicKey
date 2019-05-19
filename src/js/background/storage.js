@@ -1,15 +1,23 @@
 define([
 	"bluebird",
 	"cp",
-	"./mutex"
+	"./mutex",
+	"./page-trackers"
 ], function(
 	Promise,
 	cp,
-	Mutex
+	Mutex,
+	trackers
 ) {
 	function emptyDefaultData()
 	{
 		return Promise.resolve({});
+	}
+
+
+	function alwaysValidate()
+	{
+		return true;
 	}
 
 
@@ -24,11 +32,13 @@ define([
 		options)
 	{
 		const storageMutex = new Mutex(Promise);
-		const version = options.version || 1;
-		const getDefaultData = typeof options.getDefaultData == "function" ?
-			options.getDefaultData : emptyDefaultData;
-		const updaters = options.updaters;
-		var dataPromise = getAll();
+		const {
+			version = 1,
+			getDefaultData = emptyDefaultData,
+			validateUpdate = alwaysValidate,
+			updaters = {}
+		} = options;
+		let dataPromise = getAll();
 
 
 		function getAll()
@@ -43,10 +53,10 @@ define([
 							// this promise, so if we called the locking reset
 							// from here, it would never complete.
 						return resetWithoutLocking();
-					} else if (storage.version !== version) {
-						return update(storage);
 					} else {
-						return storage.data || {};
+							// update the existing storage to the latest version,
+							// if necessary
+						return update(storage);
 					}
 				});
 		}
@@ -55,19 +65,30 @@ define([
 		function update(
 			storage)
 		{
-			while (updaters[storage.version]) {
-				const updatedData = updaters[storage.version](storage.data, storage.version);
+			let updated = false;
 
-				storage.version = updatedData[0];
-				storage.data = updatedData[1];
+			while (updaters[storage.version]) {
+				const [data, version] = updaters[storage.version](storage.data,
+					storage.version);
+
+				storage.data = data;
+				storage.version = version;
 			}
 
 			if (storage.version === version) {
+				updated = validateUpdate(storage.data);
+			}
+
+			if (updated) {
 					// save the updated data and version to storage
 				return saveWithVersion(storage.data);
 			} else {
-					// we couldn't find a way to migrate the existing storage to
-					// the new version, so just reset it to the default
+				trackers.background.event("storage", storage.version === version ?
+					"failed-validation" : "failed-update");
+
+					// we couldn't find a way to update the existing storage to
+					// the new version or the update resulted in invalid data,
+					// so just reset it to the default
 				return resetWithoutLocking();
 			}
 		}
