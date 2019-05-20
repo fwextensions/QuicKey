@@ -1,13 +1,11 @@
 define(function() {
 	const Defaults = {
-			name: "tracker"
-		},
-		PathPattern = /chrome-extension:\/\/[^\n]+\//g;
-
-
+		name: "tracker"
+	};
+	const PathPattern = /chrome-extension:\/\/[^\n]+\//g;
 		// create a local ga var pointing at the global ga so that this module
 		// can be loaded in a node context when we build the static popup HTML
-	var ga = (window.ga = window.ga || function() { (ga.q = ga.q || []).push(arguments) });
+	const ga = (window.ga = window.ga || function() { (ga.q = ga.q || []).push(arguments) });
 
 	ga.l = +new Date;
 
@@ -18,7 +16,7 @@ define(function() {
 		setFields,
 		dontSendPageview)
 	{
-		var createFields = Object.assign({}, Defaults, fields);
+		const createFields = Object.assign({}, Defaults, fields);
 
 		if (!setFields || typeof setFields != "object") {
 			dontSendPageview = setFields;
@@ -70,11 +68,11 @@ define(function() {
 			action,
 			value)
 		{
-			var event = {
-					hitType: "event",
-					eventCategory: category,
-					eventAction: action
-				};
+			const event = {
+				hitType: "event",
+				eventCategory: category,
+				eventAction: action
+			};
 
 			if (typeof value != "undefined") {
 				event.eventValue = value;
@@ -110,17 +108,20 @@ define(function() {
 			error,
 			fatal)
 		{
-			var description;
+			let description;
 
-			if (error.error) {
+			if (typeof error == "string") {
+				description = string;
+			} else if (error.error) {
 				description = error.error.stack.replace(PathPattern, "");
 			} else {
-				description = [error.message, error.lineno + ": " + error.filename].join("\n");
+				description = `${error.message}\n${error.lineno}, ${error.colno}: ${error.filename}`;
+//				description = [error.message, error.lineno + ": " + error.filename].join("\n");
 			}
 
 			this.send("exception", {
 				exDescription: description,
-				exFatal: fatal
+				exFatal: Boolean(fatal)
 			});
 		}
 	});
