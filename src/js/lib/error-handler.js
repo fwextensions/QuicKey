@@ -8,6 +8,10 @@
 		event)
 	{
 		errors.push(event);
+
+		if (event.preventDefault) {
+			event.preventDefault();
+		}
 	}
 
 
@@ -20,20 +24,43 @@
 		) => {
 			const tracker = trackers[pageName] || trackers.background;
 
+
+			function handleError(
+				event)
+			{
+				if (event.reason) {
+					console.error("Caught unhandled promise rejection:", event.reason);
+					tracker.exception(event.reason, true);
+				} else if (event.preventDefault) {
+					console.error("Caught unhandled exception:", event.error);
+					tracker.exception(event, true);
+					event.preventDefault();
+				}
+			}
+
+
+				// fire stats for any queued errors
+			errors.forEach(event => handleError(event));
+			errors = null;
+
 			window.removeEventListener("error", queueError);
 			window.removeEventListener("unhandledrejection", queueError);
 
-			window.addEventListener("error", event => tracker.exception(event, true));
-			window.addEventListener("unhandledrejection", ({reason}) => tracker.exception(reason, true));
+			window.addEventListener("error", handleError);
+			window.addEventListener("unhandledrejection", handleError);
 		});
 	}
 
 
+		// until the require loads and the page trackers are available, just
+		// catch and queue any exceptions
 	window.addEventListener("error", queueError);
 	window.addEventListener("unhandledrejection", queueError);
 
 	if (pageName == "background") {
-		setTimeout(init, 5000);
+			// give the background page some time to set up the dimensions in
+			// the trackers before firing GA events for the cached exceptions
+		setTimeout(init, 3000);
 	} else {
 		init();
 	}

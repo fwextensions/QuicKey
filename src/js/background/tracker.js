@@ -3,6 +3,8 @@ define(function() {
 		name: "tracker"
 	};
 	const PathPattern = /chrome-extension:\/\/[^\n]+\//g;
+		// leave room for the other params in a GA call
+	const MaxStackLength = 1000;
 		// create a local ga var pointing at the global ga so that this module
 		// can be loaded in a node context when we build the static popup HTML
 	const ga = (window.ga = window.ga || function() { (ga.q = ga.q || []).push(arguments) });
@@ -108,21 +110,24 @@ define(function() {
 			error,
 			fatal)
 		{
-			let description;
+			let description = "";
 
-			if (typeof error == "string") {
-				description = string;
-			} else if (error.error) {
-				description = error.error.stack.replace(PathPattern, "");
-			} else {
-				description = `${error.message}\n${error.lineno}, ${error.colno}: ${error.filename}`;
-//				description = [error.message, error.lineno + ": " + error.filename].join("\n");
+			try {
+				if (typeof error == "string") {
+					description = error;
+				} else if (error.error) {
+					description = error.error.stack.replace(PathPattern, "").slice(0, MaxStackLength);
+				} else {
+					description = `${error.message}\n${error.lineno}, ${error.colno}: ${error.filename}`;
+				}
+
+				this.send("exception", {
+					exDescription: description,
+					exFatal: Boolean(fatal)
+				});
+			} catch (e) {
+				console.error("Calling tracker.exception() failed.", e);
 			}
-
-			this.send("exception", {
-				exDescription: description,
-				exFatal: Boolean(fatal)
-			});
 		}
 	});
 
