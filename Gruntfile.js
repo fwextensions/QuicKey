@@ -208,6 +208,7 @@ module.exports = function(grunt) {
 			},
 			rjs: {
 				files: {
+					"build/out/js/common/error-handler.js": "src/js/lib/error-handler.js",
 					"build/out/js/common/almond.js": "build/almond.js",
 					"build/out/js/common/base.js": "build/rjs/common/base.js",
 					"build/out/js/common/react.js": "build/rjs/common/react.js",
