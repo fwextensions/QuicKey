@@ -286,17 +286,12 @@ require([
 
 
 	chrome.runtime.onUpdateAvailable.addListener(function(details) {
-		function restartExtension()
-		{
-			if (!popupIsOpen) {
-DEBUG && console.log("=== reloading");
-				chrome.runtime.reload();
-			} else {
-				setTimeout(restartExtension, RestartDelay);
-			}
+		try {
+			backgroundTracker.event("extension", "update-available",
+				details && details.version);
+		} catch (e) {
+			console.log(e);
 		}
-
-		restartExtension();
 	});
 
 
