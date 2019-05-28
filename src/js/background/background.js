@@ -4,7 +4,6 @@ const MaxPopupLifetime = 450;
 const TabActivatedOnStartupDelay = 750;
 const TabRemovedDelay = 1000;
 const MinTabDwellTime = 750;
-const RestartDelay = 10 * 1000;
 const IconPaths = {
 	path: {
 		"19": "img/icon-19.png",
@@ -91,7 +90,8 @@ require([
 ) {
 	const backgroundTracker = trackers.background;
 	let popupIsOpen = false;
-	let addFromToggle = false;
+	let tabChangedFromToggle = false;
+	let isNormalIcon = true;
 	let shortcutTimer;
 	let lastWindowID;
 	let lastUsedVersion;
@@ -124,14 +124,14 @@ require([
 	function onTabChanged(
 		event)
 	{
-		if (addFromToggle) {
+		if (tabChangedFromToggle) {
 				// when we're toggling between tabs, we want to add the tab
 				// immediately because the user chose it, as opposed to
 				// ctrl-tabbing past it
-			addFromToggle = false;
+			tabChangedFromToggle = false;
 			addTab(event);
 		} else {
-			startInversionTimer();
+			setInvertedIcon();
 			debouncedAddTab(event);
 		}
 	}
@@ -140,22 +140,32 @@ require([
 	function handleCommand(
 		command)
 	{
+			// track whether the user is navigating farther back in the stack
+		const label = isNormalIcon ? "single" : "repeated";
+
 		if (command == "1-previous-tab") {
 			recentTabs.navigate(-1);
-			backgroundTracker.event("recents", "previous");
+			backgroundTracker.event("recents", "previous", label);
 		} else if (command == "2-next-tab") {
 			recentTabs.navigate(1);
-			backgroundTracker.event("recents", "next");
+			backgroundTracker.event("recents", "next", label);
 		}
 	}
 
 
-	function startInversionTimer()
+	function setInvertedIcon()
 	{
 		chrome.browserAction.setIcon(InvertedIconPaths);
+		isNormalIcon = false;
 		clearTimeout(shortcutTimer);
-		shortcutTimer = setTimeout(() => chrome.browserAction.setIcon(IconPaths),
-			MinTabDwellTime);
+		shortcutTimer = setTimeout(setNormalIcon, MinTabDwellTime);
+	}
+
+
+	function setNormalIcon()
+	{
+		chrome.browserAction.setIcon(IconPaths);
+		isNormalIcon = true;
 	}
 
 
@@ -240,13 +250,13 @@ require([
 			popupIsOpen = false;
 
 			if (!closedByEsc && Date.now() - connectTime < MaxPopupLifetime) {
-					// pass true so navigate() knows this event is coming from
-					// a double press of the shortcut.  set addFromToggle so that
-					// the onActivated listener calls add immediately instead of
-					// debouncing it.  otherwise, quickly repeated double presses
-					// would be ignored because the tab list wouldn't have been
-					// updated yet.
-				addFromToggle = true;
+					// pass true so navigate() knows this event is coming from a
+					// double press of the shortcut.  set tabChangedFromToggle
+					// so that the onActivated listener calls add immediately
+					// instead of debouncing it.  otherwise, quickly repeated
+					// double presses would be ignored because the tab list
+					// wouldn't have been updated yet.
+				tabChangedFromToggle = true;
 				recentTabs.navigate(-1, true);
 				backgroundTracker.event("recents", "toggle");
 			} else {

@@ -76,7 +76,9 @@ define(function() {
 				eventAction: action
 			};
 
-			if (typeof value != "undefined") {
+			if (typeof value == "string") {
+				event.eventLabel = value;
+			} else if (typeof value == "number") {
 				event.eventValue = value;
 			}
 
