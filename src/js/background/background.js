@@ -268,11 +268,6 @@ require([
 	});
 
 
-	window.addEventListener("error",event => {
-		backgroundTracker.exception(event, true);
-	});
-
-
 	window.log = function() {
 		DEBUG && console.log.apply(console, arguments);
 	};
