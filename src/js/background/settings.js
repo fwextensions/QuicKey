@@ -100,7 +100,7 @@ define([
 					});
 				}
 
-				return { settings: settings };
+				return { settings };
 			})
 				.then(addChromeShortcuts);
 		},
@@ -118,7 +118,7 @@ define([
 					// so resetting again during that session wouldn't work.
 				settings.shortcuts[Platform] = getDefaultSettings().shortcuts[Platform];
 
-				return { settings: settings };
+				return { settings };
 			})
 				.then(addChromeShortcuts);
 		}

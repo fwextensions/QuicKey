@@ -1,7 +1,4 @@
 define(function() {
-	const Defaults = {
-		name: "t0"
-	};
 	const PathPattern = /chrome-extension:\/\/[^\n]+\//g;
 	const MaxStackLength = 2000;
 	const GALoadTimeout = 30 * 1000;
@@ -26,9 +23,16 @@ define(function() {
 		settings = {},
 		sendPageview = true})
 	{
+		if (!id || typeof id !== "string") {
+			throw new Error("A Universal Analytics tracker ID is required.");
+		}
+
 		this.name = name;
 		this.enable();
-		this.ga("create", id, { name, ...createFields });
+
+			// the esprima parser used by RequireJS doesn't support the object
+			// spread operator, and it's not supported until Chrome 61 anyway
+		this.ga("create", id, Object.assign({ name }, createFields));
 
 		if (global.location && global.location.protocol == "chrome-extension:") {
 				// workaround the extension being in a chrome-extension:// protocol
