@@ -13,36 +13,36 @@ define([
 			// the events get tracked on the right page.  pass true to not do an
 			// automatic pageview on creation in this module.
 		return {
-			background: new Tracker(TrackerID,
-				{
-					name: "background"
-				},
-				{
+			background: new Tracker({
+				id: TrackerID,
+				name: "background",
+				settings: {
 					location: "/background.html",
 					page: "/background",
 					transport: "beacon"
 				},
-				true),
-			popup: new Tracker(TrackerID,
-				{
-					name: "popup"
-				},
-				{
+				sendPageview: false
+			}),
+			popup: new Tracker({
+				id: TrackerID,
+				name: "popup",
+				settings: {
 					location: "/popup.html",
 					page: "/popup",
 					transport: "beacon"
 				},
-				true),
-			options: new Tracker(TrackerID,
-				{
-					name: "options"
-				},
-				{
+				sendPageview: false
+			}),
+			options: new Tracker({
+				id: TrackerID,
+				name: "options",
+				settings: {
 					location: "/options.html",
 					page: "/options",
 					transport: "beacon"
 				},
-				true)
+				sendPageview: false
+			})
 		};
 	});
 });
