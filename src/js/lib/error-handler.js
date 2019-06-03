@@ -28,11 +28,13 @@
 			function handleError(
 				event)
 			{
+				const timestamp = new Date().toLocaleString();
+
 				if (event.reason) {
-					console.error("Caught unhandled promise rejection:", event.reason);
+					console.error("Caught unhandled promise rejection:", event.reason, timestamp);
 					tracker.exception(event.reason, true);
 				} else if (event.preventDefault) {
-					console.error("Caught unhandled exception:", event.error);
+					console.error("Caught unhandled exception:", event.error, timestamp);
 					tracker.exception(event, true);
 					event.preventDefault();
 				}
