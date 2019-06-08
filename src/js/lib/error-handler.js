@@ -1,7 +1,12 @@
 (function() {
+	const PathPattern = /chrome-extension:\/\/[^\n]+\//g;
+	const MaxRetries = 20;
+
+
 	const match = location.pathname.match(/\/(\w+)\.html/);
 	const pageName = (match && match[1]) || "background";
 	let errors = [];
+	let retryCount = 0;
 
 
 	function queueError(
@@ -17,6 +22,15 @@
 
 	function init()
 	{
+		if (typeof require !== "function" && retryCount < MaxRetries) {
+				// we've been loaded before the global require is set up, so
+				// wait a bit and try again
+			setTimeout(init, 100);
+			retryCount++;
+
+			return;
+		}
+
 		require([
 			"background/page-trackers"
 		], (
@@ -31,18 +45,18 @@
 				const timestamp = new Date().toLocaleString();
 
 				if (event.reason) {
-					console.error("Caught unhandled promise rejection:", event.reason, timestamp);
+					console.log(`Caught unhandled promise rejection at ${timestamp}: ${event.reason}`);
 					tracker.exception(event.reason, true);
 				} else if (event.preventDefault) {
-					console.error("Caught unhandled exception:", event.error, timestamp);
+					console.log(`Caught unhandled exception at ${timestamp}:\n${event.error.stack.replace(PathPattern, "")}`);
 					tracker.exception(event, true);
 					event.preventDefault();
 				}
 			}
 
 
-				// fire stats for any queued errors
-			errors.forEach(event => handleError(event));
+				// fire exception stats for any queued errors
+			errors.forEach(handleError);
 			errors = null;
 
 			window.removeEventListener("error", queueError);

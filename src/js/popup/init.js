@@ -1,15 +1,16 @@
-var gKeyCache = [],
-	gShortcutCache = [],
-	gClose = false,
-	gOnKeyDown,
-	gInitTime = performance.now(),
-	gPort;
-
-
 	// connect to the default port so the background page will get the
 	// onDisconnect event when the popup is closed.  do it first thing, in case
 	// the user quickly hits the shortcut again.
-gPort = chrome.runtime.connect();
+const gPort = chrome.runtime.connect();
+const gInitTime = performance.now();
+
+let gKeyCache = [];
+let gShortcutCache = [];
+let gClose = false;
+let gOnKeyDown;
+
+	// check lastError to suppress errors showing up in the extensions page
+chrome.runtime.lastError && console.log("Chrome error:", chrome.runtime.lastError);
 
 
 (function() {

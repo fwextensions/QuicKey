@@ -35,14 +35,10 @@ require([
 			// send a pageview event after a delay, in case the user is toggling
 			// to the previous tab, in which case we'll barely be rendered, and
 			// so don't want to count a pageview
-		setTimeout(function() {
+		setTimeout(() => {
 			tracker.pageview();
 			tracker.timing("loading", "popup", now);
 		}, 750);
-
-		window.addEventListener("error", function(event) {
-			tracker.exception(event, true);
-		});
 	}
 
 		// clean up the globals
