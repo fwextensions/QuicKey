@@ -155,15 +155,15 @@ define(function() {
 			error,
 			fatal)
 		{
-			let description = "";
+			let description = "Generic error";
 
 			try {
 				if (typeof error == "string") {
 					description = error;
-				} else if (error.error) {
+				} else if (error.error && error.error.stack) {
 						// reduce the noise of the protocol repeating in every URL
 					description = error.error.stack.replace(PathPattern, "").slice(0, MaxStackLength);
-				} else {
+				} else if (error.message) {
 					description = `${error.message}\n${error.lineno}, ${error.colno}: ${error.filename}`;
 				}
 

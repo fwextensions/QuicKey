@@ -42,7 +42,7 @@ define(function() {
 			url = url.replace(/\+/g, "%20");
 			url = decodeURIComponent(url);
 		} catch (e) {
-			console.error("decodeURIComponent failed:", url);
+			console.log(`decodeURIComponent failed on: ${url}`);
 
 			try {
 				url = unescape(url);

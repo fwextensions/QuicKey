@@ -42,15 +42,22 @@
 			function handleError(
 				event)
 			{
-				const timestamp = new Date().toLocaleString();
+				try {
+					const timestamp = new Date().toLocaleString();
 
-				if (event.reason) {
-					console.log(`Caught unhandled promise rejection at ${timestamp}: ${event.reason}`);
-					tracker.exception(event.reason, true);
-				} else if (event.preventDefault) {
-					console.log(`Caught unhandled exception at ${timestamp}:\n${event.error.stack.replace(PathPattern, "")}`);
-					tracker.exception(event, true);
-					event.preventDefault();
+					if (event.reason) {
+						console.log(`Caught unhandled promise rejection at ${timestamp}: ${event.reason}`);
+						tracker.exception(event.reason, true);
+					} else if (event.preventDefault) {
+						const stack = (event.error && event.error.stack &&
+							event.error.stack.replace(PathPattern, "")) || "";
+
+						console.log(`Caught unhandled exception at ${timestamp}:\n${stack}`);
+						tracker.exception(event, true);
+						event.preventDefault();
+					}
+				} catch (e) {
+					console.log("Error caught in the error handler (oh, the irony!)", e);
 				}
 			}
 
