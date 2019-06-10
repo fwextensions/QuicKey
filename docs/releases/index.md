@@ -8,13 +8,12 @@ comments: true
 # Release history
 
 
-<!--
-## 1.1.0 - 2019-05-27
+## 1.1.0 - 2019-06-09
 
 ### Added
 
 * On the new options page you can change the behavior of the <kbd>space</kbd> and <kbd>esc</kbd> keys, hide closed tabs from the search results, and customize many of the keyboard shortcuts.  In particular, you can change the key that's used to navigate the MRU menu, which is helpful if you change the default <b><kbd>alt</kbd><kbd>Q</kbd></b> shortcut.
-* A [support page](https://fwextensions.github.io/QuicKey/support/) on the website.
+* A [support page](https://fwextensions.github.io/QuicKey/support/) on the QuicKey website.
 
 ### Changed
 
@@ -23,7 +22,7 @@ comments: true
 ### Fixed
 
 * Moving tabs to the left or right of the current one sometimes positions it in the wrong place.
--->
+* Improved error handling.
 
 
 ## 1.0.3 - 2019-05-27
