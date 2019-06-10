@@ -1,0 +1,412 @@
+/* ===========================================================================
+	Base
+   =========================================================================== */
+
+* {
+	box-sizing: border-box;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
+		sans-serif, "Apple Color Emoji", "Segoe UI Symbol", "Segoe UI Emoji";
+}
+
+:root {
+	font-size: 16px;
+}
+
+body {
+	font-size: 1em;
+	user-select: none;
+	cursor: default;
+	position: relative;
+	margin: 0;
+	padding: 10em 0;
+	display: flex;
+	justify-content: center;
+	flex-flow: column;
+}
+
+
+/* ===========================================================================
+	Page
+   =========================================================================== */
+
+section {
+	margin: auto;
+	position: relative;
+}
+
+h1 {
+	font-size: 2em;
+	color: #333;
+	margin: 0 0 1.5em 0;
+	position: relative;
+}
+
+h1.quickey::before {
+	content: '';
+	background-image: url(/img/icon-300.png);
+	background-size: cover;
+	left: -115px;
+	top: -55px;
+	width: 100px;
+	height: 100px;
+	position: absolute;
+	display: inline-block;
+}
+
+h2 {
+	font-size: 1.3em;
+	line-height: 2;
+	color: #666;
+	margin: 2.75em 0 1.2em 0;
+	border-bottom: 1px solid #ddd;
+}
+
+ul {
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+}
+
+li {
+	margin: 0;
+	padding: 0;
+}
+
+kbd, button {
+	font-size: smaller;
+	font-weight: bold;
+	color: #ccc;
+	padding: 0.2em 0.5em 0.35em 0.5em;
+	vertical-align: baseline;
+	box-shadow:
+		0.07em 0.07em 0.125em rgba(0, 0, 0, 0.25),
+		0 0 0 0.04em rgba(0, 0, 0, 0.3),
+		0.02em 0.02em 0.1em rgba(0, 0, 0, 0.4) inset,
+		0.05em 0.05em 0.1em rgba(255, 255, 255, 0.35) inset;
+	border-radius: 0.25em;
+	background-color: #313536;
+	display: inline-block;
+}
+
+button.key {
+	padding: 0.2em 0.75em 0.35em 0.75em;
+	margin: 1em 1em 0 0;
+	border-radius: 0.25em;
+}
+
+button.key:hover {
+	background: #000;
+}
+
+button.key:active {
+	opacity: .5;
+}
+
+main {
+	width: 35em;
+}
+
+
+/* ===========================================================================
+	Update message
+   =========================================================================== */
+
+.update-message {
+	text-align: center;
+	color: #333;
+	background: #efefef;
+	padding: 2em 2em;
+	margin: -7em 0 7em 0;
+	border-radius: .25em;
+}
+
+.update-message h3 {
+	font-size: 1.2em;
+	font-weight: normal;
+	padding: 0;
+	margin: 0;
+}
+
+.update-message h4 {
+	color: #777;
+	font-size: .9em;
+	font-weight: normal;
+	padding: 0 6em;
+	margin: 1em 0 0 0;
+}
+
+
+/* ===========================================================================
+	Controls
+   =========================================================================== */
+
+.control {
+	margin-bottom: .5em;
+}
+
+.control label {
+	position: relative;
+	padding-left: 1.7em;
+	line-height: 1.4em;
+	display: block;
+}
+
+	/* don't use display: none so the control can still get focus */
+.control input {
+	position: absolute;
+	opacity: 0;
+	z-index: -1;
+}
+
+.control .indicator {
+	position: absolute;
+	top: .1em;
+	left: 0;
+	height: 1.25em;
+	width: 1.25em;
+	border-radius: .25em;
+	background: #efefef;
+	transition: background 0.15s ease-in-out;
+}
+
+.control .indicator:after {
+	content: '';
+	position: absolute;
+	display: none;
+}
+
+.control input:checked ~ .indicator {
+	background: #313536;
+}
+
+.control label:hover input:not([disabled]) ~ .indicator {
+	background: #ebebeb;
+}
+
+.control label:hover input:not([disabled]):checked ~ .indicator,
+.control input:checked:focus ~ .indicator {
+	background: #313536;
+}
+
+.control input:disabled ~ .indicator {
+	background: #e6e6e6;
+	opacity: 0.6;
+	pointer-events: none;
+}
+
+.control input:checked ~ .indicator:after {
+	display: block;
+}
+
+.control input[type="checkbox"] ~ .indicator:after {
+	left: 30%;
+	top: 11%;
+	width: 20%;
+	height: 46%;
+	border: solid #fff;
+	border-width: 0 .2em .2em 0;
+	transform: rotate(45deg);
+}
+
+.control input[type="checkbox"]:disabled ~ .indicator:after {
+	border-color: #666;
+}
+
+.control input[type="radio"] ~ .indicator {
+	border-radius: 50%;
+}
+
+.control input[type="radio"] ~ .indicator:after {
+	left: 25%;
+	top: 25%;
+	height: 50%;
+	width: 50%;
+	border-radius: 50%;
+	background: #fff;
+}
+
+.control input[type="radio"]:disabled ~ .indicator:after {
+	background: #7b7b7b;
+}
+
+.control-group {
+	margin: 1em 0 2em 0;
+}
+
+.control-group label {
+	margin-left: 1.25em;
+}
+
+.control-group .label {
+	line-height: 1.5;
+	margin-bottom: .5em;
+}
+
+.control-group .label kbd {
+	line-height: 1.2;
+}
+
+.chrome-shortcuts {
+	cursor: pointer;
+}
+
+
+/* ===========================================================================
+	Shortcut setting
+   =========================================================================== */
+
+.shortcut-setting {
+	display: flex;
+	margin-bottom: .5em;
+}
+
+.shortcut-setting .label {
+	padding: .35em 0;
+	margin-right: 1em;
+	line-height: 1.1em;
+	flex: 1;
+}
+
+
+/* ===========================================================================
+	Shortcut picker
+   =========================================================================== */
+
+.shortcut-picker {
+	flex: 0.85;
+}
+
+.shortcut-display {
+	font-size: 30px;
+	padding: .25em;
+	position: relative;
+	border-radius: 6px;
+	background: #efefef;
+	box-shadow: none;
+	transition: box-shadow 0.15s ease-out;
+}
+
+.shortcut-display:hover {
+	background: #ebebeb;
+}
+
+.shortcut-display:focus {
+	background: #ddd;
+	box-shadow: 0 -0.1em 0 #228 inset;
+	outline: none;
+}
+
+.disabled .shortcut-display, .disabled .shortcut-display:hover, .disabled .shortcut-display:focus {
+	background: none !important;
+	box-shadow: none !important;
+	opacity: .6;
+}
+
+.shortcut-display .placeholder {
+	color: #777;
+	font-size: .5em;
+	top: 0;
+	padding-left: .5em;
+	line-height: 3em;
+	position: absolute;
+}
+
+.clear-button {
+	width: 20px;
+	height: 20px;
+	right: 6px;
+	top: 50%;
+	margin-top: -10px;
+	background-image: url(/img/clear.svg);
+	background-size: 10px 16px;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-color: transparent;
+	border: none;
+	border-radius: 100%;
+	opacity: .6;
+	position: absolute;
+	display: block;
+}
+
+.clear-button:hover {
+	background-color: #ccc;
+	opacity: 1;
+}
+
+.clear-button:hover:active {
+	background-color: #bbb;
+}
+
+.shortcut-picker .error {
+	padding: .35em 2.15em 0;
+	font-size: smaller;
+	background-image: url(/img/alert.svg);
+	background-size: 16px 16px;
+	background-position: .5em .5em;
+	background-repeat: no-repeat;
+		/* force the grey SVG icon to be dark red via filters: https://codepen.io/sosuke/pen/Pjoqqp */
+	filter: brightness(0) saturate(100%) invert(8%) sepia(87%) saturate(5021%) hue-rotate(358deg) brightness(114%) contrast(114%);
+}
+
+	/* on macOS and a standard def monitor, the error icon is a little low and
+	   so its bottom gets cut off.  so move it a little higher on Mac. */
+.mac .shortcut-picker .error {
+	background-position: .5em .4em;
+}
+
+
+/* ===========================================================================
+	Keyboard shortcuts
+   =========================================================================== */
+
+.shortcut {
+	font-size: 30px;
+	height: 1em;
+}
+
+.shortcut kbd, .key {
+	height: inherit;
+	background-color: #313536;
+	border: 0;
+	border-radius: 0.125em;
+	box-shadow:
+		0.07em 0.07em 0.125em rgba(0, 0, 0, 0.25),
+		0 0 0 0.04em rgba(0, 0, 0, 0.3),
+		0.02em 0.02em 0.1em rgba(0, 0, 0, 0.4) inset,
+		0.05em 0.05em 0.1em rgba(255, 255, 255, 0.35) inset;
+	color: #ccc;
+	font-size: inherit;
+	font-weight: bold;
+	text-align: center;
+	outline: 0;
+	position: relative;
+	vertical-align: top;
+	margin-right: .25em;
+	-webkit-appearance: none;
+	-webkit-tap-highlight-color: transparent;
+	user-select: none;
+	display: inline-block;
+}
+
+.shortcut kbd > span, .key > span {
+	display: inline-block;
+	position: absolute;
+	top: 0;
+	left: 0;
+	font-size: 0.5em;
+	line-height: 2;
+	width: 100%;
+}
+
+.width1 {
+	width: 1.15em;
+}
+
+.width2 {
+	width: 1.65em;
+}
+
+.width3 {
+	width: 1.95em;
+}

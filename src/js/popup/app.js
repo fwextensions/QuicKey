@@ -10,9 +10,12 @@ define("popup/app", [
 	"./data/get-bookmarks",
 	"./data/get-history",
 	"./data/add-urls",
-	"./shortcuts/handle-keys",
+	"./shortcuts/popup-shortcuts",
 	"lib/handle-ref",
 	"lib/copy-to-clipboard",
+	"background/recent-tabs",
+	"background/settings",
+	"background/constants",
 	"lodash"
 ], function(
 	React,
@@ -26,9 +29,12 @@ define("popup/app", [
 	getBookmarks,
 	getHistory,
 	addURLs,
-	handleKeys,
+	shortcuts,
 	handleRef,
 	copyTextToClipboard,
+	recentTabs,
+	settings,
+	k,
 	_
 ) {
 	const MinScore = .15,
@@ -68,6 +74,7 @@ define("popup/app", [
 		gotMRUKey: true,
 		mruModifier: "Alt",
 		resultsList: null,
+		settings: settings.getDefaults(),
 
 
 		getInitialState: function()
@@ -75,7 +82,13 @@ define("popup/app", [
 			var props = this.props,
 				query = props.initialQuery;
 
-			this.mruModifier = props.platform == "mac" ? "Control" : "Alt";
+			settings.get()
+				.bind(this)
+				.then(function(settings) {
+					this.settings = settings;
+					this.mruModifier = settings.chromeShortcuts.popupModifierEventName;
+					shortcuts.update(settings);
+				});
 
 			return {
 				query: query,
@@ -89,7 +102,7 @@ define("popup/app", [
 
 		componentWillMount: function()
 		{
-			this.props.recentTabs.getAll()
+			recentTabs.getAll()
 				.bind(this)
 				.then(function(tabs) {
 					var now = Date.now();
@@ -155,12 +168,15 @@ define("popup/app", [
 					this.setQuery(this.state.query);
 
 						// after the recent tabs have been loaded and scored,
-						// apply any shortcuts that recorded during init
+						// apply any shortcuts that were recorded during init
 					if (initialShortcuts.length) {
+						const shiftMRUKey = this.settings.shortcuts[k.Shortcuts.MRUSelect];
+						const mruKey = shiftMRUKey.toLocaleLowerCase();
+
 						initialShortcuts.forEach(function(shortcut) {
-							if (shortcut == "w") {
+							if (shortcut == mruKey) {
 								this.modifySelected(1, true);
-							} else if (shortcut == "W") {
+							} else if (shortcut == shiftMRUKey) {
 								this.modifySelected(-1, true);
 							}
 						}, this);
@@ -189,7 +205,7 @@ define("popup/app", [
 
 			var scores = scoreItems(this[this.mode], query),
 				firstScoresDiff = (scores.length > 1 && scores[0].score > MinScore) ?
-					(scores[0].score - scores[1].score) : 0;
+					(scores[0].score - scores[1].score) : 0,
 					// drop barely-matching results, keeping a minimum of 3,
 					// unless there's a big difference in scores between the
 					// first two items, which may mean we need a longer tail
@@ -200,7 +216,6 @@ define("popup/app", [
 
 			return matchingItems;
 		},
-
 
 		focusTab: function(
 			tab,
@@ -223,7 +238,8 @@ define("popup/app", [
 				chrome.tabs.update(tab.id, updateData);
 
 					// make sure that tab's window comes forward
-				if (tab.windowId != chrome.windows.WINDOW_ID_CURRENT) {
+				if (!isNaN(tab.windowId) &&
+						tab.windowId !== chrome.windows.WINDOW_ID_CURRENT) {
 					chrome.windows.update(tab.windowId, { focused: true });
 				}
 
@@ -256,31 +272,40 @@ define("popup/app", [
 			direction,
 			unsuspend)
 		{
-			var self = this;
-
 				// get the current active tab, in case the user had closed the
 				// previously active tab
 			cp.tabs.query({
 				active: true,
 				currentWindow: true
 			})
+				.bind(this)
 				.then(function(activeTabs) {
-					var activeTab = activeTabs[0],
-							// if the active tab is at 0, and we want to move
-							// another tab to the left of it, force that index
-							// to be 0, which shifts the active tab to index: 1
-						index = Math.max(0, activeTab.index + direction);
+					const activeTab = activeTabs[0];
+						// if the active tab is at 0, and we want to move
+						// another tab to the left of it, force that index
+						// to be 0, which shifts the active tab to index: 1
+					let index = Math.max(0, activeTab.index + direction);
 
-						// if the moved tab is in the same window and is to the
-						// left of the active one and the user wants to move it
-						// to the right, then just set index to the active tab's
-						// position, since removing the moved tab will shift the
-						// active one to the left.  or if the user wants to move
-						// a tab from another window to the active tab's left,
-						// use its index, which will shift it to the right of the
-						// moved tab.
-					if ((tab.windowId == activeTab.windowId && tab.index < activeTab.index && direction > 0) ||
-							direction < 0) {
+
+					if (tab.windowId == activeTab.windowId) {
+						if (index == tab.index) {
+								// the tab's already where the user is trying to
+								// move it, so do nothing
+							return;
+						} else if (tab.index < activeTab.index && direction > 0) {
+								// the moved tab is in the same window and is
+								// to the left of the active one and the user
+								// wants to move it to the right, so just set
+								// index to the active tab's position, since
+								// removing the moved tab will shift the active
+								// one's index to the left before the moved one
+								// is re-inserted
+							index = activeTab.index;
+						}
+					} else if (direction < 0) {
+							// the user wants to move a tab from another window
+							// to the active tab's left, so use its index, which
+							// will shift it to the right of the moved tab
 						index = activeTab.index;
 					}
 
@@ -297,8 +322,9 @@ define("popup/app", [
 						// unsuspendURL added to it if necessary, so that
 						// unsuspending it will work.
 					addURLs(movedTab);
-					self.focusTab(movedTab, unsuspend);
-					self.props.tracker.event(self.state.query.length ? "tabs" : "recents",
+
+					this.focusTab(movedTab, unsuspend);
+					this.props.tracker.event(this.state.query.length ? "tabs" : "recents",
 						"move-" + (direction ? "right" : "left"));
 				});
 		},
@@ -344,11 +370,10 @@ define("popup/app", [
 			item,
 			includeTitle)
 		{
-			var text = "";
-
 			if (item) {
-				text = (includeTitle ? item.title + "\n" : "") +
+				const text = (includeTitle ? item.title + "\n" : "") +
 					(item.unsuspendURL || item.url);
+
 				copyTextToClipboard(text);
 			}
 		},
@@ -401,7 +426,7 @@ define("popup/app", [
 		{
 			var query = this.state.query;
 
-			if (!query) {
+			if (!query || this.settings[k.EscBehavior.Key] == k.EscBehavior.Close) {
 					// pressing esc in an empty field should close the popup
 				this.props.port.postMessage("closedByEsc");
 				window.close();
@@ -508,7 +533,7 @@ define("popup/app", [
 			this.gotMRUKey = false;
 
 				// keydown handling is managed in another module
-			return handleKeys(event, this);
+			return shortcuts.handleEvent(event, this);
 		},
 
 

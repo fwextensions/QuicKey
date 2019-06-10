@@ -9,6 +9,13 @@ define([
 	}
 
 
+	global.chrome = {
+		extension: {
+			getBackgroundPage: () => ({})
+		}
+	};
+
+
 	return {
 		management: {
 			getSelf: function()
@@ -21,6 +28,9 @@ define([
 		},
 		sessions: {
 			getRecentlyClosed: promiseNoop
+		},
+		commands: {
+			getAll: () => Promise.resolve([{ name: "_execute_browser_action" }])
 		},
 		storage: {
 			local: {

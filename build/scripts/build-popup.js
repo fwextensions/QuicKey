@@ -50,28 +50,35 @@ requirejs.config(config);
 	// this from grunt, so we have to run it as a plain node script and do the
 	// writing of the rendered HTML inside the required module
 requirejs([
-	"jsx!popup/app",
-	"background/recent-tabs"
+	"jsx!popup/app"
 ], function(
-	App,
-	recentTabs
+	App
 ) {
-	var html = ReactDOMServer.renderToString(React.createElement(App, {
-			tabs: [],
-			initialQuery: "",
-			platform: "win",
-			tracker: {
-				set: function() {}
-			},
-			recentTabs: recentTabs
-		})),
-			// insert the rendered HTML into the root node in the template
-			// popup.html file
-		newHTML = templateHTML.replace(Placeholder, html);
+	const html = ReactDOMServer.renderToString(React.createElement(App, {
+		initialQuery: "",
+		initialShortcuts: [],
+		platform: "win",
+		tracker: {
+			set: function() {
+			}
+		},
+		port: {}
+	}));
+		// insert the rendered HTML into the root node in the template
+		// popup.html file
+	const newHTML = templateHTML.replace(Placeholder, html);
+
 
 		// we only want to change the source file if the rendered markup has changed
 	if (newHTML !== currentHTML) {
-		fs.writeFileSync("./src/popup.html", newHTML, "utf8");
 		console.log("\n\n===== popup.html updated =====\n\n");
+		fs.writeFileSync("./src/popup.html", newHTML, "utf8");
+	} else {
+		console.log("\n\n===== no update needed =====\n\n");
 	}
+
+		// force node to exit, since the new settings promises seem to cause
+		// setState() outside of componentWillUnmount(), and React will complain
+		// and there'll be some promise that hangs around until it times out
+	process.exit();
 });

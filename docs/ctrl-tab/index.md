@@ -17,14 +17,16 @@ Do you wish Chrome had the same <b><kbd>ctrl</kbd><kbd>tab</kbd></b> tab navigat
   - Press <kbd>tab</kbd> repeatedly to select older tabs in the menu
   - Release <kbd>ctrl</kbd> to switch to the selected tab
 
-Chrome extensions can't provide this functionality all by themselves, unfortunately.  With a little work, however, it *is* possible to achieve both these features with *QuicKey*, though the second one requires some additional Windows-only software.  (*QuicKey* does support [keyboard-driven selection](/QuicKey/#mru-gif) of a tab from a menu without any additional setup; it's just that you can't use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> as the shortcut without these manual workarounds.)
+Chrome extensions can't provide this functionality all by themselves, unfortunately.  With a little work, however, it *is* possible to achieve both these features with *QuicKey*, though the second one requires some additional Windows-only software.  (*QuicKey* does support [keyboard-driven selection](/QuicKey/#mru-gif) of a tab from a menu without any additional setup; it's just that you can't use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> as the shortcut without these workarounds.)
 
-You can use either of the options below, but don't use both.  Following the steps in [Option 1](#option-1) will prevent [Option 2](#option-2) from working correctly.
+You can use either of the options below, but don't use both.  Following the steps in [Option 1](#option-1) will prevent [Option 2](#option-2) from working correctly.  
+
+Note that with either option, you'll obviously lose the <b><kbd>ctrl</kbd><kbd>tab</kbd></b> and <b><kbd>ctrl</kbd><kbd>shift</kbd><kbd>tab</kbd></b> keyboard shortcuts to move the next or previous tab within the current window.  On Windows and Linux, you can use <b><kbd>ctrl</kbd><kbd>pg dn</kbd> / <kbd>pg up</kbd></b> to move to the next/previous tab, and on macOS you can use <b><kbd>cmd</kbd><kbd>opt</kbd><kbd>→</kbd> / <kbd>←</kbd></b>.
 
 
 ## <a name="option-1"></a>Option 1: Use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to previously used tabs
 
-Chrome's *Keyboard shortcuts* screen normally blocks you from using <b><kbd>ctrl</kbd><kbd>tab</kbd></b> as a shortcut, but it is possible to use the Chrome developer tools to work around this limitation. (This is also much simpler than other approaches that require messing around with Chrome's preferences files.)
+Chrome's *Keyboard shortcuts* screen normally blocks you from using <b><kbd>ctrl</kbd><kbd>tab</kbd></b> as a shortcut, but it is possible to use the Chrome developer tools to work around this limitation. (This is also much simpler and more reliable than other approaches that require messing around with Chrome's preferences files.)
 
 1. [Install QuicKey](https://chrome.google.com/webstore/detail/quickey-%E2%80%93-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg).
 
@@ -32,11 +34,15 @@ Chrome's *Keyboard shortcuts* screen normally blocks you from using <b><kbd>ctrl
 
     <img src="../img/options-in-menu.png" style="width: 208px;">
 
-3. After the *Keyboard shortcuts* page opens, press <b><kbd>ctrl</kbd><kbd>shift</kbd><kbd>J</kbd></b> on Windows/Linux or <b><kbd>cmd</kbd><kbd>opt</kbd><kbd>J</kbd></b> on macOS to open the Chrome DevTools.
+3. Scroll down the *QuicKey Options* page and then click the *Change Chrome shortcuts* button.
+
+    <img src="../img/chrome-shortcuts-button.png" style="width: 485px;">
+
+4. After the *Keyboard shortcuts* page opens, press <b><kbd>ctrl</kbd><kbd>shift</kbd><kbd>J</kbd></b> on Windows/Linux or <b><kbd>cmd</kbd><kbd>opt</kbd><kbd>J</kbd></b> on macOS to open the Chrome DevTools.
 
     <img src="../img/console-open.png">
 
-4. Copy this block of code:
+5. Copy this block of code:
 
        chrome.developerPrivate.updateExtensionCommand({
            extensionId: "ldlghkoiihaelfnggonhjnfiabmaficg",
@@ -51,11 +57,11 @@ Chrome's *Keyboard shortcuts* screen normally blocks you from using <b><kbd>ctrl
 
     <button class="copy" onclick="copyCode()">Copy to Clipboard</button>
 
-5. Click into the console area of DevTools and paste the code next to the >.
+6. Click into the console area of DevTools and paste the code next to the >.
 
     <img src="../img/code-pasted.png">
 
-6. Press <kbd>enter</kbd> to run it.
+7. Press <kbd>enter</kbd> to run it.
 
     <img src="../img/ctrl-tab-selected.png">
 
@@ -91,8 +97,6 @@ Now switch between a few different tabs in Chrome using the mouse (since *QuicKe
 If you press <b><kbd>ctrl</kbd><kbd>tab</kbd></b> and keep holding <kbd>ctrl</kbd>, a menu of recent tabs will open.  Press <kbd>tab</kbd> to move the selection down in the list, <b><kbd>shift</kbd><kbd>tab</kbd></b> to move up.  When the desired tab is selected, release <kbd>ctrl</kbd> to switch to it.
 
 The other default shortcuts continue to work, so you can still press <b><kbd>alt</kbd><kbd>Q</kbd></b> to open *QuicKey* and search for a tab by name or URL instead of picking a recent one.
-
-Note that with either option above, you'll obviously lose the <b><kbd>ctrl</kbd><kbd>tab</kbd></b> and <b><kbd>ctrl</kbd><kbd>shift</kbd><kbd>tab</kbd></b> keyboard shortcuts to move the next or previous tab within the current window.  On Windows and Linux, you can use <b><kbd>ctrl</kbd><kbd>pg dn</kbd> / <kbd>pg up</kbd></b> to move to the next/previous tab, and on macOS you can use <b><kbd>cmd</kbd><kbd>opt</kbd><kbd>→</kbd> / <kbd>←</kbd></b>.
 
 
 <script>

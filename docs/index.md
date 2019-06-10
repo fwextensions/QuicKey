@@ -54,7 +54,7 @@ You can customize the shortcut key by right-clicking the *QuicKey* icon and sele
 
 ## Search for a tab quickly
 
-Unlike other tab switchers, *QuicKey* uses a [Quicksilver](https://qsapp.com/)-style search algorithm to rank the results, where contiguous matches at the beginning of words are higher in the list, as are matches against capital letters.  So you can type just a few letters to quickly find the right tab.
+Unlike other tab switchers, *QuicKey* uses a [Quicksilver](https://qsapp.com/)-style search algorithm to rank the results, where contiguous matches at the beginning of words are higher in the list, as are matches against capital letters.  So you only have to type a few letters to quickly find the right tab.
 
 Use keyboard shortcuts to navigate the list of matching tabs:
 
@@ -105,12 +105,22 @@ Opening *QuicKey* displays a list of the last 50 tabs you've visited, in order o
 
 Which shortcuts to use is up to you.  Double-pressing <b><kbd>alt</kbd><kbd>Q</kbd></b> is nice because there's just one shortcut and you can switch between the two most recently used tabs as quickly as you want.  (You can also double-click the *QuicKey* icon to toggle between the most recent tabs.)
 
-<b><kbd>alt</kbd><kbd>A</kbd></b> lets you quickly navigate to even older tabs, though the timing can be a little tricky.
+<b><kbd>alt</kbd><kbd>A</kbd></b> lets you quickly navigate to even older tabs, though the timing can sometimes be finicky.
 
 Selecting from the MRU menu by holding down the <kbd>alt</kbd> key provides the closest experience to a typical <b><kbd>alt</kbd><kbd>tab</kbd></b> menu, but you need to use <kbd>W</kbd> instead of <kbd>tab</kbd> to navigate while the menu is open (due to limitations in the Chrome platform).
 
+You can change the <b><kbd>alt</kbd><kbd>A</kbd></b> and <b><kbd>alt</kbd><kbd>S</kbd></b> shortcuts by right-clicking the *QuicKey* icon and selecting *Options*.  Then scroll down and click *Change Chrome shortcuts*. Look for the *Switch to the previous/next tab* shortcuts.
 
-You can change the <b><kbd>alt</kbd><kbd>A</kbd></b> and <b><kbd>alt</kbd><kbd>S</kbd></b> shortcuts by right-clicking the *QuicKey* icon and selecting *Options*.  Look for the *Switch to the previous/next tab* shortcuts.
+
+## Custom shortcuts and other options
+
+To customize how *QuicKey* behaves, right-click its icon <img src="../img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> and select *Options* from the menu:
+
+<img src="../img/options-in-menu.png" style="width: 208px;">
+
+On the *QuicKey Options* page, you can change the behavior of the <kbd>space</kbd> and <kbd>esc</kbd> keys, hide closed tabs from the search results, and customize many of the keyboard shortcuts described here.
+
+If you change the keyboard shortcut for showing the *QuicKey* menu to something other than the default <b><kbd>alt</kbd><kbd>Q</kbd></b> or if you have a non-US keyboard, you'll probably want to also change the key that's used to navigate down the list of recently used tabs (which defaults to <kbd>W</kbd>).  For instance, if you change the shortcut to <b><kbd>alt</kbd><kbd>Z</kbd></b>, you might want to change the navigation key to <kbd>X</kbd>, which is right next door.  To change it, go to the *Options* page, click in the first keyboard shortcut picker, and press <kbd>X</kbd>.
 
 
 ## Close and reopen tabs
@@ -119,13 +129,13 @@ To close the selected tab, press <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd
 
 ![Close button](img/close-button.png)
 
-When you open *QuicKey*, the 25 most recently closed tabs are listed below the recent tabs and shown in a faded state with an <img src="img/clear.svg" style="height: 1em"> icon:
+When you open *QuicKey*, the 25 most recently closed tabs are listed below the recent tabs and shown in a faded state with a <img src="img/history.svg" style="height: 1em"> icon:
 
 ![Closed tab](img/closed-tab.png)
 
-They are also returned when you type a query, though their score is discounted compared to open tabs.
+They are also returned when you type a query, though their score is discounted compared to open tabs.  Click a closed tab to reopen it in its original location and with all of its browsing history intact.
 
-Click a closed tab to reopen it in its original location and with all of its browsing history intact.
+If you don't want closed tabs to be shown, open the *QuicKey Options* page and uncheck *Include recently closed tabs in the search results*.
 
 
 ## Move tabs
@@ -164,18 +174,18 @@ If you use the handy extension [The Great Suspender](https://chrome.google.com/w
 
 ![Suspended tab](img/suspended-tab.png)
 
-The original URL is shown in the menu (not that long `chrome-extension://` one you see in the location bar), so if you search for `chrome` or `extension`, you won't simply match all the suspended tabs, which is what happens in other tab search extensions.
+The original URL is shown in the menu (not that long `chrome-extension://` one you see in the location bar). That means if you search for `chrome` or `extension`, you won't simply match all the suspended tabs, which is what happens in other tab search extensions.
 
 Press <b><kbd>shift</kbd><kbd>enter</kbd></b> to switch to a tab and unsuspend it in one go. Or shift-click it with the mouse.
 
 
 ## Incognito mode
 
-To switch to incognito tabs as well as normal ones, open Chrome's main menu and then go to *More tools > Extensions*, scroll down to the *QuicKey* extension, and then click the *DETAILS* button:
+To switch to incognito tabs as well as normal ones, right-click the *QuicKey* icon <img src="../img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> and select *Options* from the menu:
 
-![Incognito option](img/extensions-entry.png)
+<img src="../img/options-in-menu.png" style="width: 208px;">
 
-On the next page, scroll down and click the toggle button next to the *Allow in incognito* option:
+Scroll to the very bottom of the *QuicKey Options* page and then click the *Change incognito settings* button.  On the extensions page that opens, scroll down to the *Allow in incognito* option and click the toggle button:
 
 ![Incognito option](img/incognito-option.png)
 
@@ -189,7 +199,7 @@ Tabs in incognito mode display the incognito icon under the page's favicon, so y
 You can also copy the URL and title of the selected tab, bookmark or history item:
 
   * Press <b><kbd>ctrl</kbd><kbd>C</kbd></b> (<b><kbd>cmd</kbd><kbd>C</kbd></b> on macOS) to copy just the URL.
-  * Press <b><kbd>ctrl</kbd><kbd>shift</kbd><kbd>C</kbd></b> to copy both the item's title and its URL, with a line break in between.
+  * Press <b><kbd>ctrl</kbd><kbd>shift</kbd><kbd>C</kbd></b> (<b><kbd>cmd</kbd><kbd>shift</kbd><kbd>C</kbd></b> on macOS) to copy both the item's title and its URL, one per line.
 
 
 ## Privacy policy
@@ -206,12 +216,14 @@ When first installed, *QuicKey* asks for these permissions:
 
 *QuicKey* can't access or manipulate the content of any pages you visit and doesn't transmit any information other than some anonymized Google Analytics usage metrics.
 
+If you right-click the *QuicKey* icon on the toolbar, there's a message saying *Can't read or change site's data*, which is a bit misleading, since it can't read or change *any* site's data, not just the current one.
+
 For the technically-minded, you can inspect *QuicKey*'s code on [GitHub](https://github.com/fwextensions/QuicKey).
 
 
-## Feedback and bugs
+## Feedback and support
 
-If you find a bug in *QuicKey* or have a suggestion for a new feature, please [create a new issue](https://github.com/fwextensions/QuicKey/issues/new) on its GitHub page.
+If you find a bug in *QuicKey* or have a suggestion for a new feature, please visit the [support page](./support).
 
 
 ## Release history
@@ -221,6 +233,6 @@ View the changes in [previous releases](./releases).
 
 ## Credits
 
-The <img src="img/search.svg" style="height: 1em"> and <img src="img/clear.svg" style="height: 1em; vertical-align: middle;"> icons are from the [Octicons](https://octicons.github.com/) set, used under the [MIT License](http://opensource.org/licenses/MIT).
+The <img src="img/search.svg" style="height: 1em"> and <img src="img/clear.svg" style="height: 1em; vertical-align: middle;"> icons are from the [Octicons](https://octicons.github.com/) set, used under the [MIT License](http://opensource.org/licenses/MIT).  The <img src="img/history.svg" style="height: 1em"> icon is from the [Material Icons](https://material.io/tools/icons/) set, used under the [Apache License](https://www.apache.org/licenses/LICENSE-2.0.html).
 
 The string ranking algorithm is modeled on [Quicksilver](https://github.com/quicksilver/Quicksilver/blob/master/Quicksilver/Code-QuickStepCore/QSense.m)'s code.

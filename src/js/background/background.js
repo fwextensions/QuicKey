@@ -1,29 +1,27 @@
 	// if the popup is opened and closed within this time, switch to the
 	// previous tab
-const MaxPopupLifetime = 450,
-	TabActivatedOnStartupDelay = 750,
-	TabRemovedDelay = 1000,
-	MinTabDwellTime = 750,
-	RestartDelay = 10 * 1000,
-	IconPaths = {
-		path: {
-			"19": "img/icon-19.png",
-			"38": "img/icon-38.png"
-		}
-	},
-	InvertedIconPaths = {
-		path: {
-			"19": "img/icon-19-inverted.png",
-			"38": "img/icon-38-inverted.png"
-		}
-	};
+const MaxPopupLifetime = 450;
+const TabActivatedOnStartupDelay = 750;
+const TabRemovedDelay = 1000;
+const MinTabDwellTime = 750;
+const IconPaths = {
+	path: {
+		"19": "img/icon-19.png",
+		"38": "img/icon-38.png"
+	}
+};
+const InvertedIconPaths = {
+	path: {
+		"19": "img/icon-19-inverted.png",
+		"38": "img/icon-38-inverted.png"
+	}
+};
 
 
-var gStartingUp = false,
-	gResolveInstalledPromise,
-	gInstalledPromise = new Promise(function(resolve) {
-		gResolveInstalledPromise = resolve;
-	});
+var gStartingUp = false;
+var gInstalledPromise = new Promise(resolve => {
+	chrome.runtime.onInstalled.addListener(details => resolve(details));
+});
 
 
 function debounce(
@@ -45,9 +43,8 @@ function debounce(
 }
 
 
-chrome.runtime.onStartup.addListener(function() {
-	const onActivated = debounce(function()
-	{
+chrome.runtime.onStartup.addListener(() => {
+	const onActivated = debounce(() => {
 		chrome.tabs.onActivated.removeListener(onActivated);
 
 DEBUG && console.log("==== last onActivated");
@@ -64,7 +61,7 @@ DEBUG && console.log("==== last onActivated");
 					// the stored recent tab data will be out of date, since the tabs
 					// will get new IDs when the app reloads each one
 				return recentTabs.updateAll()
-					.then(function() {
+					.then(() => {
 DEBUG && console.log("===== updateAll done");
 
 						gStartingUp = false;
@@ -80,11 +77,6 @@ DEBUG && console.log("== onStartup");
 });
 
 
-chrome.runtime.onInstalled.addListener(function(event) {
-	gResolveInstalledPromise(event && event.reason);
-});
-
-
 require([
 	"cp",
 	"background/recent-tabs",
@@ -93,27 +85,16 @@ require([
 ], function(
 	cp,
 	recentTabs,
-	pageTrackers,
+	trackers,
 	storage
 ) {
-	var popupIsOpen = false,
-		addFromToggle = false,
-		backgroundTracker = pageTrackers.background,
-		popupTracker = pageTrackers.popup,
-		shortcutTimer,
-		lastWindowID;
-
-	window.tracker = popupTracker;
-	window.recentTabs = recentTabs;
-
-
-		// save the current time so recentTabs.getAll() knows whether it needs
-		// to update the stored data
-	storage.set(function(data) {
-		return {
-			lastStartupTime: Date.now()
-		};
-	});
+	const backgroundTracker = trackers.background;
+	let popupIsOpen = false;
+	let tabChangedFromToggle = false;
+	let isNormalIcon = true;
+	let shortcutTimer;
+	let lastWindowID;
+	let lastUsedVersion;
 
 
 	function addTab(
@@ -122,7 +103,7 @@ require([
 		if (data.tabId) {
 			return cp.tabs.get(data.tabId)
 				.then(recentTabs.add)
-				.catch(function(error) {
+				.catch(error => {
 						// ignore the "No tab with id:" errors, which will happen
 						// closing a window with multiple tabs.  since addTab()
 						// is debounced and will fire after the window is closed,
@@ -143,14 +124,14 @@ require([
 	function onTabChanged(
 		event)
 	{
-		if (addFromToggle) {
+		if (tabChangedFromToggle) {
 				// when we're toggling between tabs, we want to add the tab
 				// immediately because the user chose it, as opposed to
 				// ctrl-tabbing past it
-			addFromToggle = false;
+			tabChangedFromToggle = false;
 			addTab(event);
 		} else {
-			startInversionTimer();
+			setInvertedIcon();
 			debouncedAddTab(event);
 		}
 	}
@@ -159,31 +140,36 @@ require([
 	function handleCommand(
 		command)
 	{
+			// track whether the user is navigating farther back in the stack
+		const label = isNormalIcon ? "single" : "repeated";
+
 		if (command == "1-previous-tab") {
 			recentTabs.navigate(-1);
-			backgroundTracker.event("recents", "previous");
+			backgroundTracker.event("recents", "previous", label);
 		} else if (command == "2-next-tab") {
 			recentTabs.navigate(1);
-			backgroundTracker.event("recents", "next");
+			backgroundTracker.event("recents", "next", label);
 		}
 	}
 
 
-	function startInversionTimer()
+	function setInvertedIcon()
 	{
 		chrome.browserAction.setIcon(InvertedIconPaths);
+		isNormalIcon = false;
 		clearTimeout(shortcutTimer);
-		shortcutTimer = setTimeout(onInversionTimerDone, MinTabDwellTime);
+		shortcutTimer = setTimeout(setNormalIcon, MinTabDwellTime);
 	}
 
 
-	function onInversionTimerDone()
+	function setNormalIcon()
 	{
 		chrome.browserAction.setIcon(IconPaths);
+		isNormalIcon = true;
 	}
 
 
-	chrome.tabs.onActivated.addListener(function(event) {
+	chrome.tabs.onActivated.addListener(event => {
 		if (!gStartingUp) {
 			onTabChanged(event);
 		}
@@ -193,7 +179,7 @@ require([
 		// debounce the handling of a removed tab since Chrome seems to trigger
 		// the event when shutting down, and we want to ignore those.  hopefully,
 		// Chrome will finish quitting before this handler fires.
-	chrome.tabs.onRemoved.addListener(debounce(function(tabId, removeInfo) {
+	chrome.tabs.onRemoved.addListener(debounce((tabId, removeInfo) => {
 		if (!gStartingUp) {
 			recentTabs.remove(tabId, removeInfo);
 		}
@@ -202,7 +188,7 @@ require([
 
 		// tabs seem to get replaced with new IDs when they're auto-discarded by
 		// Chrome, so we want to update any recency data for them
-	chrome.tabs.onReplaced.addListener(function(newID, oldID) {
+	chrome.tabs.onReplaced.addListener((newID, oldID) => {
 		if (!gStartingUp) {
 			recentTabs.replace(oldID, newID);
 		}
@@ -211,7 +197,7 @@ require([
 
 		// the onActivated event isn't fired when the user switches between
 		// windows, so get the active tab in this window and store it
-	chrome.windows.onFocusChanged.addListener(function(windowID) {
+	chrome.windows.onFocusChanged.addListener(windowID => {
 			// check this event's windowID against the last one we saw and
 			// ignore the event if it's the same.  that happens when the popup
 			// opens and no tab is selected or the user's double-pressing.
@@ -219,7 +205,7 @@ require([
 				windowID != lastWindowID) {
 			lastWindowID = windowID;
 			cp.tabs.query({ active: true, windowId: windowID })
-				.then(function(tabs) {
+				.then(tabs => {
 					if (tabs.length) {
 						onTabChanged(tabs[0]);
 					}
@@ -228,7 +214,7 @@ require([
 	});
 
 
-	chrome.commands.onCommand.addListener(function(command) {
+	chrome.commands.onCommand.addListener(command => {
 		if (!gStartingUp) {
 			handleCommand(command);
 		} else {
@@ -240,17 +226,14 @@ require([
 				// to be out of sync with the reopened tabs and navigation will fail.
 			gStartingUp = false;
 			recentTabs.updateAll()
-				.then(function() {
-					handleCommand(command);
-				});
+				.then(() => handleCommand(command));
 		}
 	});
 
 
-	chrome.runtime.onConnect.addListener(function(port) {
+	chrome.runtime.onConnect.addListener(port => {
 		const connectTime = Date.now();
-
-		var closedByEsc = false;
+		let closedByEsc = false;
 
 			// in newer versions of Chrome, reopened tabs don't trigger an
 			// onActivated event, so the handler set in onStartup won't fire
@@ -259,21 +242,21 @@ require([
 		gStartingUp = false;
 		popupIsOpen = true;
 
-		port.onMessage.addListener(function(message) {
+		port.onMessage.addListener(message => {
 			closedByEsc = (message == "closedByEsc");
 		});
 
-		port.onDisconnect.addListener(function() {
+		port.onDisconnect.addListener(() => {
 			popupIsOpen = false;
 
 			if (!closedByEsc && Date.now() - connectTime < MaxPopupLifetime) {
-					// pass true so navigate() knows this event is coming from
-					// a double press of the shortcut.  set addFromToggle so that
-					// the onActivated listener calls add immediately instead of
-					// debouncing it.  otherwise, quickly repeated double presses
-					// would be ignored because the tab list wouldn't have been
-					// updated yet.
-				addFromToggle = true;
+					// pass true so navigate() knows this event is coming from a
+					// double press of the shortcut.  set tabChangedFromToggle
+					// so that the onActivated listener calls add immediately
+					// instead of debouncing it.  otherwise, quickly repeated
+					// double presses would be ignored because the tab list
+					// wouldn't have been updated yet.
+				tabChangedFromToggle = true;
 				recentTabs.navigate(-1, true);
 				backgroundTracker.event("recents", "toggle");
 			} else {
@@ -285,7 +268,7 @@ require([
 	});
 
 
-	chrome.runtime.onUpdateAvailable.addListener(function(details) {
+	chrome.runtime.onUpdateAvailable.addListener(details => {
 		try {
 			backgroundTracker.event("extension", "update-available",
 				details && details.version);
@@ -295,38 +278,59 @@ require([
 	});
 
 
-	window.addEventListener("error", function(event) {
-		backgroundTracker.exception(event, true);
-	});
-
-
 	window.log = function() {
 		DEBUG && console.log.apply(console, arguments);
 	};
 
 
-	cp.management.getSelf()
-		.then(function(info) {
-			var installType = (info.installType == "development") ? "D" : "P",
-				dimensions = {
-					"dimension1": info.version,
-					"dimension2": installType
-				};
+	storage.set(data => {
+			// save the lastUsedVersion in a global before we return the current
+			// version below, so the onInstalled promise handler knows whether
+			// to open the options page.  of course, to do that, we need to make
+			// sure that promise is handled as part of the chain started from
+			// getting the lastUsedVersion.  otherwise, the onInstalled promise
+			// below would always think it was being updated.
+		({lastUsedVersion} = data);
+
+			// save the current time so recentTabs.getAll() knows whether it
+			// needs to update the stored data
+		return {
+			lastStartupTime: Date.now(),
+			lastUsedVersion: chrome.runtime.getManifest().version
+		};
+	})
+		.then(() => cp.management.getSelf())
+		.then(info => {
+			const installType = (info.installType == "development") ? "D" : "P";
+			const dimensions = {
+				"dimension1": info.version,
+				"dimension2": installType
+			};
 
 			backgroundTracker.set(dimensions);
-			popupTracker.set(dimensions);
+			trackers.popup.set(dimensions);
+			trackers.options.set(dimensions);
 
 			backgroundTracker.pageview();
 			backgroundTracker.timing("loading", "background", performance.now());
 		})
-		.then(function() {
-				// pause the chain to wait for the installed promise to resolve,
-				// which it will never do if the event doesn't fire.  if it does,
-				// it should do so before we get here, but we use a promise just
-				// in case it doesn't for some reason.
-			return gInstalledPromise;
-		})
-		.then(function(reason) {
-			backgroundTracker.event("extension", reason);
+			// pause the chain to wait for the installed promise to resolve,
+			// which it will never do if the event doesn't fire.  if it does,
+			// it should do so before we get here, but we use a promise just
+			// in case it doesn't for some reason.
+		.then(() => gInstalledPromise)
+		.then(({reason, previousVersion}) => {
+			backgroundTracker.event("extension", reason, previousVersion);
+
+			if (reason == "update" && !lastUsedVersion) {
+					// open the options page with an update message for people
+					// who had previously installed QuicKey.  pass an update
+					// param to the page to make it show an upgrade message.
+				chrome.tabs.create({
+					url: chrome.extension.getURL("options.html?update")
+				});
+				backgroundTracker.event("extension", "open-options");
+DEBUG && console.log("== updated and opened options");
+			}
 		});
 });

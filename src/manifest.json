@@ -2,11 +2,11 @@
 	"manifest_version": 2,
 	"name": "QuicKey DEV",
 	"short_name": "QuicKey",
-	"version": "1.0.3",
+	"version": "1.1.0",
 	"description": "Add keyboard shortcuts to switch tabs with a Quicksilver-style search or a most recently used menu",
 	"author": "John Dunning",
 	"content_security_policy": "script-src 'self' 'unsafe-eval' https://www.google-analytics.com; object-src 'self'",
-	"minimum_chrome_version": "45",
+	"minimum_chrome_version": "51",
 	"permissions": [
 		"tabs",
 		"bookmarks",
@@ -33,7 +33,7 @@
 		"persistent": true
 	},
 	"options_ui": {
-		"chrome_style": true,
+		"open_in_tab": true,
 		"page": "options.html"
 	},
 	"commands": {

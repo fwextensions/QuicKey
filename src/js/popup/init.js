@@ -1,21 +1,20 @@
-var gKeyCache = [],
-	gShortcutCache = [],
-	gClose = false,
-	gOnKeyDown,
-	gInitTime = performance.now(),
-	gIsMac = /Mac/i.test(navigator.platform),
-	gPort;
-
-
 	// connect to the default port so the background page will get the
 	// onDisconnect event when the popup is closed.  do it first thing, in case
 	// the user quickly hits the shortcut again.
-gPort = chrome.runtime.connect();
+const gPort = chrome.runtime.connect();
+const gInitTime = performance.now();
+
+let gKeyCache = [];
+let gShortcutCache = [];
+let gClose = false;
+let gOnKeyDown;
+
+	// check lastError to suppress errors showing up in the extensions page
+chrome.runtime.lastError && console.log("Chrome error:", chrome.runtime.lastError);
 
 
 (function() {
-	const AllowedPattern = /[-'!"#$%&()\*+,\.\/:;<=>?@\[\\\]\^_`{|}~ \w]/,
-		ShortcutModifier = gIsMac ? "ctrlKey" : "altKey";
+	const AllowedPattern = /[-'!"#$%&()\*+,\.\/:;<=>?@\[\\\]\^_`{|}~ \w]/;
 
 
 	gOnKeyDown = function(
@@ -37,7 +36,11 @@ gPort = chrome.runtime.connect();
 				break;
 
 			default:
-				if (event[ShortcutModifier]) {
+					// we don't know yet which modifier keys were used to open
+					// the popup, but if they're still pressed, they're almost
+					// certainly the ones set in Chrome, so assume any
+					// modifier+key events are for navigating the MRU list
+				if (event.altKey || event.ctrlKey || event.metaKey) {
 					gShortcutCache.push(char);
 				} else if (AllowedPattern.test(char)) {
 					gKeyCache.push(char);
