@@ -49,15 +49,16 @@
 						console.log(`Caught unhandled promise rejection at ${timestamp}: ${event.reason}`);
 						tracker.exception(event.reason, true);
 					} else if (event.preventDefault) {
-						const stack = (event.error && event.error.stack &&
-							event.error.stack.replace(PathPattern, "")) || "";
+						const {error} = event;
+						const stack = (error && error.stack &&
+							error.stack.replace(PathPattern, "")) || "";
 
 						console.log(`Caught unhandled exception at ${timestamp}:\n${stack}`);
-						tracker.exception(event, true);
+						tracker.exception(error, true);
 						event.preventDefault();
 					}
 				} catch (e) {
-					console.log("Error caught in the error handler (oh, the irony!)", e);
+					console.log("Unhandled error in the error handler (oh, the irony!)", e);
 				}
 			}
 

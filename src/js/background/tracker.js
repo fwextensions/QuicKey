@@ -160,9 +160,9 @@ define(function() {
 			try {
 				if (typeof error == "string") {
 					description = error;
-				} else if (error.error && error.error.stack) {
+				} else if (error.stack) {
 						// reduce the noise of the protocol repeating in every URL
-					description = error.error.stack.replace(PathPattern, "").slice(0, MaxStackLength);
+					description = error.stack.replace(PathPattern, "").slice(0, MaxStackLength);
 				} else if (error.message) {
 					description = `${error.message}\n${error.lineno}, ${error.colno}: ${error.filename}`;
 				}

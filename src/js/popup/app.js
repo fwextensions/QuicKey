@@ -217,7 +217,6 @@ define("popup/app", [
 			return matchingItems;
 		},
 
-
 		focusTab: function(
 			tab,
 			unsuspend)
@@ -239,7 +238,8 @@ define("popup/app", [
 				chrome.tabs.update(tab.id, updateData);
 
 					// make sure that tab's window comes forward
-				if (tab.windowId != chrome.windows.WINDOW_ID_CURRENT) {
+				if (!isNaN(tab.windowId) &&
+						tab.windowId !== chrome.windows.WINDOW_ID_CURRENT) {
 					chrome.windows.update(tab.windowId, { focused: true });
 				}
 
