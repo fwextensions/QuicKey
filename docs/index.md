@@ -114,9 +114,9 @@ You can change the <b><kbd>alt</kbd><kbd>A</kbd></b> and <b><kbd>alt</kbd><kbd>S
 
 ## Custom shortcuts and other options
 
-To customize how *QuicKey* behaves, right-click its icon <img src="../img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> and select *Options* from the menu:
+To customize how *QuicKey* behaves, right-click its icon <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> and select *Options* from the menu:
 
-<img src="../img/options-in-menu.png" style="width: 208px;">
+<img src="img/options-in-menu.png" style="width: 208px;">
 
 On the *QuicKey Options* page, you can change the behavior of the <kbd>space</kbd> and <kbd>esc</kbd> keys, hide closed tabs from the search results, and customize many of the keyboard shortcuts described here.
 
