@@ -234,14 +234,11 @@ define("popup/app", [
 					event = "unsuspend";
 				}
 
-					// switch to the selected tab
-				chrome.tabs.update(tab.id, updateData);
+				// make sure that tab's window comes forward
+				chrome.windows.update(tab.windowId, { focused: true });
 
-					// make sure that tab's window comes forward
-				if (!isNaN(tab.windowId) &&
-						tab.windowId !== chrome.windows.WINDOW_ID_CURRENT) {
-					chrome.windows.update(tab.windowId, { focused: true });
-				}
+				// switch to the selected tab
+				chrome.tabs.update(tab.id, updateData);
 
 				this.props.tracker.event(category, event,
 					queryLength ? queryLength : undefined);
@@ -339,6 +336,7 @@ define("popup/app", [
 				if (this.mode == "tabs") {
 					if (item.sessionId) {
 							// this is a closed tab, so restore it
+						chrome.windows.update(chrome.windows.WINDOW_ID_CURRENT, { focused: true });
 						chrome.sessions.restore(item.sessionId);
 						this.props.tracker.event("tabs", "restore");
 					} else {
