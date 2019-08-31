@@ -9,9 +9,8 @@ define([
 
 
 	return shared("trackers", function() {
-			// create a separate tracker for the background and popup pages, so
-			// the events get tracked on the right page.  pass true to not do an
-			// automatic pageview on creation in this module.
+			// create a separate tracker for the background, popup and options
+			// pages, so the events get tracked with the right URL
 		return {
 			background: new Tracker({
 				id: TrackerID,

@@ -234,11 +234,17 @@ define("popup/app", [
 					event = "unsuspend";
 				}
 
-				// make sure that tab's window comes forward
-				chrome.windows.update(tab.windowId, { focused: true });
-
-				// switch to the selected tab
-				chrome.tabs.update(tab.id, updateData);
+					// bring the tab's window forward *before* focusing the tab,
+					// since activating the window can sometimes put keyboard
+					// focus on the very first tab button on macOS 12.14 (could
+					// never repro on 12.12).  then focus the tab, which should
+					// fix any focus issues.
+				cp.windows.update(tab.windowId, { focused: true })
+					.then(() => cp.tabs.update(tab.id, updateData))
+					.catch(error => {
+						this.props.tracker.exception(error);
+						log(error);
+					});
 
 				this.props.tracker.event(category, event,
 					queryLength ? queryLength : undefined);

@@ -164,7 +164,11 @@ define(function() {
 						// reduce the noise of the protocol repeating in every URL
 					description = error.stack.replace(PathPattern, "").slice(0, MaxStackLength);
 				} else if (error.message) {
-					description = `${error.message}\n${error.lineno}, ${error.colno}: ${error.filename}`;
+					const location = error.lineno
+						? `\n${error.lineno}, ${error.colno}: ${error.filename}`
+						: "";
+
+					description = `${error.message}${location}`;
 				}
 
 				this.send("exception", {

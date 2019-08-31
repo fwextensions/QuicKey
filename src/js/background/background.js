@@ -321,16 +321,5 @@ require([
 		.then(() => gInstalledPromise)
 		.then(({reason, previousVersion}) => {
 			backgroundTracker.event("extension", reason, previousVersion);
-
-			if (reason == "update" && !lastUsedVersion) {
-					// open the options page with an update message for people
-					// who had previously installed QuicKey.  pass an update
-					// param to the page to make it show an upgrade message.
-				chrome.tabs.create({
-					url: chrome.extension.getURL("options.html?update")
-				});
-				backgroundTracker.event("extension", "open-options");
-DEBUG && console.log("== updated and opened options");
-			}
 		});
 });
