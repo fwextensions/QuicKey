@@ -305,7 +305,7 @@ module.exports = function(grunt) {
 		manifest.content_security_policy = manifest.content_security_policy.replace("'unsafe-eval' ", "");
 
 		manifest.browser_action.default_title = manifest.name =
-			`${manifest.short_name} OUT ${new Date().toLocaleString()}`;
+			`${manifest.short_name} BUILD ${new Date().toLocaleString()}`;
 
 		grunt.file.write(buildManifestPath, JSON.stringify(manifest, null, "\t"));
 	});
