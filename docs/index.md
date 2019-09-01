@@ -214,7 +214,7 @@ When first installed, *QuicKey* asks for these permissions:
 
     *QuicKey* uses this permission to let you search the titles and URLs of your bookmarked pages. It will never change your bookmarks.
 
-*QuicKey* can't access or manipulate the content of any pages you visit and doesn't transmit any information other than some anonymized Google Analytics usage metrics.
+*QuicKey* can't access or manipulate the content of any pages you visit and doesn't transmit any information other than some anonymized diagnostic data.
 
 If you right-click the *QuicKey* icon on the toolbar, there's a message saying *Can't read or change site's data*, which is a bit misleading, since it can't read or change *any* site's data, not just the current one.
 

@@ -342,7 +342,6 @@ define("popup/app", [
 				if (this.mode == "tabs") {
 					if (item.sessionId) {
 							// this is a closed tab, so restore it
-						chrome.windows.update(chrome.windows.WINDOW_ID_CURRENT, { focused: true });
 						chrome.sessions.restore(item.sessionId);
 						this.props.tracker.event("tabs", "restore");
 					} else {
