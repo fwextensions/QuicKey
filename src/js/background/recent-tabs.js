@@ -414,16 +414,20 @@ DEBUG && console.log("=== updateAll");
 DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabIndex, titleOrURL(data.tabsByID[previousTabID]));
 				newData.previousTabIndex = previousTabIndex;
 
-				return cp.tabs.update(previousTabID, { active: true })
+					// we don't start the promise chain with windows.update
+					// because we want to call it in a function so that if the
+					// previous tab doesn't exist, it'll throw an exception and
+					// we can handle it in the catch() below, instead of having
+					// to duplicate the error handling code outside the chain.
+				return Promise.resolve()
 					.then(function() {
 							// if the previous tab's data is not in tabsByID,
-							// this throws an exception that will be caught
+							// this will throw an exception that will be caught
 							// below and the bad tab ID will be removed
-						const previousWindowID = data.tabsByID[previousTabID].windowId;
-
-						if (previousWindowID != chrome.windows.WINDOW_ID_CURRENT) {
-							return cp.windows.update(previousWindowID, { focused: true });
-						}
+						return cp.windows.update(data.tabsByID[previousTabID].windowId, { focused: true })
+					})
+					.then(function() {
+						return cp.tabs.update(previousTabID, { active: true });
 					})
 					.catch(function(error) {
 							// we got an error either because the previous

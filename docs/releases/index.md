@@ -8,6 +8,13 @@ comments: true
 # Release history
 
 
+## 1.1.1 - 2019-08-31
+
+### Fixed
+
+* On some versions of macOS, using the menu to focus a tab would sometimes put keyboard focus on the first tab in the window, instead of the selected tab.
+  
+
 ## 1.1.0 - 2019-06-09
 
 ### Added

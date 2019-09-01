@@ -1,10 +1,6 @@
-/node_modules
 /build/build.txt
 /build/rjs
 /build/out
-/keys
-/test
-/To do.md
-/release
-/.idea
+/node_modules
 /package-lock.json
+/release
