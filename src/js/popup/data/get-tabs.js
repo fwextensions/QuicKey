@@ -32,6 +32,28 @@ define([
 	}
 
 
+	const indexDuplicateTitles = (() => {
+		const windows = {};
+
+		return tab => {
+			const {title, windowId} = tab;
+			const window = (windows[windowId] = (windows[windowId] || {}));
+			const tabsWithSameTitle = (window[title] = window[title] || []);
+			const {length} = tabsWithSameTitle;
+
+			if (length) {
+				if (length == 1) {
+					tabsWithSameTitle[0].title = `1) ${title}`;
+				}
+
+				tab.title = `${length + 1}) ${title}`;
+			}
+
+			tabsWithSameTitle.push(tab);
+		}
+	})();
+
+
 	return function getTabs(
 		tabsPromise)
 	{
@@ -48,12 +70,8 @@ define([
 					// return a normal active tab in Chrome pre-65.  default to
 					// an empty object so the .id access below won't throw
 					// an exception.
-				var activeTab = activeTabs[0] || {},
-					match;
-
-					// remove the active tab from the array so it doesn't show up in
-					// the results, making it clearer if you have duplicate tabs open
-				_.remove(tabs, { id: activeTab.id });
+				const activeTab = activeTabs[0] || {};
+				let match;
 
 				tabs.forEach(function(tab) {
 					addURLs(tab);
@@ -73,7 +91,17 @@ define([
 							tab.title = decode(match[1]);
 						}
 					}
+
+					indexDuplicateTitles(tab);
 				});
+
+					// remove the active tab from the array so it doesn't show
+					// up in the results, making it clearer if you have duplicate
+					// tabs open.  but do this after processing all the tabs, so
+					// that if the current tab has the same title as another in
+					// the same window, the indexes displayed for the other tabs
+					// will be correct.
+				_.remove(tabs, { id: activeTab.id });
 
 				return tabs;
 			});
