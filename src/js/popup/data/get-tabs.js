@@ -32,31 +32,41 @@ define([
 	}
 
 
-	const indexDuplicateTitles = (() => {
-		const windows = {};
-
-		return tab => {
-			const {title, windowId} = tab;
-			const window = (windows[windowId] = (windows[windowId] || {}));
-			const tabsWithSameTitle = (window[title] = window[title] || []);
-			const {length} = tabsWithSameTitle;
-
-			if (length) {
-				if (length == 1) {
-					tabsWithSameTitle[0].title = `1) ${title}`;
-				}
-
-				tab.title = `${length + 1}) ${title}`;
-			}
-
-			tabsWithSameTitle.push(tab);
-		}
-	})();
-
-
 	return function getTabs(
 		tabsPromise)
 	{
+		let tabsByTitle = {};
+
+
+		function indexDuplicateTitles(
+			tab)
+		{
+				// don't include closed tabs, because there's no sense in which
+				// they have a left to right index
+			if (typeof tab.sessionId == "undefined") {
+				const {title, displayURL} = tab;
+					// the domain has already been stripped out of displayURL and
+					// if the URL doesn't contain "/", [0] will be the whole URL
+				const domainAndTitle = displayURL.split("/")[0] + title;
+				const tabsWithSameTitle = (tabsByTitle[domainAndTitle] =
+					tabsByTitle[domainAndTitle] || []);
+				const {length} = tabsWithSameTitle;
+
+				if (length) {
+					if (length == 1) {
+							// go back and set the titleIndex on the first tab,
+							// now that we know other tabs have the same title
+						tabsWithSameTitle[0].titleIndex = length;
+					}
+
+					tab.titleIndex = length + 1;
+				}
+
+				tabsWithSameTitle.push(tab);
+			}
+		}
+
+
 		return Promise.all([
 			tabsPromise,
 			cp.tabs.query({
@@ -102,6 +112,9 @@ define([
 					// the same window, the indexes displayed for the other tabs
 					// will be correct.
 				_.remove(tabs, { id: activeTab.id });
+
+					// make sure this index of tabs gets GC'd
+				tabsByTitle = null;
 
 				return tabs;
 			});
