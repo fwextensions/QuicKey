@@ -195,8 +195,8 @@ input.search-box::-webkit-search-cancel-button {
     height: 1.5em;
     top: -0.1em;
     background: #efefef;
-    border-radius: 50%;
-    padding: .1em 0.4em 0 0.4em;
+    border-radius: .75em;
+    padding: .05em 0.4em 0 0.4em;
     margin: 0 .5em 0 0;
     display: inline-block;
     position: relative;
