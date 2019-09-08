@@ -43,11 +43,10 @@ define([
 	return function MatchedString(
 		props)
 	{
-		return <div
-			className={props.className}
+		return <span
 			data-score={props.score}
 		>
 			{wrapMatches(props.query, props.text, props.hitMask)}
-		</div>
+		</span>
 	}
 });

@@ -11,13 +11,13 @@ define([
 	React,
 	_
 ) {
-	const MaxTitleLength = 70,
-		MaxURLLength = 75,
-		MinMouseMoveCount = 1,
-		SuspendedFaviconOpacity = .5,
-		FaviconURL = "chrome://favicon/";
+	const MaxTitleLength = 70;
+	const MaxURLLength = 75;
+	const MinMouseMoveCount = 1;
+	const SuspendedFaviconOpacity = .5;
+	const FaviconURL = "chrome://favicon/";
 
-	var IsDevMode = false;
+	let IsDevMode = false;
 
 
 	cp.management.getSelf()
@@ -26,14 +26,14 @@ define([
 		});
 
 
-	var ResultsListItem = React.createClass({
+	const ResultsListItem = React.createClass({
 		mouseMoveCount: 0,
 
 
 		onClick: function(
 			event)
 		{
-			var item = this.props.item;
+			const {item} = this.props;
 
 			if (IsDevMode && event.altKey) {
 					// copy some debug info to the clipboard
@@ -63,7 +63,7 @@ define([
 		onMouseMove: function(
 			event)
 		{
-			var props = this.props;
+			const {props} = this;
 
 			if ((props.selectedIndex > 0 || this.mouseMoveCount > MinMouseMoveCount)
 					&& !props.isSelected) {
@@ -89,7 +89,7 @@ define([
 		onMouseEnter: function(
 			event)
 		{
-			var props = this.props;
+			const {props} = this;
 
 			if (props.selectedIndex > 0 || this.mouseMoveCount > MinMouseMoveCount) {
 				props.setSelectedIndex(props.index);
@@ -99,26 +99,24 @@ define([
 
 		render: function()
 		{
-			var props = this.props,
-				item = props.item,
-				query = props.query,
-				scores = item.scores,
-				hitMasks = item.hitMasks,
-				tooltip = [
-					item.title.length > MaxTitleLength ? item.title : "",
-					item.displayURL.length > MaxURLLength ? item.displayURL : ""
-				].join("\n"),
-				className = [
-					"results-list-item",
-					props.mode,
-					(props.isSelected ? "selected" : ""),
-					(item.unsuspendURL ? "suspended" : ""),
-					(item.incognito ? "incognito" : ""),
-					(item.sessionId ? "closed" : "")
-				].join(" "),
-				faviconStyle = {
-					backgroundImage: "url(" + item.faviconURL + ")"
-				};
+			const {props} = this;
+			const {item, query} = props;
+			const {scores, hitMasks, title, displayURL, titleIndex} = item;
+			const className = [
+				"results-list-item",
+				props.mode,
+				(props.isSelected ? "selected" : ""),
+				(item.unsuspendURL ? "suspended" : ""),
+				(item.incognito ? "incognito" : ""),
+				(item.sessionId ? "closed" : "")
+			].join(" ");
+			const faviconStyle = {
+				backgroundImage: "url(" + item.faviconURL + ")"
+			};
+			let tooltip = [
+				title.length > MaxTitleLength ? title : "",
+				displayURL.length > MaxURLLength ? displayURL : ""
+			].join("\n");
 
 			if (IsDevMode) {
 				tooltip = _.toPairs(item.scores).concat([["recentBoost", item.recentBoost], ["id", item.id]])
@@ -149,18 +147,26 @@ define([
 				<span className="favicon"
 					style={faviconStyle}
 				/>
-				<MatchedString className="title"
-					query={query}
-					text={item.title}
-					score={scores.title}
-					hitMask={hitMasks.title}
-				/>
-				<MatchedString className="url"
-					query={query}
-					text={item.displayURL}
-					score={scores.displayURL}
-					hitMask={hitMasks.displayURL}
-				/>
+				<div className="title">
+					{titleIndex &&
+						<div className="title-index"
+							title="Position among tabs with the same title"
+						>{titleIndex}</div>}
+					<MatchedString
+						query={query}
+						text={title}
+						score={scores.title}
+						hitMask={hitMasks.title}
+					/>
+				</div>
+				<div className="url">
+					<MatchedString
+						query={query}
+						text={displayURL}
+						score={scores.displayURL}
+						hitMask={hitMasks.displayURL}
+					/>
+				</div>
 				<button className="close-button"
 					title="Close tab"
 					onClick={this.onClose}

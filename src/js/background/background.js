@@ -4,6 +4,7 @@ const MaxPopupLifetime = 450;
 const TabActivatedOnStartupDelay = 750;
 const TabRemovedDelay = 1000;
 const MinTabDwellTime = 750;
+const RestartDelay = 10 * 1000;
 const IconPaths = {
 	path: {
 		"19": "img/icon-19.png",
@@ -269,12 +270,24 @@ require([
 
 
 	chrome.runtime.onUpdateAvailable.addListener(details => {
+		function restartExtension()
+		{
+			if (!popupIsOpen) {
+DEBUG && console.log("=== reloading");
+				chrome.runtime.reload();
+			} else {
+				setTimeout(restartExtension, RestartDelay);
+			}
+		}
+
 		try {
 			backgroundTracker.event("extension", "update-available",
 				details && details.version);
 		} catch (e) {
 			console.log(e);
 		}
+
+		restartExtension();
 	});
 
 

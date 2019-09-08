@@ -173,6 +173,11 @@ You can move tabs to the left or right of the current tab, making it easy to pul
 Include SHIFT in the shortcut to also unsuspend the tab while moving it. The CTRL key should be used on both Windows and macOS. Note that you cannot move tabs between normal and incognito windows.
 
 
+★ Tabs with identical titles
+
+A tab that has the same title as other open tabs will display a number to indicate its left-to-right position among those other tabs.  For instance, if you open tabs for two different Google Drive accounts, they'll both be titled "My Drive - Google Drive".  But the one on the left will show a "1" next to its title in the menu and the one on the right will show a "2".  This makes it easier for you to select the tab you want when you know how they're organized in your window.
+
+
 ★ Search bookmarks
 
 To find a bookmark, type "/b" in the search box, then a space, and then part of the bookmark's name or URL.
