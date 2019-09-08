@@ -325,6 +325,8 @@ module.exports = function(grunt) {
 
 		return webstore.fetchToken()
 			.then(token => {
+				console.log(`Fetched webstore token (${token}).`);
+
 				return webstore.uploadExisting(zipStream, token)
 					.then((response) => {
 						if (response.uploadState == "SUCCESS") {
