@@ -149,7 +149,7 @@ input.search-box::-webkit-search-cancel-button {
 	opacity: 0.4;
 }
 
-.results-list-item div {
+.results-list-item div.title, .results-list-item div.url {
 	width: 100%;
 	height: 19px;
 	text-overflow: ellipsis;
@@ -186,6 +186,26 @@ input.search-box::-webkit-search-cancel-button {
 	opacity: 0.45;
 }
 
+.results-list-item div.title-index {
+    font-size: 0.75em;
+    font-weight: bold;
+    text-align: center;
+    color: #666;
+    min-width: 1.5em;
+    height: 1.5em;
+    top: -0.1em;
+    background: #efefef;
+    border-radius: .75em;
+    padding: .05em 0.4em 0 0.4em;
+    margin: 0 .5em 0 0;
+    display: inline-block;
+    position: relative;
+}
+
+.results-list-item.selected div.title-index {
+	background: #fafafa;
+}
+
 .results-list-item.tabs.selected:not(.closed):hover {
 	padding-right: 36px;
 }
@@ -208,6 +228,7 @@ input.search-box::-webkit-search-cancel-button {
 	background-color: transparent;
 	border: none;
 	opacity: .6;
+	border-radius: 50%;
 	position: absolute;
 	display: block;
 }
