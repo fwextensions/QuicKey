@@ -2,6 +2,10 @@
 
 # *QuicKey*
 
+[![Rating][rating-badge]][rating]
+[![Version][version-badge]][version]
+
+
 #### *QuicKey* lets you navigate all of your Chrome tabs by typing just part of a page's title or URL.  No mouse needed!
 
   * Press <b><kbd>alt</kbd><kbd>Q</kbd></b> (<b><kbd>ctrl</kbd><kbd>Q</kbd></b> on macOS).
@@ -88,7 +92,7 @@ To close the selected tab, press <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd
 
 <img src="docs/img/close-button.png" width="624" alt="Close button">
 
-When you open *QuicKey*, the 25 most recently closed tabs are listed below the recent tabs and shown in a faded state with an <img src="docs/img/clear.svg" height="19"> icon.  They are also returned when you type a query, though they're scored lower than open tabs:
+When you open *QuicKey*, the 25 most recently closed tabs are listed below the recent tabs and shown in a faded state with a <img src="docs/img/history.svg" height="19"> icon.  They are also returned when you type a query, though they're scored lower than open tabs:
 
 <img src="docs/img/closed-tab.png" width="624" alt="Closed tab">
 
@@ -177,3 +181,9 @@ If you find a bug in *QuicKey* or have a suggestion for a new feature, please [c
 The <img src="docs/img/search.svg" height="13"> and <img src="docs/img/clear.svg" height="16"> icons are from the [Octicons](https://octicons.github.com/) set, used under the [MIT License](http://opensource.org/licenses/MIT).
 
 The string ranking algorithm is modeled on [Quicksilver](https://github.com/quicksilver/Quicksilver/blob/master/Quicksilver/Code-QuickStepCore/QSense.m)'s code.
+
+
+[rating-badge]: https://img.shields.io/chrome-web-store/stars/ldlghkoiihaelfnggonhjnfiabmaficg.svg?style=flat-square&label=Rating
+[rating]: https://chrome.google.com/webstore/detail/quickey-–-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg
+[version-badge]: https://img.shields.io/chrome-web-store/v/ldlghkoiihaelfnggonhjnfiabmaficg.svg?style=flat-square&label=Version
+[version]: https://chrome.google.com/webstore/detail/quickey-–-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg

@@ -202,6 +202,10 @@ input.search-box::-webkit-search-cancel-button {
     position: relative;
 }
 
+.results-list-item.selected div.title-index {
+	background: #fafafa;
+}
+
 .results-list-item.tabs.selected:not(.closed):hover {
 	padding-right: 36px;
 }

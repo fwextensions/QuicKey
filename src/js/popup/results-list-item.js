@@ -148,7 +148,10 @@ define([
 					style={faviconStyle}
 				/>
 				<div className="title">
-					{titleIndex && <div className="title-index">{titleIndex}</div>}
+					{titleIndex &&
+						<div className="title-index"
+							title="Position among tabs with the same title"
+						>{titleIndex}</div>}
 					<MatchedString
 						query={query}
 						text={title}

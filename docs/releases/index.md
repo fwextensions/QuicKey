@@ -8,6 +8,13 @@ comments: true
 # Release history
 
 
+## 1.1.2 - 2019-09-07
+
+### Added
+
+* A tab that has the same title as other open tabs will display a number to indicate its left-to-right position among those other tabs, making it easier to find the tab you want.
+
+
 ## 1.1.1 - 2019-08-31
 
 ### Fixed
