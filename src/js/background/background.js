@@ -144,13 +144,35 @@ require([
 			// track whether the user is navigating farther back in the stack
 		const label = isNormalIcon ? "single" : "repeated";
 
-		if (command == "1-previous-tab") {
-			recentTabs.navigate(-1);
-			backgroundTracker.event("recents", "previous", label);
-		} else if (command == "2-next-tab") {
-			recentTabs.navigate(1);
-			backgroundTracker.event("recents", "next", label);
+		switch (command) {
+			case "1-previous-tab":
+				recentTabs.navigate(-1);
+				backgroundTracker.event("recents", "previous", label);
+				break;
+
+			case "2-next-tab":
+				recentTabs.navigate(1);
+				backgroundTracker.event("recents", "next", label);
+				break;
+
+			case "30-toggle-recent-tabs":
+				toggleRecentTabs(true);
+				break;
 		}
+	}
+
+
+	function toggleRecentTabs(
+		fromShortcut)
+	{
+			// pass true so navigate() knows this event is coming from a double
+			// alt-Q or an alt-Z.  set tabChangedFromToggle so that the
+			// onActivated listener calls add immediately instead of debouncing
+			// it.  otherwise, quickly repeated double presses would be ignored
+			// because the tab list wouldn't have been updated yet.
+		tabChangedFromToggle = true;
+		recentTabs.navigate(-1, true);
+		backgroundTracker.event("recents", fromShortcut ? "toggle-shortcut" : "toggle");
 	}
 
 
@@ -251,15 +273,8 @@ require([
 			popupIsOpen = false;
 
 			if (!closedByEsc && Date.now() - connectTime < MaxPopupLifetime) {
-					// pass true so navigate() knows this event is coming from a
-					// double press of the shortcut.  set tabChangedFromToggle
-					// so that the onActivated listener calls add immediately
-					// instead of debouncing it.  otherwise, quickly repeated
-					// double presses would be ignored because the tab list
-					// wouldn't have been updated yet.
-				tabChangedFromToggle = true;
-				recentTabs.navigate(-1, true);
-				backgroundTracker.event("recents", "toggle");
+					// this was a double-press of alt-Q, so toggle the tabs
+				toggleRecentTabs();
 			} else {
 					// send a background "pageview", since the popup is now closed,
 					// so that GA will track the time the popup was open

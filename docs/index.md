@@ -80,8 +80,10 @@ Opening *QuicKey* displays a list of the last 50 tabs you've visited, in order o
 
 <p style="margin-bottom: 0;">&nbsp;</p>
 
-  * **To switch to the previously active tab:**
-      * Quickly double-press the <b><kbd>alt</kbd><kbd>Q</kbd></b> or <b><kbd>ctrl</kbd><kbd>Q</kbd></b> shortcut.
+  * **To switch between the two most recent tabs:**
+      * Press <b><kbd>alt</kbd><kbd>Z</kbd></b> (<b><kbd>ctrl</kbd><kbd>Z</kbd></b> on macOS). 
+          * **Or:**      
+      * Quickly double-press <b><kbd>alt</kbd><kbd>Q</kbd></b> (<b><kbd>ctrl</kbd><kbd>Q</kbd></b> on macOS).
 
 <p style="margin-bottom: 0;">&nbsp;</p>
 
@@ -103,16 +105,16 @@ Opening *QuicKey* displays a list of the last 50 tabs you've visited, in order o
 
 ![MRU tab list](img/mru-menu.gif)
 
-Which shortcuts to use is up to you.  Double-pressing <b><kbd>alt</kbd><kbd>Q</kbd></b> is nice because there's just one shortcut and you can switch between the two most recently used tabs as quickly as you want.  (You can also double-click the *QuicKey* icon to toggle between the most recent tabs.)
+Which shortcuts to use is up to you.  Double-pressing <b><kbd>alt</kbd><kbd>Q</kbd></b> is nice because there's just one shortcut to remember, while <b><kbd>alt</kbd><kbd>Z</kbd></b> lets you switch between the two most recently used tabs very rapidly.  (You can also double-click the *QuicKey* icon to toggle between the most recent tabs.)
 
-<b><kbd>alt</kbd><kbd>A</kbd></b> lets you quickly navigate to even older tabs, though the timing can sometimes be finicky.
+<b><kbd>alt</kbd><kbd>A</kbd></b> lets you navigate to even older tabs, though the timing can sometimes be finicky.
 
 Selecting from the MRU menu by holding down the <kbd>alt</kbd> key provides the closest experience to a typical <b><kbd>alt</kbd><kbd>tab</kbd></b> menu, but you need to use <kbd>W</kbd> instead of <kbd>tab</kbd> to navigate while the menu is open (due to limitations in the Chrome platform).
 
-You can change the <b><kbd>alt</kbd><kbd>A</kbd></b> and <b><kbd>alt</kbd><kbd>S</kbd></b> shortcuts by right-clicking the *QuicKey* icon and selecting *Options*.  Then scroll down and click *Change Chrome shortcuts*. Look for the *Switch to the previous/next tab* shortcuts.
+You can change any of these shortcuts by right-clicking the *QuicKey* icon and selecting *Options*.  Then scroll down and click *Change Chrome shortcuts*. Look for the *Switch to the previous/next tab* shortcuts.
 
 
-## Custom shortcuts and other options
+## Customize shortcuts and other options
 
 To customize how *QuicKey* behaves, right-click its icon <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> and select *Options* from the menu:
 
@@ -120,7 +122,7 @@ To customize how *QuicKey* behaves, right-click its icon <img src="img/icon-38.p
 
 On the *QuicKey Options* page, you can change the behavior of the <kbd>space</kbd> and <kbd>esc</kbd> keys, hide closed tabs from the search results, and customize many of the keyboard shortcuts described here.
 
-If you change the keyboard shortcut for showing the *QuicKey* menu to something other than the default <b><kbd>alt</kbd><kbd>Q</kbd></b> or if you have a non-US keyboard, you'll probably want to also change the key that's used to navigate down the list of recently used tabs (which defaults to <kbd>W</kbd>).  For instance, if you change the shortcut to <b><kbd>alt</kbd><kbd>Z</kbd></b>, you might want to change the navigation key to <kbd>X</kbd>, which is right next door.  To change it, go to the *Options* page, click in the first keyboard shortcut picker, and press <kbd>X</kbd>.
+If you change the keyboard shortcut for showing the *QuicKey* menu to something other than the default <b><kbd>alt</kbd><kbd>Q</kbd></b> or if you have a non-US keyboard, you'll probably want to also change the key that's used to navigate down the list of recently used tabs (which defaults to <kbd>W</kbd>).  For instance, if you change the menu shortcut to <b><kbd>alt</kbd><kbd>Z</kbd></b>, you might want to change the navigation key to <kbd>X</kbd>, which is right next door.  To change it, go to the *Options* page, click in the first keyboard shortcut picker, and press <kbd>X</kbd>.
 
 
 ## Close and reopen tabs
@@ -148,7 +150,7 @@ You can move tabs to the left or right of the current tab, making it easy to pul
 Include <kbd>shift</kbd> in the shortcut to also unsuspend the tab while moving it.  The <kbd>ctrl</kbd> key should be used on both Windows and macOS.  Note that you cannot move tabs between normal and incognito windows.
 
 
-## Tabs with identical titles
+## Distinguish tabs with identical titles
 
 A tab that has the same title as other open tabs will display a number to indicate its left-to-right position among those other tabs.  For instance, if you open tabs for two different Google Drive accounts, they'll both be titled *My Drive - Google Drive*.  But the one on the left will show a **1** next to its title in the menu and the one on the right will show a **2**.  This makes it easier for you to select the tab you want when you know how they're organized in your window.   
 

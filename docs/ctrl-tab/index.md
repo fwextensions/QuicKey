@@ -21,7 +21,7 @@ Chrome extensions can't provide this functionality all by themselves, unfortunat
 
 You can use either of the options below, but don't use both.  Following the steps in [Option 1](#option-1) will prevent [Option 2](#option-2) from working correctly.  
 
-Note that with either option, you'll obviously lose the <b><kbd>ctrl</kbd><kbd>tab</kbd></b> and <b><kbd>ctrl</kbd><kbd>shift</kbd><kbd>tab</kbd></b> keyboard shortcuts to move the next or previous tab within the current window.  On Windows and Linux, you can use <b><kbd>ctrl</kbd><kbd>pg dn</kbd> / <kbd>pg up</kbd></b> to move to the next/previous tab, and on macOS you can use <b><kbd>cmd</kbd><kbd>opt</kbd><kbd>→</kbd> / <kbd>←</kbd></b>.
+Note that with either option, you'll obviously lose the <b><kbd>ctrl</kbd><kbd>tab</kbd></b> and <b><kbd>ctrl</kbd><kbd>shift</kbd><kbd>tab</kbd></b> keyboard shortcuts to move the next or previous tab within the current window.  On Windows and Linux, you can still use <b><kbd>ctrl</kbd><kbd>pg dn</kbd> / <kbd>pg up</kbd></b> to move to the next/previous tab, and on macOS you can use <b><kbd>cmd</kbd><kbd>opt</kbd><kbd>→</kbd> / <kbd>←</kbd></b>.
 
 
 ## <a name="option-1"></a>Option 1: Use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to previously used tabs
