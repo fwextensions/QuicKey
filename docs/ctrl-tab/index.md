@@ -19,15 +19,15 @@ Do you wish Chrome had the same <b><kbd>ctrl</kbd><kbd>tab</kbd></b> tab navigat
 
 Chrome extensions can't provide this functionality all by themselves, unfortunately.  With a little work, however, it *is* possible to achieve both these features with *QuicKey*, though the second one requires some additional Windows-only software.  (*QuicKey* does support [keyboard-driven selection](/QuicKey/#mru-gif) of a tab from a menu without any additional setup; it's just that you can't use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> as the shortcut without these workarounds.)
 
-You can use any of the options below, but don't follow the steps in more than one.  If you later change your mind, you can always go back to the *Keyboard shortcuts* screen and click the delete button next to the shortcuts, or change them to something else 
+You can choose one of these <b><kbd>ctrl</kbd><kbd>tab</kbd></b> behaviors:
+
+1. [<b><kbd>ctrl</kbd><kbd>tab</kbd></b> quickly switches between *only* the two most recent tabs](#option-1)
+2. [<b><kbd>ctrl</kbd><kbd>tab</kbd></b> switches to *any* of the recent tabs, but requires a brief pause before you press it again to switch back](#option-2)
+3. [<b><kbd>ctrl</kbd><kbd>tab</kbd></b> switches between the two most recent tabs *or* you can keep holding <kbd>ctrl</kbd> to select a recent tab from a menu (Windows only)](#option-3)
+
+Just don't follow the steps in more than one of these options.  If you later change your mind, you can always go back to the *Keyboard shortcuts* screen and click the delete button next to the shortcuts, or change them to something else 
 
 Note that with any option, you'll naturally lose the <b><kbd>ctrl</kbd><kbd>tab</kbd></b> and <b><kbd>ctrl</kbd><kbd>shift</kbd><kbd>tab</kbd></b> keyboard shortcuts to move the next or previous tab within the current window.  On Windows and Linux, you can still use <b><kbd>ctrl</kbd><kbd>pg dn</kbd> / <kbd>pg up</kbd></b> to move to the next/previous tab, and on macOS you can use <b><kbd>cmd</kbd><kbd>opt</kbd><kbd>→</kbd> / <kbd>←</kbd></b>.
-
-There are three different ways to use the <b><kbd>ctrl</kbd><kbd>tab</kbd></b> shortcut:
-
-1. [<b><kbd>ctrl</kbd><kbd>tab</kbd></b> can quickly switch between *only* the two most recent tabs](#option-1)
-2. [<b><kbd>ctrl</kbd><kbd>tab</kbd></b> can switch to *any* of the recent tabs, but requires a brief pause before it's pressed again to switch back](#option-2)
-3. [<b><kbd>ctrl</kbd><kbd>tab</kbd></b> can switch between the two most recent tabs *or* select a recent tab from a Firefox-style menu (Windows only)](#option-3)
 
 
 ## <a name="option-1"></a>Option 1: Use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch between the two most recent tabs
@@ -110,7 +110,7 @@ Now you can press <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to the previous
 
 ![mru-menu](../img/ctrl-tab-mru.png)
 
-This option provides the closest experience to Firefox.  It lets you quickly press and release <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to the previous tab, while also showing a menu of recent tabs if you hold down <kbd>ctrl</kbd>.
+This option provides the closest experience to Firefox.  It lets you quickly press and release <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to the previous tab, or you can keep holding <kbd>ctrl</kbd> to select from a menu of recent tabs.
 
 1. [Install QuicKey](https://chrome.google.com/webstore/detail/quickey-%E2%80%93-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg).
 
