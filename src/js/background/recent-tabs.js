@@ -411,7 +411,8 @@ DEBUG && console.log("=== updateAll");
 			previousTabID = tabIDs[previousTabIndex];
 
 			if (previousTabID) {
-DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabIndex, titleOrURL(data.tabsByID[previousTabID]));
+DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabIndex, tabIDs.slice(-5), titleOrURL(data.tabsByID[previousTabID]));
+//DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabIndex, titleOrURL(data.tabsByID[previousTabID]));
 				newData.previousTabIndex = previousTabIndex;
 
 					// we don't start the promise chain with windows.update
