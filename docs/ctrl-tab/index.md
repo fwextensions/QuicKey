@@ -71,7 +71,7 @@ That's it!
 Now you can press <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to the previously used tab, and press it again to switch back.  Unlike [Option 2](#option-2) below, you can toggle between *only* the two most recent tabs, but the advantage is you can switch back and forth as quickly as you like. 
 
 
-## <a name="option-2"></a>Option 2: Use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to previously used tabs
+## <a name="option-2"></a>Option 2: Use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to any recently used tab
 
 Follow [steps 1 through 4](#option-1-1) from option 1 above. 
 
@@ -106,7 +106,7 @@ Now you can press <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to the previous
 (You should always be cautious about copying code from a website and running it in DevTools, but even if you don't know JavaScript, it's hopefully clear what the snippet above is doing.  It's calling a private `updateExtensionCommand()` function twice to set <b><kbd>ctrl</kbd><kbd>tab</kbd></b> and <b><kbd>ctrl</kbd><kbd>shift</kbd><kbd>tab</kbd></b> keyboard shortcuts.  The "ldlgh..." string is *QuicKey*'s extension ID, which you can see in its [Chrome webstore link](https://chrome.google.com/webstore/detail/quickey-%E2%80%93-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg), so this code won't affect any other extensions you have installed.)
 
 
-## <a name="option-3"></a>Option 3: Use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to a tab via a menu (Windows only)
+## <a name="option-3"></a>Option 3: Use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to a recent tab via a menu (Windows only)
 
 ![mru-menu](../img/ctrl-tab-mru.png)
 

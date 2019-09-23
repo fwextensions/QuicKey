@@ -53,6 +53,9 @@ function debounce(
 
 	const debouncedFunc = (...args) => {
 		exec = () => {
+				// clear the timer in case we're being called by execute() so
+				// that we don't get called twice
+			clearTimeout(timeout);
 			timeout = null;
 			exec = null;
 
@@ -160,6 +163,7 @@ require([
 			addTab(event);
 		} else {
 			setInvertedIcon();
+console.log("== onTabChanged", event);
 			debouncedAddTab(event);
 		}
 	}
@@ -218,7 +222,8 @@ result && console.log("promise result", result.tabIDs.slice(-5));
 
 				// pass true so navigate() knows this event is coming from a
 				// double alt-Q or an alt-Z
-			recentTabs.navigate(-1, true);
+			recentTabs.toggle();
+//			recentTabs.navigate(-1, true);
 			backgroundTracker.event("recents", fromShortcut ? "toggle-shortcut" : "toggle");
 		});
 
