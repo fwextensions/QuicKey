@@ -25,49 +25,35 @@ let gInstalledPromise = new Promise(resolve => {
 });
 
 
-//function debounce(
-//	func,
-//	wait)
-//{
-//	var timeout;
-//
-//	return function() {
-//		var context = this,
-//			args = arguments;
-//
-//		clearTimeout(timeout);
-//		timeout = setTimeout(function() {
-//			timeout = null;
-//			func.apply(context, args);
-//		}, wait);
-//	};
-//}
-
-
 function debounce(
 	func,
 	wait)
 {
 	let timeout;
 	let exec;
-
 	const debouncedFunc = (...args) => {
 		exec = () => {
 				// clear the timer in case we're being called by execute() so
 				// that we don't get called twice
-			clearTimeout(timeout);
-			timeout = null;
-			exec = null;
+			debouncedFunc.cancel();
+console.log("=== debouncedFunc", ...args);
 
 				// return the result of func, in case we're being called by
 				// execute() and it returns a promise, so the caller can chain it
 			return func.apply(this, args);
 		};
+
+
 		clearTimeout(timeout);
 		timeout = setTimeout(exec, wait);
 	};
 
-	debouncedFunc.cancel = () => clearTimeout(timeout);
+	debouncedFunc.cancel = () => {
+		clearTimeout(timeout);
+		timeout = null;
+		exec = null;
+	};
+
 	debouncedFunc.execute = () => exec && exec();
 
 	return debouncedFunc;
@@ -128,9 +114,7 @@ require([
 	let lastUsedVersion;
 
 
-	function addTab(
-		data)
-	{
+	const addTab = debounce(data => {
 		if (data.tabId) {
 			return cp.tabs.get(data.tabId)
 				.then(recentTabs.add)
@@ -147,25 +131,20 @@ require([
 				// the event parameter is just the tab itself, so add it directly
 			return recentTabs.add(data);
 		}
-	}
-
-	const debouncedAddTab = debounce(addTab, MinTabDwellTime);
+	}, MinTabDwellTime);
 
 
 	function onTabChanged(
 		event)
 	{
-		if (tabChangedFromToggle) {
-				// when we're toggling between tabs, we want to add the tab
-				// immediately because the user chose it, as opposed to
-				// ctrl-tabbing past it
-			tabChangedFromToggle = false;
-			addTab(event);
-		} else {
+		if (!tabChangedFromToggle) {
+				// invert the icon since we're not toggling between the two most
+				// recent tabs
 			setInvertedIcon();
-console.log("== onTabChanged", event);
-			debouncedAddTab(event);
 		}
+
+		tabChangedFromToggle = false;
+		addTab(event);
 	}
 
 
@@ -196,41 +175,21 @@ console.log("== onTabChanged", event);
 	function toggleRecentTabs(
 		fromShortcut)
 	{
-			// set tabChangedFromToggle so that the onActivated listener calls
-			// add() immediately after we navigate below instead of debouncing
-			// it. otherwise, quickly repeated double presses would be ignored
-			// because the tab list wouldn't have been updated yet.
+			// set tabChangedFromToggle so that addTab() doesn't invert the icon
 		tabChangedFromToggle = true;
 
-console.log("================ about to execute");
-			// if there's a debounced onActivated event to be handled, add it
-			// now, so that when we navigate to the "previous" tab below, that'll
-			// be the tab the user started from when they began navigating
-			// backwards into the stack.  otherwise, the debounced add would fire
-			// after we navigate, putting that tab on the top of the stack, even
-			// though a different tab was now active.
-//		let promise = debouncedAddTab.execute();
-//console.log("execute() result", promise);
-//promise = promise || Promise.resolve();
-
-		const promise = debouncedAddTab.execute() || Promise.resolve();
-
-		promise.then((result) => {
-result && console.log("promise result", result.tabIDs.slice(-5));
-// TODO: the problem is previousTabIndex isn't -1 at this point, so when we call navigate(), it'll go -1 from the current value
-// would need to set it to -1 before calling navigate().  get the data and change it?  seems hacky
-
-				// pass true so navigate() knows this event is coming from a
-				// double alt-Q or an alt-Z
-			recentTabs.toggle();
-//			recentTabs.navigate(-1, true);
-			backgroundTracker.event("recents", fromShortcut ? "toggle-shortcut" : "toggle");
-		});
-
-			// pass true so navigate() knows this event is coming from a double
-			// alt-Q or an alt-Z
-//		recentTabs.navigate(-1, true);
-//		backgroundTracker.event("recents", fromShortcut ? "toggle-shortcut" : "toggle");
+			// if there's a debounced addTab() call waiting, fire it now, so
+			// that when we navigate to the "previous" tab below, that'll be the
+			// tab the user started from when they began navigating backwards
+			// into the stack.  otherwise, the debounced add would fire after we
+			// navigate, putting that tab on the top of the stack, even though a
+			// different tab was now active.
+		(addTab.execute() || Promise.resolve())
+			.then(() => {
+				recentTabs.toggle();
+				backgroundTracker.event("recents",
+					fromShortcut ? "toggle-shortcut" : "toggle");
+			});
 	}
 
 

@@ -176,12 +176,12 @@ DEBUG && console.log("updateFromFreshTabs result", result);
 				return;
 			}
 
-DEBUG && console.log("add", tab.id, titleOrURL(tab));
-
 				// make sure the new tab's ID isn't currently in the list and
 				// then push it on the end
 			removeItem(tabIDs, id);
 			tabIDs.push(id);
+
+DEBUG && console.log("add", `${tab.id}|${tab.windowId}`, tabIDs.slice(-5), titleOrURL(tab));
 
 				// copy just the keys we need from the tab object
 			tabData = createRecent(tab, tabsByID[id]);
@@ -412,7 +412,6 @@ DEBUG && console.log("=== updateAll");
 
 			if (previousTabID) {
 DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabIndex, tabIDs.slice(-5), titleOrURL(data.tabsByID[previousTabID]));
-//DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabIndex, titleOrURL(data.tabsByID[previousTabID]));
 				newData.previousTabIndex = previousTabIndex;
 
 					// we don't start the promise chain with windows.update
@@ -479,28 +478,23 @@ DEBUG && console.error(error);
 		count = count || 20;
 
 		cp.storage.local.get(null)
-			.then(function(storage) {
-				var data = storage.data,
-					tabsByID = data.tabsByID;
+			.then(storage => {
+				const {tabsByID, tabIDs} = storage.data;
 
-				Promise.all(data.tabIDs.slice(-count).reverse().map(function(tabID) {
-					return cp.tabs.get(tabID)
-						.catch(function(error) {
-							return tabID;
-						});
-					})
+				Promise.all(
+					tabIDs.slice(-count).reverse().map(tabID =>
+						cp.tabs.get(tabID).catch(() => tabID)
+					)
 				)
-					.then(function(tabs) {
-						tabs.forEach(function(tab) {
-							if (isNaN(tab)) {
-								console.log("%c   ", "font-size: 14px; background: url(" +
-									tab.favIconUrl + ") top center / contain no-repeat",
-									tab.id + ": " + tabsByID[tab.id].lastVisit + ": " + titleOrURL(tab));
-							} else {
-								console.log("MISSING", tab);
-							}
-						});
-					});
+					.then(tabs => tabs.forEach(tab => {
+						if (isNaN(tab)) {
+							console.log("%c   ",
+								`font-size: 14px; background: url(${tab.favIconUrl}) top center / contain no-repeat`,
+								`${tab.id}|${tab.windowId}: ${tabsByID[tab.id].lastVisit}: ${titleOrURL(tab)}`);
+						} else {
+							console.log("MISSING", tab);
+						}
+					}));
 			});
 	}
 
