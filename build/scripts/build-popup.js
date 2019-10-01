@@ -1,19 +1,19 @@
-const ReactDOMServer = require("react-dom/server"),
-	React = require("react"),
-	requirejs = require("requirejs"),
-	fs = require("fs"),
-	_ = require("lodash");
+const ReactDOMServer = require("react-dom/server");
+const React = require("react");
+const requirejs = require("requirejs");
+const fs = require("fs");
+const _ = require("lodash");
 
 
-const ConfigPattern = /(\{[\s\S]+\})/m,
-	Placeholder = "<!-- rendered html -->";
+const ConfigPattern = /({[\s\S]+})/m;
+const RootPattern = /<div id="root">[^<]+(<.+)\s+/m;
 
 
-var configFile = fs.readFileSync("./src/js/require-config.js", "utf8"),
-	currentHTML = fs.readFileSync("./src/popup.html", "utf8"),
-	templateHTML = fs.readFileSync("./build/mock/popup.html", "utf8"),
-	match = configFile.match(ConfigPattern),
-	config;
+const configFile = fs.readFileSync("./src/js/require-config.js", "utf8");
+const currentPopupHTML = fs.readFileSync("./src/popup.html", "utf8");
+const currentReactMarkup = currentPopupHTML.match(RootPattern)[1];
+const match = configFile.match(ConfigPattern);
+let config;
 
 
 if (!match) {
@@ -54,25 +54,22 @@ requirejs([
 ], function(
 	App
 ) {
-	const html = ReactDOMServer.renderToString(React.createElement(App, {
+	const newReactMarkup = ReactDOMServer.renderToString(React.createElement(App, {
 		initialQuery: "",
 		initialShortcuts: [],
 		platform: "win",
 		tracker: {
-			set: function() {
-			}
+			set: function() {}
 		},
 		port: {}
 	}));
-		// insert the rendered HTML into the root node in the template
-		// popup.html file
-	const newHTML = templateHTML.replace(Placeholder, html);
-
 
 		// we only want to change the source file if the rendered markup has changed
-	if (newHTML !== currentHTML) {
+	if (newReactMarkup !== currentReactMarkup) {
+		const newPopupHTML = currentPopupHTML.replace(currentReactMarkup, newReactMarkup);
+
+		fs.writeFileSync("./src/popup.html", newPopupHTML, "utf8");
 		console.log("\n\n===== popup.html updated =====\n\n");
-		fs.writeFileSync("./src/popup.html", newHTML, "utf8");
 	} else {
 		console.log("\n\n===== no update needed =====\n\n");
 	}
