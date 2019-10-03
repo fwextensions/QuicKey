@@ -116,7 +116,7 @@ You can change any of these shortcuts by right-clicking the *QuicKey* icon and s
 
 ## Customize shortcuts and other options
 
-To customize how *QuicKey* behaves, right-click its icon <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> and select *Options* from the menu:
+To customize how *QuicKey* behaves, click the <img src="img/gear.svg" style="height: 1em"> icon in the menu, or right-click its toolbar icon <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> and select *Options* from the menu:
 
 <img src="img/options-in-menu.png" style="width: 208px;">
 
@@ -240,6 +240,6 @@ View the changes in [previous releases](./releases).
 
 ## Credits
 
-The <img src="img/search.svg" style="height: 1em"> and <img src="img/clear.svg" style="height: 1em; vertical-align: middle;"> icons are from the [Octicons](https://octicons.github.com/) set, used under the [MIT License](http://opensource.org/licenses/MIT).  The <img src="img/history.svg" style="height: 1em"> icon is from the [Material Icons](https://material.io/tools/icons/) set, used under the [Apache License](https://www.apache.org/licenses/LICENSE-2.0.html).
+The <img src="img/gear.svg" style="height: 1em">, <img src="img/search.svg" style="height: 1em"> and <img src="img/clear.svg" style="height: 1em; vertical-align: middle;"> icons are from the [Octicons](https://octicons.github.com/) set, used under the [MIT License](http://opensource.org/licenses/MIT).  The <img src="img/history.svg" style="height: 1em"> icon is from the [Material Icons](https://material.io/tools/icons/) set, used under the [Apache License](https://www.apache.org/licenses/LICENSE-2.0.html).
 
 The string ranking algorithm is modeled on [Quicksilver](https://github.com/quicksilver/Quicksilver/blob/master/Quicksilver/Code-QuickStepCore/QSense.m)'s code.

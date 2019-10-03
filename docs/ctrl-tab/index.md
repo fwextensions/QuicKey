@@ -21,16 +21,16 @@ Chrome extensions can't provide this functionality all by themselves, unfortunat
 
 You can choose one of these <b><kbd>ctrl</kbd><kbd>tab</kbd></b> behaviors:
 
-1. [<b><kbd>ctrl</kbd><kbd>tab</kbd></b> quickly switches between *only* the two most recent tabs](#option-1)
+1. [<b><kbd>ctrl</kbd><kbd>tab</kbd></b> instantly switches between *only* the two most recent tabs](#option-1)
 2. [<b><kbd>ctrl</kbd><kbd>tab</kbd></b> switches to *any* of the recent tabs, but requires a brief pause before you press it again to switch back](#option-2)
 3. [<b><kbd>ctrl</kbd><kbd>tab</kbd></b> switches between the two most recent tabs *or* you can keep holding <kbd>ctrl</kbd> to select a recent tab from a menu (Windows only)](#option-3)
 
-Just don't follow the steps in more than one of these options.  If you later change your mind, you can always go back to the *Keyboard shortcuts* screen and click the delete button next to the shortcuts, or change them to something else 
+Just don't follow the steps in more than one of these options.  If you later change your mind, you can always go back to the *Keyboard shortcuts* screen and click the clear button next to the shortcuts, or change them to something else 
 
 Note that with any option, you'll naturally lose the <b><kbd>ctrl</kbd><kbd>tab</kbd></b> and <b><kbd>ctrl</kbd><kbd>shift</kbd><kbd>tab</kbd></b> keyboard shortcuts to move the next or previous tab within the current window.  On Windows and Linux, you can still use <b><kbd>ctrl</kbd><kbd>pg dn</kbd> / <kbd>pg up</kbd></b> to move to the next/previous tab, and on macOS you can use <b><kbd>cmd</kbd><kbd>opt</kbd><kbd>→</kbd> / <kbd>←</kbd></b>.
 
 
-## <a name="option-1"></a>Option 1: Use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch between the two most recent tabs
+## <a name="option-1"></a>Option 1: Use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to instantly switch between the two most recent tabs
 
 Chrome's *Keyboard shortcuts* screen normally blocks you from using <b><kbd>ctrl</kbd><kbd>tab</kbd></b> as a shortcut, but it is possible to use the Chrome developer tools to work around this limitation. (This is also much simpler and more reliable than other approaches that require messing around with Chrome's preferences files.)
 

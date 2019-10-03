@@ -64,7 +64,8 @@ module.exports = function(grunt) {
 	};
 	const buildManifestPath = "build/out/manifest.json";
 	const devPopupPath = "src/popup.html";
-	const buildPopupPath = "build/out/popup.html";
+	const prodPopupPath = "build/prod/popup.html";
+	const outPopupPath = "build/out/popup.html";
 	const extensionInfo = {
 		quickey: {
 			fullName: "QuicKey – The quick tab switcher",
@@ -226,6 +227,8 @@ module.exports = function(grunt) {
 			}
 		}
 	};
+	const rootPattern = /<div id="root">[^<]+(<.+)\s+/m;
+	const popupPlaceholder = "<!-- rendered html -->";
 
 	grunt.initConfig(config);
 
@@ -236,16 +239,13 @@ module.exports = function(grunt) {
 		console.log("Started at", new Date().toLocaleString());
 	});
 
-	grunt.registerTask("checkPopup", function() {
+	grunt.registerTask("buildPopup", function() {
 		const devPopup = grunt.file.read(devPopupPath);
-		const devBody = devPopup.slice(devPopup.indexOf("<body>"));
-		const buildPopup = grunt.file.read(buildPopupPath);
-		const buildBody = buildPopup.slice(buildPopup.indexOf("<body>"));
+		const devBody = devPopup.match(rootPattern)[1];
+		const outPopup = grunt.file.read(prodPopupPath).replace(popupPlaceholder, devBody);
 
-		if (devBody !== buildBody) {
-			grunt.fail.fatal("Source and build popup.html don't match:\n\nSource:\n" +
-				devBody + "\n\nBuild:" + buildBody);
-		}
+			// write out the built popup template with the latest React code
+		grunt.file.write(outPopupPath, outPopup);
 	});
 
 	function incrementVersion(
@@ -357,7 +357,7 @@ module.exports = function(grunt) {
 			"sync:out",
 			"copy:" + target,
 			"cleanupManifest",
-			"checkPopup",
+			"buildPopup",
 			"requirejs",
 			"babel",
 			"sync:build",
