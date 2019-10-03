@@ -152,10 +152,10 @@ define(function() {
 
 
 		exception: function(
-			error,
+			error = "Generic error",
 			fatal)
 		{
-			let description = "Generic error";
+			let description;
 
 			try {
 				if (typeof error == "string") {

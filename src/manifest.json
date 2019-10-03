@@ -56,6 +56,13 @@
 				"mac": "MacCtrl+S"
 			},
 			"description": "Switch to the next tab"
+		},
+		"30-toggle-recent-tabs": {
+			"suggested_key": {
+				"default": "Alt+Z",
+				"mac": "MacCtrl+Z"
+			},
+			"description": "Switch between the two most recent tabs"
 		}
 	},
 	"offline_enabled": true
