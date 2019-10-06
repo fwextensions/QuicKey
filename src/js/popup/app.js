@@ -217,6 +217,7 @@ define("popup/app", [
 			return matchingItems;
 		},
 
+
 		focusTab: function(
 			tab,
 			unsuspend)

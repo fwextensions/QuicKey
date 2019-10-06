@@ -121,7 +121,7 @@ define([
 					new URLSearchParams(window.location.search).has("update") &&
 					UpgradeMessage
 				}
-				<h1 className="quickey">QuicKey Options</h1>
+				<h1 className="quickey">QuicKey options</h1>
 
 
 				<h2>Search box</h2>

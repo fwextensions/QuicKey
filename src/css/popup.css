@@ -242,6 +242,10 @@ input.search-box::-webkit-search-cancel-button:hover:active {
     position: relative;
 }
 
+.mac .results-list-item div.title-index {
+	padding-top: .15em;
+}
+
 .results-list-item.selected div.title-index {
 	background: #fafafa;
 }
