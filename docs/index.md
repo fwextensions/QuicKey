@@ -111,7 +111,7 @@ Which shortcuts to use is up to you.  Double-pressing <b><kbd>alt</kbd><kbd>Q</k
 
 Selecting from the MRU menu by holding down the <kbd>alt</kbd> key provides the closest experience to a typical <b><kbd>alt</kbd><kbd>tab</kbd></b> menu, but you need to use <kbd>W</kbd> instead of <kbd>tab</kbd> to navigate while the menu is open (due to limitations in the Chrome platform).
 
-You can change any of these shortcuts by right-clicking the *QuicKey* icon and selecting *Options*.  Then scroll down and click *Change Chrome shortcuts*. Look for the *Switch to the previous/next tab* shortcuts.
+You can change any of these shortcuts by clicking the <img src="img/gear.svg" style="height: 1em"> icon in the menu or by right-clicking the *QuicKey* icon and selecting *Options*.  Then scroll down and click *Change Chrome shortcuts*. Look for the *Switch to the previous/next tab* shortcuts.
 
 
 ## Customize shortcuts and other options
@@ -120,7 +120,7 @@ To customize how *QuicKey* behaves, click the <img src="img/gear.svg" style="hei
 
 <img src="img/options-in-menu.png" style="width: 208px;">
 
-On the *QuicKey Options* page, you can change the behavior of the <kbd>space</kbd> and <kbd>esc</kbd> keys, hide closed tabs from the search results, and customize many of the keyboard shortcuts described here.
+On the *QuicKey options* page, you can change the behavior of the <kbd>space</kbd> and <kbd>esc</kbd> keys, hide closed tabs from the search results, and customize many of the keyboard shortcuts described here.
 
 If you change the keyboard shortcut for showing the *QuicKey* menu to something other than the default <b><kbd>alt</kbd><kbd>Q</kbd></b> or if you have a non-US keyboard, you'll probably want to also change the key that's used to navigate down the list of recently used tabs (which defaults to <kbd>W</kbd>).  For instance, if you change the menu shortcut to <b><kbd>alt</kbd><kbd>Z</kbd></b>, you might want to change the navigation key to <kbd>X</kbd>, which is right next door.  To change it, go to the *Options* page, click in the first keyboard shortcut picker, and press <kbd>X</kbd>.
 
@@ -137,7 +137,7 @@ When you open *QuicKey*, the 25 most recently closed tabs are listed below the r
 
 They are also returned when you type a query, though their score is discounted compared to open tabs.  Click a closed tab to reopen it in its original location and with all of its browsing history intact.
 
-If you don't want closed tabs to be shown, open the *QuicKey Options* page and uncheck *Include recently closed tabs in the search results*.
+If you don't want closed tabs to be shown, open the *QuicKey options* page and uncheck *Include recently closed tabs in the search results*.
 
 
 ## Move tabs
@@ -192,7 +192,7 @@ To switch to incognito tabs as well as normal ones, right-click the *QuicKey* ic
 
 <img src="img/options-in-menu.png" style="width: 208px;">
 
-Scroll to the very bottom of the *QuicKey Options* page and then click the *Change incognito settings* button.  On the extensions page that opens, scroll down to the *Allow in incognito* option and click the toggle button:
+Scroll to the very bottom of the *QuicKey options* page and then click the *Change incognito settings* button.  On the extensions page that opens, scroll down to the *Allow in incognito* option and click the toggle button:
 
 ![Incognito option](img/incognito-option.png)
 
