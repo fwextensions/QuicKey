@@ -188,7 +188,7 @@ Press <b><kbd>shift</kbd><kbd>enter</kbd></b> to switch to a tab and unsuspend i
 
 ## Incognito mode
 
-To switch to incognito tabs as well as normal ones, right-click the *QuicKey* icon <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> and select *Options* from the menu:
+To switch to incognito tabs as well as normal ones, click the <img src="img/gear.svg" style="height: 1em"> icon in the menu, or right-click the *QuicKey* icon <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> and select *Options* from the menu:
 
 <img src="img/options-in-menu.png" style="width: 208px;">
 

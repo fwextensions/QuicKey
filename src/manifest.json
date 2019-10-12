@@ -62,7 +62,7 @@
 				"default": "Alt+Z",
 				"mac": "MacCtrl+Z"
 			},
-			"description": "Switch between the two most recent tabs"
+			"description": "Switch instantly between the two most recent tabs"
 		}
 	},
 	"offline_enabled": true
