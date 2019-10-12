@@ -52,29 +52,9 @@ Once the extension is installed, you can click the <img src="img/icon-38.png" st
 You can customize the shortcut key by right-clicking the *QuicKey* icon and selecting *Options*.  Or manually add a <b><kbd>ctrl</kbd><kbd>tab</kbd></b> [keyboard shortcut](ctrl-tab).
 
 
-## Search for a tab quickly
+## <a name="mru"></a>Switch between the most recently used tabs
 
-Unlike other tab switchers, *QuicKey* uses a [Quicksilver](https://qsapp.com/)-style search algorithm to rank the results, where contiguous matches at the beginning of words are higher in the list, as are matches against capital letters.  So you only have to type a few letters to quickly find the right tab.
-
-Use keyboard shortcuts to navigate the list of matching tabs:
-
-  * <kbd>enter</kbd>&nbsp;: switch to the selected tab
-  * <kbd>↓</kbd> or <kbd>space</kbd>&nbsp;: move down the list
-  * <kbd>↑</kbd> or <b><kbd>shift</kbd><kbd>space</kbd></b>&nbsp;: move up the list
-  * <kbd>pg dn</kbd>&nbsp;: page down the list
-  * <kbd>pg up</kbd>&nbsp;: page up the list
-  * <kbd>end</kbd>&nbsp;: go to the bottom of the list
-  * <kbd>home</kbd>&nbsp;: go to the top of the list
-  * <kbd>esc</kbd>&nbsp;: clear the search or close the menu
-
-If you type more than 25 letters, which should be plenty to find the right tab, *QuicKey* switches to an exact string search to stay fast.
-
-Recently used tabs get a slight boost in the search results ranking, so getting back to a tab you were just using should require typing fewer letters.
-
-
-## <a name="mru"></a>Navigate the most recently used (MRU) tabs
-
-> **Note:** When first installed, *QuicKey* doesn't know which tabs have been recently used, but as you use Chrome, it will start adding tabs to the MRU list.
+> **Note:** When first installed, *QuicKey* doesn't know which tabs have been recently used, but as you use Chrome, it will start adding tabs to the most recently used (MRU) list.
 
 Opening *QuicKey* displays a list of the last 50 tabs you've visited, in order of recency.  Click a tab to switch to it, or use one of the keyboard shortcuts below to navigate the recently used tab history:
 
@@ -112,6 +92,26 @@ Which shortcuts to use is up to you.  Double-pressing <b><kbd>alt</kbd><kbd>Q</k
 Selecting from the MRU menu by holding down the <kbd>alt</kbd> key provides the closest experience to a typical <b><kbd>alt</kbd><kbd>tab</kbd></b> menu, but you need to use <kbd>W</kbd> instead of <kbd>tab</kbd> to navigate while the menu is open (due to limitations in the Chrome platform).
 
 You can change any of these shortcuts by clicking the <img src="img/gear.svg" style="height: 1em"> icon in the menu or by right-clicking the *QuicKey* icon and selecting *Options*.  Then scroll down and click *Change Chrome shortcuts*. Look for the *Switch to the previous/next tab* shortcuts.
+
+
+## Search for a tab quickly
+
+Unlike other tab switchers, *QuicKey* uses a [Quicksilver](https://qsapp.com/)-style search algorithm to rank the results, where contiguous matches at the beginning of words are higher in the list, as are matches against capital letters.  So you only have to type a few letters to quickly find the right tab.
+
+Use keyboard shortcuts to navigate the list of matching tabs:
+
+  * <kbd>enter</kbd>&nbsp;: switch to the selected tab
+  * <kbd>↓</kbd> or <kbd>space</kbd>&nbsp;: move down the list
+  * <kbd>↑</kbd> or <b><kbd>shift</kbd><kbd>space</kbd></b>&nbsp;: move up the list
+  * <kbd>pg dn</kbd>&nbsp;: page down the list
+  * <kbd>pg up</kbd>&nbsp;: page up the list
+  * <kbd>end</kbd>&nbsp;: go to the bottom of the list
+  * <kbd>home</kbd>&nbsp;: go to the top of the list
+  * <kbd>esc</kbd>&nbsp;: clear the search or close the menu
+
+If you type more than 25 letters, which should be plenty to find the right tab, *QuicKey* switches to an exact string search to stay fast.
+
+Recently used tabs get a slight boost in the search results ranking, so getting back to a tab you were just using should require typing fewer letters.
 
 
 ## Customize shortcuts and other options

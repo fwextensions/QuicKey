@@ -8,6 +8,19 @@ comments: true
 # Release history
 
 
+## 1.2.0 - 2019-10-12
+
+### Added
+
+* New <b><kbd>alt</kbd><kbd>Z</kbd></b> keyboard shortcut will switch instantly between the two most recent tabs, without requiring a wait of 750ms between presses.
+
+* Clicking the gear icon in the popup menu will open the options page.
+
+* The options page has a help link to the main website, offering more details on how to use the extension.
+
+* The instructions for [using <b><kbd>ctrl</kbd><kbd>tab</kbd></b> as a shortcut](https://fwextensions.github.io/QuicKey/ctrl-tab/) include an option for using it to switch instantly between the two most recent tabs. 
+
+
 ## 1.1.2 - 2019-09-07
 
 ### Added

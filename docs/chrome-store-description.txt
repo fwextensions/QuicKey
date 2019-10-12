@@ -90,27 +90,7 @@ Learn how at https://fwextensions.github.io/QuicKey/ctrl-tab/
 You can customize the shortcut keys (other than CTRL-TAB) by right-clicking the QuicKey icon and selecting Options.
 
 
-★ Search for a tab quickly
-
-Unlike other tab switchers, QuicKey uses a Quicksilver-style search algorithm to rank the results, where contiguous matches at the beginning of words are higher in the list, as are matches against capital letters. So you only have to type a few letters to quickly find the right tab.
-
-Use keyboard shortcuts to navigate the list:
-
- • ENTER: switch to the selected tab
- • ↓ or SPACE: move down the list
- • ↑ or SHIFT-SPACE: move up the list
- • PG DN: page down the list
- • PG UP: page up the list
- • END: go to the bottom of the list
- • HOME: go to the top of the list
- • ESC: clear the search or close the menu
-
-If you type more than 25 letters, which should be plenty to find the right tab, QuicKey switches to an exact string search to stay fast.
-
-Recently used tabs get a slight boost in the search results ranking, so getting back to a tab you were just using should require typing fewer letters.
-
-
-★ Navigate the most recently used tabs
+★ Switch between the most recently used tabs
 
  ➤ NOTE: When first installed, QuicKey doesn't know which tabs have been
       recently used, but as you use Chrome, it will start adding tabs to the
@@ -147,6 +127,26 @@ ALT-A lets you navigate to even older tabs, though the timing can sometimes be f
 Selecting from the MRU menu by holding down the ALT key provides the closest experience to a typical ALT-TAB menu, but you need to use W instead of TAB to navigate while the menu is open.
 
 You can change any of these shortcuts by clicking the gear icon in the menu or by right-clicking the QuicKey icon and selecting Options. Then scroll down and click "Change Chrome shortcuts". Look for the "Switch to the previous/next tab" shortcuts.
+
+
+★ Search for a tab quickly
+
+Unlike other tab switchers, QuicKey uses a Quicksilver-style search algorithm to rank the results, where contiguous matches at the beginning of words are higher in the list, as are matches against capital letters. So you only have to type a few letters to quickly find the right tab.
+
+Use keyboard shortcuts to navigate the list:
+
+ • ENTER: switch to the selected tab
+ • ↓ or SPACE: move down the list
+ • ↑ or SHIFT-SPACE: move up the list
+ • PG DN: page down the list
+ • PG UP: page up the list
+ • END: go to the bottom of the list
+ • HOME: go to the top of the list
+ • ESC: clear the search or close the menu
+
+If you type more than 25 letters, which should be plenty to find the right tab, QuicKey switches to an exact string search to stay fast.
+
+Recently used tabs get a slight boost in the search results ranking, so getting back to a tab you were just using should require typing fewer letters.
 
 
 ★ Customize shortcuts and other options

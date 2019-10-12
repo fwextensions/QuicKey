@@ -108,7 +108,7 @@ main {
 
 .help-button {
 	color: #fff;
-	font-size: .75em;
+	font-size: .8em;
 	font-weight: bold;
 	line-height: 100%;
 	text-align: center;
@@ -117,7 +117,7 @@ main {
 	height: 1.1em;
 	border-radius: 50%;
 	background: #333;
-	bottom: -.55em;
+	bottom: -.5em;
 	cursor: pointer;
 	position: relative;
 	display: inline-block;
