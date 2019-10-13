@@ -216,7 +216,7 @@ define([
 				<img className="incognito-screenshot"
 					src="/img/incognito-option.png"
 					alt="Incognito option"
-					title="Change incognito settings"
+					title="Change incognito setting"
 					onClick={this.handleChangeIncognitoClick}
 				/>
 				<button className="key"
