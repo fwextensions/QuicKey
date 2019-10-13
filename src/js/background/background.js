@@ -36,7 +36,6 @@ function debounce(
 				// clear the timer in case we're being called by execute() so
 				// that we don't get called twice
 			debouncedFunc.cancel();
-console.log("=== debouncedFunc", ...args);
 
 				// return the result of func, in case we're being called by
 				// execute() and it returns a promise, so the caller can chain it
@@ -195,17 +194,19 @@ require([
 
 	function setInvertedIcon()
 	{
-		chrome.browserAction.setIcon(InvertedIconPaths);
 		isNormalIcon = false;
 		clearTimeout(shortcutTimer);
 		shortcutTimer = setTimeout(setNormalIcon, MinTabDwellTime);
+		cp.browserAction.setIcon(InvertedIconPaths)
+			.catch(backgroundTracker.exception);
 	}
 
 
 	function setNormalIcon()
 	{
-		chrome.browserAction.setIcon(IconPaths);
 		isNormalIcon = true;
+		cp.browserAction.setIcon(IconPaths)
+			.catch(backgroundTracker.exception);
 	}
 
 
