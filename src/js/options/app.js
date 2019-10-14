@@ -13,7 +13,7 @@ define([
 ) {
 	const ClosedIcon = <img
 		src="img/history.svg"
-		alt="closed icon"
+		alt="Closed icon"
 		style={{
 			height: "1.2em",
 			filter: "contrast(0.3)",
@@ -22,7 +22,7 @@ define([
 	/>;
 	const IncognitoIcon = <img
 		src="img/incognito.svg"
-		alt="closed icon"
+		alt="Incognito icon"
 		style={{
 			height: "1.2em",
 			verticalAlign: "bottom"
@@ -40,33 +40,44 @@ define([
 
 	const OptionsApp = React.createClass({
 		openExtensionsTab: function(
-			page)
+			page = "")
 		{
 			chrome.tabs.create({ url: "chrome://extensions/" + page });
+		},
+
+
+		handleHelpButtonClick: function()
+		{
+			chrome.tabs.create({ url: "https://fwextensions.github.io/QuicKey/" });
+			this.props.tracker.event("extension", "options-help");
 		},
 
 
 		handleChangeShortcutsClick: function()
 		{
 			this.openExtensionsTab("shortcuts");
+			this.props.tracker.event("extension", "options-shortcuts");
 		},
 
 
 		handleCtrlTabClick: function()
 		{
 			chrome.tabs.create({ url: "https://fwextensions.github.io/QuicKey/ctrl-tab/" });
+			this.props.tracker.event("extension", "options-ctrl-tab");
 		},
 
 
 		handleChangeIncognitoClick: function()
 		{
 			this.openExtensionsTab("?id=" + chrome.runtime.id);
+			this.props.tracker.event("extension", "options-incognito");
 		},
 
 
 		handleSupportClick: function()
 		{
 			chrome.tabs.create({ url: "https://fwextensions.github.io/QuicKey/support/" });
+			this.props.tracker.event("extension", "options-support");
 		},
 
 
@@ -113,16 +124,19 @@ define([
 
 		render: function()
 		{
-			const props = this.props;
-			const {settings, onChange} = props;
+			const {settings, chromeShortcuts, onChange, onResetShortcuts} = this.props;
 
 			return <main>
 				{
 					new URLSearchParams(window.location.search).has("update") &&
 					UpgradeMessage
 				}
-				<h1 className="quickey">QuicKey Options</h1>
-
+				<h1 className="quickey">QuicKey options
+					<div className="help-button"
+						title="Learn more about QuicKey's features"
+						onClick={this.handleHelpButtonClick}
+					>?</div>
+				</h1>
 
 				<h2>Search box</h2>
 				<Controls.RadioGroup
@@ -171,7 +185,7 @@ define([
 				<h2>Customizable keyboard shortcuts</h2>
 				{this.renderShortcutList(Shortcuts.customizable)}
 				<button className="key"
-					onClick={props.onResetShortcuts}
+					onClick={onResetShortcuts}
 				>Reset shortcuts</button>
 
 				<h2>Chrome keyboard shortcuts</h2>
@@ -179,7 +193,7 @@ define([
 					title="Click to open the Chrome keyboard shortcuts page"
 					onClick={this.handleChangeShortcutsClick}
 				>
-					{this.renderShortcutList(props.chromeShortcuts)}
+					{this.renderShortcutList(chromeShortcuts)}
 				</div>
 				<button className="key"
 					onClick={this.handleChangeShortcutsClick}
@@ -199,6 +213,12 @@ define([
 					toggle it on.  Incognito tabs are indicated with this
 					icon: {IncognitoIcon}.
 				</p>
+				<img className="incognito-screenshot"
+					src="/img/incognito-option.png"
+					alt="Incognito option"
+					title="Change incognito setting"
+					onClick={this.handleChangeIncognitoClick}
+				/>
 				<button className="key"
 					onClick={this.handleChangeIncognitoClick}
 				>Change incognito setting</button>

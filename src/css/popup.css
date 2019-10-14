@@ -36,9 +36,9 @@ body {
 	margin: 5px;
 	border: none;
 	border-bottom: 1px solid #ddd;
-	padding: 2px 2px 5px 27px;
+	padding: 2px 22px 5px 28px;
 	background-image: url(/img/search.svg);
-	background-position: 6px 4px;
+	background-position: 7px 4px;
 	background-size: 13px 13px;
 	background-repeat: no-repeat;
 	background-color: transparent;
@@ -52,11 +52,22 @@ input.search-box::-webkit-input-placeholder, .command-placeholder {
 
 input.search-box::-webkit-search-cancel-button {
 	-webkit-appearance: none;
-	height: 16px;
-	width: 10px;
+	height: 22px;
+	width: 22px;
+	border-radius: 50%;
+	margin: 0 0 0 2px;
 	background-image: url(/img/clear.svg);
 	background-size: 10px 16px;
 	background-repeat: no-repeat;
+	background-position: center;
+}
+
+input.search-box::-webkit-search-cancel-button:hover {
+	background-color: #dcdcdc;
+}
+
+input.search-box::-webkit-search-cancel-button:hover:active {
+	background-color: #bbb;
 }
 
 .command-placeholder {
@@ -83,6 +94,34 @@ input.search-box::-webkit-search-cancel-button {
 .command-placeholder b {
 	visibility: hidden;
 	font-style: normal;
+}
+
+.options-button {
+	width: 22px;
+	height: 22px;
+	top: 5px;
+	right: 5px;
+	padding: 3px;
+	border-radius: 50%;
+	text-align: center;
+	position: absolute;
+	display: inline-block;
+}
+
+.options-button:hover {
+	background-color: #dcdcdc;
+}
+
+.options-button:hover:active {
+	background-color: #bbb;
+}
+
+.options-button img {
+	-webkit-user-drag: none;
+}
+
+.options-button:hover img {
+	filter: invert(1);
 }
 
 
@@ -200,6 +239,10 @@ input.search-box::-webkit-search-cancel-button {
     margin: 0 .5em 0 0;
     display: inline-block;
     position: relative;
+}
+
+.mac .results-list-item div.title-index {
+	padding-top: .15em;
 }
 
 .results-list-item.selected div.title-index {

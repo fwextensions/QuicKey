@@ -64,7 +64,8 @@ module.exports = function(grunt) {
 	};
 	const buildManifestPath = "build/out/manifest.json";
 	const devPopupPath = "src/popup.html";
-	const buildPopupPath = "build/out/popup.html";
+	const prodPopupPath = "build/prod/popup.html";
+	const outPopupPath = "build/out/popup.html";
 	const extensionInfo = {
 		quickey: {
 			fullName: "QuicKey – The quick tab switcher",
@@ -226,6 +227,8 @@ module.exports = function(grunt) {
 			}
 		}
 	};
+	const rootPattern = /<div id="root">[^<]+(<.+)\s+/m;
+	const popupPlaceholder = "<!-- rendered html -->";
 
 	grunt.initConfig(config);
 
@@ -236,78 +239,69 @@ module.exports = function(grunt) {
 		console.log("Started at", new Date().toLocaleString());
 	});
 
-	grunt.registerTask("checkPopup", function() {
+	grunt.registerTask("buildPopup", function() {
 		const devPopup = grunt.file.read(devPopupPath);
-		const devBody = devPopup.slice(devPopup.indexOf("<body>"));
-		const buildPopup = grunt.file.read(buildPopupPath);
-		const buildBody = buildPopup.slice(buildPopup.indexOf("<body>"));
+		const devBody = devPopup.match(rootPattern)[1];
+		const outPopup = grunt.file.read(prodPopupPath).replace(popupPlaceholder, devBody);
 
-		if (devBody !== buildBody) {
-			grunt.fail.fatal("Source and build popup.html don't match:\n\nSource:\n" +
-				devBody + "\n\nBuild:" + buildBody);
-		}
+			// write out the built popup template with the latest React code
+		grunt.file.write(outPopupPath, outPopup);
 	});
 
-	function incrementVersion(
-		manifestPath,
-		overrides = {})
+	function updateManifest(
+		path,
+		...overrides)
 	{
-		let manifest = grunt.file.readJSON(manifestPath);
-		let version = manifest.version.split(".");
+		let manifest = grunt.file.readJSON(path);
+
+		manifest = merge.all([manifest, ...overrides]);
+		grunt.file.write(path, JSON.stringify(manifest, null, "\t"));
+
+		return manifest;
+	}
+
+	function incrementVersion(
+		manifestPath)
+	{
+		const manifest = grunt.file.readJSON(manifestPath);
+		const version = manifest.version.split(".");
 		let versionString;
 
 		version[2] = parseInt(version[2]) + 1;
 		versionString = version.join(".");
-		manifest.version = versionString;
-
-		manifest = merge(manifest, overrides);
-
-		grunt.file.write(manifestPath, JSON.stringify(manifest, null, "\t"));
+		updateManifest(manifestPath, { version: versionString });
 
 		return versionString;
-	}
-
-	function incrementVersionAndSrc(
-		buildManifestPath,
-		srcManifestPath,
-		overrides = {})
-	{
-		const versionString = incrementVersion(buildManifestPath, overrides);
-		const srcManifest = grunt.file.readJSON(srcManifestPath);
-
-		srcManifest.version = versionString;
-		grunt.file.write(srcManifestPath, JSON.stringify(srcManifest, null, "\t"));
-
-		console.log(`Updated ${srcManifestPath} to version ${versionString}.`);
 	}
 
 	grunt.registerTask("incrementVersion", function(target = "quickey") {
 			// set the name back to the full name and icon tooltip that was
 			// overridden in the cleanupManifest task
-		const {fullName, shortName, srcManifestPath} = extensionInfo[target];
+		const {srcManifestPath} = extensionInfo[target];
+		const versionString = incrementVersion(buildManifestPath);
 
-		incrementVersionAndSrc(
-			buildManifestPath,
-			srcManifestPath,
+		updateManifest(srcManifestPath, { version: versionString });
+
+		console.log(`Updated ${srcManifestPath} to version ${versionString}.`);
+	});
+
+	grunt.registerTask("cleanupManifest", function(target, env) {
+		const manifest = grunt.file.readJSON(buildManifestPath);
+		let {fullName, shortName} = extensionInfo[target];
+
+		if (env == "dev") {
+			fullName = shortName = `${manifest.short_name} BUILD ${new Date().toLocaleString()}`;
+		}
+
+		updateManifest(buildManifestPath,
 			{
+					// we don't need the unsafe-eval policy in the built extension
+				content_security_policy: manifest.content_security_policy.replace("'unsafe-eval' ", ""),
 				name: fullName,
 				browser_action: {
 					default_title: shortName
 				}
-			}
-		);
-	});
-
-	grunt.registerTask("cleanupManifest", function() {
-		const manifest = grunt.file.readJSON(buildManifestPath);
-
-			// we don't need the unsafe-eval policy in the built extension
-		manifest.content_security_policy = manifest.content_security_policy.replace("'unsafe-eval' ", "");
-
-		manifest.browser_action.default_title = manifest.name =
-			`${manifest.short_name} BUILD ${new Date().toLocaleString()}`;
-
-		grunt.file.write(buildManifestPath, JSON.stringify(manifest, null, "\t"));
+			});
 	});
 
 	function publish(
@@ -351,13 +345,13 @@ module.exports = function(grunt) {
 			.then(done);
 	});
 
-	grunt.registerTask("build", function(target = "quickey") {
+	grunt.registerTask("build", function(target = "quickey", env = "dev") {
 		grunt.task.run([
 			"time",
 			"sync:out",
-			"copy:" + target,
-			"cleanupManifest",
-			"checkPopup",
+			`copy:${target}`,
+			`cleanupManifest:${target}:${env}`,
+			"buildPopup",
 			"requirejs",
 			"babel",
 			"sync:build",
@@ -368,16 +362,15 @@ module.exports = function(grunt) {
 	grunt.registerTask("pack", function(target = "quickey", test) {
 		const tasks = [
 			"clean:out",
-			"build:" + target,
-			"incrementVersion:" + target,
-			"compress:" + target
+			`build:${target}:prod`,
 		];
 
-		if (test == "test") {
-				// don't increment the version in the manifest
-			tasks.splice(2, 1);
+			// increment the version in the manifest only if this isn't a test
+		if (test !== "test") {
+			tasks.push("incrementVersion");
 		}
 
+		tasks.push("compress:" + target);
 		grunt.task.run(tasks);
 	});
 

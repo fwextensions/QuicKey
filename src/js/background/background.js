@@ -19,8 +19,8 @@ const InvertedIconPaths = {
 };
 
 
-var gStartingUp = false;
-var gInstalledPromise = new Promise(resolve => {
+let gStartingUp = false;
+let gInstalledPromise = new Promise(resolve => {
 	chrome.runtime.onInstalled.addListener(details => resolve(details));
 });
 
@@ -29,18 +29,33 @@ function debounce(
 	func,
 	wait)
 {
-	var timeout;
+	let timeout;
+	let exec;
+	const debouncedFunc = (...args) => {
+		exec = () => {
+				// clear the timer in case we're being called by execute() so
+				// that we don't get called twice
+			debouncedFunc.cancel();
 
-	return function() {
-		var context = this,
-			args = arguments;
+				// return the result of func, in case we're being called by
+				// execute() and it returns a promise, so the caller can chain it
+			return func.apply(this, args);
+		};
+
 
 		clearTimeout(timeout);
-		timeout = setTimeout(function() {
-			timeout = null;
-			func.apply(context, args);
-		}, wait);
+		timeout = setTimeout(exec, wait);
 	};
+
+	debouncedFunc.cancel = () => {
+		clearTimeout(timeout);
+		timeout = null;
+		exec = null;
+	};
+
+	debouncedFunc.execute = () => exec && exec();
+
+	return debouncedFunc;
 }
 
 
@@ -98,9 +113,7 @@ require([
 	let lastUsedVersion;
 
 
-	function addTab(
-		data)
-	{
+	const addTab = debounce(data => {
 		if (data.tabId) {
 			return cp.tabs.get(data.tabId)
 				.then(recentTabs.add)
@@ -117,24 +130,20 @@ require([
 				// the event parameter is just the tab itself, so add it directly
 			return recentTabs.add(data);
 		}
-	}
-
-	const debouncedAddTab = debounce(addTab, MinTabDwellTime);
+	}, MinTabDwellTime);
 
 
 	function onTabChanged(
 		event)
 	{
-		if (tabChangedFromToggle) {
-				// when we're toggling between tabs, we want to add the tab
-				// immediately because the user chose it, as opposed to
-				// ctrl-tabbing past it
-			tabChangedFromToggle = false;
-			addTab(event);
-		} else {
+		if (!tabChangedFromToggle) {
+				// invert the icon since we're not toggling between the two most
+				// recent tabs
 			setInvertedIcon();
-			debouncedAddTab(event);
 		}
+
+		tabChangedFromToggle = false;
+		addTab(event);
 	}
 
 
@@ -144,29 +153,60 @@ require([
 			// track whether the user is navigating farther back in the stack
 		const label = isNormalIcon ? "single" : "repeated";
 
-		if (command == "1-previous-tab") {
-			recentTabs.navigate(-1);
-			backgroundTracker.event("recents", "previous", label);
-		} else if (command == "2-next-tab") {
-			recentTabs.navigate(1);
-			backgroundTracker.event("recents", "next", label);
+		switch (command) {
+			case "1-previous-tab":
+				recentTabs.navigate(-1);
+				backgroundTracker.event("recents", "previous", label);
+				break;
+
+			case "2-next-tab":
+				recentTabs.navigate(1);
+				backgroundTracker.event("recents", "next", label);
+				break;
+
+			case "30-toggle-recent-tabs":
+				toggleRecentTabs(true);
+				break;
 		}
+	}
+
+
+	function toggleRecentTabs(
+		fromShortcut)
+	{
+			// set tabChangedFromToggle so that addTab() doesn't invert the icon
+		tabChangedFromToggle = true;
+
+			// if there's a debounced addTab() call waiting, fire it now, so
+			// that when we navigate to the "previous" tab below, that'll be the
+			// tab the user started from when they began navigating backwards
+			// into the stack.  otherwise, the debounced add would fire after we
+			// navigate, putting that tab on the top of the stack, even though a
+			// different tab was now active.
+		(addTab.execute() || Promise.resolve())
+			.then(() => {
+				recentTabs.toggle();
+				backgroundTracker.event("recents",
+					fromShortcut ? "toggle-shortcut" : "toggle");
+			});
 	}
 
 
 	function setInvertedIcon()
 	{
-		chrome.browserAction.setIcon(InvertedIconPaths);
 		isNormalIcon = false;
 		clearTimeout(shortcutTimer);
 		shortcutTimer = setTimeout(setNormalIcon, MinTabDwellTime);
+		cp.browserAction.setIcon(InvertedIconPaths)
+			.catch(backgroundTracker.exception);
 	}
 
 
 	function setNormalIcon()
 	{
-		chrome.browserAction.setIcon(IconPaths);
 		isNormalIcon = true;
+		cp.browserAction.setIcon(IconPaths)
+			.catch(backgroundTracker.exception);
 	}
 
 
@@ -251,15 +291,8 @@ require([
 			popupIsOpen = false;
 
 			if (!closedByEsc && Date.now() - connectTime < MaxPopupLifetime) {
-					// pass true so navigate() knows this event is coming from a
-					// double press of the shortcut.  set tabChangedFromToggle
-					// so that the onActivated listener calls add immediately
-					// instead of debouncing it.  otherwise, quickly repeated
-					// double presses would be ignored because the tab list
-					// wouldn't have been updated yet.
-				tabChangedFromToggle = true;
-				recentTabs.navigate(-1, true);
-				backgroundTracker.event("recents", "toggle");
+					// this was a double-press of alt-Q, so toggle the tabs
+				toggleRecentTabs();
 			} else {
 					// send a background "pageview", since the popup is now closed,
 					// so that GA will track the time the popup was open

@@ -2,7 +2,7 @@
 	"manifest_version": 2,
 	"name": "QuicKey DEV",
 	"short_name": "QuicKey",
-	"version": "1.1.2",
+	"version": "1.2.0",
 	"description": "Add keyboard shortcuts to switch tabs with a Quicksilver-style search or a most recently used menu",
 	"author": "John Dunning",
 	"content_security_policy": "script-src 'self' 'unsafe-eval' https://www.google-analytics.com; object-src 'self'",
@@ -56,6 +56,13 @@
 				"mac": "MacCtrl+S"
 			},
 			"description": "Switch to the next tab"
+		},
+		"30-toggle-recent-tabs": {
+			"suggested_key": {
+				"default": "Alt+Z",
+				"mac": "MacCtrl+Z"
+			},
+			"description": "Switch instantly between the two most recent tabs"
 		}
 	},
 	"offline_enabled": true

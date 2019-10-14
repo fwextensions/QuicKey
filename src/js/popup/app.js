@@ -217,6 +217,7 @@ define("popup/app", [
 			return matchingItems;
 		},
 
+
 		focusTab: function(
 			tab,
 			unsuspend)
@@ -247,7 +248,7 @@ define("popup/app", [
 					});
 
 				this.props.tracker.event(category, event,
-					queryLength ? queryLength : undefined);
+					queryLength ? queryLength : this.state.selected);
 			}
 		},
 
@@ -554,6 +555,15 @@ define("popup/app", [
 		},
 
 
+		onOptionsClick: function()
+		{
+			chrome.tabs.create({
+				url: chrome.extension.getURL("options.html")
+			});
+			this.props.tracker.event("extension", "open-options");
+		},
+
+
 		render: function()
 		{
 			var state = this.state,
@@ -569,6 +579,12 @@ define("popup/app", [
 					onKeyDown={this.onKeyDown}
 					onKeyUp={this.onKeyUp}
 				/>
+				<div className="options-button"
+					title="QuicKey options"
+					onClick={this.onOptionsClick}
+				>
+					<img src="/img/gear.svg" />
+				</div>
 				<ResultsList
 					ref={this.handleListRef}
 					items={items}

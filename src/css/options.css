@@ -106,6 +106,28 @@ main {
 	width: 35em;
 }
 
+.help-button {
+	color: #fff;
+	font-size: .8em;
+	font-weight: bold;
+	line-height: 100%;
+	text-align: center;
+	padding: 0 0 0 .05em;
+	width: 1.1em;
+	height: 1.1em;
+	border-radius: 50%;
+	background: #333;
+	bottom: -.5em;
+	cursor: pointer;
+	position: relative;
+	display: inline-block;
+	float: right;
+}
+
+.help-button:hover {
+	background: #000;
+}
+
 
 /* ===========================================================================
 	Update message
@@ -247,6 +269,12 @@ main {
 }
 
 .chrome-shortcuts {
+	cursor: pointer;
+}
+
+.incognito-screenshot {
+	width: 100%;
+	margin: 0;
 	cursor: pointer;
 }
 

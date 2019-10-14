@@ -22,8 +22,7 @@ define([
 			this.platform = /Mac/i.test(navigator.platform) ? "mac" : "win";
 
 			return {
-				settings: {},
-				retrievedSettings: false
+				settings: null
 			};
 		},
 
@@ -53,10 +52,7 @@ define([
 		setSettingsState: function(
 			settings)
 		{
-			this.setState({
-				settings: settings,
-				retrievedSettings: true
-			});
+			this.setState({ settings });
 		},
 
 
@@ -84,19 +80,19 @@ define([
 
 		render: function()
 		{
-			const {settings, retrievedSettings} = this.state;
-			const {shortcuts, chromeShortcuts} = settings;
+			const {settings} = this.state;
 
 				// for the first render, don't return any UI so that it doesn't
 				// show default values that then change when the current
 				// settings are returned asynchronously
 			return <div className={this.platform}>
 				{
-					retrievedSettings &&
+					settings &&
 					<OptionsApp
 						settings={settings}
-						shortcuts={shortcuts}
-						chromeShortcuts={chromeShortcuts}
+						shortcuts={settings.shortcuts}
+						chromeShortcuts={settings.chromeShortcuts}
+						tracker={this.tracker}
 						onChange={this.handleChange}
 						onResetShortcuts={this.handleResetShortcuts}
 					/>
