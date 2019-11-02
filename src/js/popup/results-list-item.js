@@ -105,10 +105,11 @@ define([
 			const className = [
 				"results-list-item",
 				props.mode,
-				(props.isSelected ? "selected" : ""),
-				(item.unsuspendURL ? "suspended" : ""),
-				(item.incognito ? "incognito" : ""),
-				(item.sessionId ? "closed" : "")
+				props.isSelected ? "selected" : "",
+				item.unsuspendURL ? "suspended" : "",
+				item.incognito ? "incognito" :
+					(item.differentWindow ? "different-window" : ""),
+				item.sessionId ? "closed" : ""
 			].join(" ");
 			const faviconStyle = {
 				backgroundImage: "url(" + item.faviconURL + ")"

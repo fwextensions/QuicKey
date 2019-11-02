@@ -168,6 +168,12 @@ input.search-box::-webkit-search-cancel-button:hover:active {
 	background-position: 6px 25px;
 }
 
+.results-list-item.different-window {
+	background-image: url(/img/window.svg);
+	background-size: 16px 16px;
+	background-position: 6px 25px;
+}
+
 .results-list-item.closed {
 	background-image: url(/img/history.svg);
 	background-size: 16px 16px;

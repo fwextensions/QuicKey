@@ -81,10 +81,12 @@ define([
 					// an empty object so the .id access below won't throw
 					// an exception.
 				const activeTab = activeTabs[0] || {};
+				const currentWindowID = activeTab.windowId;
 				let match;
 
 				tabs.forEach(function(tab) {
 					addURLs(tab);
+					tab.differentWindow = !isNaN(currentWindowID) && tab.windowId !== currentWindowID;
 
 						// if the tab is suspended, check if it it's in the bad
 						// state where The Great Suspender hasn't updated its
