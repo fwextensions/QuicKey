@@ -75,6 +75,7 @@ define("popup/app", [
 		mruModifier: "Alt",
 		resultsList: null,
 		settings: settings.getDefaults(),
+		settingsPromise: Promise.resolve(),
 
 
 		getInitialState: function()
@@ -82,12 +83,14 @@ define("popup/app", [
 			var props = this.props,
 				query = props.initialQuery;
 
-			settings.get()
+			this.settingsPromise = settings.get()
 				.bind(this)
 				.then(function(settings) {
 					this.settings = settings;
 					this.mruModifier = settings.chromeShortcuts.popupModifierEventName;
 					shortcuts.update(settings);
+
+					return settings;
 				});
 
 			return {
@@ -105,7 +108,8 @@ define("popup/app", [
 			recentTabs.getAll()
 				.bind(this)
 				.then(function(tabs) {
-					var now = Date.now();
+					const now = Date.now();
+					const {settingsPromise} = this;
 
 						// boost the scores of recent tabs
 					tabs.forEach(function(tab) {
@@ -129,7 +133,10 @@ define("popup/app", [
 					});
 
 					return this.loadPromisedItems(function() {
-						return getTabs(tabs)
+						return settingsPromise
+							.then(function(settings) {
+								return getTabs(tabs, settings[k.MarkTabsInOtherWindows.Key]);
+							})
 							.then(function(tabs) {
 									// run scoreItems() on the tabs so that the
 									// hitMask and scores keys are added to each

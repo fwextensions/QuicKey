@@ -68,6 +68,8 @@ define([
 			let updated = false;
 
 			while (updaters[storage.version]) {
+					// version here is the version to which the storage has
+					// been updated
 				const [data, version] = updaters[storage.version](storage.data,
 					storage.version);
 

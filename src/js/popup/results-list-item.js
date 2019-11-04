@@ -108,7 +108,7 @@ define([
 				props.isSelected ? "selected" : "",
 				item.unsuspendURL ? "suspended" : "",
 				item.incognito ? "incognito" :
-					(item.differentWindow ? "different-window" : ""),
+					(item.otherWindow ? "other-window" : ""),
 				item.sessionId ? "closed" : ""
 			].join(" ");
 			const faviconStyle = {

@@ -21,7 +21,51 @@ define([
 
 
 	return shared("quickeyStorage", function() {
-		const StorageVersion = 6;
+		const Updaters = {
+			"3": function(
+				data,
+				version)
+			{
+					// add installTime in v4
+				data.installTime = Date.now();
+
+					// we no longer need these values
+				delete data.switchFromShortcut;
+				delete data.lastShortcutTabID;
+
+				return [data, increment(version)];
+			},
+			"4": function(
+				data,
+				version)
+			{
+					// add settings in v5
+				data.settings = DefaultSettings;
+
+				return [data, increment(version)];
+			},
+			"5": function(
+				data,
+				version)
+			{
+					// add includeClosedTabs option and lastUsedVersion in
+					// v6.  leave lastUsedVersion empty so the background
+					// code can tell this was an update from an older version.
+				data.settings[k.IncludeClosedTabs.Key] = DefaultSettings[k.IncludeClosedTabs.Key];
+				data.lastUsedVersion = "";
+
+				return [data, increment(version)];
+			},
+			"6": function(
+				data,
+				version)
+			{
+					// add markTabsInOtherWindows option
+				data.settings[k.MarkTabsInOtherWindows.Key] = DefaultSettings[k.MarkTabsInOtherWindows.Key];
+
+				return [data, increment(version)];
+			}
+		};
 		const DefaultSettings = getDefaultSettings();
 		const DefaultData = {
 			installTime: Date.now(),
@@ -37,7 +81,11 @@ define([
 
 
 		return createStorage({
-			version: StorageVersion,
+				// calculate the version by incrementing the highest key in the
+				// Updaters hash, so that the version is automatically increased
+				// when an updater is added
+			version: increment(Object.keys(Updaters).sort().pop()),
+			updaters: Updaters,
 
 
 			getDefaultData: function()
@@ -63,44 +111,6 @@ define([
 
 						return data;
 					});
-			},
-
-
-			updaters: {
-				"3": function(
-					data,
-					version)
-				{
-						// add installTime in v4
-					data.installTime = Date.now();
-
-						// we no longer need these values
-					delete data.switchFromShortcut;
-					delete data.lastShortcutTabID;
-
-					return [data, increment(version)];
-				},
-				"4": function(
-					data,
-					version)
-				{
-						// add settings in v5
-					data.settings = DefaultSettings;
-
-					return [data, increment(version)];
-				},
-				"5": function(
-					data,
-					version)
-				{
-						// add includeClosedTabs option and lastUsedVersion in
-						// v6.  leave lastUsedVersion empty so the background
-						// code can tell this was an update from an older version.
-					data.settings[k.IncludeClosedTabs.Key] = DefaultSettings[k.IncludeClosedTabs.Key];
-					data.lastUsedVersion = "";
-
-					return [data, increment(version)];
-				}
 			},
 
 

@@ -19,6 +19,7 @@ define([
 	const DefaultSettings = {
 		[k.SpaceBehavior.Key]: k.SpaceBehavior.Select,
 		[k.EscBehavior.Key]: k.EscBehavior.Clear,
+		[k.MarkTabsInOtherWindows.Key]: true,
 		[k.IncludeClosedTabs.Key]: true,
 		[k.Shortcuts.Key]: {
 			mac: MacDefaults,

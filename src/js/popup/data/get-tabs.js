@@ -33,7 +33,8 @@ define([
 
 
 	return function getTabs(
-		tabsPromise)
+		tabsPromise,
+		markTabsInOtherWindows)
 	{
 		let tabsByTitle = {};
 
@@ -82,11 +83,12 @@ define([
 					// an exception.
 				const activeTab = activeTabs[0] || {};
 				const currentWindowID = activeTab.windowId;
+				const markTabs = markTabsInOtherWindows && !isNaN(currentWindowID);
 				let match;
 
 				tabs.forEach(function(tab) {
 					addURLs(tab);
-					tab.differentWindow = !isNaN(currentWindowID) && tab.windowId !== currentWindowID;
+					tab.otherWindow = markTabs && tab.windowId !== currentWindowID;
 
 						// if the tab is suspended, check if it it's in the bad
 						// state where The Great Suspender hasn't updated its

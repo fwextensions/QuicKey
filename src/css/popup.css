@@ -168,7 +168,7 @@ input.search-box::-webkit-search-cancel-button:hover:active {
 	background-position: 6px 25px;
 }
 
-.results-list-item.different-window {
+.results-list-item.other-window {
 	background-image: url(/img/window.svg);
 	background-size: 16px 16px;
 	background-position: 6px 25px;
