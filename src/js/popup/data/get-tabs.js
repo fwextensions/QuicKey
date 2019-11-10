@@ -88,7 +88,10 @@ define([
 
 				tabs.forEach(function(tab) {
 					addURLs(tab);
-					tab.otherWindow = markTabs && tab.windowId !== currentWindowID;
+
+						// don't treat closed tabs as being in other windows
+					tab.otherWindow = markTabs &&
+						tab.windowId !== currentWindowID && !tab.sessionId;
 
 						// if the tab is suspended, check if it it's in the bad
 						// state where The Great Suspender hasn't updated its

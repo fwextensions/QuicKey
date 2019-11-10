@@ -85,8 +85,11 @@ define([
 					// save the updated data and version to storage
 				return saveWithVersion(storage.data);
 			} else {
-				trackers.background.event("storage", storage.version === version ?
-					"failed-validation" : "failed-update");
+				const failure = storage.version === version ?
+					"failed-validation" : "failed-update";
+
+				console.error(`Storage error: ${failure}`);
+				trackers.background.event("storage", failure);
 
 					// we couldn't find a way to update the existing storage to
 					// the new version or the update resulted in invalid data,
