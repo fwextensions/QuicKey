@@ -170,7 +170,7 @@ main {
 	position: relative;
 	padding-left: 1.7em;
 	line-height: 1.4em;
-	display: block;
+	display: inline-block;
 }
 
 	/* don't use display: none so the control can still get focus */

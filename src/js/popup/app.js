@@ -37,11 +37,11 @@ define("popup/app", [
 	k,
 	_
 ) {
-	const MinScore = .15,
-		NearlyZeroScore = .05,
+	const MinScore = .04,
+		NearlyZeroScore = .02,
 		MaxItems = 10,
-		MinItems = 3,
-		MinScoreDiff = .4,
+		MinItems = 4,
+		MinScoreDiff = .1,
 		VeryRecentMS = 5 * 1000,
 		HourMS = 60 * 60 * 1000,
 		HourCount = 3 * 24,
@@ -210,16 +210,16 @@ define("popup/app", [
 				return this.recents;
 			}
 
-			var scores = scoreItems(this[this.mode], query),
-				firstScoresDiff = (scores.length > 1 && scores[0].score > MinScore) ?
-					(scores[0].score - scores[1].score) : 0,
-					// drop barely-matching results, keeping a minimum of 3,
-					// unless there's a big difference in scores between the
-					// first two items, which may mean we need a longer tail
-				matchingItems = _.dropRightWhile(scores, function(item, i) {
-					return item.score < NearlyZeroScore ||
-						(item.score < MinScore && (i + 1 > MinItems || firstScoresDiff > MinScoreDiff));
-				});
+			const scores = scoreItems(this[this.mode], query);
+			const firstScoresDiff = (scores.length > 1 &&
+				scores[0].score > MinScore) ? (scores[0].score - scores[1].score) : 0;
+				// drop barely-matching results, keeping a minimum of 3,
+				// unless there's a big difference in scores between the
+				// first two items, which may mean we need a longer tail
+			const matchingItems = _.dropRightWhile(scores, ({score}, i) =>
+				score < NearlyZeroScore ||
+					(score < MinScore && (i + 1 > MinItems || firstScoresDiff > MinScoreDiff))
+			);
 
 			return matchingItems;
 		},
