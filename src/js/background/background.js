@@ -222,6 +222,17 @@ require([
 	});
 
 
+	chrome.tabs.onCreated.addListener(tab => {
+		if (!tab.active) {
+				// this tab was opened via a ctrl-click on a link or by opening
+				// all the tabs in a bookmark folder, so pass true to insert
+				// this tab in the penultimate position, which makes it the
+				// "most recent" tab
+			recentTabs.add(tab, true);
+		}
+	});
+
+
 		// debounce the handling of a removed tab since Chrome seems to trigger
 		// the event when shutting down, and we want to ignore those.  hopefully,
 		// Chrome will finish quitting before this handler fires.

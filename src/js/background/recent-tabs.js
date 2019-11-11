@@ -150,7 +150,8 @@ DEBUG && console.log("updateFromFreshTabs result", result);
 
 
 	function add(
-		tab)
+		tab,
+		penultimately)
 	{
 		if (!tab) {
 			return;
@@ -176,10 +177,19 @@ DEBUG && console.log("updateFromFreshTabs result", result);
 				return;
 			}
 
-				// make sure the new tab's ID isn't currently in the list and
-				// then push it on the end
+				// make sure the new tab's ID isn't currently in the list
 			removeItem(tabIDs, id);
-			tabIDs.push(id);
+
+			if (penultimately) {
+					// this is a tab that was opened in an inactive state, so we
+					// want to insert it before the last item in the array, which
+					// is the current window, so that the new tab becomes the
+					// "most recent" one
+				tabIDs.splice(-1, 0, id);
+			} else {
+					// this is now the frontmost tab, so add it at the end
+				tabIDs.push(id);
+			}
 
 DEBUG && console.log("add", `${tab.id}|${tab.windowId}`, tabIDs.slice(-5), titleOrURL(tab));
 
@@ -194,8 +204,8 @@ DEBUG && console.log("add", `${tab.id}|${tab.windowId}`, tabIDs.slice(-5), title
 			});
 
 			return {
-				tabIDs: tabIDs,
-				tabsByID: tabsByID
+				tabIDs,
+				tabsByID
 			};
 		}, "addTab");
 	}
