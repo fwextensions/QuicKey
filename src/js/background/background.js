@@ -224,7 +224,7 @@ require([
 
 	chrome.tabs.onCreated.addListener(tab => {
 		if (!tab.active) {
-				// this tab was opened via a ctrl-click on a link or by opening
+				// this tab was opened by ctrl-clicking a link or by opening
 				// all the tabs in a bookmark folder, so pass true to insert
 				// this tab in the penultimate position, which makes it the
 				// "most recent" tab
