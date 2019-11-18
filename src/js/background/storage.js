@@ -62,23 +62,25 @@ define([
 		}
 
 
-		function update(
+		async function update(
 			storage)
 		{
 			let updated = false;
+			let updater = updaters[storage.version];
 
-			while (updaters[storage.version]) {
+			while (updater) {
 					// version here is the version to which the storage has
 					// been updated
-				const [data, version] = updaters[storage.version](storage.data,
-					storage.version);
+				const [data, version] = await updater(storage.data, storage.version);
 
 				storage.data = data;
 				storage.version = version;
+
+				updater = updaters[storage.version];
 			}
 
 			if (storage.version === version) {
-				updated = validateUpdate(storage.data);
+				updated = await validateUpdate(storage.data);
 			}
 
 			if (updated) {
@@ -88,7 +90,7 @@ define([
 				const failure = storage.version === version ?
 					"failed-validation" : "failed-update";
 
-				console.error(`Storage error: ${failure}`);
+DEBUG && console.error(`Storage error: ${failure}`);
 				trackers.background.event("storage", failure);
 
 					// we couldn't find a way to update the existing storage to
