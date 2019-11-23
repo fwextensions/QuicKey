@@ -605,6 +605,7 @@ define("popup/app", [
 					onClick={this.onOptionsClick}
 				>
 					<img src="/img/gear.svg" />
+					<div className="badge" />
 				</div>
 				<ResultsList
 					ref={this.handleListRef}

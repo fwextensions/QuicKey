@@ -108,6 +108,17 @@ input.search-box::-webkit-search-cancel-button:hover:active {
 	display: inline-block;
 }
 
+.options-button .badge {
+    width: 6px;
+    height: 6px;
+    top: 0;
+    right: 0;
+	border-radius: 50%;
+	background: #f33;
+	position: absolute;
+	display: none;
+}
+
 .options-button:hover {
 	background-color: #dcdcdc;
 }
