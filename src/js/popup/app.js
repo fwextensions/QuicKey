@@ -61,6 +61,14 @@ define("popup/app", [
 		}];
 
 
+	function sortHistoryItems(
+		a,
+		b)
+	{
+		return b.lastVisitTime - a.lastVisitTime;
+	}
+
+
 	var App = React.createClass({
 		mode: "tabs",
 		forceUpdate: false,
@@ -204,9 +212,15 @@ define("popup/app", [
 		getMatchingItems: function(
 			query)
 		{
-			if (this.mode == "command" || query == BookmarksQuery || query == HistoryQuery) {
+			if (query == HistoryQuery) {
+					// score the history items with an empty query first, so that
+					// all the right fields are added, and then sort them by
+					// recency.  the scoring is only necessary the first time /h
+					// is typed, but that's probably only once per popup open.
+				return scoreItems(this.history, "").sort(sortHistoryItems);
+			} else if (this.mode == "command" || query == BookmarksQuery) {
 				return [];
-			} else if (!query && this.mode == "tabs") {
+			} else if (this.mode == "tabs" && !query) {
 				return this.recents;
 			}
 
