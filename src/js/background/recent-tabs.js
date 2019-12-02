@@ -368,16 +368,11 @@ DEBUG && console.log("=== updateAll");
 
 
 	function navigate(
-		direction,
-		fromDoublePress)
+		direction)
 	{
 		var now = Date.now(),
-				// if the user is double-pressing the popup shortcut, use 0 as
-				// the lastShortcutTime so if they quickly do the double-press
-				// twice within 750ms, it will just toggle instead of pushing
-				// further back in the stack
 			newData = {
-				lastShortcutTime: fromDoublePress ? 0 : now,
+				lastShortcutTime: now,
 				previousTabIndex: -1
 			};
 
@@ -473,10 +468,8 @@ DEBUG && console.error(error);
 
 
 	function print(
-		count)
+		count = 20)
 	{
-		count = count || 20;
-
 		cp.storage.local.get(null)
 			.then(storage => {
 				const {tabsByID, tabIDs} = storage.data;

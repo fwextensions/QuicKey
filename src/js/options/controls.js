@@ -24,6 +24,7 @@
 					/>
 					<div className="indicator" />
 					<span>{props.label}</span>
+					{props.children}
 				</label>
 			</div>
 		},
@@ -44,6 +45,7 @@
 					/>
 					<div className="indicator" />
 					<span>{props.label}</span>
+					{props.children}
 				</label>
 			</li>
 		},

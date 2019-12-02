@@ -62,29 +62,36 @@ define([
 		}
 
 
-		function update(
+		async function update(
 			storage)
 		{
 			let updated = false;
+			let updater = updaters[storage.version];
 
-			while (updaters[storage.version]) {
-				const [data, version] = updaters[storage.version](storage.data,
-					storage.version);
+			while (updater) {
+					// version here is the version to which the storage has
+					// been updated
+				const [data, version] = await updater(storage.data, storage.version);
 
 				storage.data = data;
 				storage.version = version;
+
+				updater = updaters[storage.version];
 			}
 
 			if (storage.version === version) {
-				updated = validateUpdate(storage.data);
+				updated = await validateUpdate(storage.data);
 			}
 
 			if (updated) {
 					// save the updated data and version to storage
 				return saveWithVersion(storage.data);
 			} else {
-				trackers.background.event("storage", storage.version === version ?
-					"failed-validation" : "failed-update");
+				const failure = storage.version === version ?
+					"failed-validation" : "failed-update";
+
+DEBUG && console.error(`Storage error: ${failure}`);
+				trackers.background.event("storage", failure);
 
 					// we couldn't find a way to update the existing storage to
 					// the new version or the update resulted in invalid data,
