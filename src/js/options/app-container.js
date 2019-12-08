@@ -52,6 +52,9 @@ define([
 		setSettingsState: function(
 			settings)
 		{
+				// add a disabled flag to the Chrome shortcuts so the options
+				// page renders them as disabled
+			settings.chrome.shortcuts.forEach(shortcut => shortcut.disabled = true);
 			this.setState({ settings });
 		},
 
@@ -91,7 +94,7 @@ define([
 					<OptionsApp
 						settings={settings}
 						shortcuts={settings.shortcuts}
-						chromeShortcuts={settings.chromeShortcuts}
+						chrome={settings.chrome}
 						tracker={this.tracker}
 						onChange={this.handleChange}
 						onResetShortcuts={this.handleResetShortcuts}

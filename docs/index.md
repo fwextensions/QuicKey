@@ -62,7 +62,7 @@ Opening *QuicKey* displays a list of the last 50 tabs you've visited, in order o
 
   * **To switch between the two most recent tabs:**
       * Press <b><kbd>alt</kbd><kbd>Z</kbd></b> (<b><kbd>ctrl</kbd><kbd>Z</kbd></b> on macOS). 
-          * **Or:**      
+          * **OR**      
       * Quickly double-press <b><kbd>alt</kbd><kbd>Q</kbd></b> (<b><kbd>ctrl</kbd><kbd>Q</kbd></b> on macOS).
 
 <p style="margin-bottom: 0;">&nbsp;</p>

@@ -93,11 +93,11 @@ define([
 				// special-case the navigate button, which depends on the current
 				// Chrome keyboard shortcut for showing the QuicKey popup
 			if (shortcut.id == k.Shortcuts.MRUSelect) {
-				const {popupModifiers, popupKey} = this.props.chromeShortcuts;
-				const modifier = popupModifiers[0];
+				const {modifiers, key} = this.props.chrome.popup;
+				const modifier = modifiers[0];
 
 				label = shortcut.createLabel(modifier);
-				validator = shortcut.createValidator(modifier, popupKey);
+				validator = shortcut.createValidator(modifier, key);
 			}
 
 			return <li className="shortcut-setting"
@@ -126,7 +126,7 @@ define([
 
 		render: function()
 		{
-			const {settings, chromeShortcuts, onChange, onResetShortcuts} = this.props;
+			const {settings, chrome: { shortcuts: chromeShortcuts }, onChange, onResetShortcuts} = this.props;
 
 			return <main>
 				<h1 className="quickey">QuicKey options

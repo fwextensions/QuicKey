@@ -52,13 +52,17 @@ define([
 						// there's no shortcut defined.  so default to a platform-
 						// specific modifier so the user can still use alt-W to
 						// navigate the MRU list.
-					popupModifiers.push(Platform == "mac" ? "ctrl" : "alt");
+					popupModifiers[0] = (Platform == "mac" ? "ctrl" : "alt");
 				}
 
-				chromeShortcuts.popupKey = popupKeys.pop();
-				chromeShortcuts.popupModifiers = popupModifiers;
-				chromeShortcuts.popupModifierEventName = KeyConstants.ModifierEventNames[popupModifiers[0]];
-				settings.chromeShortcuts = chromeShortcuts;
+				settings.chrome = {
+					popup: {
+						key: popupKeys.pop(),
+						modifiers: popupModifiers,
+						modifierEventName: KeyConstants.ModifierEventNames[popupModifiers[0]]
+					},
+					shortcuts: chromeShortcuts
+				};
 
 				return settings;
 			});
@@ -76,10 +80,16 @@ define([
 		getDefaults: function()
 		{
 			const settings = extractSettings({ settings: getDefaultSettings() });
+			const popupModifiers = [(Platform == "mac" ? "ctrl" : "alt")];
 
-			settings.chromeShortcuts = [];
-			settings.chromeShortcuts.popupKey = "";
-			settings.chromeShortcuts.popupModifiers = [];
+			settings.chrome = {
+				popup: {
+					key: "",
+					modifiers: popupModifiers,
+					modifierEventName: KeyConstants.ModifierEventNames[popupModifiers[0]]
+				},
+				shortcuts: []
+			};
 
 			return settings;
 		},

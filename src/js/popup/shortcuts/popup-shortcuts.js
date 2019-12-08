@@ -94,7 +94,7 @@ define([
 		{
 			const shortcuts = settings.shortcuts;
 			const mruSelectKey = shortcuts[k.Shortcuts.MRUSelect];
-			const popupModifiers = settings.chromeShortcuts.popupModifiers;
+			const popupModifiers = settings.chrome.popup.modifiers;
 
 			Object.keys(shortcuts).forEach(function(id) {
 				const handler = Handlers[id];
