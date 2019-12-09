@@ -1,11 +1,14 @@
 define([
 	"react",
+	"./key-constants",
 	"background/constants"
 ], function(
 	React,
+	KeyConstants,
 	k
 ) {
 	const IsMac = /Mac/i.test(navigator.platform);
+	const {FunctionKeyPattern} = KeyConstants;
 	const MacModifiers = <span>⌘, ⌃ or ⌥</span>;
 	const WinModifiers = <span><b>ctrl</b> or <b>alt</b></span>;
 	const IncludeModifierMessage = <span>Include at least {IsMac ? MacModifiers : WinModifiers}</span>;
@@ -21,7 +24,8 @@ define([
 
 		return {
 			isKeyAllowed: !isShift,
-			isShortcutValid: !isShift && modifiers.length && baseKey,
+			isShortcutValid: !isShift && baseKey &&
+				(modifiers.length || FunctionKeyPattern.test(baseKey)),
 			errorMessage: (baseKey && modifiers.length == 0 && IncludeModifierMessage) ||
 				(isShift && <span><b>shift</b> is used to unsuspend the tab while moving it</span>)
 		};
@@ -36,7 +40,8 @@ define([
 	{
 		return {
 			isKeyAllowed: true,
-			isShortcutValid: modifiers.length && baseKey,
+			isShortcutValid: baseKey &&
+				(modifiers.length || FunctionKeyPattern.test(baseKey)),
 			errorMessage: baseKey && modifiers.length == 0 && IncludeModifierMessage
 		};
 	}

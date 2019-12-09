@@ -49,6 +49,8 @@
 						console.log(`Caught unhandled promise rejection at ${timestamp}: ${event.reason}`);
 						tracker.exception(event.reason, true);
 					} else if (event.preventDefault) {
+							// error may be null in some cases, like when
+							// running a script in the console
 						const {error} = event;
 						const stack = (error && error.stack &&
 							error.stack.replace(PathPattern, "")) || "";

@@ -95,7 +95,7 @@ define("popup/app", [
 				.bind(this)
 				.then(function(settings) {
 					this.settings = settings;
-					this.mruModifier = settings.chromeShortcuts.popupModifierEventName;
+					this.mruModifier = settings.chrome.popup.modifierEventName;
 					shortcuts.update(settings);
 
 					return settings;

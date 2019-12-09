@@ -9,7 +9,6 @@ define([
 	KeyConstants,
 	handleRef
 ) {
-	const FunctionKeyPattern = /^F\d{1,2}$/i;
 	const ShiftedKeyAliases = {
 		106: "*",	// numpad
 		107: "+",	// numpad
@@ -28,14 +27,25 @@ define([
 		221: "]",
 		222: "'"
 	};
-	const KeyCodes = "AZ09".split("").reduce(function(result, char) {
+	const ValidSpecialKeys = {
+		"arrowup": 1,
+		"arrowdown": 1,
+		"arrowleft": 1,
+		"arrowright": 1,
+		"pageup": 1,
+		"pagedown": 1,
+		"backspace": 1,
+		"delete": 1,
+		"insert": 1,
+		"home": 1,
+		"end": 1
+	};
+	const KeyCodes = "AZ09".split("").reduce((result, char) => {
 		result[char] = char.charCodeAt(0);
 
 		return result;
 	}, {});
-	const KeyOrder = KeyConstants.KeyOrder;
-	const ModifierAliases = KeyConstants.ModifierAliases;
-	const ShortcutSeparator = KeyConstants.ShortcutSeparator;
+	const {KeyOrder, ModifierAliases, ShortcutSeparator, FunctionKeyPattern} = KeyConstants;
 
 
 	const ShortcutPicker = React.createClass({
@@ -87,15 +97,12 @@ define([
 		},
 
 
-		handleDisplayRef: handleRef("display"),
-
-
 		getKeysFromShortcut: function(
 			shortcut)
 		{
 			const keys = [];
 
-			shortcut.split(ShortcutSeparator).forEach(function(key) {
+			shortcut.split(ShortcutSeparator).forEach(key => {
 				const order = KeyOrder[key];
 
 				keys[isNaN(order) ? KeyOrder.char : order] = ModifierAliases[key] || key;
@@ -109,7 +116,7 @@ define([
 			keys)
 		{
 				// filter out any empty items in the pressed keys array
-			return keys.filter(function(key) { return key; })
+			return keys.filter(key => key)
 				.join(ShortcutSeparator);
 		},
 
@@ -134,10 +141,7 @@ define([
 		{
 			const order = KeyOrder[key];
 
-// TODO: rationalize the handling of tab, enter, etc. so this isn't necessary.  getKeyOrder() is only called from handleKeyDown
-			if (order > KeyOrder.char) {
-				return -1;
-			} else if (isNaN(order)) {
+			if (isNaN(order)) {
 				return KeyOrder.char;
 			} else {
 				return order;
@@ -149,7 +153,7 @@ define([
 			key)
 		{
 			return key.length == 1 || KeyOrder[key] > -1 ||
-				FunctionKeyPattern.test(key);
+				FunctionKeyPattern.test(key) || !!ValidSpecialKeys[key];
 		},
 
 
@@ -164,6 +168,9 @@ define([
 
 			return this.props.validate(key, modifiers, baseKey, shortcut);
 		},
+
+
+		handleDisplayRef: handleRef("display"),
 
 
 		handleFocus: function(
@@ -206,36 +213,42 @@ define([
 				// this.state.pressedKeys
 			const pressedKeys = [].concat(this.state.pressedKeys);
 
-				// track the last key down so that we're not constantly setting
-				// the state while the user holds down the key and it repeats
 			if (key == "escape") {
 				this.display.blur();
-			} else if (this.lastKeyDown !== key) {
-				this.lastKeyDown = key;
+			} else if (key != "tab") {
+					// as long as it's not esc or tab, prevent the default action
+					// on every keydown.  otherwise, holding keys like page down
+					// would cause the page to scroll on repeat events.
+				event.preventDefault();
 
-				if (order > -1 && this.isValidKey(key)) {
-					pressedKeys[order] = key;
-					event.preventDefault();
+					// track the last key down so that we're not constantly setting
+					// the state while the user holds down the key and it repeats
+				if (this.lastKeyDown !== key) {
+					this.lastKeyDown = key;
 
-					const validation = this.validateShortcut(key, pressedKeys);
+					if (order > -1 && this.isValidKey(key)) {
+						pressedKeys[order] = key;
 
-					if (validation.isKeyAllowed) {
-						this.setState({
-							arePressedKeysValid: validation.isShortcutValid,
-							pressedKeys: pressedKeys
-						});
-					}
+						const validation = this.validateShortcut(key, pressedKeys);
 
-					if (validation.isShortcutValid) {
-							// tell our parent the shortcut has changed and then
-							// blur the picker, which will clear any error message
-						props.onChange(this.getShortcutFromKeys(pressedKeys), props.id);
-						this.display.blur();
-					} else {
-						this.setState({
-							errorKey: key,
-							errorMessage: validation.errorMessage
-						});
+						if (validation.isKeyAllowed) {
+							this.setState({
+								arePressedKeysValid: validation.isShortcutValid,
+								pressedKeys: pressedKeys
+							});
+						}
+
+						if (validation.isShortcutValid) {
+								// tell our parent the shortcut has changed and then
+								// blur the picker, which will clear any error message
+							props.onChange(this.getShortcutFromKeys(pressedKeys), props.id);
+							this.display.blur();
+						} else {
+							this.setState({
+								errorKey: key,
+								errorMessage: validation.errorMessage
+							});
+						}
 					}
 				}
 			}
@@ -252,10 +265,7 @@ define([
 				const pressedKeys = [].concat(this.state.pressedKeys);
 
 				pressedKeys[keyIndex] = undefined;
-
-				this.setState({
-					pressedKeys: pressedKeys
-				});
+				this.setState({ pressedKeys });
 				event.preventDefault();
 			}
 

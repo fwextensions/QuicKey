@@ -30,47 +30,43 @@ define([
 	return function getShortcuts()
 	{
 		return cp.commands.getAll()
-			.then(function(commands) {
-				return commands.map(function(chromeShortcut) {
-					const shortcutText = (chromeShortcut.shortcut || "");
-					var shortcutKeys;
+			.then(commands => commands.map(chromeShortcut => {
+				const shortcutText = (chromeShortcut.shortcut || "");
+				let shortcutKeys;
 
-					if (!shortcutText.includes(ShortcutSeparator)) {
-							// annoyingly, Mac Chrome returns keyboard shortcuts
-							// using chars like ⇧⌘A instead of Shift+Cmd+A.  so
-							// separate out the primary key name and then split the
-							// modifier keys into 1-char strings.  they'll get
-							// converted via the KeyAliases lookup below.
-						const match = shortcutText.match(MacShortcutPattern);
+				if (!shortcutText.includes(ShortcutSeparator)) {
+						// annoyingly, Mac Chrome returns keyboard shortcuts
+						// using chars like ⇧⌘A instead of Shift+Cmd+A.  so
+						// separate out the primary key name and then split the
+						// modifier keys into 1-char strings.  they'll get
+						// converted via the KeyAliases lookup below.
+					const match = shortcutText.match(MacShortcutPattern);
 
-						if (match && match.length == 3) {
-							shortcutKeys = match[1].split("").concat(match[2]);
-						} else {
-							shortcutKeys = [""];
-						}
+					if (match && match.length == 3) {
+						shortcutKeys = match[1].split("").concat(match[2]);
 					} else {
-						shortcutKeys = shortcutText.split(ShortcutSeparator);
+						shortcutKeys = [""];
 					}
+				} else {
+					shortcutKeys = shortcutText.split(ShortcutSeparator);
+				}
 
-						// make the modifier strings lowercase, remove spaces from
-						// keys like "Page Up", and fix keys like "Right Arrow", to
-						// make the order conform to the code string in the key event
-					const shortcut = shortcutKeys
-						.map(function(key) {
-							return KeyAliases[key] || key;
-						})
-						.join(ShortcutSeparator)
-						.toLowerCase();
+					// make the modifier strings lowercase, remove spaces from
+					// keys like "Page Up", and fix keys like "Right Arrow", to
+					// make the order conform to the code string in the key event
+				const shortcut = shortcutKeys
+					.map(key => KeyAliases[key] || key)
+					.join(ShortcutSeparator)
+					.toLowerCase();
 
-					return {
-							// the shortcut for opening the menu doesn't have a
-							// description in the manifest
-						label: chromeShortcut.description || "Open the QuicKey menu",
-						id: chromeShortcut.name,
-						disabled: true,
-						shortcut: shortcut
-					};
-				});
-		});
+				return {
+						// the shortcut for opening the menu doesn't have a
+						// description in the manifest
+					label: chromeShortcut.description || "Open the QuicKey menu",
+					id: chromeShortcut.name,
+					shortcut
+				};
+			})
+		)
 	}
 });

@@ -152,13 +152,15 @@ define(function() {
 
 
 		exception: function(
-			error = "Generic error",
+			error,
 			fatal)
 		{
 			let description;
 
 			try {
-				if (typeof error == "string") {
+				if (!error) {
+					description = "Generic error";
+				} else if (typeof error == "string") {
 					description = error;
 				} else if (error.stack) {
 						// reduce the noise of the protocol repeating in every URL
