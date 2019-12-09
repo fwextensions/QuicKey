@@ -311,20 +311,21 @@ define("popup/app", [
 						// to be 0, which shifts the active tab to index: 1
 					let index = Math.max(0, activeTab.index + direction);
 
-
 					if (tab.windowId == activeTab.windowId) {
 						if (index == tab.index) {
 								// the tab's already where the user is trying to
 								// move it, so do nothing
 							return;
-						} else if (tab.index < activeTab.index && direction > 0) {
-								// the moved tab is in the same window and is
-								// to the left of the active one and the user
-								// wants to move it to the right, so just set
-								// index to the active tab's position, since
-								// removing the moved tab will shift the active
-								// one's index to the left before the moved one
-								// is re-inserted
+						} else if ((tab.index < activeTab.index && direction > 0) ||
+								(tab.index > activeTab.index && direction < 0)) {
+								// the moved tab is in the same window and is to
+								// the left of the active one and the user wants
+								// to move it to the right, or the tab is to the
+								// right and they want to move it to the the
+								// left, so just set index to the active tab's
+								// position, since removing the moved tab will
+								// shift the active one's index to the left
+								// before the moved one is re-inserted
 							index = activeTab.index;
 						}
 					} else if (direction < 0) {
