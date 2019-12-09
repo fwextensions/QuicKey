@@ -36,6 +36,9 @@ define([
 			[" ", "space"],
 			["PageUp", "pg up"],
 			["PageDown", "pg dn"]
+		],
+		width4: [
+			"backspace"
 		]
 	};
 	const KeyConfigs = {};
@@ -43,17 +46,17 @@ define([
 
 		// set up the mapping between key codes and the classes and labels to
 		// use when rendering them
-	Object.keys(KeyClasses).forEach(function(className) {
-		KeyClasses[className].forEach(function(keyName) {
+	Object.keys(KeyClasses).forEach(className => {
+		KeyClasses[className].forEach(keyName => {
 			const config = {
 				label: keyName,
 				className: className
 			};
-			var code = keyName;
+			let code = keyName;
 
 			if (keyName instanceof Array) {
-				config.label = keyName[1];
 				code = keyName[0].toLowerCase();
+				config.label = keyName[1];
 			}
 
 			KeyConfigs[code] = config;
@@ -67,7 +70,7 @@ define([
 		const code = props.code;
 		const config = KeyConfigs[code];
 		const className = config && config.className || "width1";
-		var label = props.label || config && config.label || code;
+		let label = props.label || (config && config.label) || code;
 
 		if (label.length == 1) {
 			label = label.toUpperCase();
