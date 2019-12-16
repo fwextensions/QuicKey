@@ -8,6 +8,29 @@ comments: true
 # Release history
 
 
+## 1.3.0 - 2019-12-15
+
+### Added
+
+* New option to mark tabs that aren't in the current window with an icon.  The setting defaults on if you have more than 3 windows open when the extension is installed.
+
+* Typing <b><kbd>/</kbd><kbd>h</kbd></b> immediately shows the list of visited web pages, in recency order.  
+
+* Tabs that are opened via ctrl-click or by opening a folder of bookmarks are immediately added to the menu as recently-used tabs, so that you can then use <b><kbd>alt</kbd><kbd>Z</kbd></b> to toggle to a tab you just opened.  
+
+* Function keys and other special keys can be used as shortcuts.
+
+### Changed
+
+* The minimum version of Chrome is now 55.
+
+### Fixed
+
+* Holding down <b><kbd>alt</kbd><kbd>Z</kbd></b> to rapidly switch tabs could cause tabs other than the most recent two to be focused. 
+
+* Moving a tab from the same window to the left of the current tab would position it in the wrong place.
+ 
+
 ## 1.2.0 - 2019-10-12
 
 ### Added
