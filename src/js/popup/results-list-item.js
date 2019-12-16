@@ -101,25 +101,38 @@ define([
 		{
 			const {props} = this;
 			const {item, query} = props;
-			const {scores, hitMasks, title, displayURL, titleIndex} = item;
+			const {
+				scores,
+				hitMasks,
+				title,
+				titleIndex,
+				displayURL,
+				unsuspendURL,
+				faviconURL,
+				sessionId,
+				otherWindow,
+				incognito
+			} = item;
 			const className = [
 				"results-list-item",
 				props.mode,
-				(props.isSelected ? "selected" : ""),
-				(item.unsuspendURL ? "suspended" : ""),
-				(item.incognito ? "incognito" : ""),
-				(item.sessionId ? "closed" : "")
+				props.isSelected ? "selected" : "",
+				unsuspendURL ? "suspended" : "",
+				incognito ? "incognito" :
+					(otherWindow ? "other-window" : ""),
+				sessionId ? "closed" : ""
 			].join(" ");
 			const faviconStyle = {
-				backgroundImage: "url(" + item.faviconURL + ")"
+				backgroundImage: "url(" + faviconURL + ")"
 			};
 			let tooltip = [
 				title.length > MaxTitleLength ? title : "",
 				displayURL.length > MaxURLLength ? displayURL : ""
 			].join("\n");
+			let badgeTooltip = "";
 
 			if (IsDevMode) {
-				tooltip = _.toPairs(item.scores).concat([["recentBoost", item.recentBoost], ["id", item.id]])
+				tooltip = _.toPairs(scores).concat([["recentBoost", item.recentBoost], ["id", item.id]])
 					.map(function(a) { return a.join(": "); }).join("\n") + "\n" + tooltip;
 			}
 
@@ -127,14 +140,20 @@ define([
 				// so trim them
 			tooltip = tooltip.trim();
 
-			if (item.unsuspendURL && item.faviconURL.indexOf(FaviconURL) == 0 &&
-					!item.sessionId) {
+			if (unsuspendURL && faviconURL.indexOf(FaviconURL) == 0 && !sessionId) {
 					// this is a suspended tab, but The Great Suspender has
 					// forgotten the faded favicon for it or has set its own
 					// icon for some reason.  so we get the favicon through
-					// chrome://favicon/ and then fade it ourselves.  or it's a
-					// tab from a closed session.
+					// chrome://favicon/ and then fade it ourselves
 				faviconStyle.opacity = SuspendedFaviconOpacity;
+			}
+
+			if (incognito) {
+				badgeTooltip = "This tab is in incognito mode";
+			} else if (otherWindow) {
+				badgeTooltip = "This tab is in another window";
+			} else if (sessionId) {
+				badgeTooltip = "This tab was closed recently";
 			}
 
 			return <div className={className}
@@ -146,6 +165,9 @@ define([
 			>
 				<span className="favicon"
 					style={faviconStyle}
+				/>
+				<span className="badge"
+					title={badgeTooltip}
 				/>
 				<div className="title">
 					{titleIndex &&

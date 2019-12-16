@@ -62,7 +62,7 @@ Opening *QuicKey* displays a list of the last 50 tabs you've visited, in order o
 
   * **To switch between the two most recent tabs:**
       * Press <b><kbd>alt</kbd><kbd>Z</kbd></b> (<b><kbd>ctrl</kbd><kbd>Z</kbd></b> on macOS). 
-          * **Or:**      
+          * **OR**      
       * Quickly double-press <b><kbd>alt</kbd><kbd>Q</kbd></b> (<b><kbd>ctrl</kbd><kbd>Q</kbd></b> on macOS).
 
 <p style="margin-bottom: 0;">&nbsp;</p>
@@ -173,6 +173,8 @@ To find something in the last 2000 pages of your browser history, type <b><kbd>/
 ![Search history](img/search-history.png)
 
 The same <b><kbd>ctrl</kbd><kbd>enter</kbd></b> (<b><kbd>cmd</kbd><kbd>enter</kbd></b> on macOS) and <b><kbd>shift</kbd><kbd>enter</kbd></b> shortcuts will open the visited page in a new tab or window.
+
+As soon as you type <b><kbd>/</kbd><kbd>h</kbd><kbd>space</kbd></b>, the pages from your history will be listed in order of recency, so you can get back to a page you had visited without having to remember its name.
 
 
 ## <a href="https://chrome.google.com/webstore/detail/the-great-suspender/klbibkeccnjlkjkiokjodocebajanakg?hl=en"><img src="img/tgs-icon.png" style="height: 24px;"></a> The Great Suspender integration

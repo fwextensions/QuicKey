@@ -33,7 +33,8 @@ define([
 
 
 	return function getTabs(
-		tabsPromise)
+		tabsPromise,
+		markTabsInOtherWindows)
 	{
 		let tabsByTitle = {};
 
@@ -81,10 +82,16 @@ define([
 					// an empty object so the .id access below won't throw
 					// an exception.
 				const activeTab = activeTabs[0] || {};
+				const currentWindowID = activeTab.windowId;
+				const markTabs = markTabsInOtherWindows && !isNaN(currentWindowID);
 				let match;
 
 				tabs.forEach(function(tab) {
 					addURLs(tab);
+
+						// don't treat closed tabs as being in other windows
+					tab.otherWindow = markTabs &&
+						tab.windowId !== currentWindowID && !tab.sessionId;
 
 						// if the tab is suspended, check if it it's in the bad
 						// state where The Great Suspender hasn't updated its

@@ -170,7 +170,7 @@ main {
 	position: relative;
 	padding-left: 1.7em;
 	line-height: 1.4em;
-	display: block;
+	display: inline-block;
 }
 
 	/* don't use display: none so the control can still get focus */
@@ -249,6 +249,11 @@ main {
 
 .control input[type="radio"]:disabled ~ .indicator:after {
 	background: #7b7b7b;
+}
+
+.control .subtitle {
+	color: #666;
+	font-size: .9em;
 }
 
 .control-group {
@@ -437,4 +442,8 @@ main {
 
 .width3 {
 	width: 1.95em;
+}
+
+.width4 {
+	width: 3em;
 }

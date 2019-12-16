@@ -196,6 +196,8 @@ To find something in the last 2000 pages of your browser history, type "/h" in t
 
 The same CTRL-ENTER (CMD-ENTER on macOS) and SHIFT-ENTER shortcuts will open the visited page in a new tab or window.
 
+As soon as you type "/h", the pages from your history will be listed in order of recency, so you can get back to a page you had visited without having to remember its name.
+
 
 ★ The Great Suspender integration
 

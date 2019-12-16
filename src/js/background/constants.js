@@ -9,6 +9,9 @@ define({
 		Clear: "clear",
 		Close: "close"
 	},
+	MarkTabsInOtherWindows: {
+		Key: "markTabsInOtherWindows"
+	},
 	IncludeClosedTabs: {
 		Key: "includeClosedTabs"
 	},

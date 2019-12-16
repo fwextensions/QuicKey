@@ -108,6 +108,17 @@ input.search-box::-webkit-search-cancel-button:hover:active {
 	display: inline-block;
 }
 
+.options-button .badge {
+    width: 6px;
+    height: 6px;
+    top: 0;
+    right: 0;
+	border-radius: 50%;
+	background: #f33;
+	position: absolute;
+	display: none;
+}
+
 .options-button:hover {
 	background-color: #dcdcdc;
 }
@@ -162,30 +173,39 @@ input.search-box::-webkit-search-cancel-button:hover:active {
 	background-color: #ebebeb;
 }
 
-.results-list-item.incognito {
-	background-image: url(/img/incognito.svg);
-	background-size: 16px 16px;
-	background-position: 6px 25px;
-}
-
-.results-list-item.closed {
-	background-image: url(/img/history.svg);
-	background-size: 16px 16px;
-	background-position: 5px 25px;
-}
-
-.results-list-item .favicon {
+.results-list-item .favicon, .results-list-item .badge {
 	left: 6px;
 	top: 6px;
 	width: 16px;
 	height: 16px;
-	background-size: cover;
+	background-size: 16px 16px;
 	background-repeat: no-repeat;
 	position: absolute;
 }
 
 .results-list-item.closed .favicon {
 	opacity: 0.4;
+}
+
+.results-list-item .badge {
+	top: 25px;
+	display: none;
+}
+
+.results-list-item.incognito .badge {
+	background-image: url(/img/incognito.svg);
+	display: block;
+}
+
+.results-list-item.other-window .badge {
+	background-image: url(/img/window.svg);
+	display: block;
+}
+
+.results-list-item.closed .badge {
+	left: 5px;  /* this icon looks better centered shifted left 1px */
+	background-image: url(/img/history.svg);
+	display: block;
 }
 
 .results-list-item div.title, .results-list-item div.url {

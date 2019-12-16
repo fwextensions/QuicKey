@@ -107,6 +107,7 @@ require([
 	const backgroundTracker = trackers.background;
 	let popupIsOpen = false;
 	let tabChangedFromToggle = false;
+	let lastTogglePromise = Promise.resolve();
 	let isNormalIcon = true;
 	let shortcutTimer;
 	let lastWindowID;
@@ -177,18 +178,22 @@ require([
 			// set tabChangedFromToggle so that addTab() doesn't invert the icon
 		tabChangedFromToggle = true;
 
-			// if there's a debounced addTab() call waiting, fire it now, so
-			// that when we navigate to the "previous" tab below, that'll be the
-			// tab the user started from when they began navigating backwards
-			// into the stack.  otherwise, the debounced add would fire after we
-			// navigate, putting that tab on the top of the stack, even though a
-			// different tab was now active.
-		(addTab.execute() || Promise.resolve())
-			.then(() => {
-				recentTabs.toggle();
-				backgroundTracker.event("recents",
-					fromShortcut ? "toggle-shortcut" : "toggle");
-			});
+			// we have to wait for the last toggle promise chain to resolve before
+			// starting the next one.  otherwise, if the toggle key is held down,
+			// the events fire faster than recentTabs.toggle() can keep up, so
+			// the tabIDs array isn't updated before the next navigation happens,
+			// and the wrong tab is navigated to.
+		lastTogglePromise = lastTogglePromise
+				// if there's a debounced addTab() call waiting, fire it now, so
+				// that when we navigate to the "previous" tab below, that'll be
+				// the tab the user started from when they began navigating
+				// backwards into the stack.  otherwise, the debounced add would
+				// fire after we navigate, putting that tab on the top of the
+				// stack, even though a different tab was now active.
+			.then(() => addTab.execute())
+			.then(() => recentTabs.toggle())
+			.then(() => backgroundTracker.event("recents",
+				fromShortcut ? "toggle-shortcut" : "toggle"));
 	}
 
 
@@ -213,6 +218,17 @@ require([
 	chrome.tabs.onActivated.addListener(event => {
 		if (!gStartingUp) {
 			onTabChanged(event);
+		}
+	});
+
+
+	chrome.tabs.onCreated.addListener(tab => {
+		if (!tab.active) {
+				// this tab was opened by ctrl-clicking a link or by opening
+				// all the tabs in a bookmark folder, so pass true to insert
+				// this tab in the penultimate position, which makes it the
+				// "most recent" tab
+			recentTabs.add(tab, true);
 		}
 	});
 

@@ -12,11 +12,7 @@ define(function() {
 			meta: IsMac ? 1 : -1,
 			shift: 2,
 			cmd: 3,
-			char: 4,
-				// enter and tab are special-cased to show them in the disabled
-				// Chrome shortcut pickers
-			enter: 5,
-			tab: 5
+			char: 4
 		},
 		ModifierAliases: {
 			alt: IsMac ? "opt" : "alt",
@@ -31,6 +27,7 @@ define(function() {
 			ctrl: "Control",
 			cmd: "Meta"
 		},
-		ShortcutSeparator: "+"
+		ShortcutSeparator: "+",
+		FunctionKeyPattern: /^F\d{1,2}$/i
 	};
 });

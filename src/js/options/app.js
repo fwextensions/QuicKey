@@ -8,10 +8,10 @@ define([
 	React,
 	Shortcuts,
 	ShortcutPicker,
-	Controls,
+	{Checkbox, RadioButton, RadioGroup},
 	k
 ) {
-	const ClosedIcon = <img
+	const ClosedIcon = () => <img
 		src="img/history.svg"
 		alt="Closed icon"
 		style={{
@@ -20,7 +20,17 @@ define([
 			verticalAlign: "bottom"
 		}}
 	/>;
-	const IncognitoIcon = <img
+	const WindowIcon = () => <img
+		src="img/window.svg"
+		alt="Other window icon"
+		style={{
+			height: "1.2em",
+			paddingLeft: ".15em",
+			filter: "contrast(0.3)",
+			verticalAlign: "bottom"
+		}}
+	/>;
+	const IncognitoIcon = () => <img
 		src="img/incognito.svg"
 		alt="Incognito icon"
 		style={{
@@ -28,14 +38,6 @@ define([
 			verticalAlign: "bottom"
 		}}
 	/>;
-	const UpgradeMessage = <div className="update-message">
-		<h3>QuicKey now offers a number of options and customizable keyboard
-			shortcuts. Check them out below!
-		</h3>
-		<h4>You can always reopen this page by right-clicking the QuicKey icon
-			and selecting <i>Options</i>.
-		</h4>
-	</div>;
 
 
 	const OptionsApp = React.createClass({
@@ -91,11 +93,11 @@ define([
 				// special-case the navigate button, which depends on the current
 				// Chrome keyboard shortcut for showing the QuicKey popup
 			if (shortcut.id == k.Shortcuts.MRUSelect) {
-				const {popupModifiers, popupKey} = this.props.chromeShortcuts;
-				const modifier = popupModifiers[0];
+				const {modifiers, key} = this.props.chrome.popup;
+				const modifier = modifiers[0];
 
 				label = shortcut.createLabel(modifier);
-				validator = shortcut.createValidator(modifier, popupKey);
+				validator = shortcut.createValidator(modifier, key);
 			}
 
 			return <li className="shortcut-setting"
@@ -124,13 +126,9 @@ define([
 
 		render: function()
 		{
-			const {settings, chromeShortcuts, onChange, onResetShortcuts} = this.props;
+			const {settings, chrome: { shortcuts: chromeShortcuts }, onChange, onResetShortcuts} = this.props;
 
 			return <main>
-				{
-					new URLSearchParams(window.location.search).has("update") &&
-					UpgradeMessage
-				}
 				<h1 className="quickey">QuicKey options
 					<div className="help-button"
 						title="Learn more about QuicKey's features"
@@ -139,48 +137,55 @@ define([
 				</h1>
 
 				<h2>Search box</h2>
-				<Controls.RadioGroup
+				<RadioGroup
 					id={k.SpaceBehavior.Key}
 					value={settings[k.SpaceBehavior.Key]}
 					label={<span>Press <kbd>space</kbd> to:</span>}
 					onChange={onChange}
 				>
-					<Controls.RadioButton
+					<RadioButton
 						label="Select the next item in the menu"
 						value={k.SpaceBehavior.Select}
 					/>
-					<Controls.RadioButton
+					<RadioButton
 						label="Insert a space in the search query"
 						value={k.SpaceBehavior.Space}
 					/>
-				</Controls.RadioGroup>
+				</RadioGroup>
 
-				<Controls.RadioGroup
+				<RadioGroup
 					id={k.EscBehavior.Key}
 					value={settings[k.EscBehavior.Key]}
 					label={<span>Press <kbd>esc</kbd> to:</span>}
 					onChange={onChange}
 				>
-					<Controls.RadioButton
+					<RadioButton
 						label="Clear the search query, or close the menu if the query is empty"
 						value={k.EscBehavior.Clear}
 					/>
-					<Controls.RadioButton
+					<RadioButton
 						label="Close the menu immediately"
 						value={k.EscBehavior.Close}
 					/>
-				</Controls.RadioGroup>
+				</RadioGroup>
 
 				<h2>Search results</h2>
-				<Controls.Checkbox
-					id={k.IncludeClosedTabs.Key}
-					label="Include recently closed tabs in the search results"
-					value={settings[k.IncludeClosedTabs.Key]}
+				<Checkbox
+					id={k.MarkTabsInOtherWindows.Key}
+					label={<span>Mark tabs that are not in the current window with <WindowIcon /></span>}
+					value={settings[k.MarkTabsInOtherWindows.Key]}
 					onChange={onChange}
 				/>
-				<p>Selecting a closed tab (indicated by {ClosedIcon})
-					will reopen it with its full history.
-				</p>
+				<Checkbox
+					id={k.IncludeClosedTabs.Key}
+					label={<span>Include recently closed tabs in the search results (marked with <ClosedIcon />)</span>}
+					value={settings[k.IncludeClosedTabs.Key]}
+					onChange={onChange}
+				>
+					<div className="subtitle">
+						Selecting a closed tab will reopen it with its full history.
+					</div>
+				</Checkbox>
 
 				<h2>Customizable keyboard shortcuts</h2>
 				{this.renderShortcutList(Shortcuts.customizable)}
@@ -211,7 +216,7 @@ define([
 					To enable this functionality, click the button below, then
 					scroll down to the <i>Allow in incogito</i> setting and
 					toggle it on.  Incognito tabs are indicated with this
-					icon: {IncognitoIcon}.
+					icon: <IncognitoIcon />.
 				</p>
 				<img className="incognito-screenshot"
 					src="/img/incognito-option.png"

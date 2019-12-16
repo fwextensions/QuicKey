@@ -15,14 +15,9 @@ define([
 	pageTrackers,
 	k
 ) {
-	const MaxTabsLength = 50,
-		MaxSwitchDelay = 750,
-		TabKeysHash = {
-			id: 1,
-			url: 1,
-			windowId: 1
-		},
-		TabKeys = Object.keys(TabKeysHash);
+	const MaxTabsLength = 50;
+	const MaxSwitchDelay = 750;
+	const TabKeys = ["id", "url", "windowId"];
 
 
 	function titleOrURL(
@@ -62,7 +57,7 @@ define([
 		tab,
 		oldTab)
 	{
-		var recent = TabKeys.reduce(function(obj, key) {
+		const recent = TabKeys.reduce((obj, key) => {
 				obj[key] = tab[key];
 
 				return obj;
@@ -86,23 +81,21 @@ define([
 		freshTabs)
 	{
 DEBUG && console.log("=== updateFromFreshTabs", data, freshTabs);
-		var freshTabsByURL = {},
-			tabIDs = data.tabIDs,
-			tabsByID = data.tabsByID,
-				// start with an empty object so if there are old
-				// tabs lying around that aren't listed in tabIDs
-				// they'll get dropped
-			newTabsByID = {},
-			newTabIDs = [],
-			missingCount = 0,
-			tracker = pageTrackers.background;
+		const {tabIDs, tabsByID} = data;
+		const freshTabsByURL = {};
+			// start with an empty object so if there are old tabs lying around
+			// that aren't listed in tabIDs they'll get dropped
+		const newTabsByID = {};
+		const newTabIDs = [];
+		const tracker = pageTrackers.background;
+		let missingCount = 0;
 DEBUG && console.log("=== existing tabs", tabIDs.length, Object.keys(tabsByID).length, "fresh", freshTabs.length);
 
 			// create a dictionary of the new tabs by the URL and
 			// unsuspendURL, if any, so that a recent that had been
 			// saved unsuspended and then was later suspended could
 			// match up with the fresh, suspended tab
-		freshTabs.forEach(function(tab) {
+		freshTabs.forEach(tab => {
 			addURLs(tab);
 			freshTabsByURL[tab.url] = tab;
 			tab.unsuspendURL && (freshTabsByURL[tab.unsuspendURL] = tab);
@@ -111,9 +104,9 @@ DEBUG && console.log("=== existing tabs", tabIDs.length, Object.keys(tabsByID).l
 			// we need to loop on tabIDs instead of just building a
 			// hash and using Object.keys() to get a new list because
 			// we want to maintain the recency order from tabIDs
-		tabIDs.forEach(function(tabID) {
-			var oldTab = tabsByID[tabID],
-				newTab = freshTabsByURL[oldTab && oldTab.url];
+		tabIDs.forEach(tabID => {
+			const oldTab = tabsByID[tabID];
+			let newTab = freshTabsByURL[oldTab && oldTab.url];
 
 			if (newTab) {
 					// we found the same URL in a new tab, so copy over
@@ -150,53 +143,68 @@ DEBUG && console.log("updateFromFreshTabs result", result);
 
 
 	function add(
-		tab)
+		tab,
+		penultimately)
 	{
 		if (!tab) {
-			return;
+			return Promise.resolve();
 		}
 
-		return storage.set(function(data) {
-			var id = tab.id,
-				tabIDs = data.tabIDs,
-				tabsByID = data.tabsByID,
-				tabData,
-				lastID,
-				lastTab;
-
-			lastID = last(tabIDs);
-			lastTab = tabsByID[lastID];
+		return storage.set(({tabIDs, tabsByID}) => {
+			const {id} = tab;
+			const lastID = last(tabIDs);
+			const lastTab = tabsByID[lastID];
+			let tabData;
 
 			if ((lastTab && lastTab.url == tab.url && lastTab.id == tab.id &&
 					lastTab.windowId == tab.windowId)) {
 					// this is the same tab getting refocused, which could
 					// happen just from opening the extension and then
-					// closing it without doing anything.  or we switched to
-					// the tab using the keyboard shortcut.
-				return;
+					// closing it without doing anything, so update its
+					// lastVisit time to now
+				addVisit(lastTab);
+
+				return { tabsByID };
 			}
-
-				// make sure the new tab's ID isn't currently in the list and
-				// then push it on the end
-			removeItem(tabIDs, id);
-			tabIDs.push(id);
-
-DEBUG && console.log("add", `${tab.id}|${tab.windowId}`, tabIDs.slice(-5), titleOrURL(tab));
 
 				// copy just the keys we need from the tab object
 			tabData = createRecent(tab, tabsByID[id]);
 			addVisit(tabData);
 			tabsByID[id] = tabData;
 
+				// make sure the new tab's ID isn't currently in the list
+			removeItem(tabIDs, id);
+
+			if (penultimately) {
+					// this is a tab that was opened in an inactive state, so we
+					// want to insert it before the last item in the array, which
+					// is the current tab, so that the new tab becomes the
+					// "most recent" one before the current one.
+				tabIDs.splice(-1, 0, id);
+
+				if (lastTab) {
+						// update the current tab so its lastVisit is later than
+						// the inactive tab we just added.  that way, if the user
+						// opens 5 tabs from a bookmark folder and switches to
+						// the 5th, the MRU menu will show the current tab as
+						// one they were most recently on, rather than the 4th
+						// newly opened tab, since the menu is sorted by
+						// lastVisit times.
+					lastTab.lastVisit = tabData.lastVisit + 1;
+				}
+			} else {
+					// this is now the frontmost tab, so add it at the end
+				tabIDs.push(id);
+			}
+
+DEBUG && console.log("add", `${tab.id}|${tab.windowId}`, tabIDs.slice(-5), titleOrURL(tab));
+
 				// remove any older tabs that are over the max limit
-			tabIDs.splice(0, Math.max(tabIDs.length - MaxTabsLength, 0)).forEach(function(id) {
+			tabIDs.splice(0, Math.max(tabIDs.length - MaxTabsLength, 0)).forEach(id => {
 				delete tabsByID[id];
 			});
 
-			return {
-				tabIDs: tabIDs,
-				tabsByID: tabsByID
-			};
+			return { tabIDs, tabsByID };
 		}, "addTab");
 	}
 
@@ -208,20 +216,15 @@ DEBUG && console.log("add", `${tab.id}|${tab.windowId}`, tabIDs.slice(-5), title
 			return;
 		}
 
-		return storage.set(function(data) {
-			var tabIDs = data.tabIDs,
-				tabsByID = data.tabsByID,
-				index = tabIDs.indexOf(tabID);
+		return storage.set(({tabIDs, tabsByID}) => {
+			const index = tabIDs.indexOf(tabID);
 
 			if (index > -1) {
 DEBUG && console.log("tab closed", tabID, titleOrURL(tabsByID[tabID]));
 				tabIDs.splice(index, 1);
 				delete tabsByID[tabID];
 
-				return {
-					tabIDs: tabIDs,
-					tabsByID: tabsByID
-				};
+				return { tabIDs, tabsByID };
 			}
 		}, "removeTab");
 	}
@@ -231,12 +234,10 @@ DEBUG && console.log("tab closed", tabID, titleOrURL(tabsByID[tabID]));
 		oldID,
 		newID)
 	{
-		return storage.set(function(data) {
-			var tabIDs = data.tabIDs,
-				tabsByID = data.tabsByID,
-				index = tabIDs.indexOf(oldID),
-				oldTab = tabsByID[oldID],
-				newData = {};
+		return storage.set(({tabIDs, tabsByID}) => {
+			const index = tabIDs.indexOf(oldID);
+			const oldTab = tabsByID[oldID];
+			const newData = {};
 
 			if (oldTab) {
 					// delete the tab from tabsByID even if it's not in tabIDs
@@ -261,7 +262,7 @@ DEBUG && console.log("tab replaced", oldID, titleOrURL(oldTab));
 
 	function getAll()
 	{
-		return storage.get(function(data) {
+		return storage.get(data => {
 			const promises = [cp.tabs.query({})];
 
 			if (data.settings[k.IncludeClosedTabs.Key]) {
@@ -271,18 +272,16 @@ DEBUG && console.log("tab replaced", oldID, titleOrURL(oldTab));
 			}
 
 			return Promise.all(promises)
-				.spread(function(freshTabs, closedTabs) {
+				.spread((freshTabs, closedTabs) => {
+					const {tabIDs, lastUpdateTime, lastStartupTime} = data;
 					const freshTabsByURL = {};
 					const closedTabsByURL = {};
-					var tabsByID = data.tabsByID;
-					var newData = {
-						tabsByID: tabsByID
-					};
-					var tabs;
+					let {tabsByID} = data;
+					let newData = { tabsByID };
+					let tabs;
 
 						// lastUpdateTime shouldn't be undefined, but just in case
-					if (isNaN(data.lastUpdateTime) ||
-							data.lastStartupTime > data.lastUpdateTime) {
+					if (isNaN(lastUpdateTime) || lastStartupTime > lastUpdateTime) {
 DEBUG && console.log("====== calling updateFromFreshTabs");
 
 						newData = updateFromFreshTabs(data, freshTabs);
@@ -290,9 +289,10 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 					}
 
 						// update the fresh tabs with any recent data we have
-					tabs = freshTabs.map(function(tab) {
-						const oldTab = tabsByID[tab.id];
-						var lastVisit = 0;
+					tabs = freshTabs.map(tab => {
+						const {id, url} = tab;
+						const oldTab = tabsByID[id];
+						let lastVisit = 0;
 
 						if (oldTab) {
 								// point the recent tab at the refreshed tab so
@@ -302,12 +302,12 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 								// way, when Chrome restarts and we try to match
 								// the saved recents against the new tabs, we'll
 								// be able to match it by URL.
-							tabsByID[tab.id] = createRecent(tab, oldTab);
-							lastVisit = tabsByID[tab.id].lastVisit;
+							tabsByID[id] = createRecent(tab, oldTab);
+							lastVisit = tabsByID[id].lastVisit;
 						}
 
 						tab.lastVisit = lastVisit;
-						freshTabsByURL[tab.url] = true;
+						freshTabsByURL[url] = true;
 
 						return tab;
 					});
@@ -318,19 +318,18 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 						// new install or after closing a window, the current tab
 						// will be in the list, but is then removed from the list
 						// in getTabs().
-					if (data.tabIDs.length > 1) {
+					if (tabIDs.length > 1) {
 							// convert the sessions to tab objects and dedupe
 							// them by URL, keeping the most recent version of each
-						tabs = tabs.concat(closedTabs.map(function(session) {
-								const tabFromSession = session.tab || session.window.tabs[0];
+						tabs = tabs.concat(closedTabs.map(session => {
+							const tabFromSession = session.tab || session.window.tabs[0];
 
-									// session lastModified times are in Unix epoch
-								tabFromSession.lastVisit = session.lastModified * 1000;
+								// session lastModified times are in Unix epoch
+							tabFromSession.lastVisit = session.lastModified * 1000;
 
-								return tabFromSession;
-							})
-							.filter(function(tab) {
-								const url = tab.url;
+							return tabFromSession;
+						})
+							.filter(({url}) => {
 								const existingTab = url in closedTabsByURL ||
 									url in freshTabsByURL;
 
@@ -345,9 +344,7 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 						// storage.set() for getAll() so that the popup doesn't
 						// have to wait for the data to get stored before it's
 						// returned, to make the recents menu render faster.
-					storage.set(function() {
-						return newData;
-					});
+					storage.set(() => newData);
 
 					return tabs;
 				});
@@ -357,39 +354,31 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 
 	function updateAll()
 	{
-		return storage.set(function(data) {
-			return cp.tabs.query({})
-				.then(function(freshTabs) {
+		return storage.set(data => cp.tabs.query({})
+			.then(freshTabs => {
 DEBUG && console.log("=== updateAll");
-					return updateFromFreshTabs(data, freshTabs);
-				});
-		}, "updateAll");
+				return updateFromFreshTabs(data, freshTabs);
+			}), "updateAll");
 	}
 
 
 	function navigate(
-		direction,
-		fromDoublePress)
+		direction)
 	{
-		var now = Date.now(),
-				// if the user is double-pressing the popup shortcut, use 0 as
-				// the lastShortcutTime so if they quickly do the double-press
-				// twice within 750ms, it will just toggle instead of pushing
-				// further back in the stack
-			newData = {
-				lastShortcutTime: fromDoublePress ? 0 : now,
-				previousTabIndex: -1
-			};
+		const now = Date.now();
+		const newData = {
+			lastShortcutTime: now,
+			previousTabIndex: -1
+		};
 
 
 		function switchTabs(
 			data)
 		{
-			var tabIDs = data.tabIDs,
-				tabIDCount = tabIDs.length,
-				maxIndex = tabIDCount - 1,
-				previousTabIndex,
-				previousTabID;
+			const {tabIDs, tabsByID} = data;
+			const tabIDCount = tabIDs.length;
+			const maxIndex = tabIDCount - 1;
+			let previousTabIndex;
 
 			if (now - data.lastShortcutTime < MaxSwitchDelay && data.previousTabIndex > -1) {
 				if (direction == -1) {
@@ -408,10 +397,10 @@ DEBUG && console.log("=== updateAll");
 				// if there's only one tab or the user pressed alt-S while not
 				// navigating, this will be undefined and we'll just return
 				// newData as-is below
-			previousTabID = tabIDs[previousTabIndex];
+			const previousTabID = tabIDs[previousTabIndex];
 
 			if (previousTabID) {
-DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabIndex, tabIDs.slice(-5), titleOrURL(data.tabsByID[previousTabID]));
+DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabIndex, tabIDs.slice(-5), titleOrURL(tabsByID[previousTabID]));
 				newData.previousTabIndex = previousTabIndex;
 
 					// we don't start the promise chain with windows.update
@@ -420,16 +409,13 @@ DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabInde
 					// we can handle it in the catch() below, instead of having
 					// to duplicate the error handling code outside the chain.
 				return Promise.resolve()
-					.then(function() {
-							// if the previous tab's data is not in tabsByID,
-							// this will throw an exception that will be caught
-							// below and the bad tab ID will be removed
-						return cp.windows.update(data.tabsByID[previousTabID].windowId, { focused: true })
-					})
-					.then(function() {
-						return cp.tabs.update(previousTabID, { active: true });
-					})
-					.catch(function(error) {
+						// if the previous tab's data is not in tabsByID,
+						// this will throw an exception that will be caught
+						// below and the bad tab ID will be removed
+					.then(() => cp.windows.update(tabsByID[previousTabID].windowId,
+						{ focused: true }))
+					.then(() => cp.tabs.update(previousTabID, { active: true }))
+					.catch(error => {
 							// we got an error either because the previous
 							// tab is no longer around or its data is not in
 							// tabsByID, so remove it and update newData so
@@ -439,11 +425,11 @@ DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabInde
 							// recurse below, the next iteration will calculate
 							// the previous tab starting from there.
 						tabIDs.splice(previousTabIndex, 1);
-						delete data.tabsByID[previousTabID];
+						delete tabsByID[previousTabID];
 						data.previousTabIndex = previousTabIndex;
 
 						newData.tabIDs = tabIDs;
-						newData.tabsByID = data.tabsByID;
+						newData.tabsByID = tabsByID;
 DEBUG && console.error(error);
 
 						return switchTabs(data);
@@ -473,13 +459,11 @@ DEBUG && console.error(error);
 
 
 	function print(
-		count)
+		count = 20)
 	{
-		count = count || 20;
-
 		cp.storage.local.get(null)
-			.then(storage => {
-				const {tabsByID, tabIDs} = storage.data;
+			.then(({data}) => {
+				const {tabsByID, tabIDs} = data;
 
 				Promise.all(
 					tabIDs.slice(-count).reverse().map(tabID =>

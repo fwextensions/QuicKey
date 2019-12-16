@@ -34,21 +34,35 @@ define([
 		const settings = extractSettings(data);
 
 		return getChromeShortcuts()
-			.then(function(chromeShortcuts) {
-				const popupShortcut = chromeShortcuts.filter(function(shortcut) {
-					return shortcut.id == "_execute_browser_action";
-				})[0].shortcut || "";
+			.then(chromeShortcuts => {
+				const popupShortcut = chromeShortcuts.filter(
+					({id}) => id == "_execute_browser_action")[0].shortcut || "";
 				const popupKeys = popupShortcut.split("+");
 					// filter out shift from the modifiers, since we'll use
 					// shift+<mruKey> to navigate up the list
-				const popupModifiers = popupKeys.slice(0, -1).filter(function(key) {
-					return key.toLowerCase() != "shift";
-				});
+				const popupModifiers = popupKeys.slice(0, -1).filter(
+					key => key.toLowerCase() != "shift");
 
-				chromeShortcuts.popupKey = popupKeys.pop();
-				chromeShortcuts.popupModifiers = popupModifiers;
-				chromeShortcuts.popupModifierEventName = KeyConstants.ModifierEventNames[popupModifiers[0]];
-				settings.chromeShortcuts = chromeShortcuts;
+				if (!popupModifiers.length) {
+						// for some reason, Chrome sometimes doesn't return the
+						// shortcut for the browser action, even if it's getting
+						// triggered by it.  or the non-ASCII modifier symbols
+						// on Mac might have gotten corrupted, so they don't
+						// match what Chrome returns, and therefore we think
+						// there's no shortcut defined.  so default to a platform-
+						// specific modifier so the user can still use alt-W to
+						// navigate the MRU list.
+					popupModifiers[0] = (Platform == "mac" ? "ctrl" : "alt");
+				}
+
+				settings.chrome = {
+					popup: {
+						key: popupKeys.pop(),
+						modifiers: popupModifiers,
+						modifierEventName: KeyConstants.ModifierEventNames[popupModifiers[0]]
+					},
+					shortcuts: chromeShortcuts
+				};
 
 				return settings;
 			});
@@ -66,10 +80,16 @@ define([
 		getDefaults: function()
 		{
 			const settings = extractSettings({ settings: getDefaultSettings() });
+			const popupModifiers = [(Platform == "mac" ? "ctrl" : "alt")];
 
-			settings.chromeShortcuts = [];
-			settings.chromeShortcuts.popupKey = "";
-			settings.chromeShortcuts.popupModifiers = [];
+			settings.chrome = {
+				popup: {
+					key: "",
+					modifiers: popupModifiers,
+					modifierEventName: KeyConstants.ModifierEventNames[popupModifiers[0]]
+				},
+				shortcuts: []
+			};
 
 			return settings;
 		},
@@ -79,8 +99,7 @@ define([
 			key,
 			value)
 		{
-			return storage.set(function(data) {
-				const settings = data.settings;
+			return storage.set(({settings}) => {
 				const shortcuts = settings.shortcuts[Platform];
 
 				if (key in settings) {
@@ -88,7 +107,7 @@ define([
 				} else {
 					shortcuts[key] = value;
 
-					Object.keys(shortcuts).forEach(function(shortcutID) {
+					Object.keys(shortcuts).forEach(shortcutID => {
 							// clear any existing identical shortcuts.  we have
 							// to use a function for comparison, because some of
 							// the default shortcuts are defined like mod+C,
@@ -108,9 +127,7 @@ define([
 
 		resetShortcuts: function()
 		{
-			return storage.set(function(data) {
-				const settings = data.settings;
-
+			return storage.set(({settings}) => {
 					// we need to get a fresh copy of the shortcuts object,
 					// instead of getting it once at the top of the module,
 					// since resetting it would point settings at that copy.

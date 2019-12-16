@@ -37,11 +37,11 @@ define("popup/app", [
 	k,
 	_
 ) {
-	const MinScore = .15,
-		NearlyZeroScore = .05,
+	const MinScore = .04,
+		NearlyZeroScore = .02,
 		MaxItems = 10,
-		MinItems = 3,
-		MinScoreDiff = .4,
+		MinItems = 4,
+		MinScoreDiff = .1,
 		VeryRecentMS = 5 * 1000,
 		HourMS = 60 * 60 * 1000,
 		HourCount = 3 * 24,
@@ -61,6 +61,14 @@ define("popup/app", [
 		}];
 
 
+	function sortHistoryItems(
+		a,
+		b)
+	{
+		return b.lastVisitTime - a.lastVisitTime;
+	}
+
+
 	var App = React.createClass({
 		mode: "tabs",
 		forceUpdate: false,
@@ -75,6 +83,7 @@ define("popup/app", [
 		mruModifier: "Alt",
 		resultsList: null,
 		settings: settings.getDefaults(),
+		settingsPromise: Promise.resolve(),
 
 
 		getInitialState: function()
@@ -82,12 +91,14 @@ define("popup/app", [
 			var props = this.props,
 				query = props.initialQuery;
 
-			settings.get()
+			this.settingsPromise = settings.get()
 				.bind(this)
 				.then(function(settings) {
 					this.settings = settings;
-					this.mruModifier = settings.chromeShortcuts.popupModifierEventName;
+					this.mruModifier = settings.chrome.popup.modifierEventName;
 					shortcuts.update(settings);
+
+					return settings;
 				});
 
 			return {
@@ -105,7 +116,8 @@ define("popup/app", [
 			recentTabs.getAll()
 				.bind(this)
 				.then(function(tabs) {
-					var now = Date.now();
+					const now = Date.now();
+					const {settingsPromise} = this;
 
 						// boost the scores of recent tabs
 					tabs.forEach(function(tab) {
@@ -129,7 +141,10 @@ define("popup/app", [
 					});
 
 					return this.loadPromisedItems(function() {
-						return getTabs(tabs)
+						return settingsPromise
+							.then(function(settings) {
+								return getTabs(tabs, settings[k.MarkTabsInOtherWindows.Key]);
+							})
 							.then(function(tabs) {
 									// run scoreItems() on the tabs so that the
 									// hitMask and scores keys are added to each
@@ -197,22 +212,28 @@ define("popup/app", [
 		getMatchingItems: function(
 			query)
 		{
-			if (this.mode == "command" || query == BookmarksQuery || query == HistoryQuery) {
+			if (query == HistoryQuery) {
+					// score the history items with an empty query first, so that
+					// all the right fields are added, and then sort them by
+					// recency.  the scoring is only necessary the first time /h
+					// is typed, but that's probably only once per popup open.
+				return scoreItems(this.history, "").sort(sortHistoryItems);
+			} else if (this.mode == "command" || query == BookmarksQuery) {
 				return [];
-			} else if (!query && this.mode == "tabs") {
+			} else if (this.mode == "tabs" && !query) {
 				return this.recents;
 			}
 
-			var scores = scoreItems(this[this.mode], query),
-				firstScoresDiff = (scores.length > 1 && scores[0].score > MinScore) ?
-					(scores[0].score - scores[1].score) : 0,
-					// drop barely-matching results, keeping a minimum of 3,
-					// unless there's a big difference in scores between the
-					// first two items, which may mean we need a longer tail
-				matchingItems = _.dropRightWhile(scores, function(item, i) {
-					return item.score < NearlyZeroScore ||
-						(item.score < MinScore && (i + 1 > MinItems || firstScoresDiff > MinScoreDiff));
-				});
+			const scores = scoreItems(this[this.mode], query);
+			const firstScoresDiff = (scores.length > 1 &&
+				scores[0].score > MinScore) ? (scores[0].score - scores[1].score) : 0;
+				// drop barely-matching results, keeping a minimum of 3,
+				// unless there's a big difference in scores between the
+				// first two items, which may mean we need a longer tail
+			const matchingItems = _.dropRightWhile(scores, ({score}, i) =>
+				score < NearlyZeroScore ||
+					(score < MinScore && (i + 1 > MinItems || firstScoresDiff > MinScoreDiff))
+			);
 
 			return matchingItems;
 		},
@@ -290,20 +311,21 @@ define("popup/app", [
 						// to be 0, which shifts the active tab to index: 1
 					let index = Math.max(0, activeTab.index + direction);
 
-
 					if (tab.windowId == activeTab.windowId) {
 						if (index == tab.index) {
 								// the tab's already where the user is trying to
 								// move it, so do nothing
 							return;
-						} else if (tab.index < activeTab.index && direction > 0) {
-								// the moved tab is in the same window and is
-								// to the left of the active one and the user
-								// wants to move it to the right, so just set
-								// index to the active tab's position, since
-								// removing the moved tab will shift the active
-								// one's index to the left before the moved one
-								// is re-inserted
+						} else if ((tab.index < activeTab.index && direction > 0) ||
+								(tab.index > activeTab.index && direction < 0)) {
+								// the moved tab is in the same window and is to
+								// the left of the active one and the user wants
+								// to move it to the right, or the tab is to the
+								// right and they want to move it to the the
+								// left, so just set index to the active tab's
+								// position, since removing the moved tab will
+								// shift the active one's index to the left
+								// before the moved one is re-inserted
 							index = activeTab.index;
 						}
 					} else if (direction < 0) {
@@ -584,6 +606,7 @@ define("popup/app", [
 					onClick={this.onOptionsClick}
 				>
 					<img src="/img/gear.svg" />
+					<div className="badge" />
 				</div>
 				<ResultsList
 					ref={this.handleListRef}
