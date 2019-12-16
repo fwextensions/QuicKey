@@ -227,8 +227,16 @@ require([
 				// this tab was opened by ctrl-clicking a link or by opening
 				// all the tabs in a bookmark folder, so pass true to insert
 				// this tab in the penultimate position, which makes it the
-				// "most recent" tab
-			recentTabs.add(tab, true);
+				// "most recent" tab.  then re-add the currently focused tab,
+				// so that its lastVisit gets updated to after the ctrl-clicked
+				// tab's lastVisit.  that way, if the user opens 5 tabs from a
+				// bookmark folder and switches to the 5th, the MRU menu will
+				// show the current tab as one they were most recently on, rather
+				// than the 4th newly opened tab, since the menu is sorted by
+				// lastVisit times.
+			recentTabs.add(tab, true)
+				.then(({tabIDs, tabsByID}) =>
+					recentTabs.add(tabsByID[tabIDs.slice(-1)[0]]));
 		}
 	});
 

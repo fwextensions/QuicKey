@@ -147,7 +147,7 @@ DEBUG && console.log("updateFromFreshTabs result", result);
 		penultimately)
 	{
 		if (!tab) {
-			return;
+			return Promise.resolve();
 		}
 
 		return storage.set(({tabIDs, tabsByID}) => {
@@ -160,9 +160,13 @@ DEBUG && console.log("updateFromFreshTabs result", result);
 					lastTab.windowId == tab.windowId)) {
 					// this is the same tab getting refocused, which could
 					// happen just from opening the extension and then
-					// closing it without doing anything.  or we switched to
-					// the tab using the keyboard shortcut.
-				return;
+					// closing it without doing anything.  or a tab was opened
+					// in an inactive state, and the background is re-adding the
+					// current tab to update its lastVisit time to now so that
+					// it gets sorted correctly.
+				addVisit(lastTab);
+
+				return { tabsByID };
 			}
 
 				// make sure the new tab's ID isn't currently in the list
