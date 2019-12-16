@@ -160,14 +160,17 @@ DEBUG && console.log("updateFromFreshTabs result", result);
 					lastTab.windowId == tab.windowId)) {
 					// this is the same tab getting refocused, which could
 					// happen just from opening the extension and then
-					// closing it without doing anything.  or a tab was opened
-					// in an inactive state, and the background is re-adding the
-					// current tab to update its lastVisit time to now so that
-					// it gets sorted correctly.
+					// closing it without doing anything, so update its
+					// lastVisit time to now
 				addVisit(lastTab);
 
 				return { tabsByID };
 			}
+
+				// copy just the keys we need from the tab object
+			tabData = createRecent(tab, tabsByID[id]);
+			addVisit(tabData);
+			tabsByID[id] = tabData;
 
 				// make sure the new tab's ID isn't currently in the list
 			removeItem(tabIDs, id);
@@ -175,20 +178,26 @@ DEBUG && console.log("updateFromFreshTabs result", result);
 			if (penultimately) {
 					// this is a tab that was opened in an inactive state, so we
 					// want to insert it before the last item in the array, which
-					// is the current window, so that the new tab becomes the
-					// "most recent" one
+					// is the current tab, so that the new tab becomes the
+					// "most recent" one before the current one.
 				tabIDs.splice(-1, 0, id);
+
+				if (lastTab) {
+						// update the current tab so its lastVisit is later than
+						// the inactive tab we just added.  that way, if the user
+						// opens 5 tabs from a bookmark folder and switches to
+						// the 5th, the MRU menu will show the current tab as
+						// one they were most recently on, rather than the 4th
+						// newly opened tab, since the menu is sorted by
+						// lastVisit times.
+					lastTab.lastVisit = tabData.lastVisit + 1;
+				}
 			} else {
 					// this is now the frontmost tab, so add it at the end
 				tabIDs.push(id);
 			}
 
 DEBUG && console.log("add", `${tab.id}|${tab.windowId}`, tabIDs.slice(-5), titleOrURL(tab));
-
-				// copy just the keys we need from the tab object
-			tabData = createRecent(tab, tabsByID[id]);
-			addVisit(tabData);
-			tabsByID[id] = tabData;
 
 				// remove any older tabs that are over the max limit
 			tabIDs.splice(0, Math.max(tabIDs.length - MaxTabsLength, 0)).forEach(id => {
