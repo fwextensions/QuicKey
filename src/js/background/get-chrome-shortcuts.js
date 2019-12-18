@@ -18,13 +18,18 @@ define([
 		"→": "ArrowRight",
 		"↑": "ArrowUp",
 		"↓": "ArrowDown",
-		"⌃": "Ctrl",
-		"⇧": "Shift",
-		"⌥": "Opt",
-		"⌘": "Cmd",
+		"\u2303": "Ctrl",
+		"\u21E7": "Shift",
+		"\u2325": "Opt",
+		"\u2318": "Cmd",
+//		"⌃": "Ctrl",
+//		"⇧": "Shift",
+//		"⌥": "Opt",
+//		"⌘": "Cmd",
 	};
 	const ShortcutSeparator = "+";
-	const MacShortcutPattern = /([⌃⇧⌥⌘]+)(.+)/;
+	const MacShortcutPattern = /([\u2303\u21E7\u2325\u2318]+)(.+)/;
+//	const MacShortcutPattern = /([⌃⇧⌥⌘]+)(.+)/;
 
 
 	return function getShortcuts()
