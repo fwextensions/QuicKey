@@ -17,11 +17,15 @@ define([
 		"←": "ArrowLeft",
 		"→": "ArrowRight",
 		"↑": "ArrowUp",
-		"↓": "ArrowDown",
-		"\u2303": "Ctrl",
-		"\u21E7": "Shift",
-		"\u2325": "Opt",
-		"\u2318": "Cmd",
+		"↓": "ArrowDown"
+//		["\u2303"]: "Ctrl",
+//		["\u21E7"]: "Shift",
+//		["\u2325"]: "Opt",
+//		["\u2318"]: "Cmd",
+//		"\u2303": "Ctrl",
+//		"\u21E7": "Shift",
+//		"\u2325": "Opt",
+//		"\u2318": "Cmd",
 //		"⌃": "Ctrl",
 //		"⇧": "Shift",
 //		"⌥": "Opt",
@@ -31,6 +35,10 @@ define([
 	const MacShortcutPattern = /([\u2303\u21E7\u2325\u2318]+)(.+)/;
 //	const MacShortcutPattern = /([⌃⇧⌥⌘]+)(.+)/;
 
+	KeyAliases["\u2303"] = "Ctrl";
+	KeyAliases["\u21E7"] = "Shift";
+	KeyAliases["\u2325"] = "Opt";
+	KeyAliases["\u2318"] = "Cmd";
 
 	return function getShortcuts()
 	{
