@@ -14,10 +14,17 @@ define([
 		"Del": "Delete",
 		"Comma": ",",
 		"Period": ".",
-		"←": "ArrowLeft",
-		"→": "ArrowRight",
-		"↑": "ArrowUp",
-		"↓": "ArrowDown"
+			// Unicode chars used as keys show up as broken chars in Chrome after
+			// r.js combines the files
+//		"←": "ArrowLeft",
+//		"→": "ArrowRight",
+//		"↑": "ArrowUp",
+//		"↓": "ArrowDown",
+//		"⌃": "Ctrl",
+//		"⇧": "Shift",
+//		"⌥": "Opt",
+//		"⌘": "Cmd",
+			// babel converts these back to single chars during the build
 //		["\u2303"]: "Ctrl",
 //		["\u21E7"]: "Shift",
 //		["\u2325"]: "Opt",
@@ -26,15 +33,18 @@ define([
 //		"\u21E7": "Shift",
 //		"\u2325": "Opt",
 //		"\u2318": "Cmd",
-//		"⌃": "Ctrl",
-//		"⇧": "Shift",
-//		"⌥": "Opt",
-//		"⌘": "Cmd",
 	};
 	const ShortcutSeparator = "+";
 	const MacShortcutPattern = /([\u2303\u21E7\u2325\u2318]+)(.+)/;
+		// Unicode chars in a regex also show up broken
 //	const MacShortcutPattern = /([⌃⇧⌥⌘]+)(.+)/;
 
+		// the only way to prevent babel from converting the chars seems to be
+		// to set the keys this way
+	KeyAliases["\u2190"] = "ArrowLeft";
+	KeyAliases["\u2192"] = "ArrowRight";
+	KeyAliases["\u2191"] = "ArrowUp";
+	KeyAliases["\u2193"] = "ArrowDown";
 	KeyAliases["\u2303"] = "Ctrl";
 	KeyAliases["\u21E7"] = "Shift";
 	KeyAliases["\u2325"] = "Opt";
