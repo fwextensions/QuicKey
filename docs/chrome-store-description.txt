@@ -67,6 +67,17 @@ Switch tabs or access bookmarks and history with a Quicksilver-style search or a
 Switch tabs with a Quicksilver-style search or a most recently used (MRU) tab list
 
 
+# Search terms in Edge store
+
+tab switcher
+tab manager
+MRU tab menu
+most recently used tabs menu
+recent tabs menu
+tab search
+ctrl-tab navigation
+
+
 ★
 ➤
 ↑ ↓
