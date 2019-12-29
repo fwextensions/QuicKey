@@ -355,7 +355,7 @@ module.exports = function(grunt) {
 			"requirejs",
 			"babel",
 			"sync:build",
-//			"clean:rjs"
+			"clean:rjs"
 		]);
 	});
 
