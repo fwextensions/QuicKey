@@ -56,7 +56,7 @@ Chrome's *Keyboard shortcuts* screen normally blocks you from using <b><kbd>ctrl
            keybinding: "Ctrl+Tab"
        });
 
-    <button class="copy" onclick="copyCode(1)">Copy to Clipboard</button>
+    <button class="copy" onclick="copyCode(0)">Copy to Clipboard</button>
 
 6. Click into the console area of DevTools and paste the code next to the `>`.
 
@@ -88,7 +88,7 @@ Follow [steps 1 through 4](#option-1-1) from option 1 above.
            keybinding: "Ctrl+Shift+Tab"
        });
 
-    <button class="copy" onclick="copyCode(2)">Copy to Clipboard</button>
+    <button class="copy" onclick="copyCode(1)">Copy to Clipboard</button>
 
 6. Click into the console area of DevTools and paste the code next to the `>`.
 
@@ -136,16 +136,21 @@ The other default shortcuts continue to work, so you can still press <b><kbd>alt
     {
         var copyFrom = document.createElement("textarea"),
             body = document.body,
+            source = document.getElementsByTagName("pre")[index],
             result;
 
-        copyFrom.textContent = document.getElementsByClassName("highlight")[index].textContent;
-        body.appendChild(copyFrom);
-        copyFrom.select();
-        result = document.execCommand("copy");
-        body.removeChild(copyFrom);
-
-        if (!result) {
-            alert("The browser blocked the copy action for some reason.");
-        }
+		if (source) {
+			copyFrom.textContent = source.textContent;
+			body.appendChild(copyFrom);
+			copyFrom.select();
+			result = document.execCommand("copy");
+			body.removeChild(copyFrom);
+	
+			if (!result) {
+				alert("The browser blocked the copy action for some reason.");
+			}
+		} else {
+			alert("The code couldn't be found. Please copy it manually.");
+		}
     }
 </script>

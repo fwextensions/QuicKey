@@ -11,6 +11,7 @@ define([
 ) {
 	const TitlePattern = /ttl=([^&]+)/;
 	const BadTGSTitlePattern = /^chrome-extension:\/\/[^/]+\/suspended\.html#ttl=([^&]+)/;
+	const WhitespacePattern = /[\u00A0\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000]/g;
 
 
 	function decode(
@@ -34,7 +35,8 @@ define([
 
 	return function getTabs(
 		tabsPromise,
-		markTabsInOtherWindows)
+		markTabsInOtherWindows,
+		normalizeWhitespace)
 	{
 		let tabsByTitle = {};
 
@@ -75,7 +77,7 @@ define([
 				currentWindow: true
 			})
 		])
-			.spread(function(tabs, activeTabs) {
+			.spread((tabs, activeTabs) => {
 					// there should normally be an active tab, unless we've
 					// refreshed the open popup via devtools, which seemed to
 					// return a normal active tab in Chrome pre-65.  default to
@@ -86,7 +88,7 @@ define([
 				const markTabs = markTabsInOtherWindows && !isNaN(currentWindowID);
 				let match;
 
-				tabs.forEach(function(tab) {
+				tabs.forEach(tab => {
 					addURLs(tab);
 
 						// don't treat closed tabs as being in other windows
@@ -107,6 +109,14 @@ define([
 						if (match) {
 							tab.title = decode(match[1]);
 						}
+					}
+
+					if (normalizeWhitespace) {
+							// replace all non-standard spaces with a regular
+							// space so that users who've enabled the option to
+							// insert spaces in the query can match against
+							// these titles
+						tab.title = tab.title.replace(WhitespacePattern, " ");
 					}
 
 					indexDuplicateTitles(tab);

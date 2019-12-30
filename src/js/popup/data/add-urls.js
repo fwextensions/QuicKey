@@ -1,16 +1,16 @@
 define(function() {
 		// assume any extension URL that begins with suspended.html is from TGS
-	const SuspendedURLPattern = /^chrome-extension:\/\/[^/]+\/suspended\.html#(?:.*&)?uri=(.+)$/,
-		ProtocolPattern = /^((chrome-extension:\/\/[^/]+\/suspended\.html#(?:.*&)?uri=)?(https?|file|chrome):\/\/(www\.)?)|(chrome-extension:\/\/[^/]+\/)/,
-		TGSIconPath = "chrome-extension://klbibkeccnjlkjkiokjodocebajanakg/img/",
-		FaviconURLPrefix = "chrome://favicon/";
+	const SuspendedURLPattern = /^chrome-extension:\/\/[^/]+\/suspended\.html#(?:.*&)?uri=(.+)$/;
+	const ProtocolPattern = /^((chrome-extension:\/\/[^/]+\/suspended\.html#(?:.*&)?uri=)?(https?|file|chrome):\/\/(www\.)?)|(chrome-extension:\/\/[^/]+\/)/;
+	const TGSIconPath = "chrome-extension://klbibkeccnjlkjkiokjodocebajanakg/img/";
+	const FaviconURLPrefix = "chrome://favicon/";
 
 
 	return function addURLs(
 		item)
 	{
-		var url = item.url,
-			unsuspendURL = url.replace(SuspendedURLPattern, "$1");
+		let {url, favIconUrl} = item;
+		const unsuspendURL = url.replace(SuspendedURLPattern, "$1");
 
 		if (url != unsuspendURL) {
 				// add a URL without the Great Suspender preamble that we can use
@@ -28,8 +28,8 @@ define(function() {
 			// them as data URIs in item.favIconUrl.  except, sometimes it seems
 			// to put its own icon in there if the background page wasn't available,
 			// so default to the chrome:// URL in that case.
-		item.faviconURL = (item.favIconUrl && item.favIconUrl.indexOf(TGSIconPath) != 0) ?
-			item.favIconUrl : FaviconURLPrefix + (item.unsuspendURL || url);
+		item.faviconURL = (favIconUrl && favIconUrl.indexOf(TGSIconPath) != 0) ?
+			favIconUrl : FaviconURLPrefix + (item.unsuspendURL || url);
 
 			// add a clean displayURL to each tab that we can score against and
 			// show in the item.  unfortunately, decodeURIComponent() will throw
@@ -42,7 +42,7 @@ define(function() {
 			url = url.replace(/\+/g, "%20");
 			url = decodeURIComponent(url);
 		} catch (e) {
-			console.log(`decodeURIComponent failed on: ${url}`);
+DEBUG && console.log(`decodeURIComponent failed on: ${url}`);
 
 			try {
 				url = unescape(url);

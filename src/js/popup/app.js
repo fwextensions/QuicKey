@@ -143,7 +143,8 @@ define("popup/app", [
 					return this.loadPromisedItems(function() {
 						return settingsPromise
 							.then(function(settings) {
-								return getTabs(tabs, settings[k.MarkTabsInOtherWindows.Key]);
+								return getTabs(tabs, settings[k.MarkTabsInOtherWindows.Key],
+									settings[k.SpaceBehavior.Key] == k.SpaceBehavior.Space);
 							})
 							.then(function(tabs) {
 									// run scoreItems() on the tabs so that the
