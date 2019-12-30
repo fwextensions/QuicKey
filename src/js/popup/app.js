@@ -42,13 +42,6 @@ define("popup/app", [
 		MaxItems = 10,
 		MinItems = 4,
 		MinScoreDiff = .1,
-		VeryRecentMS = 5 * 1000,
-		HourMS = 60 * 60 * 1000,
-		HourCount = 3 * 24,
-		RecentMS = HourCount * HourMS,
-		VeryRecentBoost = .15,
-		RecentBoost = .1,
-		ClosedPenalty = .98,
 		BookmarksQuery = "/b ",
 		HistoryQuery = "/h ",
 		BQuery = "/b",
@@ -114,92 +107,55 @@ define("popup/app", [
 		componentWillMount: function()
 		{
 			recentTabs.getAll()
-				.bind(this)
-				.then(function(tabs) {
-					const now = Date.now();
-					const {settingsPromise} = this;
-
-						// boost the scores of recent tabs
-					tabs.forEach(function(tab) {
-						var age,
-							hours;
-
-						if (tab.sessionId) {
-								// penalize matching closed tabs
-							tab.recentBoost = ClosedPenalty;
-						} else if (tab.lastVisit) {
-							age = now - tab.lastVisit;
-
-							if (age < VeryRecentMS) {
-								tab.recentBoost = 1 + VeryRecentBoost;
-							} else if (age < RecentMS) {
-								hours = Math.floor(age / HourMS);
-								tab.recentBoost = 1 +
-									RecentBoost * ((HourCount - hours) / HourCount);
-							}
-						}
-					});
-
-					return this.loadPromisedItems(function() {
-						return settingsPromise
-							.then(function(settings) {
-								return getTabs(tabs, settings[k.MarkTabsInOtherWindows.Key],
-									settings[k.SpaceBehavior.Key] == k.SpaceBehavior.Space);
-							})
-							.then(function(tabs) {
-									// run scoreItems() on the tabs so that the
-									// hitMask and scores keys are added to each
-								scoreItems(tabs, "");
-
-								return tabs;
+				.then(tabs => this.loadPromisedItems(() => this.settingsPromise
+					.then(settings => getTabs(tabs,
+						settings[k.MarkTabsInOtherWindows.Key],
+						settings[k.SpaceBehavior.Key] == k.SpaceBehavior.Space))
+					.then(tabs => {
+							// filter out just recent and closed tabs that we
+							// have a last visit time for
+						this.recents = tabs
+							.filter(({lastVisit}) => lastVisit)
+							.sort((a, b) => {
+									// sort open tabs before closed ones, and
+									// newer before old
+								if ((a.sessionId && b.sessionId) || (!a.sessionId && !b.sessionId)) {
+									return b.lastVisit - a.lastVisit;
+								} else if (a.sessionId) {
+									return 1;
+								} else {
+									return -1;
+								}
 							});
-					}, "tabs", "");
-				})
-				.then(function(tabs) {
-					var initialShortcuts = this.props.initialShortcuts;
 
-						// filter out just recent and closed tabs that we
-						// have a last visit time for
-					this.recents = tabs
-						.filter(function(tab) { return tab.lastVisit })
-						.sort(function(a, b) {
-								// sort open tabs before closed ones, and
-								// newer before old
-							if ((a.sessionId && b.sessionId) || (!a.sessionId && !b.sessionId)) {
-								return b.lastVisit - a.lastVisit;
-							} else if (a.sessionId) {
-								return 1;
-							} else {
-								return -1;
+						if (!this.recents.length) {
+							this.recents = NoRecentTabsMessage;
+						}
+
+							// run scoreItems() on the tabs so that the
+							// hitMask and scores keys are added to each
+						return scoreItems(tabs, "");
+					}), "tabs", "")
+					.then(tabs => {
+							const initialShortcuts = this.props.initialShortcuts;
+
+								// after the recent tabs have been loaded and scored,
+								// apply any shortcuts that were recorded during init
+							if (initialShortcuts.length) {
+								const shiftMRUKey = this.settings.shortcuts[k.Shortcuts.MRUSelect];
+								const mruKey = shiftMRUKey.toLocaleLowerCase();
+
+								initialShortcuts.forEach(shortcut => {
+									if (shortcut == mruKey) {
+										this.modifySelected(1, true);
+									} else if (shortcut == shiftMRUKey) {
+										this.modifySelected(-1, true);
+									}
+								});
 							}
-						});
 
-					if (!this.recents.length) {
-						this.recents = NoRecentTabsMessage;
-					}
-
-						// set the query again because we may have already
-						// rendered a match on the tabs without the recent boosts,
-						// which may have changed the results
-					this.setQuery(this.state.query);
-
-						// after the recent tabs have been loaded and scored,
-						// apply any shortcuts that were recorded during init
-					if (initialShortcuts.length) {
-						const shiftMRUKey = this.settings.shortcuts[k.Shortcuts.MRUSelect];
-						const mruKey = shiftMRUKey.toLocaleLowerCase();
-
-						initialShortcuts.forEach(function(shortcut) {
-							if (shortcut == mruKey) {
-								this.modifySelected(1, true);
-							} else if (shortcut == shiftMRUKey) {
-								this.modifySelected(-1, true);
-							}
-						}, this);
-					}
-
-					this.props.tracker.set("metric1", tabs.length);
-				});
+							this.props.tracker.set("metric1", tabs.length);
+						}));
 		},
 
 

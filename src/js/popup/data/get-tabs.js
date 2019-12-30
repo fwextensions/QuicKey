@@ -12,6 +12,13 @@ define([
 	const TitlePattern = /ttl=([^&]+)/;
 	const BadTGSTitlePattern = /^chrome-extension:\/\/[^/]+\/suspended\.html#ttl=([^&]+)/;
 	const WhitespacePattern = /[\u00A0\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000]/g;
+	const HourMS = 60 * 60 * 1000;
+	const HourCount = 3 * 24;
+	const RecentMS = HourCount * HourMS;
+	const RecentBoost = .1;
+	const VeryRecentMS = 5 * 1000;
+	const VeryRecentBoost = .15;
+	const ClosedPenalty = .98;
 
 
 	function decode(
@@ -30,6 +37,27 @@ define([
 		}
 
 		return result;
+	}
+
+
+	function addRecentBoost(
+		tab)
+	{
+		if (tab.sessionId) {
+				// penalize matching closed tabs
+			tab.recentBoost = ClosedPenalty;
+		} else if (tab.lastVisit) {
+			const age = Date.now() - tab.lastVisit;
+
+			if (age < VeryRecentMS) {
+				tab.recentBoost = 1 + VeryRecentBoost;
+			} else if (age < RecentMS) {
+				const hours = Math.floor(age / HourMS);
+
+				tab.recentBoost = 1 +
+					RecentBoost * ((HourCount - hours) / HourCount);
+			}
+		}
 	}
 
 
@@ -90,6 +118,7 @@ define([
 
 				tabs.forEach(tab => {
 					addURLs(tab);
+					addRecentBoost(tab);
 
 						// don't treat closed tabs as being in other windows
 					tab.otherWindow = markTabs &&
