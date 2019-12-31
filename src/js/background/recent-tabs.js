@@ -4,16 +4,14 @@ define([
 	"shared",
 	"popup/data/add-urls",
 	"./quickey-storage",
-	"./page-trackers",
-	"./constants",
+	"./page-trackers"
 ], function(
 	Promise,
 	cp,
 	shared,
 	addURLs,
 	storage,
-	pageTrackers,
-	k
+	pageTrackers
 ) {
 	const MaxTabsLength = 50;
 	const MaxSwitchDelay = 750;
@@ -260,18 +258,14 @@ DEBUG && console.log("tab replaced", oldID, titleOrURL(oldTab));
 	}
 
 
-	function getAll()
+	function getAll(
+		includeClosedTabs)
 	{
 		return storage.get(data => {
-			const promises = [cp.tabs.query({})];
-
-			if (data.settings[k.IncludeClosedTabs.Key]) {
-				promises.push(cp.sessions.getRecentlyClosed());
-			} else {
-				promises.push([]);
-			}
-
-			return Promise.all(promises)
+			return Promise.all([
+				cp.tabs.query({}),
+				includeClosedTabs ? cp.sessions.getRecentlyClosed() : []
+			])
 				.spread((freshTabs, closedTabs) => {
 					const {tabIDs, lastUpdateTime, lastStartupTime} = data;
 					const freshTabsByURL = {};

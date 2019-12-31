@@ -6,7 +6,7 @@ define("popup/app", [
 	"jsx!./message-item",
 	"cp",
 	"./score/score-items",
-	"./data/get-tabs",
+	"./data/init-tabs",
 	"./data/get-bookmarks",
 	"./data/get-history",
 	"./data/add-urls",
@@ -25,7 +25,7 @@ define("popup/app", [
 	MessageItem,
 	cp,
 	scoreItems,
-	getTabs,
+	initTabs,
 	getBookmarks,
 	getHistory,
 	addURLs,
@@ -37,21 +37,21 @@ define("popup/app", [
 	k,
 	_
 ) {
-	const MinScore = .04,
-		NearlyZeroScore = .02,
-		MaxItems = 10,
-		MinItems = 4,
-		MinScoreDiff = .1,
-		BookmarksQuery = "/b ",
-		HistoryQuery = "/h ",
-		BQuery = "/b",
-		HQuery = "/h",
-		CommandQuery = "/",
-		NoRecentTabsMessage = [{
-			message: "Recently used tabs will appear here as you continue browsing",
-			faviconURL: "img/alert.svg",
-			component: MessageItem
-		}];
+	const MinScore = .04;
+	const NearlyZeroScore = .02;
+	const MaxItems = 10;
+	const MinItems = 4;
+	const MinScoreDiff = .1;
+	const BookmarksQuery = "/b ";
+	const HistoryQuery = "/h ";
+	const BQuery = "/b";
+	const HQuery = "/h";
+	const CommandQuery = "/";
+	const NoRecentTabsMessage = [{
+		message: "Recently used tabs will appear here as you continue browsing",
+		faviconURL: "img/alert.svg",
+		component: MessageItem
+	}];
 
 
 	function sortHistoryItems(
@@ -64,19 +64,19 @@ define("popup/app", [
 
 	var App = React.createClass({
 		mode: "tabs",
-		forceUpdate: false,
 		tabs: [],
 		bookmarks: [],
 		history: [],
 		recents: [],
 		bookmarksPromise: null,
 		historyPromise: null,
+		forceUpdate: false,
 		gotModifierUp: false,
 		gotMRUKey: true,
 		mruModifier: "Alt",
 		resultsList: null,
 		settings: settings.getDefaults(),
-		settingsPromise: Promise.resolve(),
+		settingsPromise: settings.get(),
 
 
 		getInitialState: function()
@@ -84,9 +84,8 @@ define("popup/app", [
 			var props = this.props,
 				query = props.initialQuery;
 
-			this.settingsPromise = settings.get()
-				.bind(this)
-				.then(function(settings) {
+			this.settingsPromise
+				.then(settings => {
 					this.settings = settings;
 					this.mruModifier = settings.chrome.popup.modifierEventName;
 					shortcuts.update(settings);
@@ -106,56 +105,38 @@ define("popup/app", [
 
 		componentWillMount: function()
 		{
-			recentTabs.getAll()
-				.then(tabs => this.loadPromisedItems(() => this.settingsPromise
-					.then(settings => getTabs(tabs,
-						settings[k.MarkTabsInOtherWindows.Key],
-						settings[k.SpaceBehavior.Key] == k.SpaceBehavior.Space))
-					.then(tabs => {
-							// filter out just recent and closed tabs that we
-							// have a last visit time for
-						this.recents = tabs
-							.filter(({lastVisit}) => lastVisit)
-							.sort((a, b) => {
-									// sort open tabs before closed ones, and
-									// newer before old
-								if ((a.sessionId && b.sessionId) || (!a.sessionId && !b.sessionId)) {
-									return b.lastVisit - a.lastVisit;
-								} else if (a.sessionId) {
-									return 1;
-								} else {
-									return -1;
-								}
-							});
+			this.initTabs()
+				.then(tabs => {
+						// by the time we get here, the settings promise will
+						// already have resolved and updated this.settings, so
+						// this will look for the correct MRU key
+					const shiftMRUKey = this.settings.shortcuts[k.Shortcuts.MRUSelect];
+					const mruKey = shiftMRUKey.toLocaleLowerCase();
 
-						if (!this.recents.length) {
-							this.recents = NoRecentTabsMessage;
+						// after the recent tabs have been loaded and scored,
+						// apply any shortcuts that were recorded during init
+					this.props.initialShortcuts.forEach(shortcut => {
+						if (shortcut == mruKey) {
+							this.modifySelected(1, true);
+						} else if (shortcut == shiftMRUKey) {
+							this.modifySelected(-1, true);
 						}
+					});
 
-							// run scoreItems() on the tabs so that the
-							// hitMask and scores keys are added to each
-						return scoreItems(tabs, "");
-					}), "tabs", "")
-					.then(tabs => {
-							const initialShortcuts = this.props.initialShortcuts;
+					this.props.tracker.set("metric1", tabs.length);
+				});
+		},
 
-								// after the recent tabs have been loaded and scored,
-								// apply any shortcuts that were recorded during init
-							if (initialShortcuts.length) {
-								const shiftMRUKey = this.settings.shortcuts[k.Shortcuts.MRUSelect];
-								const mruKey = shiftMRUKey.toLocaleLowerCase();
 
-								initialShortcuts.forEach(shortcut => {
-									if (shortcut == mruKey) {
-										this.modifySelected(1, true);
-									} else if (shortcut == shiftMRUKey) {
-										this.modifySelected(-1, true);
-									}
-								});
-							}
-
-							this.props.tracker.set("metric1", tabs.length);
-						}));
+		componentDidMount: function()
+		{
+				// annoyingly, there seems to be a bug in Chrome where the
+				// closed tab is still around when the callback passed to
+				// chrome.tabs.remove() is called.  so we need to add an
+				// onRemoved handler to listen for the actual removal.  this
+				// also handles the edge case where the menu is open and a tab
+				// in another window is closed.
+			chrome.tabs.onRemoved.addListener(this.onTabRemoved);
 		},
 
 
@@ -163,6 +144,45 @@ define("popup/app", [
 		{
 				// we only want this flag to be true through one render cycle
 			this.forceUpdate = false;
+		},
+
+
+		initTabs: function()
+		{
+				// remove any existing promise so that loadPromisedItems() will
+				// store the new items
+			delete this.tabsPromise;
+
+			return this.loadPromisedItems(() => this.settingsPromise
+				.then(settings => initTabs(
+					recentTabs.getAll(settings[k.IncludeClosedTabs.Key]),
+					settings[k.MarkTabsInOtherWindows.Key],
+					settings[k.SpaceBehavior.Key] == k.SpaceBehavior.Space))
+				.then(tabs => {
+						// filter out just recent and closed tabs that we have a
+						// last visit time for
+					this.recents = tabs
+						.filter(({lastVisit}) => lastVisit)
+						.sort((a, b) => {
+								// sort open tabs before closed ones, and newer
+								// before old
+							if ((a.sessionId && b.sessionId) || (!a.sessionId && !b.sessionId)) {
+								return b.lastVisit - a.lastVisit;
+							} else if (a.sessionId) {
+								return 1;
+							} else {
+								return -1;
+							}
+						});
+
+					if (!this.recents.length) {
+						this.recents = NoRecentTabsMessage;
+					}
+
+						// run scoreItems() on the tabs so that the hitMask and
+						// scores keys are added to each
+					return scoreItems(tabs, "");
+				}), "tabs", "");
 		},
 
 
@@ -235,16 +255,8 @@ define("popup/app", [
 			tab)
 		{
 				// we can only remove actual tabs
-			if (tab && this.mode == "tabs") {
+			if (tab && !isNaN(tab.id) && this.mode == "tabs") {
 				chrome.tabs.remove(tab.id);
-				_.pull(this.tabs, tab);
-				_.remove(this.recents, { id: tab.id });
-
-					// update the list to show the remaining matching tabs
-				this.setState({
-					matchingItems: this.getMatchingItems(this.state.query)
-				});
-				this.props.tracker.event(this.state.query ? "tabs" : "recents", "close");
 			}
 		},
 
@@ -442,16 +454,16 @@ define("popup/app", [
 		loadPromisedItems: function(
 			loader,
 			itemName,
-			commandPattern)
+			command)
 		{
-			var promiseName = itemName + "Promise";
+			const promiseName = itemName + "Promise";
 
 			if (!this[promiseName]) {
 					// store the promise so we only load the items once
-				this[promiseName] = loader().then(function(items) {
+				this[promiseName] = loader().then(items => {
 						// strip the /b|h from the typed query
-					var originalQuery = this.state.query,
-						query = originalQuery.slice(commandPattern.length);
+					const originalQuery = this.state.query;
+					const query = originalQuery.slice(command.length);
 
 						// store the result and then update the results list with
 						// the match on the existing query
@@ -459,7 +471,7 @@ define("popup/app", [
 					this.setQuery(originalQuery, query);
 
 					return items;
-				}.bind(this));
+				});
 			}
 
 			return this[promiseName];
@@ -467,6 +479,19 @@ define("popup/app", [
 
 
 		handleListRef: handleRef("resultsList"),
+
+
+		onTabRemoved: function()
+		{
+				// refresh the results list so that the newly closed tab
+				// will show in the closed list, and if there are multiple
+				// tabs with the same name, their index numbers will update
+			this.initTabs()
+				.then(() => {
+					this.props.tracker.event(this.state.query ?
+						"tabs" : "recents", "close");
+				});
+		},
 
 
 		onQueryChange: function(

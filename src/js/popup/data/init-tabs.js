@@ -61,7 +61,7 @@ define([
 	}
 
 
-	return function getTabs(
+	return function initTabs(
 		tabsPromise,
 		markTabsInOtherWindows,
 		normalizeWhitespace)
