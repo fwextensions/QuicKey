@@ -28,16 +28,13 @@ define([
 	}
 
 
-	return function createStorage(
-		options)
+	return function createStorage({
+		version = 1,
+		getDefaultData = emptyDefaultData,
+		validateUpdate = alwaysValidate,
+		updaters = {} })
 	{
 		const storageMutex = new Mutex(Promise);
-		const {
-			version = 1,
-			getDefaultData = emptyDefaultData,
-			validateUpdate = alwaysValidate,
-			updaters = {}
-		} = options;
 		let dataPromise = getAll();
 
 
@@ -69,7 +66,7 @@ define([
 			let updater = updaters[storage.version];
 
 			while (updater) {
-					// version here is the version to which the storage has
+					// version here is the version to which the storage has just
 					// been updated
 				const [data, version] = await updater(storage.data, storage.version);
 

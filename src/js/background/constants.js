@@ -1,4 +1,4 @@
-define({
+define(() => ({
 	SpaceBehavior: {
 		Key: "spaceBehavior",
 		Select: "select",
@@ -24,4 +24,4 @@ define({
 		CopyURL: "copyURL",
 		CopyTitleURL: "copyTitleURL"
 	}
-});
+}));
