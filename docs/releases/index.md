@@ -14,6 +14,8 @@ comments: true
 
 * Non-breaking spaces and other non-standard space characters in titles will now match spaces typed in the query. 
 
+* The list of results will update if a tab is closed while the menu is open. 
+
 * Only the unsuspended versions of pages are listed when searching the history.
  
 

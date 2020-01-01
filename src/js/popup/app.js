@@ -149,10 +149,6 @@ define("popup/app", [
 
 		initTabs: function()
 		{
-				// remove any existing promise so that loadPromisedItems() will
-				// store the new items
-			delete this.tabsPromise;
-
 			return this.loadPromisedItems(() => this.settingsPromise
 				.then(settings => initTabs(
 					recentTabs.getAll(settings[k.IncludeClosedTabs.Key]),
@@ -179,10 +175,8 @@ define("popup/app", [
 						this.recents = NoRecentTabsMessage;
 					}
 
-						// run scoreItems() on the tabs so that the hitMask and
-						// scores keys are added to each
-					return scoreItems(tabs, "");
-				}), "tabs", "");
+					return tabs;
+				}), "tabs", "", true);	// pass true to force a reload
 		},
 
 
@@ -190,12 +184,10 @@ define("popup/app", [
 			query)
 		{
 			if (query == HistoryQuery) {
-// TODO: why is this necessary?
-					// score the history items with an empty query first, so that
-					// all the right fields are added, and then sort them by
-					// recency.  the scoring is only necessary the first time /h
-					// is typed, but that's probably only once per popup open.
-				return scoreItems(this.history, "").sort(sortHistoryItems);
+					// special case the /h query so that we can sort the history
+					// items by visit date and show them as soon as the command
+					// is typed with no query
+				return this.history.sort(sortHistoryItems);
 			} else if (this.mode == "command" || query == BookmarksQuery) {
 				return [];
 			} else if (this.mode == "tabs" && !query) {
@@ -455,20 +447,22 @@ define("popup/app", [
 		loadPromisedItems: function(
 			loader,
 			itemName,
-			command)
+			command,
+			reload = false)
 		{
 			const promiseName = itemName + "Promise";
 
-			if (!this[promiseName]) {
+			if (!this[promiseName] || reload) {
 					// store the promise so we only load the items once
 				this[promiseName] = loader().then(items => {
 						// strip the /b|h from the typed query
 					const originalQuery = this.state.query;
 					const query = originalQuery.slice(command.length);
 
-						// store the result and then update the results list with
-						// the match on the existing query
-					this[itemName] = items;
+						// score the the items so the expected keys are added
+						// to each one, and then update the results list with
+						// matches on the current query
+					this[itemName] = scoreItems(items, "");
 					this.setQuery(originalQuery, query);
 
 					return items;
@@ -500,7 +494,7 @@ define("popup/app", [
 		{
 			var query = event.target.value,
 					// remember the original typed value in case it matches a
-					// special mode below and we have to trip out the / part in
+					// special mode below and we have to remove the / part in
 					// order to match the items against it
 				originalQuery = query;
 
