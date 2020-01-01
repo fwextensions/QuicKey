@@ -8,6 +8,15 @@ comments: true
 # Release history
 
 
+## 1.3.1 - 2019-12-15
+
+### Fixed
+
+* Non-breaking spaces and other non-standard space characters in titles will now match spaces typed in the query. 
+
+* Only the unsuspended versions of pages are listed when searching the history.
+ 
+
 ## 1.3.0 - 2019-12-15
 
 ### Added
@@ -63,6 +72,7 @@ comments: true
 ### Added
 
 * On the new options page you can change the behavior of the <kbd>space</kbd> and <kbd>esc</kbd> keys, hide closed tabs from the search results, and customize many of the keyboard shortcuts.  In particular, you can change the key that's used to navigate the MRU menu, which is helpful if you change the default <b><kbd>alt</kbd><kbd>Q</kbd></b> shortcut.
+
 * A [support page](https://fwextensions.github.io/QuicKey/support/) on the QuicKey website.
 
 ### Changed
@@ -72,6 +82,7 @@ comments: true
 ### Fixed
 
 * Moving tabs to the left or right of the current one sometimes positions it in the wrong place.
+
 * Improved error handling.
 
 
@@ -102,8 +113,11 @@ comments: true
 ### Fixed
 
 * HTML isn't escaped in recent tab menu when there is no query.
+
 * Maintain recent tab information when a tab is replaced, such as when it's been unloaded from memory by Chrome.
+
 * Skip tabs that were closed without the extension noticing when navigating to earlier tabs.
+
 * Switching to a previous tab via the shortcut key after Chrome restarts without first opening the menu often fails.
 
 

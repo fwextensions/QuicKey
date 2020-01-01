@@ -5,27 +5,22 @@ define([
 	addURLs,
 	cp
 ) {
-	const RequestedItemCount = 2000,
-		LoopItemCount = 1000;
+	const RequestedItemCount = 2000;
+	const LoopItemCount = 1000;
 
 
-	function loop(
-		fn)
-	{
-		return fn().then(function(val) {
-			return (val === true && loop(fn)) || val;
-		});
-	}
+	const loop = fn => fn().then(val => (val === true && loop(fn)) || val);
 
 
 	return function getHistory()
 	{
-		var history = [],
-			ids = {};
+		const ids = {};
+		const urls = {};
+		let count = 0;
+		let lastItem = null;
 
-		return loop(function() {
-			var endTime = (history.length && history[history.length - 1].lastVisitTime) ||
-					Date.now();
+		return loop(() => {
+			const endTime = (lastItem && lastItem.lastVisitTime) || Date.now();
 
 			return cp.history.search({
 				text: "",
@@ -33,26 +28,30 @@ define([
 				endTime: endTime,
 				maxResults: LoopItemCount
 			})
-				.then(function(historyItems) {
-					var initialHistoryLength = history.length;
+				.then(historyItems => {
+					const initialCount = count;
 
-					historyItems.forEach(function(item) {
-						var id = item.id;
+					historyItems.forEach(item => {
+						const {id} = item;
 
 							// history will often return duplicate items
-						if (!ids[id] && history.length < RequestedItemCount) {
-							addURLs(item);
-							history.push(item);
-							ids[id] = true;
+						if (!ids[id] && count < RequestedItemCount) {
+							addURLs(item, true);
+
+							if (!(item.url in urls)) {
+								lastItem = urls[item.url] = item;
+								ids[id] = true;
+								count++;
+							}
 						}
 					});
 
 						// only loop if we found some new items in the last call
 						// and we haven't reached the limit yet
-					if (history.length > initialHistoryLength && history.length < RequestedItemCount) {
+					if (count > initialCount && count < RequestedItemCount) {
 						return true;
 					} else {
-						return history;
+						return Object.values(urls);
 					}
 				});
 		});

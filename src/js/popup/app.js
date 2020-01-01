@@ -190,6 +190,7 @@ define("popup/app", [
 			query)
 		{
 			if (query == HistoryQuery) {
+// TODO: why is this necessary?
 					// score the history items with an empty query first, so that
 					// all the right fields are added, and then sort them by
 					// recency.  the scoring is only necessary the first time /h
