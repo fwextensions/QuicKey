@@ -104,7 +104,7 @@ You can customize the shortcut keys (other than CTRL-TAB) by right-clicking the 
 ★ Switch between the most recently used tabs
 
  ➤ NOTE: When first installed, QuicKey doesn't know which tabs have been
-      recently used, but as you use Chrome, it will start adding tabs to the
+      recently used, but as you use Chrome, tabs will get added to the
       most recently used (MRU) list.
 
 Opening QuicKey displays a list of the last 50 tabs you've visited, in order of recency. Click a tab to switch to it, or use one of the keyboard shortcuts below to navigate the recently used tab history:
@@ -193,7 +193,7 @@ A tab that has the same title as other open tabs will display a number to indica
 
 ★ Search bookmarks
 
-To find a bookmark, type "/b" in the search box, then a space, and then part of the bookmark's name or URL.
+To find a bookmark, type "/b" and a space in the search box, then part of the bookmark's name or URL.
 
  • Press ENTER to open it in the current tab.
  • Press CTRL-ENTER (CMD-ENTER on macOS) to open it in a new tab in
@@ -203,9 +203,16 @@ To find a bookmark, type "/b" in the search box, then a space, and then part of 
 
 ★ Search the browser history
 
-To find something in the last 2000 pages of your browser history, type "/h" in the search box, then a space, and then part of the page's name or URL.
+To find something in the last 2000 pages of your browser history, type "/h" and a space in the search box, then part of the page's name or URL.
 
 The same CTRL-ENTER (CMD-ENTER on macOS) and SHIFT-ENTER shortcuts will open the visited page in a new tab or window.
+
+As soon as you type "/h ", the pages from your history will be listed in order of recency, so you can get back to a page you had recently visited without having to remember its name.
+
+
+★ Delete bookmarks and history items
+
+To delete the selected bookmark or history item, press CTRL-W (CMD-CTRL-W on macOS). Or hover over an item and click the X button on the right side of the menu. You'll be asked to confirm the deletion of bookmarks.
 
 
 ★ The Great Suspender integration

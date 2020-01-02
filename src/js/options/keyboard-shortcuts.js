@@ -87,7 +87,7 @@ define([
 			},
 			{
 				id: k.Shortcuts.CloseTab,
-				label: "Close the selected tab",
+				label: <span>Close the selected <b>tab</b>, or delete the selected <b>bookmark</b> or <b>history</b> item</span>,
 				validate: validateSomeModifier
 			},
 			{

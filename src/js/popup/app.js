@@ -357,15 +357,19 @@ define("popup/app", [
 		},
 
 
+			// although this method also deletes bookmarks/history items, keep
+			// the closeTab name since that's the name of the shortcut setting
 		closeTab: function(
 			item)
 		{
+			const {query} = this.state;
+
+
 			const deleteItem = (
 				item,
 				deleteCall) =>
 			{
 				const {mode} = this;
-				const {query} = this.state;
 				const command = mode == "bookmarks" ? BookmarksQuery : HistoryQuery;
 
 				deleteCall(item);
@@ -381,17 +385,18 @@ define("popup/app", [
 			};
 
 
-			if (!item) {
-				return;
-			} else if (this.mode == "tabs" && !isNaN(item.id)) {
-				chrome.tabs.remove(item.id);
-				this.props.tracker.event(query ? "tabs" : "recents", "close");
-			} else if (this.mode == "bookmarks") {
-				if (confirm(DeleteBookmarkConfirmation)) {
-					deleteItem(item, ({id}) => chrome.bookmarks.remove(id));
+			if (item) {
+				if (this.mode == "tabs" && !isNaN(item.id)) {
+					chrome.tabs.remove(item.id);
+					this.props.tracker.event(query ? "tabs" : "recents", "close");
+				} else if (this.mode == "bookmarks") {
+					if (confirm(DeleteBookmarkConfirmation)) {
+						deleteItem(item, ({id}) => chrome.bookmarks.remove(id));
+					}
+				} else if (this.mode == "history") {
+					deleteItem(item, ({originalURL}) =>
+						chrome.history.deleteUrl({ url: originalURL }));
 				}
-			} else if (this.mode == "history") {
-				deleteItem(item, ({originalURL}) => chrome.history.deleteUrl({ url: originalURL }));
 			}
 		},
 
@@ -510,11 +515,7 @@ define("popup/app", [
 				// refresh the results list so that the newly closed tab
 				// will show in the closed list, and if there are multiple
 				// tabs with the same name, their index numbers will update
-			this.initTabs()
-				.then(() => {
-					this.props.tracker.event(this.state.query ?
-						"tabs" : "recents", "close");
-				});
+			this.initTabs();
 		},
 
 
