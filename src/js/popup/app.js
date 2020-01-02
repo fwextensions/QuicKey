@@ -52,6 +52,7 @@ define("popup/app", [
 		faviconURL: "img/alert.svg",
 		component: MessageItem
 	}];
+	const DeleteBookmarkConfirmation = "Are you sure you want to permanently delete this bookmark?";
 
 
 	function sortHistoryItems(
@@ -357,11 +358,40 @@ define("popup/app", [
 
 
 		closeTab: function(
-			tab)
+			item)
 		{
-				// we can only remove actual tabs
-			if (tab && !isNaN(tab.id) && this.mode == "tabs") {
-				chrome.tabs.remove(tab.id);
+			const deleteItem = (
+				item,
+				deleteCall) =>
+			{
+				const {mode} = this;
+				const {query} = this.state;
+				const command = mode == "bookmarks" ? BookmarksQuery : HistoryQuery;
+
+				deleteCall(item);
+				_.pull(this[mode], item);
+
+					// call getMatchingItems() directly with just the query,
+					// unless the query is just the command part, in which case
+					// we need to pass that so the right list is returned
+				this.setState({
+					matchingItems: this.getMatchingItems(query.slice(command.length) || query)
+				});
+				this.props.tracker.event(mode, "close");
+			};
+
+
+			if (!item) {
+				return;
+			} else if (this.mode == "tabs" && !isNaN(item.id)) {
+				chrome.tabs.remove(item.id);
+				this.props.tracker.event(query ? "tabs" : "recents", "close");
+			} else if (this.mode == "bookmarks") {
+				if (confirm(DeleteBookmarkConfirmation)) {
+					deleteItem(item, ({id}) => chrome.bookmarks.remove(id));
+				}
+			} else if (this.mode == "history") {
+				deleteItem(item, ({originalURL}) => chrome.history.deleteUrl({ url: originalURL }));
 			}
 		},
 

@@ -16,6 +16,11 @@ define([
 	const MinMouseMoveCount = 1;
 	const SuspendedFaviconOpacity = .5;
 	const FaviconURL = "chrome://favicon/";
+	const CloseButtonTooltips = {
+		tabs: "Close tab",
+		bookmarks: "Delete bookmark",
+		history: "Delete this page from the browser history"
+	};
 
 	let IsDevMode = false;
 
@@ -190,7 +195,7 @@ define([
 					/>
 				</div>
 				<button className="close-button"
-					title="Close tab"
+					title={CloseButtonTooltips[props.mode]}
 					onClick={this.onClose}
 				/>
 			</div>
