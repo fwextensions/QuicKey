@@ -147,6 +147,35 @@ define("popup/app", [
 		},
 
 
+		loadPromisedItems: function(
+			loader,
+			itemName,
+			command,
+			reload = false)
+		{
+			const promiseName = itemName + "Promise";
+
+			if (!this[promiseName] || reload) {
+					// store the promise so we only load the items once
+				this[promiseName] = loader().then(items => {
+						// strip the /b|h from the typed query
+					const originalQuery = this.state.query;
+					const query = originalQuery.slice(command.length);
+
+						// score the the items so the expected keys are added
+						// to each one, and then update the results list with
+						// matches on the current query
+					this[itemName] = scoreItems(items, "");
+					this.setQuery(originalQuery, query);
+
+					return items;
+				});
+			}
+
+			return this[promiseName];
+		},
+
+
 		initTabs: function()
 		{
 			return this.loadPromisedItems(() => this.settingsPromise
@@ -180,6 +209,53 @@ define("popup/app", [
 		},
 
 
+		setQuery: function(
+			originalQuery,
+			query)
+		{
+			var queryToMatch = query || originalQuery;
+
+			this.setState({
+				matchingItems: this.getMatchingItems(queryToMatch),
+				query: originalQuery,
+				selected: queryToMatch ? 0 : -1
+			});
+		},
+
+
+		clearQuery: function()
+		{
+			var query = this.state.query;
+
+			if (!query || this.settings[k.EscBehavior.Key] == k.EscBehavior.Close) {
+					// pressing esc in an empty field should close the popup
+				this.props.port.postMessage("closedByEsc");
+				window.close();
+			} else {
+					// if we're searching for bookmarks or history, reset the
+					// query to just /b or /h, rather than clearing it, unless
+					// it's already a command, in which case, clear it
+				if (this.mode == "tabs" || this.mode == "command" ||
+						query == BookmarksQuery || query == HistoryQuery) {
+					this.forceUpdate = true;
+					query = "";
+				} else if (this.mode == "bookmarks") {
+					this.forceUpdate = true;
+					query = BookmarksQuery;
+				} else if (this.mode == "history") {
+					this.forceUpdate = true;
+					query = HistoryQuery;
+				}
+
+					// scroll the list back to the first row, which wouldn't
+					// happen by default if we just cleared the query, since in
+					// that case there's no selected item to scroll to
+				this.resultsList.scrollToRow(0);
+				this.onQueryChange({ target: { value: query }});
+			}
+		},
+
+
 		getMatchingItems: function(
 			query)
 		{
@@ -206,6 +282,42 @@ define("popup/app", [
 			);
 
 			return matchingItems;
+		},
+
+
+		openItem: function(
+			item,
+			shiftKey,
+			altKey)
+		{
+			if (item) {
+				if (this.mode == "tabs") {
+					if (item.sessionId) {
+							// this is a closed tab, so restore it
+						chrome.sessions.restore(item.sessionId);
+						this.props.tracker.event("tabs", "restore");
+					} else {
+							// switch to the tab
+						this.focusTab(item, shiftKey);
+					}
+				} else if (shiftKey) {
+						// open in a new window
+					chrome.windows.create({ url: item.url });
+					this.props.tracker.event(this.mode, "open-new-win");
+				} else if (altKey) {
+						// open in a new tab
+					chrome.tabs.create({ url: item.url });
+					this.props.tracker.event(this.mode, "open-new-tab");
+				} else {
+						// open in the same tab
+					chrome.tabs.update({ url: item.url });
+					this.props.tracker.event(this.mode, "open");
+				}
+
+					// we seem to have to close the window in a timeout so that
+					// the hover state of the button gets cleared
+				setTimeout(function() { window.close(); }, 0);
+			}
 		},
 
 
@@ -318,42 +430,6 @@ define("popup/app", [
 		},
 
 
-		openItem: function(
-			item,
-			shiftKey,
-			altKey)
-		{
-			if (item) {
-				if (this.mode == "tabs") {
-					if (item.sessionId) {
-							// this is a closed tab, so restore it
-						chrome.sessions.restore(item.sessionId);
-						this.props.tracker.event("tabs", "restore");
-					} else {
-							// switch to the tab
-						this.focusTab(item, shiftKey);
-					}
-				} else if (shiftKey) {
-						// open in a new window
-					chrome.windows.create({ url: item.url });
-					this.props.tracker.event(this.mode, "open-new-win");
-				} else if (altKey) {
-						// open in a new tab
-					chrome.tabs.create({ url: item.url });
-					this.props.tracker.event(this.mode, "open-new-tab");
-				} else {
-						// open in the same tab
-					chrome.tabs.update({ url: item.url });
-					this.props.tracker.event(this.mode, "open");
-				}
-
-					// we seem to have to close the window in a timeout so that
-					// the hover state of the button gets cleared
-				setTimeout(function() { window.close(); }, 0);
-			}
-		},
-
-
 		copyItemURL: function(
 			item,
 			includeTitle)
@@ -393,83 +469,6 @@ define("popup/app", [
 			}
 
 			this.setState({ selected: index });
-		},
-
-
-		setQuery: function(
-			originalQuery,
-			query)
-		{
-			var queryToMatch = query || originalQuery;
-
-			this.setState({
-				matchingItems: this.getMatchingItems(queryToMatch),
-				query: originalQuery,
-				selected: queryToMatch ? 0 : -1
-			});
-		},
-
-
-		clearQuery: function()
-		{
-			var query = this.state.query;
-
-			if (!query || this.settings[k.EscBehavior.Key] == k.EscBehavior.Close) {
-					// pressing esc in an empty field should close the popup
-				this.props.port.postMessage("closedByEsc");
-				window.close();
-			} else {
-					// if we're searching for bookmarks or history,
-					// reset the query to just /b or /h, rather than
-					// clearing it, unless it's already that, in which
-					// case, clear it
-				if (this.mode == "tabs" || this.mode == "command" ||
-						query == BookmarksQuery || query == HistoryQuery) {
-					this.forceUpdate = true;
-					query = "";
-				} else if (this.mode == "bookmarks") {
-					this.forceUpdate = true;
-					query = BookmarksQuery;
-				} else if (this.mode == "history") {
-					this.forceUpdate = true;
-					query = HistoryQuery;
-				}
-
-					// scroll the list back to the first row, which wouldn't
-					// happen by default if we just cleared the query, since in
-					// that case there's no selected item to scroll to
-				this.resultsList.scrollToRow(0);
-				this.onQueryChange({ target: { value: query }});
-			}
-		},
-
-
-		loadPromisedItems: function(
-			loader,
-			itemName,
-			command,
-			reload = false)
-		{
-			const promiseName = itemName + "Promise";
-
-			if (!this[promiseName] || reload) {
-					// store the promise so we only load the items once
-				this[promiseName] = loader().then(items => {
-						// strip the /b|h from the typed query
-					const originalQuery = this.state.query;
-					const query = originalQuery.slice(command.length);
-
-						// score the the items so the expected keys are added
-						// to each one, and then update the results list with
-						// matches on the current query
-					this[itemName] = scoreItems(items, "");
-					this.setQuery(originalQuery, query);
-
-					return items;
-				});
-			}
-
-			return this[promiseName];
 		},
 
 
