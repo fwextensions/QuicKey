@@ -8,13 +8,21 @@ comments: true
 # Release history
 
 
-## 1.3.1 - 2019-12-15
+## 1.3.1 - 2020-01-15
+
+### Added
+
+* Bookmarks and entries in the browser history can be deleted by clicking the X button on each item or with the close-tab keyboard shortcut.  
+
+* Ctrl- or cmd-clicking a bookmark or history item will open it in a new tab. 
 
 ### Fixed
 
 * Non-breaking spaces and other non-standard space characters in titles will now match spaces typed in the query. 
 
-* The list of results will update if a tab is closed while the menu is open. 
+* Worked around a Chrome bug that caused some Unicode characters like ⌘ to sometimes not be recognized correctly, which could break keyboard shortcuts.
+
+* The list of results will update if a tab is closed while the menu is open.
 
 * Only the unsuspended versions of pages are listed when searching the history.
  

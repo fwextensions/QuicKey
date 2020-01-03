@@ -52,6 +52,7 @@ define("popup/app", [
 		faviconURL: "img/alert.svg",
 		component: MessageItem
 	}];
+	const DeleteBookmarkConfirmation = "Are you sure you want to permanently delete this bookmark?";
 
 
 	function sortHistoryItems(
@@ -288,7 +289,7 @@ define("popup/app", [
 		openItem: function(
 			item,
 			shiftKey,
-			altKey)
+			modKey)
 		{
 			if (item) {
 				if (this.mode == "tabs") {
@@ -304,7 +305,7 @@ define("popup/app", [
 						// open in a new window
 					chrome.windows.create({ url: item.url });
 					this.props.tracker.event(this.mode, "open-new-win");
-				} else if (altKey) {
+				} else if (modKey) {
 						// open in a new tab
 					chrome.tabs.create({ url: item.url });
 					this.props.tracker.event(this.mode, "open-new-tab");
@@ -356,12 +357,47 @@ define("popup/app", [
 		},
 
 
+			// although this method also deletes bookmarks/history items, keep
+			// the closeTab name since that's the name of the shortcut setting
 		closeTab: function(
-			tab)
+			item)
 		{
-				// we can only remove actual tabs
-			if (tab && !isNaN(tab.id) && this.mode == "tabs") {
-				chrome.tabs.remove(tab.id);
+			const {query} = this.state;
+
+
+			const deleteItem = (
+				deleteFunc) =>
+			{
+				const {mode} = this;
+				const command = mode == "bookmarks" ? BookmarksQuery : HistoryQuery;
+
+				deleteFunc(item);
+				_.pull(this[mode], item);
+
+					// call getMatchingItems() directly with just the query,
+					// unless the query is just the command part, in which case
+					// we need to pass that so the right list is returned
+				this.setState({
+					matchingItems: this.getMatchingItems(query.slice(command.length) || query)
+				});
+				this.props.tracker.event(mode, "close");
+			};
+
+
+			if (item) {
+				if (this.mode == "tabs" && !isNaN(item.id)) {
+						// the onTabRemoved handler below will re-init the list,
+						// which will show the tab as closed
+					chrome.tabs.remove(item.id);
+					this.props.tracker.event(query ? "tabs" : "recents", "close");
+				} else if (this.mode == "bookmarks") {
+					if (confirm(DeleteBookmarkConfirmation)) {
+						deleteItem(({id}) => chrome.bookmarks.remove(id));
+					}
+				} else if (this.mode == "history") {
+					deleteItem(({originalURL}) =>
+						chrome.history.deleteUrl({ url: originalURL }));
+				}
 			}
 		},
 
@@ -480,11 +516,7 @@ define("popup/app", [
 				// refresh the results list so that the newly closed tab
 				// will show in the closed list, and if there are multiple
 				// tabs with the same name, their index numbers will update
-			this.initTabs()
-				.then(() => {
-					this.props.tracker.event(this.state.query ?
-						"tabs" : "recents", "close");
-				});
+			this.initTabs();
 		},
 
 

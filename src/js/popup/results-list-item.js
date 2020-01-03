@@ -2,12 +2,14 @@ define([
 	"jsx!./matched-string",
 	"cp",
 	"lib/copy-to-clipboard",
+	"options/key-constants",
 	"react",
 	"lodash"
 ], function(
 	MatchedString,
 	cp,
 	copyTextToClipboard,
+	{ModKeyBoolean},
 	React,
 	_
 ) {
@@ -16,6 +18,11 @@ define([
 	const MinMouseMoveCount = 1;
 	const SuspendedFaviconOpacity = .5;
 	const FaviconURL = "chrome://favicon/";
+	const CloseButtonTooltips = {
+		tabs: "Close tab",
+		bookmarks: "Delete bookmark",
+		history: "Delete this page from the browser history"
+	};
 
 	let IsDevMode = false;
 
@@ -33,9 +40,10 @@ define([
 		onClick: function(
 			event)
 		{
+			const {shiftKey, altKey} = event;
 			const {item} = this.props;
 
-			if (IsDevMode && event.altKey) {
+			if (IsDevMode && altKey) {
 					// copy some debug info to the clipboard
 				copyTextToClipboard([
 					item.title,
@@ -45,7 +53,8 @@ define([
 					_.toPairs(item.scores).map(function(a) { return a.join(": "); }).join("\n")
 				].join("\n"));
 			} else {
-				this.props.onItemClicked(item, event.shiftKey);
+					// pass in whether ctrl or cmd was pressed while clicking
+				this.props.onItemClicked(item, shiftKey, event[ModKeyBoolean]);
 			}
 		},
 
@@ -57,6 +66,14 @@ define([
 				// just before it's closed
 			event.stopPropagation();
 			this.props.onTabClosed(this.props.item);
+		},
+
+
+		onCloseMouseDown: function(
+			event)
+		{
+				// prevent the click from stealing focus from the search box
+			event.preventDefault();
 		},
 
 
@@ -190,8 +207,9 @@ define([
 					/>
 				</div>
 				<button className="close-button"
-					title="Close tab"
+					title={CloseButtonTooltips[props.mode]}
 					onClick={this.onClose}
+					onMouseDown={this.onCloseMouseDown}
 				/>
 			</div>
 		}

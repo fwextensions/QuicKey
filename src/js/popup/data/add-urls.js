@@ -16,6 +16,7 @@ define(function() {
 		if (unsuspend) {
 				// force the item to use the unsuspended version of its URL
 			item.url = unsuspendURL;
+			item.originalURL = url;
 			item.faviconURL = FaviconURLPrefix + (unsuspendURL);
 		} else {
 			if (url != unsuspendURL) {

@@ -4,16 +4,18 @@ define([
 	"./get-default-settings",
 	"./get-chrome-shortcuts",
 	"options/key-constants",
-	"options/are-shortcuts-identical"
+	"options/are-shortcuts-identical",
+	"./constants"
 ], function(
 	Promise,
 	storage,
 	getDefaultSettings,
 	getChromeShortcuts,
 	KeyConstants,
-	areShortcutsIdentical
+	areShortcutsIdentical,
+	{IsMac, Platform}
 ) {
-	const Platform = /Mac/i.test(navigator.platform) ? "mac" : "win";
+	const DefaultPopupModifier = IsMac ? "ctrl" : "alt";
 
 
 	function extractSettings(
@@ -52,7 +54,7 @@ define([
 						// there's no shortcut defined.  so default to a platform-
 						// specific modifier so the user can still use alt-W to
 						// navigate the MRU list.
-					popupModifiers[0] = (Platform == "mac" ? "ctrl" : "alt");
+					popupModifiers[0] = DefaultPopupModifier;
 				}
 
 				settings.chrome = {
@@ -80,7 +82,7 @@ define([
 		getDefaults: function()
 		{
 			const settings = extractSettings({ settings: getDefaultSettings() });
-			const popupModifiers = [(Platform == "mac" ? "ctrl" : "alt")];
+			const popupModifiers = [DefaultPopupModifier];
 
 			settings.chrome = {
 				popup: {

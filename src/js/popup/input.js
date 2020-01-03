@@ -39,6 +39,14 @@ define([
 		},
 
 
+		focus: function()
+		{
+			if (this.input) {
+				this.input.focus();
+			}
+		},
+
+
 		setSelectionRange: function(start, end)
 		{
 			if (this.input) {
