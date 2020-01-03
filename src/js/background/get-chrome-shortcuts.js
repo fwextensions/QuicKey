@@ -39,8 +39,9 @@ define([
 		// Unicode chars in a regex also show up broken
 //	const MacShortcutPattern = /([⌃⇧⌥⌘]+)(.+)/;
 
-		// the only way to prevent babel from converting the chars seems to be
-		// to set the keys this way
+		// the only way to prevent babel from converting the \u strings to
+		// literal chars seems to be to set the keys this way after the object's
+		// been created
 	KeyAliases["\u2190"] = "ArrowLeft";
 	KeyAliases["\u2192"] = "ArrowRight";
 	KeyAliases["\u2191"] = "ArrowUp";

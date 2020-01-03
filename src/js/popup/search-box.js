@@ -33,6 +33,12 @@ define([
 		},
 
 
+		focus: function()
+		{
+			this.searchBox.focus();
+		},
+
+
 		handleRef: handleRef("searchBox"),
 
 

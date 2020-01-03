@@ -1,6 +1,8 @@
-define(function() {
-	const IsMac = /Mac/i.test(navigator.platform);
-
+define([
+	"background/constants"
+], function(
+	{IsMac}
+) {
 	return {
 		KeyOrder: {
 			ctrl: 0,
@@ -27,6 +29,7 @@ define(function() {
 			ctrl: "Control",
 			cmd: "Meta"
 		},
+		ModKeyBoolean: IsMac ? "metaKey" : "ctrlKey",
 		ShortcutSeparator: "+",
 		FunctionKeyPattern: /^F\d{1,2}$/i
 	};

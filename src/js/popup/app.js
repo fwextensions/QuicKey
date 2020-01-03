@@ -289,7 +289,7 @@ define("popup/app", [
 		openItem: function(
 			item,
 			shiftKey,
-			altKey)
+			modKey)
 		{
 			if (item) {
 				if (this.mode == "tabs") {
@@ -305,7 +305,7 @@ define("popup/app", [
 						// open in a new window
 					chrome.windows.create({ url: item.url });
 					this.props.tracker.event(this.mode, "open-new-win");
-				} else if (altKey) {
+				} else if (modKey) {
 						// open in a new tab
 					chrome.tabs.create({ url: item.url });
 					this.props.tracker.event(this.mode, "open-new-tab");
@@ -366,13 +366,12 @@ define("popup/app", [
 
 
 			const deleteItem = (
-				item,
-				deleteCall) =>
+				deleteFunc) =>
 			{
 				const {mode} = this;
 				const command = mode == "bookmarks" ? BookmarksQuery : HistoryQuery;
 
-				deleteCall(item);
+				deleteFunc(item);
 				_.pull(this[mode], item);
 
 					// call getMatchingItems() directly with just the query,
@@ -387,14 +386,16 @@ define("popup/app", [
 
 			if (item) {
 				if (this.mode == "tabs" && !isNaN(item.id)) {
+						// the onTabRemoved handler below will re-init the list,
+						// which will show the tab as closed
 					chrome.tabs.remove(item.id);
 					this.props.tracker.event(query ? "tabs" : "recents", "close");
 				} else if (this.mode == "bookmarks") {
 					if (confirm(DeleteBookmarkConfirmation)) {
-						deleteItem(item, ({id}) => chrome.bookmarks.remove(id));
+						deleteItem(({id}) => chrome.bookmarks.remove(id));
 					}
 				} else if (this.mode == "history") {
-					deleteItem(item, ({originalURL}) =>
+					deleteItem(({originalURL}) =>
 						chrome.history.deleteUrl({ url: originalURL }));
 				}
 			}

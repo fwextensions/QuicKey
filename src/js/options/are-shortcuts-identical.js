@@ -1,12 +1,8 @@
 define([
 	"./key-constants"
 ], function(
-	KeyConstants
+	{ModifierAliases, ShortcutSeparator}
 ) {
-	const ModifierAliases = KeyConstants.ModifierAliases;
-	const ShortcutSeparator = KeyConstants.ShortcutSeparator;
-
-
 	function getKeys(
 		shortcut)
 	{

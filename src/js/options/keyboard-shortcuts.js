@@ -4,14 +4,12 @@ define([
 	"background/constants"
 ], function(
 	React,
-	KeyConstants,
+	{FunctionKeyPattern},
 	k
 ) {
-	const IsMac = /Mac/i.test(navigator.platform);
-	const {FunctionKeyPattern} = KeyConstants;
 	const MacModifiers = <span>⌘, ⌃ or ⌥</span>;
 	const WinModifiers = <span><b>ctrl</b> or <b>alt</b></span>;
-	const IncludeModifierMessage = <span>Include at least {IsMac ? MacModifiers : WinModifiers}</span>;
+	const IncludeModifierMessage = <span>Include at least {k.IsMac ? MacModifiers : WinModifiers}</span>;
 
 
 	function validateNoShift(
