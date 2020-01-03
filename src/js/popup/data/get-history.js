@@ -7,6 +7,7 @@ define([
 ) {
 	const RequestedItemCount = 2000;
 	const LoopItemCount = 1000;
+	const FilenamePattern = /([^/]*)\/([^/]+)?$/;
 
 
 	const loop = fn => fn().then(val => (val === true && loop(fn)) || val);
@@ -38,8 +39,24 @@ define([
 						if (!ids[id] && count < RequestedItemCount) {
 							addURLs(item, true);
 
-							if (!(item.url in urls)) {
-								lastItem = urls[item.url] = item;
+								// get the url after addURLs(), since that will
+								// convert suspended URLs to unsuspended
+							const {url, title} = item;
+
+							if (!(url in urls)) {
+								if (!title) {
+									const match = url.match(FilenamePattern);
+
+										// if there's no title on the history
+										// item, it's probably a locally loaded
+										// raw file.  so try to pull out the
+										// filename or last folder in the URL,
+										// and if that doesn't work, default to
+										// the full URL as a title.
+									item.title = (match && (match[2] || match[1])) || url;
+								}
+
+								lastItem = urls[url] = item;
 								ids[id] = true;
 								count++;
 							}
