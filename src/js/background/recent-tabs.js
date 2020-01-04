@@ -4,16 +4,14 @@ define([
 	"shared",
 	"popup/data/add-urls",
 	"./quickey-storage",
-	"./page-trackers",
-	"./constants",
+	"./page-trackers"
 ], function(
 	Promise,
 	cp,
 	shared,
 	addURLs,
 	storage,
-	pageTrackers,
-	k
+	pageTrackers
 ) {
 	const MaxTabsLength = 50;
 	const MaxSwitchDelay = 750;
@@ -260,18 +258,14 @@ DEBUG && console.log("tab replaced", oldID, titleOrURL(oldTab));
 	}
 
 
-	function getAll()
+	function getAll(
+		includeClosedTabs)
 	{
 		return storage.get(data => {
-			const promises = [cp.tabs.query({})];
-
-			if (data.settings[k.IncludeClosedTabs.Key]) {
-				promises.push(cp.sessions.getRecentlyClosed());
-			} else {
-				promises.push([]);
-			}
-
-			return Promise.all(promises)
+			return Promise.all([
+				cp.tabs.query({}),
+				includeClosedTabs ? cp.sessions.getRecentlyClosed() : []
+			])
 				.spread((freshTabs, closedTabs) => {
 					const {tabIDs, lastUpdateTime, lastStartupTime} = data;
 					const freshTabsByURL = {};
@@ -290,7 +284,7 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 
 						// update the fresh tabs with any recent data we have
 					tabs = freshTabs.map(tab => {
-						const {id, url} = tab;
+						const {id, url} = addURLs(tab);
 						const oldTab = tabsByID[id];
 						let lastVisit = 0;
 
@@ -308,6 +302,11 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 
 						tab.lastVisit = lastVisit;
 						freshTabsByURL[url] = true;
+
+							// if the tab is suspended, also store it with the
+							// unsuspendURL so that we can dedupe it against
+							// closed unsuspended tabs below
+						tab.unsuspendURL && (freshTabsByURL[tab.unsuspendURL] = true);
 
 						return tab;
 					});
@@ -337,6 +336,8 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 
 								return !existingTab;
 							})
+								// init the remaining closed tabs
+							.map(closedTab => addURLs(closedTab))
 						);
 					}
 
@@ -390,7 +391,8 @@ DEBUG && console.log("=== updateAll");
 				}
 			} else if (direction == -1) {
 					// if the user is not actively navigating, we want to ignore
-					// alt-S keypresses so the icon doesn't invert for no reason
+					// alt-S keypresses so the icon doesn't invert for no reason,
+					// so we only set previousTabIndex when going backwards
 				previousTabIndex = maxIndex - 1;
 			}
 

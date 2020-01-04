@@ -1,40 +1,51 @@
 define([
 	"bluebird",
-	"./add-urls",
 	"cp",
+	"lib/decode",
 	"lodash"
 ], function(
 	Promise,
-	addURLs,
 	cp,
+	decode,
 	_
 ) {
 	const TitlePattern = /ttl=([^&]+)/;
 	const BadTGSTitlePattern = /^chrome-extension:\/\/[^/]+\/suspended\.html#ttl=([^&]+)/;
+	const WhitespacePattern = /[\u00A0\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000]/g;
+	const HourMS = 60 * 60 * 1000;
+	const HourCount = 3 * 24;
+	const RecentMS = HourCount * HourMS;
+	const RecentBoost = .1;
+	const VeryRecentMS = 5 * 1000;
+	const VeryRecentBoost = .15;
+	const ClosedPenalty = .98;
 
 
-	function decode(
-		string)
+	function addRecentBoost(
+		tab)
 	{
-		var result = string;
+		if (tab.sessionId) {
+				// penalize matching closed tabs
+			tab.recentBoost = ClosedPenalty;
+		} else if (tab.lastVisit) {
+			const age = Date.now() - tab.lastVisit;
 
-			// try to use decodeURIComponent() to unescape the ttl param, which
-			// sometimes throws if it doesn't like the encoding
-		try {
-			result = decodeURIComponent(string);
-		} catch (e) {
-			try {
-				result = unescape(string);
-			} catch (e) {}
+			if (age < VeryRecentMS) {
+				tab.recentBoost = 1 + VeryRecentBoost;
+			} else if (age < RecentMS) {
+				const hours = Math.floor(age / HourMS);
+
+				tab.recentBoost = 1 +
+					RecentBoost * ((HourCount - hours) / HourCount);
+			}
 		}
-
-		return result;
 	}
 
 
-	return function getTabs(
+	return function initTabs(
 		tabsPromise,
-		markTabsInOtherWindows)
+		markTabsInOtherWindows,
+		normalizeWhitespace)
 	{
 		let tabsByTitle = {};
 
@@ -75,7 +86,7 @@ define([
 				currentWindow: true
 			})
 		])
-			.spread(function(tabs, activeTabs) {
+			.spread((tabs, activeTabs) => {
 					// there should normally be an active tab, unless we've
 					// refreshed the open popup via devtools, which seemed to
 					// return a normal active tab in Chrome pre-65.  default to
@@ -84,10 +95,9 @@ define([
 				const activeTab = activeTabs[0] || {};
 				const currentWindowID = activeTab.windowId;
 				const markTabs = markTabsInOtherWindows && !isNaN(currentWindowID);
-				let match;
 
-				tabs.forEach(function(tab) {
-					addURLs(tab);
+				tabs.forEach(tab => {
+					addRecentBoost(tab);
 
 						// don't treat closed tabs as being in other windows
 					tab.otherWindow = markTabs &&
@@ -102,11 +112,19 @@ define([
 						// TGS puts in the URL.
 					if (tab.unsuspendURL && (tab.title == "Suspended Tab" ||
 							BadTGSTitlePattern.test(tab.title))) {
-						match = tab.url.match(TitlePattern);
+						const match = tab.url.match(TitlePattern);
 
 						if (match) {
 							tab.title = decode(match[1]);
 						}
+					}
+
+					if (normalizeWhitespace) {
+							// replace all non-standard spaces with a regular
+							// space so that users who've enabled the option to
+							// insert spaces in the query can match against
+							// these titles
+						tab.title = tab.title.replace(WhitespacePattern, " ");
 					}
 
 					indexDuplicateTitles(tab);

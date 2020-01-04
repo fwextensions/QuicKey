@@ -4,15 +4,23 @@ define([
 	React
 ) {
 	const IsMac = /Mac/i.test(navigator.platform);
+	const WindowsArrows = [
+		["ArrowLeft", "◀"],
+		["ArrowRight", "▶"],
+		["ArrowUp", "▲"],
+		["ArrowDown", "▼"]
+	];
+		// these arrows look too skinny on Windows
+	const MacArrows = [
+		["ArrowLeft", "←"],
+		["ArrowRight", "→"],
+		["ArrowUp", "↑"],
+		["ArrowDown", "↓"]
+	];
 		// use the modifier characters as single-width keys on Mac, but use the
 		// full names elsewhere
 	const KeyClasses = {
-		width1: [
-			["ArrowLeft", "◀"],
-			["ArrowRight", "▶"],
-			["ArrowUp", "▲"],
-			["ArrowDown", "▼"]
-		].concat(!IsMac ? [] : [
+		width1: (IsMac ? MacArrows : WindowsArrows).concat(!IsMac ? [] : [
 			["ctrl", "⌃"],
 			["shift", "⇧"],
 			["opt", "⌥"],
@@ -78,7 +86,6 @@ define([
 
 		return <kbd className={className}><span>{label}</span></kbd>;
 	}
-
 
 	return Key;
 });

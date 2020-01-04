@@ -2,12 +2,14 @@ define([
 	"jsx!./matched-string",
 	"cp",
 	"lib/copy-to-clipboard",
+	"options/key-constants",
 	"react",
 	"lodash"
 ], function(
 	MatchedString,
 	cp,
 	copyTextToClipboard,
+	{ModKeyBoolean},
 	React,
 	_
 ) {
@@ -16,6 +18,12 @@ define([
 	const MinMouseMoveCount = 1;
 	const SuspendedFaviconOpacity = .5;
 	const FaviconURL = "chrome://favicon/";
+	const CloseButtonTooltips = {
+		tabs: "Close tab",
+		closedTab: "Delete this closed tab from the browser history",
+		bookmarks: "Delete bookmark",
+		history: "Delete this page from the browser history"
+	};
 
 	let IsDevMode = false;
 
@@ -33,9 +41,10 @@ define([
 		onClick: function(
 			event)
 		{
+			const {shiftKey, altKey} = event;
 			const {item} = this.props;
 
-			if (IsDevMode && event.altKey) {
+			if (IsDevMode && altKey) {
 					// copy some debug info to the clipboard
 				copyTextToClipboard([
 					item.title,
@@ -45,7 +54,8 @@ define([
 					_.toPairs(item.scores).map(function(a) { return a.join(": "); }).join("\n")
 				].join("\n"));
 			} else {
-				this.props.onItemClicked(item, event.shiftKey);
+					// pass in whether ctrl or cmd was pressed while clicking
+				this.props.onItemClicked(item, shiftKey, event[ModKeyBoolean]);
 			}
 		},
 
@@ -57,6 +67,14 @@ define([
 				// just before it's closed
 			event.stopPropagation();
 			this.props.onTabClosed(this.props.item);
+		},
+
+
+		onCloseMouseDown: function(
+			event)
+		{
+				// prevent the click from stealing focus from the search box
+			event.preventDefault();
 		},
 
 
@@ -100,7 +118,7 @@ define([
 		render: function()
 		{
 			const {props} = this;
-			const {item, query} = props;
+			const {item, query, mode, style, isSelected} = props;
 			const {
 				scores,
 				hitMasks,
@@ -115,8 +133,8 @@ define([
 			} = item;
 			const className = [
 				"results-list-item",
-				props.mode,
-				props.isSelected ? "selected" : "",
+				mode,
+				isSelected ? "selected" : "",
 				unsuspendURL ? "suspended" : "",
 				incognito ? "incognito" :
 					(otherWindow ? "other-window" : ""),
@@ -133,7 +151,7 @@ define([
 
 			if (IsDevMode) {
 				tooltip = _.toPairs(scores).concat([["recentBoost", item.recentBoost], ["id", item.id]])
-					.map(function(a) { return a.join(": "); }).join("\n") + "\n" + tooltip;
+					.map(keyValue => keyValue.join(": ")).join("\n") + "\n" + tooltip;
 			}
 
 				// blank lines at the end of the tooltip show up in macOS Chrome,
@@ -157,7 +175,7 @@ define([
 			}
 
 			return <div className={className}
-				style={props.style}
+				style={style}
 				title={tooltip}
 				onClick={this.onClick}
 				onMouseMove={this.onMouseMove}
@@ -190,8 +208,9 @@ define([
 					/>
 				</div>
 				<button className="close-button"
-					title="Close tab"
+					title={CloseButtonTooltips[sessionId ? "closedTab" : mode]}
 					onClick={this.onClose}
+					onMouseDown={this.onCloseMouseDown}
 				/>
 			</div>
 		}

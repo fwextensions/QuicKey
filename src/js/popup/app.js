@@ -6,7 +6,7 @@ define("popup/app", [
 	"jsx!./message-item",
 	"cp",
 	"./score/score-items",
-	"./data/get-tabs",
+	"./data/init-tabs",
 	"./data/get-bookmarks",
 	"./data/get-history",
 	"./data/add-urls",
@@ -25,7 +25,7 @@ define("popup/app", [
 	MessageItem,
 	cp,
 	scoreItems,
-	getTabs,
+	initTabs,
 	getBookmarks,
 	getHistory,
 	addURLs,
@@ -37,28 +37,22 @@ define("popup/app", [
 	k,
 	_
 ) {
-	const MinScore = .04,
-		NearlyZeroScore = .02,
-		MaxItems = 10,
-		MinItems = 4,
-		MinScoreDiff = .1,
-		VeryRecentMS = 5 * 1000,
-		HourMS = 60 * 60 * 1000,
-		HourCount = 3 * 24,
-		RecentMS = HourCount * HourMS,
-		VeryRecentBoost = .15,
-		RecentBoost = .1,
-		ClosedPenalty = .98,
-		BookmarksQuery = "/b ",
-		HistoryQuery = "/h ",
-		BQuery = "/b",
-		HQuery = "/h",
-		CommandQuery = "/",
-		NoRecentTabsMessage = [{
-			message: "Recently used tabs will appear here as you continue browsing",
-			faviconURL: "img/alert.svg",
-			component: MessageItem
-		}];
+	const MinScore = .04;
+	const NearlyZeroScore = .02;
+	const MaxItems = 10;
+	const MinItems = 4;
+	const MinScoreDiff = .1;
+	const BookmarksQuery = "/b ";
+	const HistoryQuery = "/h ";
+	const BQuery = "/b";
+	const HQuery = "/h";
+	const CommandQuery = "/";
+	const NoRecentTabsMessage = [{
+		message: "Recently used tabs will appear here as you continue browsing",
+		faviconURL: "img/alert.svg",
+		component: MessageItem
+	}];
+	const DeleteBookmarkConfirmation = "Are you sure you want to permanently delete this bookmark?";
 
 
 	function sortHistoryItems(
@@ -71,19 +65,19 @@ define("popup/app", [
 
 	var App = React.createClass({
 		mode: "tabs",
-		forceUpdate: false,
 		tabs: [],
 		bookmarks: [],
 		history: [],
 		recents: [],
 		bookmarksPromise: null,
 		historyPromise: null,
+		forceUpdate: false,
 		gotModifierUp: false,
 		gotMRUKey: true,
 		mruModifier: "Alt",
 		resultsList: null,
 		settings: settings.getDefaults(),
-		settingsPromise: Promise.resolve(),
+		settingsPromise: settings.get(),
 
 
 		getInitialState: function()
@@ -91,9 +85,8 @@ define("popup/app", [
 			var props = this.props,
 				query = props.initialQuery;
 
-			this.settingsPromise = settings.get()
-				.bind(this)
-				.then(function(settings) {
+			this.settingsPromise
+				.then(settings => {
 					this.settings = settings;
 					this.mruModifier = settings.chrome.popup.modifierEventName;
 					shortcuts.update(settings);
@@ -113,57 +106,92 @@ define("popup/app", [
 
 		componentWillMount: function()
 		{
-			recentTabs.getAll()
-				.bind(this)
-				.then(function(tabs) {
-					const now = Date.now();
-					const {settingsPromise} = this;
+			this.loadTabs()
+				.then(tabs => {
+						// by the time we get here, the settings promise will
+						// already have resolved and updated this.settings, so
+						// this will look for the correct MRU key
+					const shiftMRUKey = this.settings.shortcuts[k.Shortcuts.MRUSelect];
+					const mruKey = shiftMRUKey.toLocaleLowerCase();
 
-						// boost the scores of recent tabs
-					tabs.forEach(function(tab) {
-						var age,
-							hours;
-
-						if (tab.sessionId) {
-								// penalize matching closed tabs
-							tab.recentBoost = ClosedPenalty;
-						} else if (tab.lastVisit) {
-							age = now - tab.lastVisit;
-
-							if (age < VeryRecentMS) {
-								tab.recentBoost = 1 + VeryRecentBoost;
-							} else if (age < RecentMS) {
-								hours = Math.floor(age / HourMS);
-								tab.recentBoost = 1 +
-									RecentBoost * ((HourCount - hours) / HourCount);
-							}
+						// after the recent tabs have been loaded and scored,
+						// apply any shortcuts that were recorded during init
+					this.props.initialShortcuts.forEach(shortcut => {
+						if (shortcut == mruKey) {
+							this.modifySelected(1, true);
+						} else if (shortcut == shiftMRUKey) {
+							this.modifySelected(-1, true);
 						}
 					});
 
-					return this.loadPromisedItems(function() {
-						return settingsPromise
-							.then(function(settings) {
-								return getTabs(tabs, settings[k.MarkTabsInOtherWindows.Key]);
-							})
-							.then(function(tabs) {
-									// run scoreItems() on the tabs so that the
-									// hitMask and scores keys are added to each
-								scoreItems(tabs, "");
+					this.props.tracker.set("metric1", tabs.length);
+				});
+		},
 
-								return tabs;
-							});
-					}, "tabs", "");
-				})
-				.then(function(tabs) {
-					var initialShortcuts = this.props.initialShortcuts;
 
-						// filter out just recent and closed tabs that we
-						// have a last visit time for
+		componentDidMount: function()
+		{
+				// annoyingly, there seems to be a bug in Chrome where the
+				// closed tab is still around when the callback passed to
+				// chrome.tabs.remove() is called.  so we need to add an
+				// onRemoved handler to listen for the actual removal.  this
+				// also handles the edge case where the menu is open and a tab
+				// in another window is closed.
+			chrome.tabs.onRemoved.addListener(this.onTabRemoved);
+		},
+
+
+		componentDidUpdate: function()
+		{
+				// we only want this flag to be true through one render cycle
+			this.forceUpdate = false;
+		},
+
+
+		loadPromisedItems: function(
+			loader,
+			itemName,
+			command,
+			reload = false)
+		{
+			const promiseName = itemName + "Promise";
+
+			if (!this[promiseName] || reload) {
+					// store the promise so we only load the items once
+				this[promiseName] = loader().then(items => {
+						// strip the /b|h from the typed query
+					const originalQuery = this.state.query;
+					const query = originalQuery.slice(command.length);
+
+						// score the the items so the expected keys are added
+						// to each one, and then update the results list with
+						// matches on the current query
+					this[itemName] = scoreItems(items, "");
+					this.setQuery(originalQuery, query);
+
+					return items;
+				});
+			}
+
+			return this[promiseName];
+		},
+
+
+		loadTabs: function()
+		{
+			return this.loadPromisedItems(() => this.settingsPromise
+				.then(settings => initTabs(
+					recentTabs.getAll(settings[k.IncludeClosedTabs.Key]),
+					settings[k.MarkTabsInOtherWindows.Key],
+					settings[k.SpaceBehavior.Key] == k.SpaceBehavior.Space))
+				.then(tabs => {
+						// filter out just recent and closed tabs that we have a
+						// last visit time for
 					this.recents = tabs
-						.filter(function(tab) { return tab.lastVisit })
-						.sort(function(a, b) {
-								// sort open tabs before closed ones, and
-								// newer before old
+						.filter(({lastVisit}) => lastVisit)
+						.sort((a, b) => {
+								// sort open tabs before closed ones, and newer
+								// before old
 							if ((a.sessionId && b.sessionId) || (!a.sessionId && !b.sessionId)) {
 								return b.lastVisit - a.lastVisit;
 							} else if (a.sessionId) {
@@ -177,35 +205,55 @@ define("popup/app", [
 						this.recents = NoRecentTabsMessage;
 					}
 
-						// set the query again because we may have already
-						// rendered a match on the tabs without the recent boosts,
-						// which may have changed the results
-					this.setQuery(this.state.query);
-
-						// after the recent tabs have been loaded and scored,
-						// apply any shortcuts that were recorded during init
-					if (initialShortcuts.length) {
-						const shiftMRUKey = this.settings.shortcuts[k.Shortcuts.MRUSelect];
-						const mruKey = shiftMRUKey.toLocaleLowerCase();
-
-						initialShortcuts.forEach(function(shortcut) {
-							if (shortcut == mruKey) {
-								this.modifySelected(1, true);
-							} else if (shortcut == shiftMRUKey) {
-								this.modifySelected(-1, true);
-							}
-						}, this);
-					}
-
-					this.props.tracker.set("metric1", tabs.length);
-				});
+					return tabs;
+				}), "tabs", "", true);	// pass true to force a reload
 		},
 
 
-		componentDidUpdate: function()
+		setQuery: function(
+			originalQuery,
+			query)
 		{
-				// we only want this flag to be true through one render cycle
-			this.forceUpdate = false;
+			var queryToMatch = query || originalQuery;
+
+			this.setState({
+				matchingItems: this.getMatchingItems(queryToMatch),
+				query: originalQuery,
+				selected: queryToMatch ? 0 : -1
+			});
+		},
+
+
+		clearQuery: function()
+		{
+			var query = this.state.query;
+
+			if (!query || this.settings[k.EscBehavior.Key] == k.EscBehavior.Close) {
+					// pressing esc in an empty field should close the popup
+				this.props.port.postMessage("closedByEsc");
+				window.close();
+			} else {
+					// if we're searching for bookmarks or history, reset the
+					// query to just /b or /h, rather than clearing it, unless
+					// it's already a command, in which case, clear it
+				if (this.mode == "tabs" || this.mode == "command" ||
+						query == BookmarksQuery || query == HistoryQuery) {
+					this.forceUpdate = true;
+					query = "";
+				} else if (this.mode == "bookmarks") {
+					this.forceUpdate = true;
+					query = BookmarksQuery;
+				} else if (this.mode == "history") {
+					this.forceUpdate = true;
+					query = HistoryQuery;
+				}
+
+					// scroll the list back to the first row, which wouldn't
+					// happen by default if we just cleared the query, since in
+					// that case there's no selected item to scroll to
+				this.resultsList.scrollToRow(0);
+				this.onQueryChange({ target: { value: query }});
+			}
 		},
 
 
@@ -213,11 +261,10 @@ define("popup/app", [
 			query)
 		{
 			if (query == HistoryQuery) {
-					// score the history items with an empty query first, so that
-					// all the right fields are added, and then sort them by
-					// recency.  the scoring is only necessary the first time /h
-					// is typed, but that's probably only once per popup open.
-				return scoreItems(this.history, "").sort(sortHistoryItems);
+					// special case the /h query so that we can sort the history
+					// items by visit date and show them as soon as the command
+					// is typed with no query
+				return this.history.sort(sortHistoryItems);
 			} else if (this.mode == "command" || query == BookmarksQuery) {
 				return [];
 			} else if (this.mode == "tabs" && !query) {
@@ -236,6 +283,42 @@ define("popup/app", [
 			);
 
 			return matchingItems;
+		},
+
+
+		openItem: function(
+			item,
+			shiftKey,
+			modKey)
+		{
+			if (item) {
+				if (this.mode == "tabs") {
+					if (item.sessionId) {
+							// this is a closed tab, so restore it
+						chrome.sessions.restore(item.sessionId);
+						this.props.tracker.event("tabs", "restore");
+					} else {
+							// switch to the tab
+						this.focusTab(item, shiftKey);
+					}
+				} else if (shiftKey) {
+						// open in a new window
+					chrome.windows.create({ url: item.url });
+					this.props.tracker.event(this.mode, "open-new-win");
+				} else if (modKey) {
+						// open in a new tab
+					chrome.tabs.create({ url: item.url });
+					this.props.tracker.event(this.mode, "open-new-tab");
+				} else {
+						// open in the same tab
+					chrome.tabs.update({ url: item.url });
+					this.props.tracker.event(this.mode, "open");
+				}
+
+					// we seem to have to close the window in a timeout so that
+					// the hover state of the button gets cleared
+				setTimeout(function() { window.close(); }, 0);
+			}
 		},
 
 
@@ -274,20 +357,70 @@ define("popup/app", [
 		},
 
 
+			// although this method also deletes bookmarks/history items, keep
+			// the closeTab name since that's the name of the shortcut setting
 		closeTab: function(
-			tab)
+			item)
 		{
-				// we can only remove actual tabs
-			if (tab && this.mode == "tabs") {
-				chrome.tabs.remove(tab.id);
-				_.pull(this.tabs, tab);
-				_.remove(this.recents, { id: tab.id });
+			const {query} = this.state;
+			const {mode} = this;
 
-					// update the list to show the remaining matching tabs
+
+			const deleteItem = (
+				deleteFunc,
+				eventCategory = mode) =>
+			{
+				const command = mode == "bookmarks" ? BookmarksQuery : HistoryQuery;
+
+				deleteFunc(item);
+				_.pull(this[mode], item);
+
+					// call getMatchingItems() directly with just the query,
+					// unless the query is just the command part, in which case
+					// we need to pass that so the right list is returned
 				this.setState({
-					matchingItems: this.getMatchingItems(this.state.query)
+					matchingItems: this.getMatchingItems(query.slice(command.length) || query)
 				});
-				this.props.tracker.event(this.state.query ? "tabs" : "recents", "close");
+				this.props.tracker.event(eventCategory, "close");
+			};
+
+
+			if (item) {
+				if (mode == "tabs") {
+					if (!isNaN(item.id)) {
+							// the onTabRemoved handler below will re-init the
+							// list, which will then show the tab as closed
+						chrome.tabs.remove(item.id);
+						this.props.tracker.event(query ? "tabs" : "recents", "close");
+					} else {
+							// this is a closed tab that the user wants to
+							// delete, so pass a special event category
+						deleteItem(({url}) => chrome.history.deleteUrl({ url }),
+							"closed-tab");
+
+							// since this closed tab is also in the recents list,
+							// we have to pull it from there as well.  we don't
+							// need to do that in the tab branch above because
+							// loadTabs() gets called, which re-inits recents.
+						_.pull(this.recents, item);
+					}
+				} else if (mode == "bookmarks") {
+					if (confirm(DeleteBookmarkConfirmation)) {
+						deleteItem(({id}) => chrome.bookmarks.remove(id));
+					}
+				} else if (mode == "history") {
+						// we have to use originalURL to delete the history item,
+						// since it may have been a suspended page and we convert
+						// url to the unsuspended version
+					deleteItem(({originalURL}) =>
+						chrome.history.deleteUrl({ url: originalURL }));
+
+						// just in case this URL was also recently closed, remove
+						// it from the tabs and recents lists, since it will no
+						// longer be re-openable
+					_.remove(this.tabs, { url: item.originalURL });
+					_.remove(this.recents, { url: item.originalURL });
+				}
 			}
 		},
 
@@ -356,42 +489,6 @@ define("popup/app", [
 		},
 
 
-		openItem: function(
-			item,
-			shiftKey,
-			altKey)
-		{
-			if (item) {
-				if (this.mode == "tabs") {
-					if (item.sessionId) {
-							// this is a closed tab, so restore it
-						chrome.sessions.restore(item.sessionId);
-						this.props.tracker.event("tabs", "restore");
-					} else {
-							// switch to the tab
-						this.focusTab(item, shiftKey);
-					}
-				} else if (shiftKey) {
-						// open in a new window
-					chrome.windows.create({ url: item.url });
-					this.props.tracker.event(this.mode, "open-new-win");
-				} else if (altKey) {
-						// open in a new tab
-					chrome.tabs.create({ url: item.url });
-					this.props.tracker.event(this.mode, "open-new-tab");
-				} else {
-						// open in the same tab
-					chrome.tabs.update({ url: item.url });
-					this.props.tracker.event(this.mode, "open");
-				}
-
-					// we seem to have to close the window in a timeout so that
-					// the hover state of the button gets cleared
-				setTimeout(function() { window.close(); }, 0);
-			}
-		},
-
-
 		copyItemURL: function(
 			item,
 			includeTitle)
@@ -434,82 +531,16 @@ define("popup/app", [
 		},
 
 
-		setQuery: function(
-			originalQuery,
-			query)
-		{
-			var queryToMatch = query || originalQuery;
-
-			this.setState({
-				matchingItems: this.getMatchingItems(queryToMatch),
-				query: originalQuery,
-				selected: queryToMatch ? 0 : -1
-			});
-		},
-
-
-		clearQuery: function()
-		{
-			var query = this.state.query;
-
-			if (!query || this.settings[k.EscBehavior.Key] == k.EscBehavior.Close) {
-					// pressing esc in an empty field should close the popup
-				this.props.port.postMessage("closedByEsc");
-				window.close();
-			} else {
-					// if we're searching for bookmarks or history,
-					// reset the query to just /b or /h, rather than
-					// clearing it, unless it's already that, in which
-					// case, clear it
-				if (this.mode == "tabs" || this.mode == "command" ||
-						query == BookmarksQuery || query == HistoryQuery) {
-					this.forceUpdate = true;
-					query = "";
-				} else if (this.mode == "bookmarks") {
-					this.forceUpdate = true;
-					query = BookmarksQuery;
-				} else if (this.mode == "history") {
-					this.forceUpdate = true;
-					query = HistoryQuery;
-				}
-
-					// scroll the list back to the first row, which wouldn't
-					// happen by default if we just cleared the query, since in
-					// that case there's no selected item to scroll to
-				this.resultsList.scrollToRow(0);
-				this.onQueryChange({ target: { value: query }});
-			}
-		},
-
-
-		loadPromisedItems: function(
-			loader,
-			itemName,
-			commandPattern)
-		{
-			var promiseName = itemName + "Promise";
-
-			if (!this[promiseName]) {
-					// store the promise so we only load the items once
-				this[promiseName] = loader().then(function(items) {
-						// strip the /b|h from the typed query
-					var originalQuery = this.state.query,
-						query = originalQuery.slice(commandPattern.length);
-
-						// store the result and then update the results list with
-						// the match on the existing query
-					this[itemName] = items;
-					this.setQuery(originalQuery, query);
-
-					return items;
-				}.bind(this));
-			}
-
-			return this[promiseName];
-		},
-
-
 		handleListRef: handleRef("resultsList"),
+
+
+		onTabRemoved: function()
+		{
+				// refresh the results list so that the newly closed tab
+				// will show in the closed list, and if there are multiple
+				// tabs with the same name, their index numbers will update
+			this.loadTabs();
+		},
 
 
 		onQueryChange: function(
@@ -517,7 +548,7 @@ define("popup/app", [
 		{
 			var query = event.target.value,
 					// remember the original typed value in case it matches a
-					// special mode below and we have to trip out the / part in
+					// special mode below and we have to remove the / part in
 					// order to match the items against it
 				originalQuery = query;
 
@@ -588,9 +619,7 @@ define("popup/app", [
 
 		render: function()
 		{
-			var state = this.state,
-				query = state.query,
-				items = state.matchingItems;
+			const {query, matchingItems, selected} = this.state;
 
 			return <div className={this.props.platform}>
 				<SearchBox
@@ -610,12 +639,12 @@ define("popup/app", [
 				</div>
 				<ResultsList
 					ref={this.handleListRef}
-					items={items}
+					items={matchingItems}
 					maxItems={MaxItems}
 					itemComponent={ResultsListItem}
 					mode={this.mode}
 					query={query}
-					selectedIndex={state.selected}
+					selectedIndex={selected}
 					setSelectedIndex={this.setSelectedIndex}
 					onItemClicked={this.openItem}
 					onTabClosed={this.closeTab}

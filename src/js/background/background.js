@@ -333,15 +333,15 @@ DEBUG && console.log("=== reloading");
 			backgroundTracker.event("extension", "update-available",
 				details && details.version);
 		} catch (e) {
-			console.log(e);
+DEBUG && console.log(e);
 		}
 
 		restartExtension();
 	});
 
 
-	window.log = function() {
-		DEBUG && console.log.apply(console, arguments);
+	window.log = function(...args) {
+		DEBUG && console.log.apply(console, args);
 	};
 
 

@@ -54,7 +54,7 @@ You can customize the shortcut key by right-clicking the *QuicKey* icon and sele
 
 ## <a name="mru"></a>Switch between the most recently used tabs
 
-> **Note:** When first installed, *QuicKey* doesn't know which tabs have been recently used, but as you use Chrome, it will start adding tabs to the most recently used (MRU) list.
+> **Note:** When first installed, *QuicKey* doesn't know which tabs have been recently used, but as you use Chrome, tabs will get added to the most recently used (MRU) list.
 
 Opening *QuicKey* displays a list of the last 50 tabs you've visited, in order of recency.  Click a tab to switch to it, or use one of the keyboard shortcuts below to navigate the recently used tab history:
 
@@ -135,9 +135,9 @@ When you open *QuicKey*, the 25 most recently closed tabs are listed below the r
 
 ![Closed tab](img/closed-tab.png)
 
-They are also returned when you type a query, though their score is discounted compared to open tabs.  Click a closed tab to reopen it in its original location and with all of its browsing history intact.
+They are also returned when you type a query, though their rank in the list of results is lower than open tabs.  Click a closed tab to reopen it in its original location and with all of its browsing history intact.
 
-If you don't want closed tabs to be shown, open the *QuicKey options* page and uncheck *Include recently closed tabs in the search results*.
+If you don't want any closed tabs to be shown, open the *QuicKey options* page and uncheck *Include recently closed tabs in the search results*.  You can also remove a specific closed tab from the browser's history by pressing <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd</kbd><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS) or by clicking the its <img src="img/clear.svg" style="height: 1em; vertical-align: middle;"> button on the right side of the menu. 
 
 
 ## Move tabs
@@ -168,13 +168,19 @@ To find a bookmark, type <b><kbd>/</kbd><kbd>b</kbd><kbd>space</kbd></b> in the 
 
 ## <a name="history"></a>Search the browser history
 
+To see the last 2000 pages of your browser history in order of recency, type <b><kbd>/</kbd><kbd>h</kbd><kbd>space</kbd></b> in the search box. Or type part of the page's name or URL to narrow the search.
 To find something in the last 2000 pages of your browser history, type <b><kbd>/</kbd><kbd>h</kbd><kbd>space</kbd></b> in the search box, and then part of the page's name or URL.
 
 ![Search history](img/search-history.png)
 
 The same <b><kbd>ctrl</kbd><kbd>enter</kbd></b> (<b><kbd>cmd</kbd><kbd>enter</kbd></b> on macOS) and <b><kbd>shift</kbd><kbd>enter</kbd></b> shortcuts will open the visited page in a new tab or window.
 
-As soon as you type <b><kbd>/</kbd><kbd>h</kbd><kbd>space</kbd></b>, the pages from your history will be listed in order of recency, so you can get back to a page you had visited without having to remember its name.
+As soon as you type <b><kbd>/</kbd><kbd>h</kbd><kbd>space</kbd></b>, the pages from your history will be listed in order of recency, so you can get back to a page you had recently visited without having to remember its name.
+
+
+## Delete bookmarks and history items
+
+To delete the selected bookmark or history item, press <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd</kbd><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS). Or hover over an item and click the <img src="img/clear.svg" style="height: 1em; vertical-align: middle;"> button on the right side of the menu. You'll be asked to confirm the deletion of bookmarks.
 
 
 ## <a href="https://chrome.google.com/webstore/detail/the-great-suspender/klbibkeccnjlkjkiokjodocebajanakg?hl=en"><img src="img/tgs-icon.png" style="height: 24px;"></a> The Great Suspender integration

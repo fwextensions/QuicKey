@@ -5,23 +5,23 @@ define([
 	addURLs,
 	cp
 ) {
-	var bookmarks = [],
-		urls = {};
+	let bookmarks = [];
+	let urls = {};
 
 
 	function processNodes(
 		nodes)
 	{
-		nodes.forEach(function(node) {
-			var url = node.url;
+		nodes.forEach(node => {
+			const {url, children} = node;
 
 				// don't return any duplicate URLs
 			if (url && !urls[url]) {
 				addURLs(node);
 				urls[url] = true;
 				bookmarks.push(node);
-			} else if (node.children) {
-				processNodes(node.children);
+			} else if (children) {
+				processNodes(children);
 			}
 		});
 	}
@@ -33,7 +33,7 @@ define([
 		urls = {};
 
 		return cp.bookmarks.getTree()
-			.then(function(bookmarkNodes) {
+			.then(bookmarkNodes => {
 				processNodes(bookmarkNodes);
 				urls = null;
 

@@ -269,16 +269,16 @@ input.search-box::-webkit-search-cancel-button:hover:active {
 	background: #fafafa;
 }
 
-.results-list-item.tabs.selected:not(.closed):hover {
-	padding-right: 36px;
-}
-
 .results-list-item .close-button {
 	outline: none;
 	display: none;
 }
 
-.results-list-item.tabs.selected:not(.closed):hover .close-button {
+.results-list-item.selected:hover {
+	padding-right: 36px;
+}
+
+.results-list-item.selected:hover .close-button {
 	width: 24px;
 	height: 24px;
 	right: 6px;
@@ -296,12 +296,12 @@ input.search-box::-webkit-search-cancel-button:hover:active {
 	display: block;
 }
 
-.results-list-item.tabs.selected:hover .close-button:hover {
+.results-list-item.selected:hover .close-button:hover {
 	background-color: #dcdcdc;
 	opacity: 1;
 }
 
-.results-list-item.tabs.selected:hover .close-button:hover:active {
+.results-list-item.selected:hover .close-button:hover:active {
 	background-color: #bbb;
 }
 

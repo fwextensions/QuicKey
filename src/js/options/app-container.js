@@ -2,25 +2,25 @@ define([
 	"react",
 	"jsx!./app",
 	"background/page-trackers",
-	"background/settings"
+	"background/settings",
+	"background/constants"
 ], function(
 	React,
 	OptionsApp,
 	trackers,
-	settings
+	settings,
+	{Platform}
 ) {
 	const PlusPattern = /\+/g;
 
 
 	const OptionsAppContainer = React.createClass({
 		tracker: trackers.options,
-		platform: "win",
+		platform: Platform,
 
 
 		getInitialState: function()
 		{
-			this.platform = /Mac/i.test(navigator.platform) ? "mac" : "win";
-
 			return {
 				settings: null
 			};
