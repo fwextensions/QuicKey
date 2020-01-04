@@ -2,13 +2,11 @@ define([
 	"bluebird",
 	"cp",
 	"lib/decode",
-	"./add-urls",
 	"lodash"
 ], function(
 	Promise,
 	cp,
 	decode,
-	addURLs,
 	_
 ) {
 	const TitlePattern = /ttl=([^&]+)/;
@@ -99,7 +97,6 @@ define([
 				const markTabs = markTabsInOtherWindows && !isNaN(currentWindowID);
 
 				tabs.forEach(tab => {
-					addURLs(tab);
 					addRecentBoost(tab);
 
 						// don't treat closed tabs as being in other windows

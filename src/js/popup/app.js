@@ -397,6 +397,12 @@ define("popup/app", [
 							// delete, so pass a special event category
 						deleteItem(({url}) => chrome.history.deleteUrl({ url }),
 							"closed-tab");
+
+							// since this closed tab is also in the recents list,
+							// we have to pull it from there as well.  we don't
+							// need to do that in the tab branch above because
+							// loadTabs() gets called, which re-inits recents.
+						_.pull(this.recents, item);
 					}
 				} else if (mode == "bookmarks") {
 					if (confirm(DeleteBookmarkConfirmation)) {
@@ -408,6 +414,12 @@ define("popup/app", [
 						// url to the unsuspended version
 					deleteItem(({originalURL}) =>
 						chrome.history.deleteUrl({ url: originalURL }));
+
+						// just in case this URL was also recently closed, remove
+						// it from the tabs and recents lists, since it will no
+						// longer be re-openable
+					_.remove(this.tabs, { url: item.originalURL });
+					_.remove(this.recents, { url: item.originalURL });
 				}
 			}
 		},
@@ -527,7 +539,7 @@ define("popup/app", [
 				// refresh the results list so that the newly closed tab
 				// will show in the closed list, and if there are multiple
 				// tabs with the same name, their index numbers will update
-			this.initTabs();
+			this.loadTabs();
 		},
 
 

@@ -284,7 +284,7 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 
 						// update the fresh tabs with any recent data we have
 					tabs = freshTabs.map(tab => {
-						const {id, url} = tab;
+						const {id, url} = addURLs(tab);
 						const oldTab = tabsByID[id];
 						let lastVisit = 0;
 
@@ -302,6 +302,11 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 
 						tab.lastVisit = lastVisit;
 						freshTabsByURL[url] = true;
+
+							// if the tab is suspended, also store it with the
+							// unsuspendURL so that we can dedupe it against
+							// closed unsuspended tabs below
+						tab.unsuspendURL && (freshTabsByURL[tab.unsuspendURL] = true);
 
 						return tab;
 					});
@@ -331,6 +336,8 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 
 								return !existingTab;
 							})
+								// init the remaining closed tabs
+							.map(closedTab => addURLs(closedTab))
 						);
 					}
 
@@ -384,7 +391,8 @@ DEBUG && console.log("=== updateAll");
 				}
 			} else if (direction == -1) {
 					// if the user is not actively navigating, we want to ignore
-					// alt-S keypresses so the icon doesn't invert for no reason
+					// alt-S keypresses so the icon doesn't invert for no reason,
+					// so we only set previousTabIndex when going backwards
 				previousTabIndex = maxIndex - 1;
 			}
 

@@ -53,5 +53,7 @@ define([
 			// closed tabs will have recentBoost already set.  this is mostly to
 			// add a default value for bookmarks and history.
 		item.recentBoost = isNaN(item.recentBoost) ? 1 : item.recentBoost;
+
+		return item;
 	}
 });
