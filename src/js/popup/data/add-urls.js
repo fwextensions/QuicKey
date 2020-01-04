@@ -1,4 +1,8 @@
-define(function() {
+define([
+	"lib/decode"
+], function(
+	decode
+) {
 		// assume any extension URL that begins with suspended.html is from TGS
 	const SuspendedURLPattern = /^chrome-extension:\/\/[^/]+\/suspended\.html#(?:.*&)?uri=(.+)$/;
 	const ProtocolPattern = /^((chrome-extension:\/\/[^/]+\/suspended\.html#(?:.*&)?uri=)?(https?|file|chrome):\/\/(www\.)?)|(chrome-extension:\/\/[^/]+\/)/;
@@ -41,24 +45,10 @@ define(function() {
 		}
 
 			// add a clean displayURL to each tab that we can score against and
-			// show in the item.  unfortunately, decodeURIComponent() will throw
-			// an exception if it doesn't like how a URL is formed, which we
-			// don't have any control over.  so first replace +'s with %20 and
-			// then try to decode.  if that throws, try unescape(), even though
-			// it's deprecated.  if unescape is ever fully removed from Chrome,
-			// then url will just be left undecoded for the displayURL.
-		try {
-			url = url.replace(/\+/g, "%20");
-			url = decodeURIComponent(url);
-		} catch (e) {
-DEBUG && console.log(`decodeURIComponent failed on: ${url}`);
-
-			try {
-				url = unescape(url);
-			} catch (e) {}
-		}
-
-		item.displayURL = url.replace(ProtocolPattern, "");
+			// show in the item.  replace the +s with %20 to try to make
+			// decodeURIComponent happier and remove the protocol.
+		item.displayURL = decode(url.replace(/\+/g, "%20"))
+			.replace(ProtocolPattern, "");
 
 			// closed tabs will have recentBoost already set.  this is mostly to
 			// add a default value for bookmarks and history.

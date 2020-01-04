@@ -12,7 +12,7 @@ comments: true
 
 ### Added
 
-* Bookmarks and entries in the browser history can be deleted by clicking the X button on each item or with the close-tab keyboard shortcut.  
+* Closed tabs, bookmarks, and entries in the browser history can be deleted by clicking the X button on each item or with the close-tab keyboard shortcut.  
 
 * Ctrl- or cmd-clicking a bookmark or history item will open it in a new tab. 
 

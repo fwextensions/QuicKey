@@ -171,9 +171,9 @@ If you change the keyboard shortcut for showing the QuicKey menu to something ot
 
 To close the selected tab, press CTRL-W (CMD-CTRL-W on macOS). Or hover over a tab and click the X button on the right side of the menu.
 
-When you open QuicKey, the 25 most recently closed tabs are listed below the recent tabs and shown in a faded state with a clock icon. They are also returned when you type a query, though their score is discounted compared to open tabs. Click a closed tab to reopen it in its original location and with all of its browsing history intact.
+When you open QuicKey, the 25 most recently closed tabs are listed below the recent tabs and shown in a faded state with a clock icon. They are also returned when you type a query, though their rank in the list of results is lower than open tabs. Click a closed tab to reopen it in its original location and with all of its browsing history intact.
 
-If you don't want closed tabs to be shown, open the QuicKey options page and uncheck "Include recently closed tabs in the search results".
+If you don't want any closed tabs to be shown, open the QuicKey options page and uncheck "Include recently closed tabs in the search results". You can also remove a specific closed tab from the browser's history by pressing CTRL-W (CMD-CTRL-W on macOS) or by clicking its X button on the right side of the menu.
 
 
 ★ Move tabs

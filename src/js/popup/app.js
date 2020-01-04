@@ -106,7 +106,7 @@ define("popup/app", [
 
 		componentWillMount: function()
 		{
-			this.initTabs()
+			this.loadTabs()
 				.then(tabs => {
 						// by the time we get here, the settings promise will
 						// already have resolved and updated this.settings, so
@@ -177,7 +177,7 @@ define("popup/app", [
 		},
 
 
-		initTabs: function()
+		loadTabs: function()
 		{
 			return this.loadPromisedItems(() => this.settingsPromise
 				.then(settings => initTabs(
@@ -363,12 +363,13 @@ define("popup/app", [
 			item)
 		{
 			const {query} = this.state;
+			const {mode} = this;
 
 
 			const deleteItem = (
-				deleteFunc) =>
+				deleteFunc,
+				eventCategory = mode) =>
 			{
-				const {mode} = this;
 				const command = mode == "bookmarks" ? BookmarksQuery : HistoryQuery;
 
 				deleteFunc(item);
@@ -380,21 +381,31 @@ define("popup/app", [
 				this.setState({
 					matchingItems: this.getMatchingItems(query.slice(command.length) || query)
 				});
-				this.props.tracker.event(mode, "close");
+				this.props.tracker.event(eventCategory, "close");
 			};
 
 
 			if (item) {
-				if (this.mode == "tabs" && !isNaN(item.id)) {
-						// the onTabRemoved handler below will re-init the list,
-						// which will show the tab as closed
-					chrome.tabs.remove(item.id);
-					this.props.tracker.event(query ? "tabs" : "recents", "close");
-				} else if (this.mode == "bookmarks") {
+				if (mode == "tabs") {
+					if (!isNaN(item.id)) {
+							// the onTabRemoved handler below will re-init the
+							// list, which will then show the tab as closed
+						chrome.tabs.remove(item.id);
+						this.props.tracker.event(query ? "tabs" : "recents", "close");
+					} else {
+							// this is a closed tab that the user wants to
+							// delete, so pass a special event category
+						deleteItem(({url}) => chrome.history.deleteUrl({ url }),
+							"closed-tab");
+					}
+				} else if (mode == "bookmarks") {
 					if (confirm(DeleteBookmarkConfirmation)) {
 						deleteItem(({id}) => chrome.bookmarks.remove(id));
 					}
-				} else if (this.mode == "history") {
+				} else if (mode == "history") {
+						// we have to use originalURL to delete the history item,
+						// since it may have been a suspended page and we convert
+						// url to the unsuspended version
 					deleteItem(({originalURL}) =>
 						chrome.history.deleteUrl({ url: originalURL }));
 				}
@@ -596,9 +607,7 @@ define("popup/app", [
 
 		render: function()
 		{
-			var state = this.state,
-				query = state.query,
-				items = state.matchingItems;
+			const {query, matchingItems, selected} = this.state;
 
 			return <div className={this.props.platform}>
 				<SearchBox
@@ -618,12 +627,12 @@ define("popup/app", [
 				</div>
 				<ResultsList
 					ref={this.handleListRef}
-					items={items}
+					items={matchingItems}
 					maxItems={MaxItems}
 					itemComponent={ResultsListItem}
 					mode={this.mode}
 					query={query}
-					selectedIndex={state.selected}
+					selectedIndex={selected}
 					setSelectedIndex={this.setSelectedIndex}
 					onItemClicked={this.openItem}
 					onTabClosed={this.closeTab}

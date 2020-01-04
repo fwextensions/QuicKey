@@ -20,6 +20,7 @@ define([
 	const FaviconURL = "chrome://favicon/";
 	const CloseButtonTooltips = {
 		tabs: "Close tab",
+		closedTab: "Delete this closed tab from the browser history",
 		bookmarks: "Delete bookmark",
 		history: "Delete this page from the browser history"
 	};
@@ -117,7 +118,7 @@ define([
 		render: function()
 		{
 			const {props} = this;
-			const {item, query} = props;
+			const {item, query, mode, style, isSelected} = props;
 			const {
 				scores,
 				hitMasks,
@@ -132,8 +133,8 @@ define([
 			} = item;
 			const className = [
 				"results-list-item",
-				props.mode,
-				props.isSelected ? "selected" : "",
+				mode,
+				isSelected ? "selected" : "",
 				unsuspendURL ? "suspended" : "",
 				incognito ? "incognito" :
 					(otherWindow ? "other-window" : ""),
@@ -150,7 +151,7 @@ define([
 
 			if (IsDevMode) {
 				tooltip = _.toPairs(scores).concat([["recentBoost", item.recentBoost], ["id", item.id]])
-					.map(function(a) { return a.join(": "); }).join("\n") + "\n" + tooltip;
+					.map(keyValue => keyValue.join(": ")).join("\n") + "\n" + tooltip;
 			}
 
 				// blank lines at the end of the tooltip show up in macOS Chrome,
@@ -174,7 +175,7 @@ define([
 			}
 
 			return <div className={className}
-				style={props.style}
+				style={style}
 				title={tooltip}
 				onClick={this.onClick}
 				onMouseMove={this.onMouseMove}
@@ -207,7 +208,7 @@ define([
 					/>
 				</div>
 				<button className="close-button"
-					title={CloseButtonTooltips[props.mode]}
+					title={CloseButtonTooltips[sessionId ? "closedTab" : mode]}
 					onClick={this.onClose}
 					onMouseDown={this.onCloseMouseDown}
 				/>

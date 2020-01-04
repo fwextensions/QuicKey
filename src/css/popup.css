@@ -274,11 +274,11 @@ input.search-box::-webkit-search-cancel-button:hover:active {
 	display: none;
 }
 
-.results-list-item.selected:not(.closed):hover {
+.results-list-item.selected:hover {
 	padding-right: 36px;
 }
 
-.results-list-item.selected:not(.closed):hover .close-button {
+.results-list-item.selected:hover .close-button {
 	width: 24px;
 	height: 24px;
 	right: 6px;

@@ -1,12 +1,14 @@
 define([
 	"bluebird",
-	"./add-urls",
 	"cp",
+	"lib/decode",
+	"./add-urls",
 	"lodash"
 ], function(
 	Promise,
-	addURLs,
 	cp,
+	decode,
+	addURLs,
 	_
 ) {
 	const TitlePattern = /ttl=([^&]+)/;
@@ -19,25 +21,6 @@ define([
 	const VeryRecentMS = 5 * 1000;
 	const VeryRecentBoost = .15;
 	const ClosedPenalty = .98;
-
-
-	function decode(
-		string)
-	{
-		var result = string;
-
-			// try to use decodeURIComponent() to unescape the ttl param, which
-			// sometimes throws if it doesn't like the encoding
-		try {
-			result = decodeURIComponent(string);
-		} catch (e) {
-			try {
-				result = unescape(string);
-			} catch (e) {}
-		}
-
-		return result;
-	}
 
 
 	function addRecentBoost(
@@ -114,7 +97,6 @@ define([
 				const activeTab = activeTabs[0] || {};
 				const currentWindowID = activeTab.windowId;
 				const markTabs = markTabsInOtherWindows && !isNaN(currentWindowID);
-				let match;
 
 				tabs.forEach(tab => {
 					addURLs(tab);
@@ -133,7 +115,7 @@ define([
 						// TGS puts in the URL.
 					if (tab.unsuspendURL && (tab.title == "Suspended Tab" ||
 							BadTGSTitlePattern.test(tab.title))) {
-						match = tab.url.match(TitlePattern);
+						const match = tab.url.match(TitlePattern);
 
 						if (match) {
 							tab.title = decode(match[1]);

@@ -1,11 +1,11 @@
 define(function() {
-	function copyTextToClipboard(
+	return function copyTextToClipboard(
 		text)
 	{
-		var copyFrom = document.createElement("textarea"),
-			body = document.body,
-			activeElement = document.activeElement,
-			result;
+		const copyFrom = document.createElement("textarea");
+		const body = document.body;
+		const activeElement = document.activeElement;
+		let result;
 
 		copyFrom.textContent = text;
 		body.appendChild(copyFrom);
@@ -24,7 +24,4 @@ define(function() {
 			activeElement.focus();
 		}
 	}
-
-
-	return copyTextToClipboard;
 });

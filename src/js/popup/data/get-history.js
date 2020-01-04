@@ -1,9 +1,11 @@
 define([
-	"./add-urls",
-	"cp"
+	"cp",
+	"lib/decode",
+	"./add-urls"
 ], function(
-	addURLs,
-	cp
+	cp,
+	decode,
+	addURLs
 ) {
 	const RequestedItemCount = 2000;
 	const LoopItemCount = 1000;
@@ -53,7 +55,7 @@ define([
 										// filename or last folder in the URL,
 										// and if that doesn't work, default to
 										// the full URL as a title.
-									item.title = (match && (match[2] || match[1])) || url;
+									item.title = decode((match && (match[2] || match[1])) || url);
 								}
 
 								lastItem = urls[url] = item;
