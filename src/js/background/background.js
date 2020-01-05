@@ -114,6 +114,7 @@ require([
 	k
 ) {
 	const backgroundTracker = trackers.background;
+	let tabCount = 0;
 	let popupIsOpen = false;
 	let tabChangedFromToggle = false;
 	let lastTogglePromise = Promise.resolve();
@@ -134,6 +135,13 @@ require([
 				backgroundTracker.exception(error);
 			}
 		}), MinTabDwellTime);
+
+
+	const debouncedOnRemoved = debounce((tabId, removeInfo) => {
+		if (!gStartingUp) {
+			recentTabs.remove(tabId, removeInfo);
+		}
+	}, TabRemovedDelay);
 
 
 	function onTabActivated(
@@ -251,8 +259,11 @@ require([
 		isNormalIcon = false;
 		clearTimeout(shortcutTimer);
 		shortcutTimer = setTimeout(handler, MinTabDwellTime);
-		cp.browserAction.setIcon(paths)
+
+		return cp.browserAction.setBadgeBackgroundColor({ color: "#3367d6" })
 			.catch(backgroundTracker.exception);
+//		cp.browserAction.setIcon(paths)
+//			.catch(backgroundTracker.exception);
 	}
 
 
@@ -263,7 +274,19 @@ require([
 
 		isNormalIcon = true;
 		cp.browserAction.setIcon(paths)
+
+		return cp.browserAction.setBadgeBackgroundColor({ color: "#a0a0a0" })
 			.catch(backgroundTracker.exception);
+//		cp.browserAction.setIcon(IconPaths)
+//			.catch(backgroundTracker.exception);
+	}
+
+
+	function updateTabCount(
+		delta = 0)
+	{
+		tabCount += delta;
+		chrome.browserAction.setBadgeText({ text: String(tabCount) });
 	}
 
 
@@ -275,6 +298,8 @@ require([
 
 
 	chrome.tabs.onCreated.addListener(tab => {
+		updateTabCount(1);
+
 		if (!gStartingUp && !tab.active) {
 				// this tab was opened by ctrl-clicking a link or by opening
 				// all the tabs in a bookmark folder, so pass true to insert
@@ -285,14 +310,16 @@ require([
 	});
 
 
-		// debounce the handling of a removed tab since Chrome seems to trigger
-		// the event when shutting down, and we want to ignore those.  hopefully,
-		// Chrome will finish quitting before this handler fires.
-	chrome.tabs.onRemoved.addListener(debounce((tabId, removeInfo) => {
-		if (!gStartingUp) {
-			recentTabs.remove(tabId, removeInfo);
-		}
-	}, TabRemovedDelay));
+	chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
+		updateTabCount(-1);
+
+			// debounce the handling of a removed tab since Chrome seems to
+			// trigger the event when shutting down, and we want to ignore
+			// those.  hopefully, Chrome will finish quitting before this
+			// handler fires.  we don't debounce the listener because we want
+			// to update the tab count immediately.
+		debouncedOnRemoved(tabId, removeInfo);
+	});
 
 
 		// tabs seem to get replaced with new IDs when they're auto-discarded by
@@ -401,7 +428,13 @@ DEBUG && console.log(e);
 
 
 		// update the icon, in case we're in dark mode when the extension loads
-	setNormalIcon();
+	setNormalIcon()
+		.then(() => cp.tabs.query({}))
+		.then(tabs => {
+			tabCount = tabs.length;
+			updateTabCount();
+		});
+
 
 	storage.set(data => {
 			// save the lastUsedVersion in a global before we return the current
