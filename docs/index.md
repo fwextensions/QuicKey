@@ -137,7 +137,7 @@ When you open *QuicKey*, the 25 most recently closed tabs are listed below the r
 
 They are also returned when you type a query, though their rank in the list of results is lower than open tabs.  Click a closed tab to reopen it in its original location and with all of its browsing history intact.
 
-If you don't want any closed tabs to be shown, open the *QuicKey options* page and uncheck *Include recently closed tabs in the search results*.  You can also remove a specific closed tab from the browser's history by pressing <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd</kbd><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS) or by clicking the its <img src="img/clear.svg" style="height: 1em; vertical-align: middle;"> button on the right side of the menu. 
+If you don't want any closed tabs to be shown, open the *QuicKey options* page and uncheck *Include recently closed tabs in the search results*.  You can also remove the selected closed tab from the browser's history by pressing <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd</kbd><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS) or by clicking the its <img src="img/clear.svg" style="height: 1em; vertical-align: middle;"> button on the right side of the menu. 
 
 
 ## Move tabs
