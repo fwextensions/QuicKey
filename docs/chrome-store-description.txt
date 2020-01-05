@@ -111,7 +111,7 @@ Opening QuicKey displays a list of the last 50 tabs you've visited, in order of 
 
  ➤ To switch between the two most recent tabs:
     • Press ALT-Z (CTRL-Z on macOS).
-        Or:
+        OR:
     • Quickly double-press ALT-Q (CTRL-Q on macOS).
 
  ➤ To navigate farther back in the MRU list:
@@ -173,7 +173,7 @@ To close the selected tab, press CTRL-W (CMD-CTRL-W on macOS). Or hover over a t
 
 When you open QuicKey, the 25 most recently closed tabs are listed below the recent tabs and shown in a faded state with a clock icon. They are also returned when you type a query, though their rank in the list of results is lower than open tabs. Click a closed tab to reopen it in its original location and with all of its browsing history intact.
 
-If you don't want any closed tabs to be shown, open the QuicKey options page and uncheck "Include recently closed tabs in the search results". You can also remove a specific closed tab from the browser's history by pressing CTRL-W (CMD-CTRL-W on macOS) or by clicking its X button on the right side of the menu.
+If you don't want any closed tabs to be shown, open the QuicKey options page and uncheck "Include recently closed tabs in the search results". You can also remove the selected closed tab from the browser's history by pressing CTRL-W (CMD-CTRL-W on macOS) or by clicking its X button on the right side of the menu.
 
 
 ★ Move tabs
