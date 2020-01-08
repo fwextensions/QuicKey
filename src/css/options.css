@@ -107,7 +107,7 @@ main {
 }
 
 .help-button {
-	color: #fff;
+	color: #ccc;
 	font-size: .8em;
 	font-weight: bold;
 	line-height: 100%;
@@ -124,7 +124,15 @@ main {
 	float: right;
 }
 
+.mac .help-button {
+	font-size: .7em;
+	padding: .1em 0 0 .05em;
+	width: 1.2em;
+	height: 1.2em;
+}
+
 .help-button:hover {
+	color: #fff;
 	background: #000;
 }
 
