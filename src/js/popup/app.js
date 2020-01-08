@@ -368,10 +368,9 @@ define("popup/app", [
 
 			const deleteItem = (
 				deleteFunc,
+				command = "",
 				eventCategory = mode) =>
 			{
-				const command = mode == "bookmarks" ? BookmarksQuery : HistoryQuery;
-
 				deleteFunc(item);
 				_.pull(this[mode], item);
 
@@ -395,31 +394,40 @@ define("popup/app", [
 					} else {
 							// this is a closed tab that the user wants to
 							// delete, so pass a special event category
-						deleteItem(({url}) => chrome.history.deleteUrl({ url }),
-							"closed-tab");
+						deleteItem(({url}) => {
+								// deleting the URL from history also deletes
+								// any session for that URL
+							chrome.history.deleteUrl({ url });
 
-							// since this closed tab is also in the recents list,
-							// we have to pull it from there as well.  we don't
-							// need to do that in the tab branch above because
-							// loadTabs() gets called, which re-inits recents.
-						_.pull(this.recents, item);
+								// since this closed tab is also in the recents
+								// list, we have to pull it from there as well.
+								// do it in this callback so that it's removed
+								// before getMatchingItems() is called.  we
+								// don't need to do that in the tab branch above
+								// because the onTabRemoved handler calls
+								// loadTabs(), which re-inits recents.
+							_.pull(this.recents, item);
+						}, "", "closed-tab");
+
 					}
 				} else if (mode == "bookmarks") {
 					if (confirm(DeleteBookmarkConfirmation)) {
-						deleteItem(({id}) => chrome.bookmarks.remove(id));
+						deleteItem(({id}) => chrome.bookmarks.remove(id),
+							BookmarksQuery);
 					}
 				} else if (mode == "history") {
 						// we have to use originalURL to delete the history item,
 						// since it may have been a suspended page and we convert
 						// url to the unsuspended version
-					deleteItem(({originalURL}) =>
-						chrome.history.deleteUrl({ url: originalURL }));
+					deleteItem(({originalURL: url}) => {
+						chrome.history.deleteUrl({ url });
 
-						// just in case this URL was also recently closed, remove
-						// it from the tabs and recents lists, since it will no
-						// longer be re-openable
-					_.remove(this.tabs, { url: item.originalURL });
-					_.remove(this.recents, { url: item.originalURL });
+							// just in case this URL was also recently closed,
+							// remove it from the tabs and recents lists, since
+							// it will no longer be re-openable
+						_.remove(this.tabs, { url });
+						_.remove(this.recents, { url });
+					}, HistoryQuery);
 				}
 			}
 		},
