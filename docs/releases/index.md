@@ -8,6 +8,13 @@ comments: true
 # Release history
 
 
+## 1.3.2 - 2020-01-08
+
+### Fixed
+
+* The current search query is no longer modified when a closed tab is deleted.
+
+
 ## 1.3.1 - 2020-01-04
 
 ### Added
