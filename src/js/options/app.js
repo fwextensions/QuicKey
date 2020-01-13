@@ -127,6 +127,8 @@ define([
 		render: function()
 		{
 			const {settings, chrome: { shortcuts: chromeShortcuts }, onChange, onResetShortcuts} = this.props;
+			const incognitoUpper = k.IsEdge ? "InPrivate" : "Incognito";
+			const incognitoLower = k.IsEdge ? "InPrivate" : "incognito";
 
 			return <main>
 				<h1 className="quickey">QuicKey options
@@ -193,16 +195,16 @@ define([
 					onClick={onResetShortcuts}
 				>Reset shortcuts</button>
 
-				<h2>Chrome keyboard shortcuts</h2>
+				<h2>Browser keyboard shortcuts</h2>
 				<div className="chrome-shortcuts"
-					title="Click to open the Chrome keyboard shortcuts page"
+					title="Click to open the browser's keyboard shortcuts page"
 					onClick={this.handleChangeShortcutsClick}
 				>
 					{this.renderShortcutList(chromeShortcuts)}
 				</div>
 				<button className="key"
 					onClick={this.handleChangeShortcutsClick}
-				>Change Chrome shortcuts</button>
+				>Change browser shortcuts</button>
 				<button className="key"
 					title="Learn how to make Chrome use ctrl-tab as a shortcut"
 					onClick={this.handleCtrlTabClick}
@@ -211,25 +213,25 @@ define([
 				<h2>Other keyboard shortcuts</h2>
 				{this.renderShortcutList(Shortcuts.fixed)}
 
-				<h2>Incognito windows</h2>
-				<p>By default, QuicKey can't switch to tabs in incognito windows.
+				<h2>{incognitoUpper} windows</h2>
+				<p>By default, QuicKey can't switch to tabs in {incognitoLower} windows.
 					To enable this functionality, click the button below, then
-					scroll down to the <i>Allow in incogito</i> setting and
-					toggle it on.  Incognito tabs are indicated with this
+					scroll down to the <i>Allow in {incognitoLower}</i> setting and
+					toggle it on.  {incognitoUpper} tabs are indicated with this
 					icon: <IncognitoIcon />.
 				</p>
 				<img className="incognito-screenshot"
-					src="/img/incognito-option.png"
-					alt="Incognito option"
-					title="Change incognito setting"
+					src={`/img/${incognitoLower.toLocaleLowerCase()}-option.png`}
+					alt={`${incognitoUpper} option`}
+					title={`Change ${incognitoLower} setting`}
 					onClick={this.handleChangeIncognitoClick}
 				/>
 				<button className="key"
 					onClick={this.handleChangeIncognitoClick}
-				>Change incognito setting</button>
+				>Change {incognitoLower} setting</button>
 
 				<h2>Feedback and support</h2>
-				<p>If you have a question, found a bug or thought of a new
+				<p>If you have a question, found a bug, or thought of a new
 					feature you'd like to see, please visit the support page and
 					leave a comment.
 				</p>

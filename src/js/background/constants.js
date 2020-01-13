@@ -8,7 +8,9 @@ define([
 	return shared("k", () => ({
 		IsMac,
 		Platform: IsMac ? "mac" : "win",
+			// this will get overridden in background.js if we're in dev mode
 		IsDev: false,
+		IsEdge: /Edg\//i.test(navigator.userAgent),
 		SpaceBehavior: {
 			Key: "spaceBehavior",
 			Select: "select",

@@ -1,11 +1,13 @@
 define([
 	"shared",
-	"./tracker"
+	"./tracker",
+	"./constants"
 ], function(
 	shared,
-	Tracker
+	Tracker,
+	k
 ) {
-	const TrackerID = "UA-108153491-3";
+	const TrackerID = k.IsEdge ? "UA-108153491-4" : "UA-108153491-3";
 
 
 	return shared("trackers", function() {
