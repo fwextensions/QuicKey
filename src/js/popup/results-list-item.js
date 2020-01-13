@@ -3,6 +3,7 @@ define([
 	"cp",
 	"lib/copy-to-clipboard",
 	"options/key-constants",
+	"background/constants",
 	"react",
 	"lodash"
 ], function(
@@ -10,6 +11,7 @@ define([
 	cp,
 	copyTextToClipboard,
 	{ModKeyBoolean},
+	{IsDev},
 	React,
 	_
 ) {
@@ -25,14 +27,6 @@ define([
 		history: "Delete this page from the browser history"
 	};
 
-	let IsDevMode = false;
-
-
-	cp.management.getSelf()
-		.then(function(info) {
-			IsDevMode = info.installType == "development";
-		});
-
 
 	const ResultsListItem = React.createClass({
 		mouseMoveCount: 0,
@@ -44,7 +38,7 @@ define([
 			const {shiftKey, altKey} = event;
 			const {item} = this.props;
 
-			if (IsDevMode && altKey) {
+			if (IsDev && altKey) {
 					// copy some debug info to the clipboard
 				copyTextToClipboard([
 					item.title,
@@ -149,7 +143,7 @@ define([
 			].join("\n");
 			let badgeTooltip = "";
 
-			if (IsDevMode) {
+			if (IsDev) {
 				tooltip = _.toPairs(scores).concat([["recentBoost", item.recentBoost], ["id", item.id]])
 					.map(keyValue => keyValue.join(": ")).join("\n") + "\n" + tooltip;
 			}

@@ -20,6 +20,7 @@ const InvertedIconPaths = {
 
 
 let gStartingUp = false;
+let gIgnoreNextTabActivation = false;
 let gInstalledPromise = new Promise(resolve => {
 	chrome.runtime.onInstalled.addListener(details => resolve(details));
 });
@@ -27,10 +28,13 @@ let gInstalledPromise = new Promise(resolve => {
 
 function debounce(
 	func,
-	wait)
+	wait,
+	thisArg = this)
 {
 	let timeout;
 	let exec;
+
+
 	const debouncedFunc = (...args) => {
 		exec = () => {
 				// clear the timer in case we're being called by execute() so
@@ -39,7 +43,7 @@ function debounce(
 
 				// return the result of func, in case we're being called by
 				// execute() and it returns a promise, so the caller can chain it
-			return func.apply(this, args);
+			return func.apply(thisArg, args);
 		};
 
 
@@ -47,13 +51,16 @@ function debounce(
 		timeout = setTimeout(exec, wait);
 	};
 
+
 	debouncedFunc.cancel = () => {
 		clearTimeout(timeout);
 		timeout = null;
 		exec = null;
 	};
 
-	debouncedFunc.execute = () => exec && exec();
+
+	debouncedFunc.execute = () => Promise.resolve(exec && exec());
+
 
 	return debouncedFunc;
 }
@@ -97,12 +104,14 @@ require([
 	"cp",
 	"background/recent-tabs",
 	"background/page-trackers",
-	"background/quickey-storage"
+	"background/quickey-storage",
+	"background/constants"
 ], function(
 	cp,
 	recentTabs,
 	trackers,
-	storage
+	storage,
+	k
 ) {
 	const backgroundTracker = trackers.background;
 	let popupIsOpen = false;
@@ -114,37 +123,34 @@ require([
 	let lastUsedVersion;
 
 
-	const addTab = debounce(data => {
-		if (data.tabId) {
-			return cp.tabs.get(data.tabId)
-				.then(recentTabs.add)
-				.catch(error => {
-						// ignore the "No tab with id:" errors, which will happen
-						// closing a window with multiple tabs.  since addTab()
-						// is debounced and will fire after the window is closed,
-						// the tab no longer exists at that point.
-					if (error && error.message && error.message.indexOf("No tab") != 0) {
-						backgroundTracker.exception(error);
-					}
-				});
-		} else {
-				// the event parameter is just the tab itself, so add it directly
-			return recentTabs.add(data);
-		}
-	}, MinTabDwellTime);
+	const addTab = debounce(({tabId}) => cp.tabs.get(tabId)
+		.then(recentTabs.add)
+		.catch(error => {
+				// ignore the "No tab with id:" errors, which will happen
+				// closing a window with multiple tabs.  since addTab()
+				// is debounced and will fire after the window is closed,
+				// the tab no longer exists at that point.
+			if (error && error.message && error.message.indexOf("No tab") != 0) {
+				backgroundTracker.exception(error);
+			}
+		}), MinTabDwellTime);
 
 
-	function onTabChanged(
+	function onTabActivated(
 		event)
 	{
-		if (!tabChangedFromToggle) {
-				// invert the icon since we're not toggling between the two most
-				// recent tabs
-			setInvertedIcon();
+		if (!gIgnoreNextTabActivation) {
+			if (!tabChangedFromToggle) {
+					// invert the icon since we're not toggling between the two
+					// most recent tabs
+				setInvertedIcon();
+			}
+
+			tabChangedFromToggle = false;
+			addTab(event);
 		}
 
-		tabChangedFromToggle = false;
-		addTab(event);
+		gIgnoreNextTabActivation = false;
 	}
 
 
@@ -190,18 +196,59 @@ require([
 				// backwards into the stack.  otherwise, the debounced add would
 				// fire after we navigate, putting that tab on the top of the
 				// stack, even though a different tab was now active.
-			.then(() => addTab.execute())
-			.then(() => recentTabs.toggle())
+			.then(addTab.execute)
+			.then(recentTabs.toggle)
 			.then(() => backgroundTracker.event("recents",
 				fromShortcut ? "toggle-shortcut" : "toggle"));
 	}
 
 
+	function activateLastTab()
+	{
+		setNormalIcon();
+
+			// make sure any pending addTab is finished, so that when we get the
+			// tab data out of storage, the order will be correct
+		addTab.execute()
+				// execute() will return the tab data from recentTabs.add(), but
+				// if there wasn't a pending add for some reason, it's simpler
+				// to just always get the data from storage
+			.then(() => storage.get(({tabIDs, tabsByID}) => {
+				const [previousTabID, currentTabID] = tabIDs.slice(-2);
+				const previousTab = tabsByID[previousTabID];
+				const currentTab = tabsByID[currentTabID];
+
+				if (previousTab && currentTab &&
+						previousTab.windowId !== currentTab.windowId) {
+						// the previous tab is in another window, and the user
+						// might have activated other tabs in that window before
+						// getting to the current tab, so check
+					cp.tabs.get(previousTabID)
+						.then(({active}) => {
+							if (!active) {
+									// the previous tab isn't active, so activate
+									// it, so that if the user than alt-tabs back
+									// to that window, the previous tab will
+									// already be visible.  make sure
+									// onTabActivated() ignores this event.
+								gIgnoreNextTabActivation = true;
+								cp.tabs.update(previousTabID, { active: true })
+									.catch(console.error);
+							}
+						});
+				}
+			}));
+	}
+
+
 	function setInvertedIcon()
 	{
+			// only reactivate the last tab in dev mode for now
+		const handler = k.IsDev ? activateLastTab : setNormalIcon;
+
 		isNormalIcon = false;
 		clearTimeout(shortcutTimer);
-		shortcutTimer = setTimeout(setNormalIcon, MinTabDwellTime);
+		shortcutTimer = setTimeout(handler, MinTabDwellTime);
 		cp.browserAction.setIcon(InvertedIconPaths)
 			.catch(backgroundTracker.exception);
 	}
@@ -217,7 +264,7 @@ require([
 
 	chrome.tabs.onActivated.addListener(event => {
 		if (!gStartingUp) {
-			onTabChanged(event);
+			onTabActivated(event);
 		}
 	});
 
@@ -262,11 +309,14 @@ require([
 				windowID != lastWindowID) {
 			lastWindowID = windowID;
 			cp.tabs.query({ active: true, windowId: windowID })
-				.then(tabs => {
-					if (tabs.length) {
-						onTabChanged(tabs[0]);
-					}
-				});
+					// pass just the tabId to onTabActivated(), even though we
+					// have the full tab, since most of the time, onTabActivated()
+					// will be called by onActivated, which only gets the tabId.
+					// this simplifies the logic in onTabActivated().  if this
+					// window somehow doesn't have an active tab, which should
+					// never happen, it'll pass undefined to addTab(), which
+					// will catch the exception.
+				.then(([tab = {}]) => onTabActivated({ tabId: tab.id }));
 		}
 	});
 
@@ -368,6 +418,11 @@ DEBUG && console.log(e);
 				"dimension1": info.version,
 				"dimension2": installType
 			};
+
+			if (installType == "D") {
+					// changing a constant at runtime is gross, but here we are
+				k.IsDev = true;
+			}
 
 			backgroundTracker.set(dimensions);
 			trackers.popup.set(dimensions);

@@ -42,7 +42,7 @@ define([
 		{
 				// pass null to get everything in storage
 			return cp.storage.local.get(null)
-				.then(function(storage) {
+				.then(storage => {
 					if (!storage || !storage.data) {
 							// this is likely a new install, so reset the storage
 							// to the default.  we need to do this without locking
@@ -122,15 +122,12 @@ DEBUG && console.error(`Storage error: ${failure}`);
 			return cp.storage.local.clear()
 				.then(getDefaultData)
 				.then(saveWithVersion)
-				.then(function(data) {
-						// normally, dataPromise points to the resolved
-						// promise from getAll() that was created when
-						// createStorage() was first called and returns the
-						// in-memory version of the data object from storage.
-						// but since we just cleared that, we need to update
-						// the promise to point to the fresh data in memory.
-					return dataPromise = Promise.resolve(data);
-				});
+					// normally, dataPromise points to the resolved promise from
+					// getAll() that was created when createStorage() was first
+					// called and returns the in-memory copy of the data from
+					// storage.  but since we just cleared that, we need to
+					// update the promise to point to the fresh data in memory.
+				.then(data => dataPromise = Promise.resolve(data));
 		}
 
 
@@ -139,28 +136,23 @@ DEBUG && console.error(`Storage error: ${failure}`);
 			thisArg,
 			saveResult)
 		{
-			return storageMutex.lock(function() {
-				return dataPromise
-					.then(function(data) {
-						return Promise.resolve(task.call(thisArg, data))
-							.then(function(newData) {
-								if (saveResult && newData) {
-										// since all the values are stored on the
-										// .data key of the storage instead of at
-										// the topmost level, we need to update
-										// that object with the changed data
-										// before calling save().  otherwise, we'd
-										// lose any values that weren't changed
-										// and returned by the task function.
-									Object.assign(data, newData);
+			return storageMutex.lock(() => dataPromise
+				.then(data => Promise.resolve(task.call(thisArg, data))
+					.then(newData => {
+						if (saveResult && newData) {
+								// since all the values are stored on the .data
+								// key of the storage instead of at the topmost
+								// level, we need to update that object with the
+								// changed data before calling save().
+								// otherwise, we'd lose any values that weren't
+								// changed and returned by the task function.
+							Object.assign(data, newData);
 
-									return save(data);
-								} else {
-									return newData;
-								}
-							});
-					});
-			});
+							return save(data);
+						} else {
+							return newData;
+						}
+					})));
 		}
 
 
@@ -190,9 +182,9 @@ DEBUG && console.error(`Storage error: ${failure}`);
 
 
 		return {
-			get: get,
-			set: set,
-			reset: reset
+			get,
+			set,
+			reset
 		};
 	}
 });

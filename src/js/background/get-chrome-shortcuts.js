@@ -1,3 +1,7 @@
+// add a comment that'll be preserved through the build so we can see if these
+// characters still get mangled in Chrome store versions
+/* @preserve ⌃⇧⌥⌘ */
+
 define([
 	"cp"
 ], function(
@@ -15,7 +19,7 @@ define([
 		"Comma": ",",
 		"Period": ".",
 			// Unicode chars used as keys show up as broken chars in Chrome after
-			// r.js combines the files
+			// r.js combines the files, possibly only after adding bluebird.min.js
 //		"←": "ArrowLeft",
 //		"→": "ArrowRight",
 //		"↑": "ArrowUp",
