@@ -104,12 +104,14 @@ require([
 	"cp",
 	"background/recent-tabs",
 	"background/page-trackers",
-	"background/quickey-storage"
+	"background/quickey-storage",
+	"background/constants"
 ], function(
 	cp,
 	recentTabs,
 	trackers,
-	storage
+	storage,
+	k
 ) {
 	const backgroundTracker = trackers.background;
 	let popupIsOpen = false;
@@ -123,7 +125,6 @@ require([
 
 	const addTab = debounce(({tabId}) => cp.tabs.get(tabId)
 		.then(recentTabs.add)
-		.then(() => recentTabs.print(5))
 		.catch(error => {
 				// ignore the "No tab with id:" errors, which will happen
 				// closing a window with multiple tabs.  since addTab()
@@ -242,9 +243,12 @@ require([
 
 	function setInvertedIcon()
 	{
+			// only reactivate the last tab in dev mode for now
+		const handler = k.IsDev ? activateLastTab : setNormalIcon;
+
 		isNormalIcon = false;
 		clearTimeout(shortcutTimer);
-		shortcutTimer = setTimeout(activateLastTab, MinTabDwellTime);
+		shortcutTimer = setTimeout(handler, MinTabDwellTime);
 		cp.browserAction.setIcon(InvertedIconPaths)
 			.catch(backgroundTracker.exception);
 	}
@@ -414,6 +418,11 @@ DEBUG && console.log(e);
 				"dimension1": info.version,
 				"dimension2": installType
 			};
+
+			if (installType == "D") {
+					// changing a constant at runtime is gross, but here we are
+				k.IsDev = true;
+			}
 
 			backgroundTracker.set(dimensions);
 			trackers.popup.set(dimensions);

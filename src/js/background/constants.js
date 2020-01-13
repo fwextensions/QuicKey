@@ -1,9 +1,14 @@
-define(function() {
+define([
+	"shared"
+], function(
+	shared
+) {
 	const IsMac = /Mac/i.test(navigator.platform);
 
-	return {
+	return shared("k", () => ({
 		IsMac,
 		Platform: IsMac ? "mac" : "win",
+		IsDev: false,
 		SpaceBehavior: {
 			Key: "spaceBehavior",
 			Select: "select",
@@ -29,5 +34,5 @@ define(function() {
 			CopyURL: "copyURL",
 			CopyTitleURL: "copyTitleURL"
 		}
-	};
+	}));
 });
