@@ -91,7 +91,7 @@ Which shortcuts to use is up to you.  Double-pressing <b><kbd>alt</kbd><kbd>Q</k
 
 Selecting from the MRU menu by holding down the <kbd>alt</kbd> key provides the closest experience to a typical <b><kbd>alt</kbd><kbd>tab</kbd></b> menu, but you need to use <kbd>W</kbd> instead of <kbd>tab</kbd> to navigate while the menu is open (due to limitations in the Chrome platform).
 
-You can change any of these shortcuts by clicking the <img src="img/gear.svg" style="height: 1em"> icon in the menu or by right-clicking the *QuicKey* icon and selecting *Options*.  Then scroll down and click *Change Chrome shortcuts*. Look for the *Switch to the previous/next tab* shortcuts.
+You can change any of these shortcuts by clicking the <img src="img/gear.svg" style="height: 1em"> icon in the menu or by right-clicking the *QuicKey* icon and selecting *Options*.  Then scroll down and click *Change browser shortcuts*. Look for the *Switch to the previous/next tab* shortcuts.
 
 
 ## Search for a tab quickly
