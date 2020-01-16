@@ -78,6 +78,9 @@ tab search
 ctrl-tab navigation
 
 
+Any open tab can be immediately searched after installation.  The list of recent tabs will be empty immediately after the extension is installed, but tabs will be added to the list as you switch between them.
+
+
 ★
 ➤
 ↑ ↓
