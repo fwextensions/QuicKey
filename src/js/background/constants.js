@@ -4,13 +4,16 @@ define([
 	shared
 ) {
 	const IsMac = /Mac/i.test(navigator.platform);
+	const IsEdge = /Edg\//i.test(navigator.userAgent);
 
 	return shared("k", () => ({
 		IsMac,
 		Platform: IsMac ? "mac" : "win",
 			// this will get overridden in background.js if we're in dev mode
 		IsDev: false,
-		IsEdge: /Edg\//i.test(navigator.userAgent),
+		IsEdge,
+		IncognitoNameUC: IsEdge ? "InPrivate" : "Incognito",
+		IncognitoNameLC: IsEdge ? "InPrivate" : "incognito",
 		SpaceBehavior: {
 			Key: "spaceBehavior",
 			Select: "select",

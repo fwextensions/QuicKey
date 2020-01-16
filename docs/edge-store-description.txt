@@ -85,7 +85,7 @@ ctrl-tab navigation
 
 # Description
 
-No mouse needed!
+Add keyboard shortcuts to switch tabs with a Quicksilver-style search or a most recently used menu.  No mouse needed!
 
  • Press ALT-Q (CTRL-Q on macOS)
  • Type a few letters

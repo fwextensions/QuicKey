@@ -11,6 +11,8 @@ define([
 	{Checkbox, RadioButton, RadioGroup},
 	k
 ) {
+	const {IncognitoNameUC, IncognitoNameLC} = k;
+	const IncognitoAction = k.IsEdge ? "click the checkbox" : "toggle it on";
 	const ClosedIcon = () => <img
 		src="img/history.svg"
 		alt="Closed icon"
@@ -127,8 +129,6 @@ define([
 		render: function()
 		{
 			const {settings, chrome: { shortcuts: chromeShortcuts }, onChange, onResetShortcuts} = this.props;
-			const incognitoUpper = k.IsEdge ? "InPrivate" : "Incognito";
-			const incognitoLower = k.IsEdge ? "InPrivate" : "incognito";
 
 			return <main>
 				<h1 className="quickey">QuicKey options
@@ -213,22 +213,22 @@ define([
 				<h2>Other keyboard shortcuts</h2>
 				{this.renderShortcutList(Shortcuts.fixed)}
 
-				<h2>{incognitoUpper} windows</h2>
-				<p>By default, QuicKey can't switch to tabs in {incognitoLower} windows.
+				<h2>{IncognitoNameUC} windows</h2>
+				<p>By default, QuicKey can't switch to tabs in {IncognitoNameLC} windows.
 					To enable this functionality, click the button below, then
-					scroll down to the <i>Allow in {incognitoLower}</i> setting and
-					toggle it on.  {incognitoUpper} tabs are indicated with this
-					icon: <IncognitoIcon />.
+					scroll down to the <i>Allow in {IncognitoNameLC}</i> setting
+					and {IncognitoAction}.  {IncognitoNameUC} tabs are marked
+					with <IncognitoIcon />.
 				</p>
 				<img className="incognito-screenshot"
-					src={`/img/${incognitoLower.toLocaleLowerCase()}-option.png`}
-					alt={`${incognitoUpper} option`}
-					title={`Change ${incognitoLower} setting`}
+					src={`/img/${IncognitoNameLC.toLocaleLowerCase()}-option.png`}
+					alt={`${IncognitoNameUC} option`}
+					title={`Change ${IncognitoNameLC} setting`}
 					onClick={this.handleChangeIncognitoClick}
 				/>
 				<button className="key"
 					onClick={this.handleChangeIncognitoClick}
-				>Change {incognitoLower} setting</button>
+				>Change {IncognitoNameLC} setting</button>
 
 				<h2>Feedback and support</h2>
 				<p>If you have a question, found a bug, or thought of a new
