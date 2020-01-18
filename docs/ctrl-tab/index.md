@@ -73,7 +73,7 @@ Now you can press <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to the previous
 
 ## <a name="option-2"></a>Option 2: Use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to any recently used tab
 
-Follow [steps 1 through 4](#option-1-1) from option 1 above. 
+Follow [steps 1 through 4](#option-1-1) from option 1 above, and then: 
 
 5. Copy this block of code:
 

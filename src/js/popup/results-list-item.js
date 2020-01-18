@@ -11,7 +11,7 @@ define([
 	cp,
 	copyTextToClipboard,
 	{ModKeyBoolean},
-	{IsDev},
+	{IsDev, IncognitoNameLC},
 	React,
 	_
 ) {
@@ -26,6 +26,7 @@ define([
 		bookmarks: "Delete bookmark",
 		history: "Delete this page from the browser history"
 	};
+	const IncognitoTooltip = `This tab is in ${IncognitoNameLC} mode`;
 
 
 	const ResultsListItem = React.createClass({
@@ -111,8 +112,7 @@ define([
 
 		render: function()
 		{
-			const {props} = this;
-			const {item, query, mode, style, isSelected} = props;
+			const {item, query, mode, style, isSelected} = this.props;
 			const {
 				scores,
 				hitMasks,
@@ -161,7 +161,7 @@ define([
 			}
 
 			if (incognito) {
-				badgeTooltip = "This tab is in incognito mode";
+				badgeTooltip = IncognitoTooltip;
 			} else if (otherWindow) {
 				badgeTooltip = "This tab is in another window";
 			} else if (sessionId) {
