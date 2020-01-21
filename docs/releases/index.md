@@ -8,6 +8,20 @@ comments: true
 # Release history
 
 
+## 1.3.4 - 2020-01-20
+
+### Fixed
+
+* Sometimes the matching letters in search results would not be shown correctly.
+
+
+## 1.3.3 - 2020-01-15
+
+### Added 
+
+* Support for the new Edge browser.  This version only launched in the Edge store.
+
+
 ## 1.3.2 - 2020-01-08
 
 ### Fixed
