@@ -85,7 +85,7 @@ ctrl-tab navigation
 
 # Description
 
-No mouse needed!
+Add keyboard shortcuts to switch tabs with a Quicksilver-style search or a most recently used menu.  No mouse needed!
 
  • Press ALT-Q (CTRL-Q on macOS)
  • Type a few letters
@@ -217,7 +217,7 @@ To delete the selected bookmark or history item, press CTRL-W (CMD-CTRL-W on mac
 
 ★ The Great Suspender integration
 
-If you use the handy extension "The Great Suspender", then suspended tabs will look faded in the list, and the original URL is shown (not that long chrome-extension:// one you see in the location bar). That means if you search for "chrome" or "extension", you won't simply match all the suspended tabs, which is what happens in other tab search extensions.
+If you use the handy extension "The Great Suspender", then suspended tabs will look faded in the list, and the original URL is shown (not that long extension:// one you see in the location bar). That means if you search for "extension", you won't simply match all the suspended tabs, which is what happens in other tab search extensions.
 
 Press SHIFT-ENTER to switch to a tab and unsuspend it in one go. Or shift-click it with the mouse.
 

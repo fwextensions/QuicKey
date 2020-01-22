@@ -1,9 +1,19 @@
-define(function() {
+define([
+	"shared"
+], function(
+	shared
+) {
 	const IsMac = /Mac/i.test(navigator.platform);
+	const IsEdge = /Edg\//i.test(navigator.userAgent);
 
-	return {
+	return shared("k", () => ({
 		IsMac,
 		Platform: IsMac ? "mac" : "win",
+			// this will get overridden in background.js if we're in dev mode
+		IsDev: false,
+		IsEdge,
+		IncognitoNameUC: IsEdge ? "InPrivate" : "Incognito",
+		IncognitoNameLC: IsEdge ? "InPrivate" : "incognito",
 		SpaceBehavior: {
 			Key: "spaceBehavior",
 			Select: "select",
@@ -29,5 +39,5 @@ define(function() {
 			CopyURL: "copyURL",
 			CopyTitleURL: "copyTitleURL"
 		}
-	};
+	}));
 });
