@@ -8,11 +8,13 @@ comments: true
 # Release history
 
 
-## 1.3.4 - 2020-01-20
+## 1.3.4 - 2020-01-21
 
 ### Fixed
 
-* Sometimes the matching letters in search results would not be shown correctly.
+* The matching letters in search results would not be shown correctly in some cases.
+
+* The order of recent tabs was sometimes lost when restarting the browser.  
 
 
 ## 1.3.3 - 2020-01-15
