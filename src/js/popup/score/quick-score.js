@@ -32,8 +32,7 @@ define(function() {
 		abbreviationRange = abbreviationRange || new Range(0, abbreviation.length);
 		fullMatchedRange = fullMatchedRange || new Range();
 
-// TODO: why is the second test necessary?  !"" is true
-		if (!abbreviation || !abbreviationRange.length) {
+		if (!abbreviationRange.length) {
 				// deduct some points for all remaining characters
 			return IgnoredScore;
 		}
@@ -41,6 +40,8 @@ define(function() {
 		if (abbreviationRange.length > searchRange.length) {
 			return 0;
 		}
+
+		const initialHitMaskLength = hitMask && hitMask.length;
 
 		for (var i = abbreviationRange.length; i > 0; i--) {
 			var abbreviationSubstring = abbreviation.substr(abbreviationRange.location, i),
@@ -52,7 +53,8 @@ define(function() {
 				continue;
 			}
 
-// TODO: do we need this?  new code doesn't have it
+// TODO: do we need this?  new code doesn't have it.  that's because it's
+//  reducing the search range by the length of the remaining query before searching
 			if (matchedRange.location + abbreviationRange.length > searchRange.max()) {
 				continue;
 			}
@@ -163,15 +165,13 @@ define(function() {
 				/* DEBUG log(clip(score)); */
 
 				return score;
+			} else if (hitMask) {
+					// the remaining abbreviation does not appear in the remaining
+					// string, so strip off any matches we've added during the
+					// current call, as they'll be invalid when we start over
+					// with a shorter piece of the abbreviation
+				hitMask.length = initialHitMaskLength;
 			}
-		}
-
-		if (hitMask) {
-				// the remaining abbreviation does not appear in the remaining
-				// string, so clear the hitMask, since we'll start over with a
-				// shorter piece of the abbreviation, which might match earlier
-				// in the string, making the existing match indexes invalid.
-			hitMask.length = 0;
 		}
 
 		return 0;

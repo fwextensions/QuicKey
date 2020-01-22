@@ -78,6 +78,9 @@ tab search
 ctrl-tab navigation
 
 
+Any open tab can be immediately searched after installation.  The list of recent tabs will be empty immediately after the extension is installed, but tabs will be added to the list as you switch between them.
+
+
 ★
 ➤
 ↑ ↓
@@ -183,7 +186,7 @@ You can move tabs to the left or right of the current tab, making it easy to pul
  • Press CTRL-[ to move the selected tab to the left of the current one.
  • Press CTRL-] to move it to the right.
 
-Include SHIFT in the shortcut to also unsuspend the tab while moving it. The CTRL key should be used on both Windows and macOS. Note that you cannot move tabs between normal and incognito windows.
+Include SHIFT in the shortcut to also unsuspend the tab while moving it. The CTRL key should be used on both Windows and macOS. Note that you cannot move tabs between normal and InPrivate windows.
 
 
 ★ Distinguish tabs with identical titles
@@ -222,11 +225,11 @@ If you use the handy extension "The Great Suspender", then suspended tabs will l
 Press SHIFT-ENTER to switch to a tab and unsuspend it in one go. Or shift-click it with the mouse.
 
 
-★ Incognito mode
+★ InPrivate mode
 
-To switch to incognito tabs as well as normal ones, right-click the QuicKey icon and select Options from the menu. Scroll to the very bottom of the QuicKey options page and then click the "Change incognito settings" button. On the extensions page that opens, scroll down to the "Allow in incognito" option and click the toggle button next to it.
+To switch to InPrivate tabs as well as normal ones, right-click the QuicKey icon and select "Extension options" from the menu. Scroll to the very bottom of the QuicKey options page and then click the "Change InPrivate settings" button. On the extensions page that opens, scroll down to the "Allow in InPrivate" option and click the toggle button next to it.
 
-Tabs in incognito mode display the incognito icon under the page's favicon, so you can distinguish a normal tab from an incognito one with the same title.
+Tabs in InPrivate mode display the InPrivate icon under the page's favicon, so you can distinguish a normal tab from an InPrivate one with the same title.
 
 
 ★ Copy a URL or title
@@ -242,17 +245,18 @@ You can also copy the URL and title of the selected tab, bookmark or history ite
 
 When first installed, QuicKey asks for these permissions:
 
- ➤ "Read and change your browsing history on all signed-in devices"
+ ➤ "Read and modify your browsing history on all your signed-in devices"
 
       QuicKey uses this permission to let you search the titles and URLs of
-      the open tabs, as well as pages from your history. The "all signed-in
+      the open tabs, as well as pages from your history. The "all your signed-in
       devices" part is there only so that recently closed tabs can be restored
       with their full history.
 
- ➤ "Read and change your bookmarks"
+ ➤ "Read and change your favorites"
 
       QuicKey uses this permission to let you search the titles and URLs of
-      your bookmarked pages. It will never change your bookmarks.
+      pages in your favorites. The only time it changes your favorites is when
+      you choose to delete one.
 
 QuicKey can't access or manipulate the content of any pages you visit and doesn't transmit any information other than some anonymized diagnostic data.
 
@@ -261,10 +265,10 @@ If you right-click the QuicKey icon on the toolbar, there's a message saying "Ca
 
 ★ Support and source code
 
-For more information, go to https://fwextensions.github.io/QuicKey/
+Get more information at https://fwextensions.github.io/QuicKey/
 
-To report a bug or request a feature, go to https://fwextensions.github.io/QuicKey/support/
+Report a bug or request a feature at https://fwextensions.github.io/QuicKey/support/
 
 View the release history at https://fwextensions.github.io/QuicKey/releases
 
-The QuicKey source code is at https://github.com/fwextensions/QuicKey
+See the source code at https://github.com/fwextensions/QuicKey

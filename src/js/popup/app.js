@@ -44,9 +44,7 @@ define("popup/app", [
 	const MinScoreDiff = .1;
 	const BookmarksQuery = "/b ";
 	const HistoryQuery = "/h ";
-	const BQuery = "/b";
-	const HQuery = "/h";
-	const CommandQuery = "/";
+	const CommandQueryPattern = /^\/[bh]?$/;
 	const NoRecentTabsMessage = [{
 		message: "Recently used tabs will appear here as you continue browsing",
 		faviconURL: "img/alert.svg",
@@ -576,7 +574,7 @@ define("popup/app", [
 				if (!this.history.length) {
 					this.loadPromisedItems(getHistory, "history", HistoryQuery);
 				}
-			} else if (query == CommandQuery || query == BQuery || query == HQuery) {
+			} else if (CommandQueryPattern.test(query)) {
 					// we don't know if the user's going to type b or h, so
 					// don't match any items
 				this.mode = "command";

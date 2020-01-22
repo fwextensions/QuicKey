@@ -270,7 +270,7 @@ require([
 
 
 	chrome.tabs.onCreated.addListener(tab => {
-		if (!tab.active) {
+		if (!gStartingUp && !tab.active) {
 				// this tab was opened by ctrl-clicking a link or by opening
 				// all the tabs in a bookmark folder, so pass true to insert
 				// this tab in the penultimate position, which makes it the
@@ -430,6 +430,7 @@ DEBUG && console.log(e);
 
 			backgroundTracker.pageview();
 			backgroundTracker.timing("loading", "background", performance.now());
+DEBUG && console.log("=== startup done", performance.now());
 		})
 			// pause the chain to wait for the installed promise to resolve,
 			// which it will never do if the event doesn't fire.  if it does,
