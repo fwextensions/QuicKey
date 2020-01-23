@@ -1,4 +1,44 @@
 /* ===========================================================================
+	Light mode colors
+   =========================================================================== */
+
+@media (prefers-color-scheme: light) {
+	html {
+		--background-color: #fff;
+		--text-color: #000;
+		--divider-color: #ddd;
+		--item-selected-background-color: #ebebeb;
+		--highlighted-text-color: #228;
+		--title-index-background-color: #efefef;
+		--title-index-text-color: #666;
+		--selected-title-index-background-color: #fafafa;
+		--hover-button-background-color: #dcdcdc;
+		--active-button-background-color: #bbb;
+	}
+}
+
+
+/* ===========================================================================
+	Dark mode colors
+   =========================================================================== */
+
+@media (prefers-color-scheme: dark) {
+	html {
+		--background-color: #202124;
+		--text-color: #fff;
+		--divider-color: #666;
+		--item-selected-background-color: #444547;
+		--highlighted-text-color: #b8c9ff;
+		--title-index-background-color: #444;
+		--title-index-text-color: #bbb;
+		--selected-title-index-background-color: #666;
+		--hover-button-background-color: #505154;
+		--active-button-background-color: #666;
+	}
+}
+
+
+/* ===========================================================================
 	Popup
    =========================================================================== */
 
@@ -16,6 +56,8 @@ html, body {
 }
 
 body {
+	background: var(--background-color);
+	color: var(--text-color);
 	font-size: 14px;
 	-webkit-user-select: none;
 	user-select: none;
@@ -35,7 +77,7 @@ body {
 	height: 25px;
 	margin: 5px;
 	border: none;
-	border-bottom: 1px solid #ddd;
+	border-bottom: 1px solid var(--divider-color);
 	padding: 2px 22px 5px 28px;
 	background-image: url(/img/search.svg);
 	background-position: 7px 4px;
@@ -63,11 +105,11 @@ input.search-box::-webkit-search-cancel-button {
 }
 
 input.search-box::-webkit-search-cancel-button:hover {
-	background-color: #dcdcdc;
+	background-color: var(--hover-button-background-color);
 }
 
 input.search-box::-webkit-search-cancel-button:hover:active {
-	background-color: #bbb;
+	background-color: var(--active-button-background-color);
 }
 
 .command-placeholder {
@@ -120,11 +162,11 @@ input.search-box::-webkit-search-cancel-button:hover:active {
 }
 
 .options-button:hover {
-	background-color: #dcdcdc;
+	background-color: var(--hover-button-background-color);
 }
 
 .options-button:hover:active {
-	background-color: #bbb;
+	background-color: var(--active-button-background-color);
 }
 
 .options-button img {
@@ -170,7 +212,7 @@ input.search-box::-webkit-search-cancel-button:hover:active {
 }
 
 .results-list-item.selected {
-	background-color: #ebebeb;
+	background-color: var(--item-selected-background-color)
 }
 
 .results-list-item .favicon, .results-list-item .badge {
@@ -216,7 +258,7 @@ input.search-box::-webkit-search-cancel-button:hover:active {
 }
 
 .results-list-item div b, .search-box {
-	color: #228;
+	color: var(--highlighted-text-color);
 }
 
 .results-list-item div.title:empty::after {
@@ -249,11 +291,11 @@ input.search-box::-webkit-search-cancel-button:hover:active {
     font-size: 0.75em;
     font-weight: bold;
     text-align: center;
-    color: #666;
+    color: var(--title-index-text-color);
     min-width: 1.5em;
     height: 1.5em;
     top: -0.1em;
-    background: #efefef;
+    background: var(--title-index-background-color);
     border-radius: .75em;
     padding: .05em 0.4em 0 0.4em;
     margin: 0 .5em 0 0;
@@ -266,7 +308,7 @@ input.search-box::-webkit-search-cancel-button:hover:active {
 }
 
 .results-list-item.selected div.title-index {
-	background: #fafafa;
+	background: var(--selected-title-index-background-color);
 }
 
 .results-list-item .close-button {
@@ -297,12 +339,12 @@ input.search-box::-webkit-search-cancel-button:hover:active {
 }
 
 .results-list-item.selected:hover .close-button:hover {
-	background-color: #dcdcdc;
+	background-color: var(--hover-button-background-color);
 	opacity: 1;
 }
 
 .results-list-item.selected:hover .close-button:hover:active {
-	background-color: #bbb;
+	background-color: var(--active-button-background-color);
 }
 
 .results-list-item.message {
