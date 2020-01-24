@@ -8,7 +8,7 @@
 		--text-color: #000;
 		--divider-color: #ddd;
 		--item-selected-background-color: #ebebeb;
-		--highlighted-text-color: #228;
+		--highlighted-text-color: hsl(240, 60%, 33%);
 		--title-index-background-color: #efefef;
 		--title-index-text-color: #666;
 		--selected-title-index-background-color: #fafafa;
@@ -28,7 +28,7 @@
 		--text-color: #fff;
 		--divider-color: #666;
 		--item-selected-background-color: #444547;
-		--highlighted-text-color: #b8c9ff;
+		--highlighted-text-color: hsl(240, 100%, 88%);
 		--title-index-background-color: #444;
 		--title-index-text-color: #bbb;
 		--selected-title-index-background-color: #666;
