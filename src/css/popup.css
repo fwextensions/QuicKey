@@ -1,39 +1,31 @@
 /* ===========================================================================
-	Light mode colors
-   =========================================================================== */
-
-@media (prefers-color-scheme: light) {
-	html {
-		--background-color: #fff;
-		--text-color: #000;
-		--divider-color: #ddd;
-		--item-selected-background-color: #ebebeb;
-		--highlighted-text-color: hsl(240, 60%, 33%);
-		--title-index-background-color: #efefef;
-		--title-index-text-color: #666;
-		--selected-title-index-background-color: #fafafa;
-		--hover-button-background-color: #dcdcdc;
-		--active-button-background-color: #bbb;
-	}
-}
-
-
-/* ===========================================================================
 	Dark mode colors
    =========================================================================== */
 
 @media (prefers-color-scheme: dark) {
-	html {
-		--background-color: #202124;
-		--text-color: #fff;
-		--divider-color: #666;
-		--item-selected-background-color: #444547;
+	:root {
+		--divider-color: #555;
 		--highlighted-text-color: hsl(240, 100%, 88%);
-		--title-index-background-color: #444;
-		--title-index-text-color: #bbb;
-		--selected-title-index-background-color: #666;
 		--hover-button-background-color: #505154;
 		--active-button-background-color: #666;
+	}
+
+	body {
+		--color: #fff;
+		--background: #202124;
+	}
+
+	.results-list-item.selected {
+		--background: #444547;
+	}
+
+	.results-list-item div.title-index {
+		--color: #bbb;
+		--background: #444;
+	}
+
+	.results-list-item.selected div.title-index {
+		--background: #666;
 	}
 }
 
@@ -56,8 +48,8 @@ html, body {
 }
 
 body {
-	background: var(--background-color);
-	color: var(--text-color);
+	background: var(--background, #fff);
+	color: var(--color, #000);
 	font-size: 14px;
 	-webkit-user-select: none;
 	user-select: none;
@@ -212,7 +204,7 @@ input.search-box::-webkit-search-cancel-button:hover:active {
 }
 
 .results-list-item.selected {
-	background-color: var(--item-selected-background-color)
+	background-color: var(--background, #ebebeb)
 }
 
 .results-list-item .favicon, .results-list-item .badge {
@@ -258,7 +250,7 @@ input.search-box::-webkit-search-cancel-button:hover:active {
 }
 
 .results-list-item div b, .search-box {
-	color: var(--highlighted-text-color);
+	color: var(--highlighted-text-color, hsl(240, 60%, 33%));
 }
 
 .results-list-item div.title:empty::after {
@@ -291,11 +283,11 @@ input.search-box::-webkit-search-cancel-button:hover:active {
     font-size: 0.75em;
     font-weight: bold;
     text-align: center;
-    color: var(--title-index-text-color);
+    color: var(--color, #666);
     min-width: 1.5em;
     height: 1.5em;
     top: -0.1em;
-    background: var(--title-index-background-color);
+    background: var(--background, #efefef);
     border-radius: .75em;
     padding: .05em 0.4em 0 0.4em;
     margin: 0 .5em 0 0;
@@ -308,7 +300,7 @@ input.search-box::-webkit-search-cancel-button:hover:active {
 }
 
 .results-list-item.selected div.title-index {
-	background: var(--selected-title-index-background-color);
+	background: var(--background, #fafafa);
 }
 
 .results-list-item .close-button {

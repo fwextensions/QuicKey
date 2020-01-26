@@ -1,4 +1,87 @@
 /* ===========================================================================
+	Dark mode colors
+   =========================================================================== */
+
+@media (prefers-color-scheme: dark) {
+	body {
+		--color: #fff;
+		--background: #202124;
+	}
+
+	h1 {
+		--color: #efefef;
+	}
+
+	h1.quickey::before {
+		--background-image: url(/img/icon-300-inverted.png);
+	}
+
+	h2 {
+		--color: #ccc;
+		--border-color: #555;
+	}
+
+	.help-button {
+		--color: #666;
+		--background: #ccc;
+	}
+
+	.help-button:hover {
+		--color: #000;
+		--background: #fff;
+	}
+
+	.control .indicator {
+		--background: #555;
+	}
+
+	.control label:hover input:not([disabled]) ~ .indicator {
+		--background: #666;
+	}
+
+	.control input:checked ~ .indicator,
+	.control input:checked:focus ~ .indicator,
+	.control label:hover input:not([disabled]):checked ~ .indicator {
+		--background: #e6e6e7;
+	}
+
+	.control input:disabled ~ .indicator {
+		--background: #333;
+	}
+
+	.control input[type="checkbox"] ~ .indicator:after {
+		--border-color: #000;
+	}
+
+	.control input[type="checkbox"]:disabled ~ .indicator:after {
+		--border-color: #ccc;
+	}
+
+	.control input[type="radio"] ~ .indicator:after {
+		--background: #000;
+	}
+
+	.control input[type="radio"]:disabled ~ .indicator:after {
+		--background: #ccc;
+	}
+
+	.control .subtitle {
+		--color: #aaa;
+	}
+
+	.shortcut-display {
+		--background: #555;
+	}
+
+	.shortcut-display:hover {
+		--background: #4a4a4a;
+	}
+
+
+}
+
+
+/* ===========================================================================
 	Base
    =========================================================================== */
 
@@ -13,6 +96,8 @@
 }
 
 body {
+	background: var(--background, #fff);
+	color: var(--color, #000);
 	font-size: 1em;
 	user-select: none;
 	cursor: default;
@@ -36,14 +121,14 @@ section {
 
 h1 {
 	font-size: 2em;
-	color: #333;
+	color: var(--color, #333);
 	margin: 0 0 1.5em 0;
 	position: relative;
 }
 
 h1.quickey::before {
 	content: '';
-	background-image: url(/img/icon-300.png);
+	background-image: var(--background-image, url(/img/icon-300.png));
 	background-size: cover;
 	left: -115px;
 	top: -55px;
@@ -56,9 +141,9 @@ h1.quickey::before {
 h2 {
 	font-size: 1.3em;
 	line-height: 2;
-	color: #666;
+	color: var(--color, #666);
 	margin: 2.75em 0 1.2em 0;
-	border-bottom: 1px solid #ddd;
+	border-bottom: 1px solid var(--border-color, #ddd);
 }
 
 ul {
@@ -107,7 +192,7 @@ main {
 }
 
 .help-button {
-	color: #ccc;
+	color: var(--color, #fff);
 	font-size: .8em;
 	font-weight: bold;
 	line-height: 100%;
@@ -116,7 +201,7 @@ main {
 	width: 1.1em;
 	height: 1.1em;
 	border-radius: 50%;
-	background: #333;
+	background: var(--background, #333);
 	bottom: -.5em;
 	cursor: pointer;
 	position: relative;
@@ -132,8 +217,8 @@ main {
 }
 
 .help-button:hover {
-	color: #fff;
-	background: #000;
+	color: var(--color, #fff);
+	background: var(--background, #000);
 }
 
 
@@ -195,7 +280,7 @@ main {
 	height: 1.25em;
 	width: 1.25em;
 	border-radius: .25em;
-	background: #efefef;
+	background: var(--background, #efefef);
 	transition: background 0.15s ease-in-out;
 }
 
@@ -205,21 +290,18 @@ main {
 	display: none;
 }
 
-.control input:checked ~ .indicator {
-	background: #313536;
-}
-
 .control label:hover input:not([disabled]) ~ .indicator {
-	background: #ebebeb;
+	background: var(--background, #ebebeb);
 }
 
-.control label:hover input:not([disabled]):checked ~ .indicator,
-.control input:checked:focus ~ .indicator {
-	background: #313536;
+.control input:checked ~ .indicator,
+.control input:checked:focus ~ .indicator,
+.control label:hover input:not([disabled]):checked ~ .indicator {
+	background: var(--background, #313536);
 }
 
 .control input:disabled ~ .indicator {
-	background: #e6e6e6;
+	background: var(--background, #e6e6e6);
 	opacity: 0.6;
 	pointer-events: none;
 }
@@ -233,13 +315,13 @@ main {
 	top: 11%;
 	width: 20%;
 	height: 46%;
-	border: solid #fff;
+	border: solid var(--border-color, #fff);
 	border-width: 0 .2em .2em 0;
 	transform: rotate(45deg);
 }
 
 .control input[type="checkbox"]:disabled ~ .indicator:after {
-	border-color: #666;
+	border-color: var(--border-color, #666);
 }
 
 .control input[type="radio"] ~ .indicator {
@@ -252,15 +334,15 @@ main {
 	height: 50%;
 	width: 50%;
 	border-radius: 50%;
-	background: #fff;
+	background: var(--background, #fff);
 }
 
 .control input[type="radio"]:disabled ~ .indicator:after {
-	background: #7b7b7b;
+	background: var(--background, #7b7b7b);
 }
 
 .control .subtitle {
-	color: #666;
+	color: var(--color, #666);
 	font-size: .9em;
 }
 
@@ -322,13 +404,13 @@ main {
 	padding: .25em;
 	position: relative;
 	border-radius: 6px;
-	background: #efefef;
+	background: var(--background, #efefef);
 	box-shadow: none;
 	transition: box-shadow 0.15s ease-out;
 }
 
 .shortcut-display:hover {
-	background: #ebebeb;
+	background: var(--background, #ebebeb);
 }
 
 .shortcut-display:focus {
