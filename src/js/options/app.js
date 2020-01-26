@@ -130,7 +130,7 @@ define([
 		{
 			const {settings, chrome: { shortcuts: chromeShortcuts }, onChange, onResetShortcuts} = this.props;
 
-			return <main>
+			return <main className={k.IsEdge ? "edge" : "chrome"}>
 				<h1 className="quickey">QuicKey options
 					<div className="help-button"
 						title="Learn more about QuicKey's features"

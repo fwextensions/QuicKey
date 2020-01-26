@@ -21,6 +21,19 @@
 		--border-color: #555;
 	}
 
+	kbd, button {
+		--color: #333;
+		--background: #cecac9;
+		--shadow-color-1: rgba(0, 0, 0, 0.25);
+		--shadow-color-2: rgba(0, 0, 0, 0.1);
+		--shadow-color-3: rgba(0, 0, 0, 0.6);
+		--shadow-color-4: rgba(255, 255, 255, 0.55);
+	}
+
+	button.key:hover {
+		--background: #eee;
+	}
+
 	.help-button {
 		--color: #666;
 		--background: #ccc;
@@ -70,14 +83,34 @@
 	}
 
 	.shortcut-display {
-		--background: #555;
-	}
-
-	.shortcut-display:hover {
 		--background: #4a4a4a;
 	}
 
+	.shortcut-display:hover {
+		--background: #555;
+	}
 
+	.shortcut-display:focus {
+		--color: #aaa;
+		--background: #666;
+		--shadow-color: hsl(240, 100%, 88%);
+	}
+
+	.clear-button:hover {
+		--background: #777;
+	}
+
+	.clear-button:hover:active {
+		--background: #888;
+	}
+
+	.incognito-screenshot {
+		content: url("/img/incognito-option-dark.png");
+	}
+
+	.edge .incognito-screenshot {
+		content: url("/img/inprivate-option-dark.png");
+	}
 }
 
 
@@ -160,16 +193,16 @@ li {
 kbd, button {
 	font-size: smaller;
 	font-weight: bold;
-	color: #ccc;
+	color: var(--color, #ccc);
 	padding: 0.2em 0.5em 0.35em 0.5em;
 	vertical-align: baseline;
 	box-shadow:
-		0.07em 0.07em 0.125em rgba(0, 0, 0, 0.25),
-		0 0 0 0.04em rgba(0, 0, 0, 0.3),
-		0.02em 0.02em 0.1em rgba(0, 0, 0, 0.4) inset,
-		0.05em 0.05em 0.1em rgba(255, 255, 255, 0.35) inset;
+		0.07em 0.07em 0.125em var(--shadow-color-1, rgba(0, 0, 0, 0.25)),
+		0 0 0 0.04em var(--shadow-color-2, rgba(0, 0, 0, 0.3)),
+		0.02em 0.02em 0.1em var(--shadow-color-3, rgba(0, 0, 0, 0.4)) inset,
+		0.05em 0.05em 0.1em var(--shadow-color-4, rgba(255, 255, 255, 0.35)) inset;
 	border-radius: 0.25em;
-	background-color: #313536;
+	background-color: var(--background, #313536);
 	display: inline-block;
 }
 
@@ -180,7 +213,7 @@ button.key {
 }
 
 button.key:hover {
-	background: #000;
+	background: var(--background, #000);
 }
 
 button.key:active {
@@ -414,8 +447,9 @@ main {
 }
 
 .shortcut-display:focus {
-	background: #ddd;
-	box-shadow: 0 -0.1em 0 #228 inset;
+	color: var(--color, #777);
+	background: var(--background, #ddd);
+	box-shadow: 0 -0.1em 0 var(--shadow-color, #228) inset;
 	outline: none;
 }
 
@@ -426,7 +460,6 @@ main {
 }
 
 .shortcut-display .placeholder {
-	color: #777;
 	font-size: .5em;
 	top: 0;
 	padding-left: .5em;
@@ -453,12 +486,12 @@ main {
 }
 
 .clear-button:hover {
-	background-color: #ccc;
+	background-color: var(--background, #ccc);
 	opacity: 1;
 }
 
 .clear-button:hover:active {
-	background-color: #bbb;
+	background-color: var(--background, #bbb);
 }
 
 .shortcut-picker .error {
@@ -490,17 +523,9 @@ main {
 
 .shortcut kbd, .key {
 	height: inherit;
-	background-color: #313536;
 	border: 0;
 	border-radius: 0.125em;
-	box-shadow:
-		0.07em 0.07em 0.125em rgba(0, 0, 0, 0.25),
-		0 0 0 0.04em rgba(0, 0, 0, 0.3),
-		0.02em 0.02em 0.1em rgba(0, 0, 0, 0.4) inset,
-		0.05em 0.05em 0.1em rgba(255, 255, 255, 0.35) inset;
-	color: #ccc;
 	font-size: inherit;
-	font-weight: bold;
 	text-align: center;
 	outline: 0;
 	position: relative;
@@ -509,7 +534,6 @@ main {
 	-webkit-appearance: none;
 	-webkit-tap-highlight-color: transparent;
 	user-select: none;
-	display: inline-block;
 }
 
 .shortcut kbd > span, .key > span {
