@@ -256,35 +256,6 @@ main {
 
 
 /* ===========================================================================
-	Update message
-   =========================================================================== */
-
-.update-message {
-	text-align: center;
-	color: #333;
-	background: #efefef;
-	padding: 2em 2em;
-	margin: -7em 0 7em 0;
-	border-radius: .25em;
-}
-
-.update-message h3 {
-	font-size: 1.2em;
-	font-weight: normal;
-	padding: 0;
-	margin: 0;
-}
-
-.update-message h4 {
-	color: #777;
-	font-size: .9em;
-	font-weight: normal;
-	padding: 0 6em;
-	margin: 1em 0 0 0;
-}
-
-
-/* ===========================================================================
 	Controls
    =========================================================================== */
 
