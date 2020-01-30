@@ -8,6 +8,18 @@
 		--background: #202124;
 	}
 
+	.options.icon, .search.icon {
+		--fill: #aaa;
+	}
+
+	.history.icon, .window.icon {
+		--fill: #666;
+	}
+
+	.incognito.icon {
+		--fill: #888;
+	}
+
 	.search-box, .command-placeholder {
 		--border-color: #555;
 	}
@@ -84,6 +96,23 @@ body {
 	user-select: none;
 	cursor: default;
 	overflow: hidden;
+}
+
+
+/* ===========================================================================
+	Icons
+   =========================================================================== */
+
+.options.icon, .search.icon {
+	fill: var(--fill, #888);
+}
+
+.history.icon, .window.icon {
+	fill: var(--fill, #bbb);
+}
+
+.incognito.icon {
+	fill: var(--fill, #a9a9a9);
 }
 
 
@@ -252,23 +281,10 @@ input.search-box::-webkit-search-cancel-button:hover:active {
 
 .results-list-item .badge {
 	top: 25px;
-	display: none;
-}
-
-.results-list-item.incognito .badge {
-	background-image: url(/img/incognito.svg);
-	display: block;
-}
-
-.results-list-item.other-window .badge {
-	background-image: url(/img/window.svg);
-	display: block;
 }
 
 .results-list-item.closed .badge {
-	left: 5px;  /* this icon looks better centered shifted left 1px */
-	background-image: url(/img/history.svg);
-	display: block;
+	left: 5px;  /* this icon looks more centered when shifted left 1px */
 }
 
 .results-list-item div.title, .results-list-item div.url {

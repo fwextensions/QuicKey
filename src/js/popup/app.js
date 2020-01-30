@@ -4,6 +4,7 @@ define("popup/app", [
 	"jsx!./results-list",
 	"jsx!./results-list-item",
 	"jsx!./message-item",
+	"jsx!icons",
 	"cp",
 	"./score/score-items",
 	"./data/init-tabs",
@@ -23,6 +24,7 @@ define("popup/app", [
 	ResultsList,
 	ResultsListItem,
 	MessageItem,
+	{OptionsIcon},
 	cp,
 	scoreItems,
 	initTabs,
@@ -640,7 +642,7 @@ define("popup/app", [
 					title="QuicKey options"
 					onClick={this.onOptionsClick}
 				>
-					<img src="/img/gear.svg" />
+					<OptionsIcon />
 					<div className="badge" />
 				</div>
 				<ResultsList

@@ -1,5 +1,6 @@
 define([
 	"jsx!./matched-string",
+	"jsx!icons",
 	"cp",
 	"lib/copy-to-clipboard",
 	"options/key-constants",
@@ -8,6 +9,7 @@ define([
 	"lodash"
 ], function(
 	MatchedString,
+	{HistoryIcon, IncognitoIcon, WindowIcon},
 	cp,
 	copyTextToClipboard,
 	{ModKeyBoolean},
@@ -141,6 +143,7 @@ define([
 				title.length > MaxTitleLength ? title : "",
 				displayURL.length > MaxURLLength ? displayURL : ""
 			].join("\n");
+			let badge = null;
 			let badgeTooltip = "";
 
 			if (IsDev) {
@@ -161,10 +164,13 @@ define([
 			}
 
 			if (incognito) {
+				badge = <IncognitoIcon />;
 				badgeTooltip = IncognitoTooltip;
 			} else if (otherWindow) {
+				badge = <WindowIcon />;
 				badgeTooltip = "This tab is in another window";
 			} else if (sessionId) {
+				badge = <HistoryIcon />;
 				badgeTooltip = "This tab was closed recently";
 			}
 
@@ -175,12 +181,14 @@ define([
 				onMouseMove={this.onMouseMove}
 				onMouseEnter={this.onMouseEnter}
 			>
-				<span className="favicon"
+				<div className="favicon"
 					style={faviconStyle}
 				/>
-				<span className="badge"
+				<div className="badge"
 					title={badgeTooltip}
-				/>
+				>
+					{badge}
+				</div>
 				<div className="title">
 					{titleIndex &&
 						<div className="title-index"
