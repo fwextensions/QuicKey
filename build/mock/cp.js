@@ -26,6 +26,9 @@ define([
 		tabs: {
 			query: promiseNoop
 		},
+		windows: {
+			getAll: promiseNoop
+		},
 		sessions: {
 			getRecentlyClosed: promiseNoop
 		},

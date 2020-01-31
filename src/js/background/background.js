@@ -400,6 +400,9 @@ DEBUG && console.log(e);
 	};
 
 
+		// update the icon, in case we're in dark mode when the extension loads
+	setNormalIcon();
+
 	storage.set(data => {
 			// save the lastUsedVersion in a global before we return the current
 			// version below, so the onInstalled promise handler knows whether
