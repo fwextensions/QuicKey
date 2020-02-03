@@ -1,6 +1,6 @@
 define([
 	"jsx!./matched-string",
-	"jsx!icons",
+	"jsx!common/icons",
 	"cp",
 	"lib/copy-to-clipboard",
 	"options/key-constants",
@@ -9,7 +9,7 @@ define([
 	"lodash"
 ], function(
 	MatchedString,
-	{HistoryIcon, IncognitoIcon, WindowIcon},
+	{HistoryIcon, IncognitoIcon, WindowIcon, ClearIcon},
 	cp,
 	copyTextToClipboard,
 	{ModKeyBoolean},
@@ -24,9 +24,9 @@ define([
 	const FaviconURL = "chrome://favicon/";
 	const CloseButtonTooltips = {
 		tabs: "Close tab",
-		closedTab: "Delete this closed tab from the browser history",
 		bookmarks: "Delete bookmark",
-		history: "Delete this page from the browser history"
+		closedTab: "Remove this closed tab from the browser history",
+		history: "Remove this page from the browser history"
 	};
 	const IncognitoTooltip = `This tab is in ${IncognitoNameLC} mode`;
 
@@ -213,7 +213,9 @@ define([
 					title={CloseButtonTooltips[sessionId ? "closedTab" : mode]}
 					onClick={this.onClose}
 					onMouseDown={this.onCloseMouseDown}
-				/>
+				>
+					<ClearIcon />
+				</button>
 			</div>
 		}
 	});

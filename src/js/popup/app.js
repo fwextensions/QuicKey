@@ -4,7 +4,7 @@ define("popup/app", [
 	"jsx!./results-list",
 	"jsx!./results-list-item",
 	"jsx!./message-item",
-	"jsx!icons",
+	"jsx!common/icons",
 	"cp",
 	"./score/score-items",
 	"./data/init-tabs",

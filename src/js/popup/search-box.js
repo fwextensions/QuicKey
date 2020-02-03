@@ -1,19 +1,23 @@
 define([
 	"jsx!./input",
+	"jsx!common/icons",
 	"lib/handle-ref",
 	"react"
 ], function(
 	Input,
+	{SearchIcon},
 	handleRef,
 	React
 ) {
-	function Placeholder(
-		props)
+	function Placeholder({
+		mode,
+		shortcut,
+		text})
 	{
-		var id = props.mode + "-placeholder";
+		const id = mode + "-placeholder";
 
 		return <div id={id} className="command-placeholder">
-			<b>{props.shortcut} </b>{props.text}
+			<b>{shortcut} </b>{text}
 		</div>
 	}
 
@@ -44,9 +48,8 @@ define([
 
 		render: function()
 		{
-			var props = this.props,
-				mode = props.mode,
-				query = props.query;
+			const {props} = this;
+			const {mode, query} = props;
 
 				// we want to show the placeholders only when the user's entered
 				// the history or bookmarks mode and the query length is 3, which
@@ -55,10 +58,9 @@ define([
 				// position isn't lost if the user moves it from the end and
 				// starts typing.  that change is forced when the app gets an
 				// esc and clears the text.
-			return <div>
+			return <div className="search-box" >
 				<Input type="search"
 					ref={this.handleRef}
-					className="search-box"
 					tabIndex="0"
 					placeholder="Search for a tab title or URL, or type / for more options"
 					spellCheck={false}
@@ -69,6 +71,7 @@ define([
 					onKeyDown={props.onKeyDown}
 					onKeyUp={props.onKeyUp}
 				/>
+				<SearchIcon />
 				{mode == "bookmarks" && query.length == 3 &&
 					<Placeholder mode={mode} shortcut="/b" text="Search for a bookmark title or URL" />}
 				{mode == "history" && query.length == 3 &&
