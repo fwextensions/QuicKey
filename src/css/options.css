@@ -104,6 +104,10 @@
 		--background: #888;
 	}
 
+	.shortcut-picker .error {
+		--color: rgb(193, 0, 0);
+	}
+
 	.incognito-screenshot {
 		content: url("/img/incognito-option-dark.png");
 	}
@@ -252,6 +256,28 @@ main {
 .help-button:hover {
 	color: var(--color, #fff);
 	background: var(--background, #000);
+}
+
+
+/* ===========================================================================
+	Icons
+   =========================================================================== */
+
+.clear.icon {
+	fill: var(--fill, #888);
+}
+
+.history.icon, .window.icon {
+	fill: var(--fill, #bbb);
+}
+
+.incognito.icon {
+	fill: var(--fill, #a9a9a9);
+}
+
+.history.icon, .window.icon, .incognito.icon {
+	height: 1.2em;
+	vertical-align: bottom;
 }
 
 
@@ -466,20 +492,24 @@ main {
 }
 
 .shortcut-picker .error {
-	padding: .35em 2.15em 0;
 	font-size: smaller;
-	background-image: url(/img/alert.svg);
-	background-size: 16px 16px;
-	background-position: .5em .5em;
-	background-repeat: no-repeat;
-		/* force the grey SVG icon to be dark red via filters: https://codepen.io/sosuke/pen/Pjoqqp */
-	filter: brightness(0) saturate(100%) invert(8%) sepia(87%) saturate(5021%) hue-rotate(358deg) brightness(114%) contrast(114%);
+	color: var(--color, rgb(193, 0, 0));
+	padding: .35em 2.15em 0;
+	position: relative;
+}
+
+.shortcut-picker .error .alert.icon {
+	fill: var(--color, rgb(193, 0, 0));
+	left: .5em;
+	top: .5em;
+	position: absolute;
 }
 
 	/* on macOS and a standard def monitor, the error icon is a little low and
 	   so its bottom gets cut off.  so move it a little higher on Mac. */
-.mac .shortcut-picker .error {
-	background-position: .5em .4em;
+.mac .shortcut-picker .error .alert.icon {
+	left: .5em;
+	top: .4em;
 }
 
 

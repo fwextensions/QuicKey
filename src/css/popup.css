@@ -24,6 +24,10 @@
 		--border-color: #555;
 	}
 
+	.search-box input::-webkit-input-placeholder, .command-placeholder {
+		--color: rgb(139, 139, 139);
+	}
+
 	.search-box input::-webkit-search-cancel-button:hover,
 	.options-button:hover,
 	.results-list-item.selected:hover .close-button:hover {
@@ -34,14 +38,6 @@
 	.options-button:hover:active,
 	.results-list-item.selected:hover .close-button:hover:active {
 		--background: #666;
-	}
-
-	.results-list-item.selected:hover .close-button:hover {
-		background-color: var(--background);
-	}
-
-	.results-list-item.selected:hover .close-button:hover:active {
-		background-color: var(--background);
 	}
 
 	.results-list-item.selected {
@@ -119,6 +115,11 @@ img {
 	fill: var(--fill, #a9a9a9);
 }
 
+.history.icon, .window.icon, .incognito.icon {
+	width: 16px;
+	height: 16px;
+}
+
 
 /* ===========================================================================
 	Search box
@@ -150,6 +151,7 @@ img {
 .search-box input::-webkit-input-placeholder, .command-placeholder {
 	font-weight: normal;
 	font-style: italic;
+	color: var(--color, rgb(117, 117, 117));
 }
 
 .search-box input::-webkit-search-cancel-button {
@@ -185,7 +187,6 @@ img {
 	-webkit-user-modify: read-only;
 	overflow: hidden;
 	-webkit-text-security: none;
-	color: rgb(117, 117, 117);
 	pointer-events: none;
 }
 

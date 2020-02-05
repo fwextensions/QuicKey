@@ -3,43 +3,18 @@ define([
 	"jsx!./keyboard-shortcuts",
 	"jsx!./shortcut-picker",
 	"jsx!./controls",
+	"jsx!common/icons",
 	"background/constants"
 ], function(
 	React,
 	Shortcuts,
 	ShortcutPicker,
 	{Checkbox, RadioButton, RadioGroup},
+	{HistoryIcon, WindowIcon, IncognitoIcon},
 	k
 ) {
 	const {IncognitoNameUC, IncognitoNameLC} = k;
 	const IncognitoAction = k.IsEdge ? "click the checkbox" : "toggle it on";
-	const ClosedIcon = () => <img
-		src="img/history.svg"
-		alt="Closed icon"
-		style={{
-			height: "1.2em",
-			filter: "contrast(0.3)",
-			verticalAlign: "bottom"
-		}}
-	/>;
-	const WindowIcon = () => <img
-		src="img/window.svg"
-		alt="Other window icon"
-		style={{
-			height: "1.2em",
-			paddingLeft: ".15em",
-			filter: "contrast(0.3)",
-			verticalAlign: "bottom"
-		}}
-	/>;
-	const IncognitoIcon = () => <img
-		src="img/incognito.svg"
-		alt="Incognito icon"
-		style={{
-			height: "1.2em",
-			verticalAlign: "bottom"
-		}}
-	/>;
 
 
 	const OptionsApp = React.createClass({
@@ -180,7 +155,7 @@ define([
 				/>
 				<Checkbox
 					id={k.IncludeClosedTabs.Key}
-					label={<span>Include recently closed tabs in the search results (marked with <ClosedIcon />)</span>}
+					label={<span>Include recently closed tabs in the search results (marked with <HistoryIcon />)</span>}
 					value={settings[k.IncludeClosedTabs.Key]}
 					onChange={onChange}
 				>
