@@ -20,6 +20,11 @@
 		--fill: #888;
 	}
 
+	.inprivate.icon {
+		filter: none !important;
+		opacity: .8 !important;
+	}
+
 	.search-box, .command-placeholder {
 		--border-color: #555;
 	}
@@ -115,7 +120,12 @@ img {
 	fill: var(--fill, #a9a9a9);
 }
 
-.history.icon, .window.icon, .incognito.icon {
+.inprivate.icon {
+	filter: invert(1);
+	opacity: .6;
+}
+
+.history.icon, .window.icon, .incognito.icon, .inprivate.icon {
 	width: 16px;
 	height: 16px;
 }

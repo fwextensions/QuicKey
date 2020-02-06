@@ -10,11 +10,12 @@ define([
 	Shortcuts,
 	ShortcutPicker,
 	{Checkbox, RadioButton, RadioGroup},
-	{HistoryIcon, WindowIcon, IncognitoIcon},
+	{IncognitoIcon, InPrivateIcon, HistoryIcon, WindowIcon},
 	k
 ) {
 	const {IncognitoNameUC, IncognitoNameLC} = k;
 	const IncognitoAction = k.IsEdge ? "click the checkbox" : "toggle it on";
+	const IncognitoIndicator = k.IsEdge ? <InPrivateIcon /> : <IncognitoIcon />;
 
 
 	const OptionsApp = React.createClass({
@@ -193,7 +194,7 @@ define([
 					To enable this functionality, click the button below, then
 					scroll down to the <i>Allow in {IncognitoNameLC}</i> setting
 					and {IncognitoAction}.  {IncognitoNameUC} tabs are marked
-					with <IncognitoIcon />.
+					with {IncognitoIndicator}.
 				</p>
 				<img className="incognito-screenshot"
 					src={`/img/${IncognitoNameLC.toLocaleLowerCase()}-option.png`}

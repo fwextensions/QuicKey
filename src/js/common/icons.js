@@ -38,6 +38,23 @@ define([
 		),
 
 
+		InPrivateIcon: () => (
+			<svg className="inprivate icon" viewBox="0 0 20 20">
+				<linearGradient id="g2" gradientUnits="userSpaceOnUse" x1="2.8318" y1="16.25" x2="17.1682" y2="16.25">
+					<stop offset="0.3" stopColor="#b2aeaa" />
+					<stop offset="0.8" stopColor="#33312d" />
+				</linearGradient>
+				<linearGradient id="g1" gradientUnits="userSpaceOnUse" x1="6" y1="7.5" x2="14" y2="7.5">
+					<stop offset="0.15" stopColor="#b2aeaa" />
+					<stop offset="1" stopColor="#393632" />
+				</linearGradient>
+				<circle fill="#33312d" cx="10" cy="10" r="10" />
+				<path fill="url(#g2)" d="M10,20c2.8,0,5.4-1.2,7.2-3c-1.3-2.6-4-4.5-7.2-4.5S4.1,14.3,2.8,17C4.6,18.8,7.2,20,10,20z" />
+				<circle fill="url(#g1)" cx="10" cy="7.5" r="4" />
+			</svg>
+		),
+
+
 		HistoryIcon: () => (
 			<svg className="history icon" viewBox="0 0 48 48">
 				<path d="M25.99 6c-9.95 0-17.99 8.06-17.99 18h-6l7.79 7.79.14.29 8.07-8.08h-6c0-7.73 6.27-14 14-14s14 6.27 14 14-6.27 14-14 14c-3.87 0-7.36-1.58-9.89-4.11l-2.83 2.83c3.25 3.26 7.74 5.28 12.71 5.28 9.95 0 18.01-8.06 18.01-18s-8.06-18-18.01-18zm-1.99 10v10l8.56 5.08 1.44-2.43-7-4.15v-8.5h-3z"/>
@@ -54,7 +71,7 @@ define([
 
 		AlertIcon: () => (
 			<svg className="alert icon" width="16" height="16" viewBox="0 0 16 16">
-				<path fillRule="evenodd" d="M8.865 1.52c-.18-.31-.51-.5-.87-.5s-.69.19-.87.5L.275 13.5c-.18.31-.18.69 0 1 .19.31.52.5.87.5h13.7c.36 0 .69-.19.86-.5.17-.31.18-.69.01-1L8.865 1.52zM8.995 13h-2v-2h2v2zm0-3h-2V6h2v4z" />
+				<path fillRule="evenodd" d="M8.865 1.52c-.18-.31-.51-.5-.87-.5s-.69.19-.87.5L.275 13.5c-.18.31-.18.69 0 1 .19.31.52.5.87.5h13.7c.36 0 .69-.19.86-.5.17-.31.18-.69.01-1L8.865 1.52zM8.995 13h-2v-2h2v2zm0-3h-2V6h2v4z"/>
 			</svg>
 		)
 	};

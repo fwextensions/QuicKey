@@ -9,11 +9,17 @@ define([
 	"lodash"
 ], function(
 	MatchedString,
-	{HistoryIcon, IncognitoIcon, WindowIcon, ClearIcon},
+	{
+		HistoryIcon,
+		IncognitoIcon,
+		InPrivateIcon,
+		WindowIcon,
+		ClearIcon
+	},
 	cp,
 	copyTextToClipboard,
 	{ModKeyBoolean},
-	{IsDev, IncognitoNameLC},
+	{IsDev, IsEdge, IncognitoNameLC},
 	React,
 	_
 ) {
@@ -48,7 +54,7 @@ define([
 					item.displayURL,
 					this.props.query,
 					item.recentBoost,
-					_.toPairs(item.scores).map(function(a) { return a.join(": "); }).join("\n")
+					_.toPairs(item.scores).map(a => a.join(": ")).join("\n")
 				].join("\n"));
 			} else {
 					// pass in whether ctrl or cmd was pressed while clicking
@@ -164,7 +170,7 @@ define([
 			}
 
 			if (incognito) {
-				badge = <IncognitoIcon />;
+				badge = IsEdge ? <InPrivateIcon /> : <IncognitoIcon />;
 				badgeTooltip = IncognitoTooltip;
 			} else if (otherWindow) {
 				badge = <WindowIcon />;

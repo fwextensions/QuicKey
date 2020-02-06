@@ -34,6 +34,11 @@
 		--background: #eee;
 	}
 
+	.inprivate.icon {
+		filter: none !important;
+		opacity: .8 !important;
+	}
+
 	.help-button {
 		--color: #666;
 		--background: #ccc;
@@ -80,6 +85,10 @@
 
 	.control .subtitle {
 		--color: #aaa;
+	}
+
+	.shortcut-setting .label b {
+		--opacity: .8;
 	}
 
 	.shortcut-display {
@@ -275,7 +284,12 @@ main {
 	fill: var(--fill, #a9a9a9);
 }
 
-.history.icon, .window.icon, .incognito.icon {
+.inprivate.icon {
+	filter: invert(1);
+	opacity: .6;
+}
+
+.history.icon, .window.icon, .incognito.icon, .inprivate.icon {
 	height: 1.2em;
 	vertical-align: bottom;
 }
@@ -420,6 +434,10 @@ main {
 	flex: 1;
 }
 
+.shortcut-setting .label b {
+	opacity: var(--opacity, .65);
+}
+
 
 /* ===========================================================================
 	Shortcut picker
@@ -493,13 +511,13 @@ main {
 
 .shortcut-picker .error {
 	font-size: smaller;
-	color: var(--color, rgb(193, 0, 0));
+	color: var(--color, hsl(0, 100%, 45%));
 	padding: .35em 2.15em 0;
 	position: relative;
 }
 
 .shortcut-picker .error .alert.icon {
-	fill: var(--color, rgb(193, 0, 0));
+	fill: var(--color, hsl(0, 100%, 45%));
 	left: .5em;
 	top: .5em;
 	position: absolute;
