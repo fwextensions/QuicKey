@@ -7,7 +7,7 @@ define([
 ], function(
 	React,
 	Shortcut,
-	{AlertIcon},
+	{AlertIcon, ClearIcon},
 	{KeyOrder, ModifierAliases, ShortcutSeparator, FunctionKeyPattern},
 	handleRef
 ) {
@@ -329,7 +329,9 @@ define([
 							title="Remove the shortcut"
 							onMouseDown={this.handleClearMouseDown}
 							onClick={this.handleClearClick}
-						/>
+						>
+							<ClearIcon />
+						</div>
 					}
 					{
 						focused && !pressedKeys.join("") &&

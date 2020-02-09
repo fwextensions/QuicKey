@@ -34,6 +34,14 @@
 		--background: #eee;
 	}
 
+	.history.icon, .window.icon {
+		--fill: #aaa;
+	}
+
+	.clear.icon {
+		--fill: #aaa;
+	}
+
 	.inprivate.icon {
 		filter: none !important;
 		opacity: .8 !important;
@@ -92,11 +100,11 @@
 	}
 
 	.shortcut-display {
-		--background: #4a4a4a;
+		--background: #333;
 	}
 
 	.shortcut-display:hover {
-		--background: #555;
+		--background: #383838;
 	}
 
 	.shortcut-display:focus {
@@ -106,11 +114,11 @@
 	}
 
 	.clear-button:hover {
-		--background: #777;
+		--background: #505154;
 	}
 
 	.clear-button:hover:active {
-		--background: #888;
+		--background: #666;
 	}
 
 	.shortcut-picker .error {
@@ -238,7 +246,7 @@ main {
 }
 
 .help-button {
-	color: var(--color, #fff);
+	color: var(--color, #ccc);
 	font-size: .8em;
 	font-weight: bold;
 	line-height: 100%;
@@ -277,7 +285,7 @@ main {
 }
 
 .history.icon, .window.icon {
-	fill: var(--fill, #bbb);
+	fill: var(--fill, #999);
 }
 
 .incognito.icon {
@@ -488,7 +496,6 @@ main {
 	right: 6px;
 	top: 50%;
 	margin-top: -10px;
-	background-image: url(/img/clear.svg);
 	background-size: 10px 16px;
 	background-position: center;
 	background-repeat: no-repeat;
@@ -507,6 +514,14 @@ main {
 
 .clear-button:hover:active {
 	background-color: var(--background, #bbb);
+}
+
+.clear-button .clear.icon {
+	width: 16px;
+	height: 16px;
+	top: 2px;
+	left: 2px;
+	position: absolute;
 }
 
 .shortcut-picker .error {

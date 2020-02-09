@@ -12,12 +12,8 @@
 		--fill: #aaa;
 	}
 
-	.history.icon, .window.icon {
-		--fill: #666;
-	}
-
-	.incognito.icon {
-		--fill: #888;
+	.history.icon, .window.icon, .incognito.icon {
+		--fill: #777;
 	}
 
 	.inprivate.icon {
@@ -31,6 +27,10 @@
 
 	.search-box input::-webkit-input-placeholder, .command-placeholder {
 		--color: rgb(139, 139, 139);
+	}
+
+	.search-box input::-webkit-search-cancel-button {
+		background-image: url(/img/clear-dark.svg) !important;
 	}
 
 	.search-box input::-webkit-search-cancel-button:hover,
@@ -112,12 +112,8 @@ img {
 	fill: var(--fill, #888);
 }
 
-.history.icon, .window.icon {
+.history.icon, .window.icon, .incognito.icon {
 	fill: var(--fill, #bbb);
-}
-
-.incognito.icon {
-	fill: var(--fill, #a9a9a9);
 }
 
 .inprivate.icon {
@@ -125,9 +121,14 @@ img {
 	opacity: .6;
 }
 
-.history.icon, .window.icon, .incognito.icon, .inprivate.icon {
+.icon {
 	width: 16px;
 	height: 16px;
+}
+
+.search.icon {
+	width: 13px;
+	height: 13px;
 }
 
 
