@@ -34,11 +34,7 @@
 		--background: #eee;
 	}
 
-	.history.icon, .window.icon {
-		--fill: #aaa;
-	}
-
-	.clear.icon {
+	.history.icon, .window.icon, .clear.icon {
 		--fill: #aaa;
 	}
 
