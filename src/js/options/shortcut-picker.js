@@ -1,12 +1,14 @@
 define([
 	"react",
 	"jsx!./shortcut",
+	"jsx!common/icons",
 	"./key-constants",
 	"lib/handle-ref"
 ], function(
 	React,
 	Shortcut,
-	KeyConstants,
+	{AlertIcon, ClearIcon},
+	{KeyOrder, ModifierAliases, ShortcutSeparator, FunctionKeyPattern},
 	handleRef
 ) {
 	const ShiftedKeyAliases = {
@@ -45,7 +47,6 @@ define([
 
 		return result;
 	}, {});
-	const {KeyOrder, ModifierAliases, ShortcutSeparator, FunctionKeyPattern} = KeyConstants;
 
 
 	const ShortcutPicker = React.createClass({
@@ -328,7 +329,9 @@ define([
 							title="Remove the shortcut"
 							onMouseDown={this.handleClearMouseDown}
 							onClick={this.handleClearClick}
-						/>
+						>
+							<ClearIcon />
+						</div>
 					}
 					{
 						focused && !pressedKeys.join("") &&
@@ -336,7 +339,11 @@ define([
 					}
 				</div>
 				{
-					errorMessage && <div className="error">{errorMessage}</div>
+					errorMessage &&
+					<div className="error">
+						<AlertIcon />
+						<span>{errorMessage}</span>
+					</div>
 				}
 			</div>
 		}

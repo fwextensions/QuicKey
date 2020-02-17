@@ -245,19 +245,24 @@ require([
 	{
 			// only reactivate the last tab in dev mode for now
 		const handler = k.IsDev ? activateLastTab : setNormalIcon;
+		const paths = matchMedia("(prefers-color-scheme: dark)").matches ?
+			IconPaths : InvertedIconPaths;
 
 		isNormalIcon = false;
 		clearTimeout(shortcutTimer);
 		shortcutTimer = setTimeout(handler, MinTabDwellTime);
-		cp.browserAction.setIcon(InvertedIconPaths)
+		cp.browserAction.setIcon(paths)
 			.catch(backgroundTracker.exception);
 	}
 
 
 	function setNormalIcon()
 	{
+		const paths = matchMedia("(prefers-color-scheme: dark)").matches ?
+			InvertedIconPaths : IconPaths;
+
 		isNormalIcon = true;
-		cp.browserAction.setIcon(IconPaths)
+		cp.browserAction.setIcon(paths)
 			.catch(backgroundTracker.exception);
 	}
 
@@ -394,6 +399,9 @@ DEBUG && console.log(e);
 		DEBUG && console.log.apply(console, args);
 	};
 
+
+		// update the icon, in case we're in dark mode when the extension loads
+	setNormalIcon();
 
 	storage.set(data => {
 			// save the lastUsedVersion in a global before we return the current

@@ -3,43 +3,19 @@ define([
 	"jsx!./keyboard-shortcuts",
 	"jsx!./shortcut-picker",
 	"jsx!./controls",
+	"jsx!common/icons",
 	"background/constants"
 ], function(
 	React,
 	Shortcuts,
 	ShortcutPicker,
 	{Checkbox, RadioButton, RadioGroup},
+	{IncognitoIcon, InPrivateIcon, HistoryIcon, WindowIcon},
 	k
 ) {
 	const {IncognitoNameUC, IncognitoNameLC} = k;
 	const IncognitoAction = k.IsEdge ? "click the checkbox" : "toggle it on";
-	const ClosedIcon = () => <img
-		src="img/history.svg"
-		alt="Closed icon"
-		style={{
-			height: "1.2em",
-			filter: "contrast(0.3)",
-			verticalAlign: "bottom"
-		}}
-	/>;
-	const WindowIcon = () => <img
-		src="img/window.svg"
-		alt="Other window icon"
-		style={{
-			height: "1.2em",
-			paddingLeft: ".15em",
-			filter: "contrast(0.3)",
-			verticalAlign: "bottom"
-		}}
-	/>;
-	const IncognitoIcon = () => <img
-		src="img/incognito.svg"
-		alt="Incognito icon"
-		style={{
-			height: "1.2em",
-			verticalAlign: "bottom"
-		}}
-	/>;
+	const IncognitoIndicator = k.IsEdge ? <InPrivateIcon /> : <IncognitoIcon />;
 
 
 	const OptionsApp = React.createClass({
@@ -130,7 +106,7 @@ define([
 		{
 			const {settings, chrome: { shortcuts: chromeShortcuts }, onChange, onResetShortcuts} = this.props;
 
-			return <main>
+			return <main className={k.IsEdge ? "edge" : "chrome"}>
 				<h1 className="quickey">QuicKey options
 					<div className="help-button"
 						title="Learn more about QuicKey's features"
@@ -180,7 +156,7 @@ define([
 				/>
 				<Checkbox
 					id={k.IncludeClosedTabs.Key}
-					label={<span>Include recently closed tabs in the search results (marked with <ClosedIcon />)</span>}
+					label={<span>Include recently closed tabs in the search results (marked with <HistoryIcon />)</span>}
 					value={settings[k.IncludeClosedTabs.Key]}
 					onChange={onChange}
 				>
@@ -218,7 +194,7 @@ define([
 					To enable this functionality, click the button below, then
 					scroll down to the <i>Allow in {IncognitoNameLC}</i> setting
 					and {IncognitoAction}.  {IncognitoNameUC} tabs are marked
-					with <IncognitoIcon />.
+					with {IncognitoIndicator}.
 				</p>
 				<img className="incognito-screenshot"
 					src={`/img/${IncognitoNameLC.toLocaleLowerCase()}-option.png`}
