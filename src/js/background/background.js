@@ -5,17 +5,35 @@ const TabActivatedOnStartupDelay = 750;
 const TabRemovedDelay = 1000;
 const MinTabDwellTime = 750;
 const RestartDelay = 10 * 1000;
-const IconPaths = {
-	path: {
-		"19": "img/icon-19.png",
-		"38": "img/icon-38.png"
+const BadgeColors = {
+	light: {
+		normal: "#a0a0a0",
+		inverted: "#3367d6"
+	},
+	dark: {
+		normal: "#666",
+		inverted: "#3367d6"
 	}
 };
-const InvertedIconPaths = {
-	path: {
-		"19": "img/icon-19-inverted.png",
-		"38": "img/icon-38-inverted.png"
+const IconPaths = {
+	light: {
+		normal: {
+			path: {
+				"19": "img/icon-19.png",
+				"38": "img/icon-38.png"
+			}
+		},
+		inverted: {
+			path: {
+				"19": "img/icon-19-inverted.png",
+				"38": "img/icon-38-inverted.png"
+			}
+		}
 	}
+};
+IconPaths.dark = {
+	normal: IconPaths.light.inverted,
+	inverted: IconPaths.light.normal
 };
 
 
@@ -137,14 +155,14 @@ require([
 		}), MinTabDwellTime);
 
 
-	const debouncedOnRemoved = debounce((tabId, removeInfo) => {
+	const handleTabRemoved = debounce((tabId, removeInfo) => {
 		if (!gStartingUp) {
 			recentTabs.remove(tabId, removeInfo);
 		}
 	}, TabRemovedDelay);
 
 
-	function onTabActivated(
+	function handleTabActivated(
 		event)
 	{
 		if (!gIgnoreNextTabActivation) {
@@ -238,7 +256,7 @@ require([
 									// it, so that if the user than alt-tabs back
 									// to that window, the previous tab will
 									// already be visible.  make sure
-									// onTabActivated() ignores this event.
+									// handleTabActivated() ignores this event.
 								gIgnoreNextTabActivation = true;
 								cp.tabs.update(previousTabID, { active: true })
 									.catch(console.error);
@@ -249,18 +267,31 @@ require([
 	}
 
 
+	function getIconsAndBadgeColor(
+		inverted)
+	{
+		const osMode = matchMedia("(prefers-color-scheme: dark)").matches ?
+			"dark" : "light";
+		const iconMode = inverted ? "inverted" : "normal";
+		const paths = IconPaths[osMode][iconMode];
+		const badgeColor = BadgeColors[osMode][iconMode];
+
+		return [paths, badgeColor];
+	}
+
+
 	function setInvertedIcon()
 	{
 			// only reactivate the last tab in dev mode for now
 		const handler = k.IsDev ? activateLastTab : setNormalIcon;
-		const paths = matchMedia("(prefers-color-scheme: dark)").matches ?
-			IconPaths : InvertedIconPaths;
+			// pass true since we want the inverted colors
+		const [paths, badgeColor] = getIconsAndBadgeColor(true);
 
 		isNormalIcon = false;
 		clearTimeout(shortcutTimer);
 		shortcutTimer = setTimeout(handler, MinTabDwellTime);
 
-		return cp.browserAction.setBadgeBackgroundColor({ color: "#3367d6" })
+		return cp.browserAction.setBadgeBackgroundColor({ color: badgeColor })
 			.catch(backgroundTracker.exception);
 //		cp.browserAction.setIcon(paths)
 //			.catch(backgroundTracker.exception);
@@ -269,13 +300,12 @@ require([
 
 	function setNormalIcon()
 	{
-		const paths = matchMedia("(prefers-color-scheme: dark)").matches ?
-			InvertedIconPaths : IconPaths;
+		const [paths, badgeColor] = getIconsAndBadgeColor();
 
 		isNormalIcon = true;
-		cp.browserAction.setIcon(paths)
+		cp.browserAction.setIcon(paths);
 
-		return cp.browserAction.setBadgeBackgroundColor({ color: "#a0a0a0" })
+		return cp.browserAction.setBadgeBackgroundColor({ color: badgeColor })
 			.catch(backgroundTracker.exception);
 //		cp.browserAction.setIcon(IconPaths)
 //			.catch(backgroundTracker.exception);
@@ -292,7 +322,7 @@ require([
 
 	chrome.tabs.onActivated.addListener(event => {
 		if (!gStartingUp) {
-			onTabActivated(event);
+			handleTabActivated(event);
 		}
 	});
 
@@ -317,8 +347,8 @@ require([
 			// trigger the event when shutting down, and we want to ignore
 			// those.  hopefully, Chrome will finish quitting before this
 			// handler fires.  we don't debounce the listener because we want
-			// to update the tab count immediately.
-		debouncedOnRemoved(tabId, removeInfo);
+			// to update the tab count immediately above.
+		handleTabRemoved(tabId, removeInfo);
 	});
 
 
@@ -341,14 +371,14 @@ require([
 				windowID != lastWindowID) {
 			lastWindowID = windowID;
 			cp.tabs.query({ active: true, windowId: windowID })
-					// pass just the tabId to onTabActivated(), even though we
-					// have the full tab, since most of the time, onTabActivated()
+					// pass just the tabId to handleTabActivated(), even though we
+					// have the full tab, since most of the time, handleTabActivated()
 					// will be called by onActivated, which only gets the tabId.
-					// this simplifies the logic in onTabActivated().  if this
+					// this simplifies the logic in handleTabActivated().  if this
 					// window somehow doesn't have an active tab, which should
 					// never happen, it'll pass undefined to addTab(), which
 					// will catch the exception.
-				.then(([tab = {}]) => onTabActivated({ tabId: tab.id }));
+				.then(([tab = {}]) => handleTabActivated({ tabId: tab.id }));
 		}
 	});
 
