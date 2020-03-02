@@ -137,7 +137,7 @@ require([
 	const backgroundTracker = trackers.background;
 	let tabCount = 0;
 	let popupIsOpen = false;
-	let tabChangedFromToggle = false;
+	let tabChangedFromCommand = false;
 	let lastTogglePromise = Promise.resolve();
 	let isNormalIcon = true;
 	let showTabCount = true;
@@ -170,13 +170,13 @@ require([
 		event)
 	{
 		if (!gIgnoreNextTabActivation) {
-			if (!tabChangedFromToggle) {
-					// invert the icon since we're not toggling between the two
-					// most recent tabs
+			if (tabChangedFromCommand) {
+					// invert the icon since the user is actively navigating
+					// between next/previous tabs with the shortcuts
 				setInvertedIcon();
 			}
 
-			tabChangedFromToggle = false;
+			tabChangedFromCommand = false;
 			addTab(event);
 		}
 
@@ -192,11 +192,13 @@ require([
 
 		switch (command) {
 			case "1-previous-tab":
+				tabChangedFromCommand = true;
 				recentTabs.navigate(-1);
 				backgroundTracker.event("recents", "previous", label);
 				break;
 
 			case "2-next-tab":
+				tabChangedFromCommand = true;
 				recentTabs.navigate(1);
 				backgroundTracker.event("recents", "next", label);
 				break;
@@ -211,9 +213,6 @@ require([
 	function toggleRecentTabs(
 		fromShortcut)
 	{
-			// set tabChangedFromToggle so that addTab() doesn't invert the icon
-		tabChangedFromToggle = true;
-
 			// we have to wait for the last toggle promise chain to resolve before
 			// starting the next one.  otherwise, if the toggle key is held down,
 			// the events fire faster than recentTabs.toggle() can keep up, so
