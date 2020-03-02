@@ -21,6 +21,7 @@ define([
 		[k.EscBehavior.Key]: k.EscBehavior.Clear,
 		[k.MarkTabsInOtherWindows.Key]: true,
 		[k.IncludeClosedTabs.Key]: true,
+		[k.ShowTabCount.Key]: false,
 		[k.Shortcuts.Key]: {
 			mac: MacDefaults,
 			win: DefaultShortcuts

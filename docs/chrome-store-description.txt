@@ -92,6 +92,11 @@ No mouse needed!
  • Press ENTER to switch to the selected tab
 
 
+★ Now with support for dark mode!
+
+QuicKey will respond to changes in your computer's dark mode setting.
+
+
 ★ Use CTRL-TAB as the keyboard shortcut
 
 With a little extra work, you can make QuicKey respond to the Holy Grail of keyboard shortcuts: CTRL-TAB.
@@ -162,7 +167,7 @@ Recently used tabs get a slight boost in the search results ranking, so getting 
 
 ★ Customize shortcuts and other options
 
-To customize how QuicKey behaves, click the gear icon in the menu, or right-click its icon on the toolbar and select Options. On the QuicKey options page, you can change the behavior of the SPACE and ESC keys, hide closed tabs from the search results, and customize many of the keyboard shortcuts described here.
+To customize how QuicKey behaves, click the gear icon in the menu, or right-click its icon on the toolbar and select Options. On the QuicKey options page, you can change the behavior of the SPACE and ESC keys, mark tabs in other windows with an icon, hide closed tabs from the search results, show the count of open tabs, and customize many of the keyboard shortcuts described here.
 
 If you change the keyboard shortcut for showing the QuicKey menu to something other than the default ALT-Q or if you have a non-US keyboard, you'll probably want to also change the key that's used to navigate down the list of recently used tabs (which defaults to W). For instance, if you change the menu shortcut to ALT-Z, you might want to change the navigation key to X, which is right next door. To change it, go to the Options page, click in the first keyboard shortcut picker, and press X.
 

@@ -239,6 +239,7 @@ button.key:active {
 
 main {
 	width: 35em;
+	position: relative;
 }
 
 .help-button {

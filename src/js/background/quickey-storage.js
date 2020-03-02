@@ -66,6 +66,16 @@ define([
 					(await DefaultData).settings[k.MarkTabsInOtherWindows.Key];
 
 				return [data, increment(version)];
+			},
+			"7": async function(
+				data,
+				version)
+			{
+					// add showTabCount option
+				data.settings[k.ShowTabCount.Key] =
+					(await DefaultData).settings[k.ShowTabCount.Key];
+
+				return [data, increment(version)];
 			}
 		};
 		const DefaultSettings = getDefaultSettings();

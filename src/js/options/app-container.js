@@ -9,7 +9,7 @@ define([
 	OptionsApp,
 	trackers,
 	settings,
-	{Platform}
+	{Platform, ShowTabCount}
 ) {
 	const PlusPattern = /\+/g;
 
@@ -64,6 +64,13 @@ define([
 			key)
 		{
 			settings.set(key, value)
+				.then(settings => {
+					if (key == ShowTabCount.Key) {
+						chrome.runtime.sendMessage({ [ShowTabCount.Key]: value });
+					}
+
+					return settings;
+				})
 				.then(this.setSettingsState);
 
 				// convert the value to a string before trying to do the

@@ -416,18 +416,18 @@ define("popup/app", [
 							BookmarksQuery);
 					}
 				} else if (mode == "history") {
+					const url = item.originalURL;
+
 						// we have to use originalURL to delete the history item,
 						// since it may have been a suspended page and we convert
 						// url to the unsuspended version
-					deleteItem(({originalURL: url}) => {
-						chrome.history.deleteUrl({ url });
+					deleteItem(() => chrome.history.deleteUrl({ url }));
 
-							// just in case this URL was also recently closed,
-							// remove it from the tabs and recents lists, since
-							// it will no longer be re-openable
-						_.remove(this.tabs, { url });
-						_.remove(this.recents, { url });
-					}, HistoryQuery);
+						// just in case this URL was also recently closed, remove
+						// it from the tabs and recents lists, since it will no
+						// longer be re-openable
+					_.remove(this.tabs, { url });
+					_.remove(this.recents, { url });
 				}
 			}
 		},
