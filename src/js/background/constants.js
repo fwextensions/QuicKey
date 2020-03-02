@@ -30,6 +30,9 @@ define([
 		IncludeClosedTabs: {
 			Key: "includeClosedTabs"
 		},
+		ShowTabCount: {
+			Key: "showTabCount"
+		},
 		Shortcuts: {
 			Key: "shortcuts",
 			MRUSelect: "mruSelect",

@@ -35,6 +35,7 @@ IconPaths.dark = {
 	normal: IconPaths.light.inverted,
 	inverted: IconPaths.light.normal
 };
+const Manifest = chrome.runtime.getManifest();
 
 
 let gStartingUp = false;
@@ -123,12 +124,14 @@ require([
 	"background/recent-tabs",
 	"background/page-trackers",
 	"background/quickey-storage",
+	"background/settings",
 	"background/constants"
 ], function(
 	cp,
 	recentTabs,
 	trackers,
 	storage,
+	settings,
 	k
 ) {
 	const backgroundTracker = trackers.background;
@@ -137,6 +140,7 @@ require([
 	let tabChangedFromToggle = false;
 	let lastTogglePromise = Promise.resolve();
 	let isNormalIcon = true;
+	let showTabCount = true;
 	let shortcutTimer;
 	let lastWindowID;
 	let lastUsedVersion;
@@ -276,7 +280,7 @@ require([
 		const paths = IconPaths[osMode][iconMode];
 		const badgeColor = BadgeColors[osMode][iconMode];
 
-		return [paths, badgeColor];
+		return { paths, badgeColor };
 	}
 
 
@@ -285,30 +289,33 @@ require([
 			// only reactivate the last tab in dev mode for now
 		const handler = k.IsDev ? activateLastTab : setNormalIcon;
 			// pass true since we want the inverted colors
-		const [paths, badgeColor] = getIconsAndBadgeColor(true);
+		const {paths, badgeColor} = getIconsAndBadgeColor(true);
 
 		isNormalIcon = false;
 		clearTimeout(shortcutTimer);
 		shortcutTimer = setTimeout(handler, MinTabDwellTime);
 
-		return cp.browserAction.setBadgeBackgroundColor({ color: badgeColor })
+		return Promise.all([
+			showTabCount
+			? cp.browserAction.setBadgeBackgroundColor({ color: badgeColor })
+			: cp.browserAction.setIcon(paths)
+		])
 			.catch(backgroundTracker.exception);
-//		cp.browserAction.setIcon(paths)
-//			.catch(backgroundTracker.exception);
 	}
 
 
 	function setNormalIcon()
 	{
-		const [paths, badgeColor] = getIconsAndBadgeColor();
+		const {paths, badgeColor} = getIconsAndBadgeColor();
 
 		isNormalIcon = true;
 		cp.browserAction.setIcon(paths);
 
-		return cp.browserAction.setBadgeBackgroundColor({ color: badgeColor })
+		return Promise.all([
+			cp.browserAction.setBadgeBackgroundColor({ color: badgeColor }),
+			cp.browserAction.setIcon(paths)
+		])
 			.catch(backgroundTracker.exception);
-//		cp.browserAction.setIcon(IconPaths)
-//			.catch(backgroundTracker.exception);
 	}
 
 
@@ -316,7 +323,20 @@ require([
 		delta = 0)
 	{
 		tabCount += delta;
-		chrome.browserAction.setBadgeText({ text: String(tabCount) });
+
+		const name = Manifest.short_name;
+		const text = showTabCount
+			? String(tabCount)
+			: "";
+		const title = showTabCount
+			? `${name} - ${tabCount} open tab${tabCount == 1 ? "" : "s"}`
+			: name;
+
+		return Promise.all([
+			cp.browserAction.setBadgeText({ text }),
+			cp.browserAction.setTitle({ title })
+		]
+)			.catch(backgroundTracker.exception);
 	}
 
 
@@ -430,6 +450,14 @@ require([
 	});
 
 
+	chrome.runtime.onMessage.addListener(message => {
+		if (k.ShowTabCount.Key in message) {
+			showTabCount = message[k.ShowTabCount.Key];
+			updateTabCount();
+		}
+	});
+
+
 	chrome.runtime.onUpdateAvailable.addListener(details => {
 		function restartExtension()
 		{
@@ -457,14 +485,13 @@ DEBUG && console.log(e);
 	};
 
 
-		// update the icon, in case we're in dark mode when the extension loads
-	setNormalIcon()
+		// update the icon, in case we're in dark mode when the extension loads,
+		// and update the badge text depending on the setting of showTabCount
+	settings.get()
+		.then(settings => showTabCount = settings[k.ShowTabCount.Key])
+		.then(() => setNormalIcon())
 		.then(() => cp.tabs.query({}))
-		.then(tabs => {
-			tabCount = tabs.length;
-			updateTabCount();
-		});
-
+		.then(({length}) => updateTabCount(length));
 
 	storage.set(data => {
 			// save the lastUsedVersion in a global before we return the current
@@ -479,7 +506,7 @@ DEBUG && console.log(e);
 			// needs to update the stored data
 		return {
 			lastStartupTime: Date.now(),
-			lastUsedVersion: chrome.runtime.getManifest().version
+			lastUsedVersion: Manifest.version
 		};
 	})
 		.then(() => cp.management.getSelf())

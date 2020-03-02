@@ -66,6 +66,16 @@ define([
 					(await DefaultData).settings[k.MarkTabsInOtherWindows.Key];
 
 				return [data, increment(version)];
+			},
+			"7": async function(
+				data,
+				version)
+			{
+					// add showTabCount option
+				data.settings[k.ShowTabCount.Key] =
+					(await DefaultData).settings[k.ShowTabCount.Key];
+
+				return [data, increment(version)];
 			}
 		};
 		const DefaultSettings = getDefaultSettings();
@@ -90,8 +100,9 @@ define([
 		return createStorage({
 				// calculate the version by incrementing the highest key in the
 				// Updaters hash, so that the version is automatically increased
-				// when an updater is added
-			version: increment(Object.keys(Updaters).sort().pop()),
+				// when an updater is added.  use a proper numeric sort so that
+				// once we go over 9, the order is correct.
+			version: increment(Object.keys(Updaters).sort((a, b) => a - b).pop()),
 			updaters: Updaters,
 
 

@@ -114,7 +114,8 @@ define([
 					>?</div>
 				</h1>
 
-				<h2>Search box</h2>
+
+				<h2>General</h2>
 				<RadioGroup
 					id={k.SpaceBehavior.Key}
 					value={settings[k.SpaceBehavior.Key]}
@@ -147,7 +148,6 @@ define([
 					/>
 				</RadioGroup>
 
-				<h2>Search results</h2>
 				<Checkbox
 					id={k.MarkTabsInOtherWindows.Key}
 					label={<span>Mark tabs that are not in the current window with <WindowIcon /></span>}
@@ -164,6 +164,12 @@ define([
 						Selecting a closed tab will reopen it with its full history.
 					</div>
 				</Checkbox>
+				<Checkbox
+					id={k.ShowTabCount.Key}
+					label="Show the number of open tabs on the icon"
+					value={settings[k.ShowTabCount.Key]}
+					onChange={onChange}
+				/>
 
 				<h2>Customizable keyboard shortcuts</h2>
 				{this.renderShortcutList(Shortcuts.customizable)}
