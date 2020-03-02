@@ -166,7 +166,7 @@ define([
 				</Checkbox>
 				<Checkbox
 					id={k.ShowTabCount.Key}
-					label="Show the number of open tabs on the icon"
+					label="Show the number of open tabs on the QuicKey icon"
 					value={settings[k.ShowTabCount.Key]}
 					onChange={onChange}
 				/>
