@@ -4,7 +4,7 @@ define("popup/app", [
 	"jsx!./results-list",
 	"jsx!./results-list-item",
 	"jsx!./message-item",
-	"jsx!common/icons",
+	"jsx!./options-button",
 	"cp",
 	"./score/score-items",
 	"./data/init-tabs",
@@ -15,6 +15,7 @@ define("popup/app", [
 	"lib/handle-ref",
 	"lib/copy-to-clipboard",
 	"background/recent-tabs",
+	"background/quickey-storage",
 	"background/settings",
 	"background/constants",
 	"lodash"
@@ -24,7 +25,7 @@ define("popup/app", [
 	ResultsList,
 	ResultsListItem,
 	MessageItem,
-	{OptionsIcon},
+	OptionsButton,
 	cp,
 	scoreItems,
 	initTabs,
@@ -35,6 +36,7 @@ define("popup/app", [
 	handleRef,
 	copyTextToClipboard,
 	recentTabs,
+	storage,
 	settings,
 	k,
 	_
@@ -77,15 +79,25 @@ define("popup/app", [
 		mruModifier: "Alt",
 		resultsList: null,
 		settings: settings.getDefaults(),
-		settingsPromise: settings.get(),
+		settingsPromise: null,
 
 
 		getInitialState: function()
 		{
-			var props = this.props,
-				query = props.initialQuery;
+			const query = this.props.initialQuery;
 
-			this.settingsPromise
+			this.settingsPromise = storage.get()
+				.then(data => {
+					if (data.lastSeenOptionsVersion < storage.version) {
+							// new settings have been added since the last time
+							// the user opened the options page
+						this.setState({ newSettingsAvailable: true });
+					}
+
+						// pass the data we got from storage to settings so it
+						// doesn't have to get its own copy of it
+					return settings.get(data);
+				})
 				.then(settings => {
 					this.settings = settings;
 					this.mruModifier = settings.chrome.popup.modifierEventName;
@@ -95,11 +107,12 @@ define("popup/app", [
 				});
 
 			return {
-				query: query,
+				query,
 				matchingItems: this.getMatchingItems(query),
 					// default to the first item being selected if we got an
 					// initial query
-				selected: query ? 0 : -1
+				selected: query ? 0 : -1,
+				newSettingsAvailable: false
 			};
 		},
 
@@ -183,6 +196,9 @@ define("popup/app", [
 				.then(settings => initTabs(
 					recentTabs.getAll(settings[k.IncludeClosedTabs.Key]),
 					settings[k.MarkTabsInOtherWindows.Key],
+						// pass in the space key behavior so initTabs() knows
+						// whether to normalize all whitespace, which is not
+						// needed if space moves the selection
 					settings[k.SpaceBehavior.Key] == k.SpaceBehavior.Space))
 				.then(tabs => {
 						// filter out just recent and closed tabs that we have a
@@ -627,7 +643,7 @@ define("popup/app", [
 
 		render: function()
 		{
-			const {query, matchingItems, selected} = this.state;
+			const {query, matchingItems, selected, newSettingsAvailable} = this.state;
 
 			return <div className={this.props.platform}>
 				<SearchBox
@@ -638,13 +654,10 @@ define("popup/app", [
 					onKeyDown={this.onKeyDown}
 					onKeyUp={this.onKeyUp}
 				/>
-				<div className="options-button"
-					title="QuicKey options"
+				<OptionsButton
+					newSettingsAvailable={newSettingsAvailable}
 					onClick={this.onOptionsClick}
-				>
-					<OptionsIcon />
-					<div className="badge" />
-				</div>
+				/>
 				<ResultsList
 					ref={this.handleListRef}
 					items={matchingItems}

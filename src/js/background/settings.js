@@ -72,8 +72,14 @@ define([
 
 
 	return {
-		get: function()
+		get: function(
+			data)
 		{
+			if (data && typeof data == "object") {
+					// the caller already got the storage data, so just use it
+				return addChromeShortcuts(data);
+			}
+
 			return storage.get()
 				.then(addChromeShortcuts);
 		},

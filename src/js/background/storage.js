@@ -182,6 +182,7 @@ DEBUG && console.error(`Storage error: ${failure}`);
 
 
 		return {
+			get version() { return version; },
 			get,
 			set,
 			reset

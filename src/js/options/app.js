@@ -18,6 +18,22 @@ define([
 	const IncognitoIndicator = k.IsEdge ? <InPrivateIcon /> : <IncognitoIcon />;
 
 
+	function NewSetting({
+		addedVersion,
+		lastSeenOptionsVersion,
+		children})
+	{
+		return (
+			<div className="new-setting">
+				{lastSeenOptionsVersion < addedVersion &&
+					<div className="new-indicator">NEW</div>
+				}
+				{children}
+			</div>
+		);
+	}
+
+
 	const OptionsApp = React.createClass({
 		openExtensionsTab: function(
 			page = "")
@@ -64,14 +80,14 @@ define([
 		renderShortcutSetting: function(
 			shortcut)
 		{
-			const shortcutSettings = this.props.shortcuts;
+			const {settings} = this.props;
 			let label = shortcut.label;
 			let validator = shortcut.validate;
 
 				// special-case the navigate button, which depends on the current
 				// Chrome keyboard shortcut for showing the QuicKey popup
 			if (shortcut.id == k.Shortcuts.MRUSelect) {
-				const {modifiers, key} = this.props.chrome.popup;
+				const {modifiers, key} = settings.chrome.popup;
 				const modifier = modifiers[0];
 
 				label = shortcut.createLabel(modifier);
@@ -83,7 +99,10 @@ define([
 			>
 				<div className="label">{label}</div>
 				<ShortcutPicker id={shortcut.id}
-					shortcut={shortcut.shortcut || shortcutSettings[shortcut.id]}
+						// non-customizable shortcuts will come with a shortcut
+						// sequence.  otherwise, look up the current shortcut
+						// in settings.
+					shortcut={shortcut.shortcut || settings.shortcuts[shortcut.id]}
 					disabled={shortcut.disabled}
 					placeholder={shortcut.placeholder}
 					validate={validator}
@@ -104,7 +123,12 @@ define([
 
 		render: function()
 		{
-			const {settings, chrome: { shortcuts: chromeShortcuts }, onChange, onResetShortcuts} = this.props;
+			const {
+				settings,
+				lastSeenOptionsVersion,
+				onChange,
+				onResetShortcuts
+			} = this.props;
 
 			return <main className={k.IsEdge ? "edge" : "chrome"}>
 				<h1 className="quickey">QuicKey options
@@ -164,12 +188,17 @@ define([
 						Selecting a closed tab will reopen it with its full history.
 					</div>
 				</Checkbox>
-				<Checkbox
-					id={k.ShowTabCount.Key}
-					label="Show the number of open tabs on the QuicKey icon"
-					value={settings[k.ShowTabCount.Key]}
-					onChange={onChange}
-				/>
+				<NewSetting
+					addedVersion={8}
+					lastSeenOptionsVersion={lastSeenOptionsVersion}
+				>
+					<Checkbox
+						id={k.ShowTabCount.Key}
+						label="Show the number of open tabs on the QuicKey icon"
+						value={settings[k.ShowTabCount.Key]}
+						onChange={onChange}
+					/>
+				</NewSetting>
 
 				<h2>Customizable keyboard shortcuts</h2>
 				{this.renderShortcutList(Shortcuts.customizable)}
@@ -182,7 +211,7 @@ define([
 					title="Click to open the browser's keyboard shortcuts page"
 					onClick={this.handleChangeShortcutsClick}
 				>
-					{this.renderShortcutList(chromeShortcuts)}
+					{this.renderShortcutList(settings.chrome.shortcuts)}
 				</div>
 				<button className="key"
 					onClick={this.handleChangeShortcutsClick}
