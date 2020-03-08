@@ -36,13 +36,13 @@
 	.search-box input::-webkit-search-cancel-button:hover,
 	.options-button:hover,
 	.results-list-item.selected:hover .close-button:hover {
-		--background: #505154;
+		--background: #535457;
 	}
 
 	.search-box input::-webkit-search-cancel-button:hover:active,
 	.options-button:hover:active,
 	.results-list-item.selected:hover .close-button:hover:active {
-		--background: #666;
+		--background: #5d5e61;
 	}
 
 	.results-list-item.selected {
@@ -362,7 +362,7 @@ img {
 }
 
 .results-list-item.selected div.title-index {
-	background: var(--background, #fafafa);
+	background: var(--background, #dbdbdb);
 }
 
 .results-list-item .close-button {
@@ -402,7 +402,7 @@ img {
 }
 
 .results-list-item.selected:hover .close-button:hover:active {
-	background-color: var(--background, #bbb);
+	background-color: var(--background, #d1d1d1);
 }
 
 .results-list-item.message {
