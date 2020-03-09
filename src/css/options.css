@@ -422,6 +422,29 @@ main {
 	cursor: pointer;
 }
 
+.new-setting {
+	display: flex;
+	align-items: center;
+	margin-bottom: .5em;
+}
+
+.new-indicator {
+	color: #d70000;
+	font-weight: bold;
+	font-size: .7em;
+	text-indent: -3.5em;
+	animation: red-fade 3s infinite ease-out;
+}
+
+@keyframes red-fade {
+    0% { color: #f33; }
+    100% { color: #d70000; }
+}
+
+.new-setting .control {
+	margin-bottom: 0;
+}
+
 
 /* ===========================================================================
 	Shortcut setting
