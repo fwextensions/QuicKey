@@ -298,6 +298,7 @@ module.exports = function(grunt) {
 					// we don't need the unsafe-eval policy in the built extension
 				content_security_policy: manifest.content_security_policy.replace("'unsafe-eval' ", ""),
 				name: fullName,
+				short_name: shortName,
 				browser_action: {
 					default_title: shortName
 				}

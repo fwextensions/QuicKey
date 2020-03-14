@@ -392,11 +392,10 @@ define("popup/app", [
 				deleteFunc(item);
 				_.pull(this[mode], item);
 
-					// call getMatchingItems() directly with just the query,
-					// unless the query is just the command part, in which case
-					// we need to pass that so the right list is returned.  limit
-					// the selected index to the new matching items length, in
-					// case the user deleted the very last item.
+					// call getMatchingItems() to get the updated results list
+					// minus the item we removed.  limit the selected index to
+					// the new matching items length, in case the user deleted
+					// the very last item.
 				const matchingItems = this.getMatchingItems(query);
 				const selected = Math.min(this.state.selected, matchingItems.length - 1);
 
