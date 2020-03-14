@@ -392,10 +392,13 @@ define("popup/app", [
 
 					// call getMatchingItems() directly with just the query,
 					// unless the query is just the command part, in which case
-					// we need to pass that so the right list is returned
-				this.setState({
-					matchingItems: this.getMatchingItems(query.slice(command.length) || query)
-				});
+					// we need to pass that so the right list is returned.  limit
+					// the selected index to the new matching items length, in
+					// case the user deleted the very last item.
+				const matchingItems = this.getMatchingItems(query.slice(command.length) || query);
+				const selected = Math.min(this.state.selected, matchingItems.length - 1);
+
+				this.setState({ selected, matchingItems });
 				this.props.tracker.event(eventCategory, "close");
 			};
 
@@ -424,7 +427,6 @@ define("popup/app", [
 								// loadTabs(), which re-inits recents.
 							_.pull(this.recents, item);
 						}, "", "closed-tab");
-
 					}
 				} else if (mode == "bookmarks") {
 					if (confirm(DeleteBookmarkConfirmation)) {
@@ -437,7 +439,8 @@ define("popup/app", [
 						// we have to use originalURL to delete the history item,
 						// since it may have been a suspended page and we convert
 						// url to the unsuspended version
-					deleteItem(() => chrome.history.deleteUrl({ url }));
+					deleteItem(() => chrome.history.deleteUrl({ url }),
+						HistoryQuery);
 
 						// just in case this URL was also recently closed, remove
 						// it from the tabs and recents lists, since it will no
@@ -560,10 +563,19 @@ define("popup/app", [
 
 		onTabRemoved: function()
 		{
+			const {selected} = this.state;
+
 				// refresh the results list so that the newly closed tab
 				// will show in the closed list, and if there are multiple
-				// tabs with the same name, their index numbers will update
-			this.loadTabs();
+				// tabs with the same name, their index numbers will update.
+				// loadTabs() calls loadPromisedItems(), which calls setQuery(),
+				// which will reset the selected index to 0.  so after the tabs
+				// are reloaded, set selected back to what it was, limiting it
+				// to the current items length, in case the user had closed the
+				// very last item in the list.
+			this.loadTabs()
+				.then(() => this.setState(({matchingItems}) =>
+					({ selected: Math.min(selected, matchingItems.length - 1) })));
 		},
 
 

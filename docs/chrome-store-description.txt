@@ -94,7 +94,7 @@ No mouse needed!
 
 ★ Now with support for dark mode!
 
-QuicKey will respond to changes in your computer's dark mode setting.
+QuicKey will respond to changes in your computer's dark mode setting with darker colors that match your browser's user interface.
 
 
 ★ Use CTRL-TAB as the keyboard shortcut

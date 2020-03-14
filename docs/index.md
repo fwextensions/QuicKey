@@ -13,6 +13,7 @@ comments: true
       <li class="glide__slide"><img src="img/screenshot-2.png"></li>
       <li class="glide__slide"><img src="img/screenshot-3.png"></li>
       <li class="glide__slide"><img src="img/screenshot-4.png"></li>
+      <li class="glide__slide"><img src="img/screenshot-5.png"></li>
     </ul>
   </div>
 </div>
@@ -211,6 +212,13 @@ Scroll to the very bottom of the *QuicKey options* page and then click the *Chan
 Tabs in incognito mode display the incognito icon under the page's favicon, so you can distinguish a normal tab from an incognito one with the same title:
 
 ![Incognito tab](img/incognito-tab.png)
+
+
+## Dark mode
+
+*QuicKey* will respond to changes in your computer's dark mode setting with darker colors that match your browser's user interface.
+
+![Dark mode](img/dark-mode.png)
 
 
 ## Copy a URL or title

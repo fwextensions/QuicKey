@@ -8,6 +8,25 @@ comments: true
 # Release history
 
 
+## 1.4.0 - 2020-03-16
+
+### Added
+
+* Dark mode is supported in the *QuicKey* menu and options page when you've enabled it on your OS.
+
+* The number of open tabs can be optionally shown in a badge on the *QuicKey* icon.
+
+* A red dot is shown on the gear icon in the menu when new settings have been added since the last time you've visited the *QuicKey options* page.
+
+### Changed
+
+* The *QuicKey* icon is inverted only when the switch to previous/next tab command is used, and not when other interactions cause the current tab to change. 
+
+### Fixed
+
+* The selected item is maintained when closing a tab.  
+
+
 ## 1.3.4 - 2020-01-21
 
 ### Fixed
