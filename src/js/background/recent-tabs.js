@@ -34,11 +34,17 @@ define([
 		array,
 		item)
 	{
-		var index = array.indexOf(item);
+		let startIndex = 0;
+		let index = -1;
 
-		if (index > -1) {
-			array.splice(index, 1);
-		}
+		do {
+			index = array.indexOf(item, startIndex);
+
+			if (index > -1) {
+				array.splice(index, 1);
+				startIndex = index;
+			}
+		} while (index > -1);
 
 		return array;
 	}
