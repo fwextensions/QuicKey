@@ -78,6 +78,22 @@ tab search
 ctrl-tab navigation
 
 
+# Permission justifications
+
+purpose
+QuicKey adds keyboard shortcuts to switch tabs with a Quicksilver-style search or a most recently used menu.  It makes navigating among hundreds of open tabs much easier, while providing similar search access to bookmarks and browser history.
+
+tabs
+QuicKey needs the tabs permissions because the entire purpose of the extension is to let the user easily switch tabs by searching across all of the titles and URLs.  It also tracks tab activation, so it can display a list of recently visited tabs.
+
+history
+QuicKey needs the history permission to let the user search the titles and URLs of pages from the browser history.  The only time QuicKey changes the history is when the user chooses to delete a history item.
+
+sessions
+QuicKey needs the sessions permission so that it can restore recently closed tabs with their full history.  It lists the closed tabs below the recently used tabs, and also lets the user access them via search.
+
+
+
 ★
 ➤
 ↑ ↓
