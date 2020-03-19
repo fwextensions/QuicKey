@@ -1,5 +1,6 @@
 define([
 	"jsx!./matched-string",
+	"jsx!common/icons",
 	"cp",
 	"lib/copy-to-clipboard",
 	"options/key-constants",
@@ -8,10 +9,17 @@ define([
 	"lodash"
 ], function(
 	MatchedString,
+	{
+		HistoryIcon,
+		IncognitoIcon,
+		InPrivateIcon,
+		WindowIcon,
+		ClearIcon
+	},
 	cp,
 	copyTextToClipboard,
 	{ModKeyBoolean},
-	{IsDev, IncognitoNameLC},
+	{IsDev, IsEdge, IncognitoNameLC},
 	React,
 	_
 ) {
@@ -22,9 +30,9 @@ define([
 	const FaviconURL = "chrome://favicon/";
 	const CloseButtonTooltips = {
 		tabs: "Close tab",
-		closedTab: "Delete this closed tab from the browser history",
 		bookmarks: "Delete bookmark",
-		history: "Delete this page from the browser history"
+		closedTab: "Remove this closed tab from the browser history",
+		history: "Remove this page from the browser history"
 	};
 	const IncognitoTooltip = `This tab is in ${IncognitoNameLC} mode`;
 
@@ -46,7 +54,7 @@ define([
 					item.displayURL,
 					this.props.query,
 					item.recentBoost,
-					_.toPairs(item.scores).map(function(a) { return a.join(": "); }).join("\n")
+					_.toPairs(item.scores).map(a => a.join(": ")).join("\n")
 				].join("\n"));
 			} else {
 					// pass in whether ctrl or cmd was pressed while clicking
@@ -112,7 +120,13 @@ define([
 
 		render: function()
 		{
-			const {item, query, mode, style, isSelected} = this.props;
+			const {
+				item,
+				query,
+				mode,
+				style,
+				isSelected
+			} = this.props;
 			const {
 				scores,
 				hitMasks,
@@ -141,6 +155,7 @@ define([
 				title.length > MaxTitleLength ? title : "",
 				displayURL.length > MaxURLLength ? displayURL : ""
 			].join("\n");
+			let badge = null;
 			let badgeTooltip = "";
 
 			if (IsDev) {
@@ -161,10 +176,13 @@ define([
 			}
 
 			if (incognito) {
+				badge = IsEdge ? <InPrivateIcon /> : <IncognitoIcon />;
 				badgeTooltip = IncognitoTooltip;
 			} else if (otherWindow) {
+				badge = <WindowIcon />;
 				badgeTooltip = "This tab is in another window";
 			} else if (sessionId) {
+				badge = <HistoryIcon />;
 				badgeTooltip = "This tab was closed recently";
 			}
 
@@ -175,12 +193,14 @@ define([
 				onMouseMove={this.onMouseMove}
 				onMouseEnter={this.onMouseEnter}
 			>
-				<span className="favicon"
+				<div className="favicon"
 					style={faviconStyle}
 				/>
-				<span className="badge"
+				<div className="badge"
 					title={badgeTooltip}
-				/>
+				>
+					{badge}
+				</div>
 				<div className="title">
 					{titleIndex &&
 						<div className="title-index"
@@ -205,7 +225,9 @@ define([
 					title={CloseButtonTooltips[sessionId ? "closedTab" : mode]}
 					onClick={this.onClose}
 					onMouseDown={this.onCloseMouseDown}
-				/>
+				>
+					<ClearIcon />
+				</button>
 			</div>
 		}
 	});

@@ -87,7 +87,7 @@ define([
 				const failure = storage.version === version ?
 					"failed-validation" : "failed-update";
 
-DEBUG && console.error(`Storage error: ${failure}`);
+DEBUG && console.error(`Storage error: ${failure}`, storage);
 				trackers.background.event("storage", failure);
 
 					// we couldn't find a way to update the existing storage to
@@ -182,6 +182,7 @@ DEBUG && console.error(`Storage error: ${failure}`);
 
 
 		return {
+			get version() { return version; },
 			get,
 			set,
 			reset

@@ -5,18 +5,37 @@ const TabActivatedOnStartupDelay = 750;
 const TabRemovedDelay = 1000;
 const MinTabDwellTime = 750;
 const RestartDelay = 10 * 1000;
+const BadgeColors = {
+	light: {
+		normal: "#a0a0a0",
+		inverted: "#3367d6"
+	},
+	dark: {
+		normal: "#666",
+		inverted: "#3367d6"
+	}
+};
 const IconPaths = {
-	path: {
-		"19": "img/icon-19.png",
-		"38": "img/icon-38.png"
+	light: {
+		normal: {
+			path: {
+				"19": "img/icon-19.png",
+				"38": "img/icon-38.png"
+			}
+		},
+		inverted: {
+			path: {
+				"19": "img/icon-19-inverted.png",
+				"38": "img/icon-38-inverted.png"
+			}
+		}
 	}
 };
-const InvertedIconPaths = {
-	path: {
-		"19": "img/icon-19-inverted.png",
-		"38": "img/icon-38-inverted.png"
-	}
+IconPaths.dark = {
+	normal: IconPaths.light.inverted,
+	inverted: IconPaths.light.normal
 };
+const Manifest = chrome.runtime.getManifest();
 
 
 let gStartingUp = false;
@@ -105,19 +124,23 @@ require([
 	"background/recent-tabs",
 	"background/page-trackers",
 	"background/quickey-storage",
+	"background/settings",
 	"background/constants"
 ], function(
 	cp,
 	recentTabs,
 	trackers,
 	storage,
+	settings,
 	k
 ) {
 	const backgroundTracker = trackers.background;
+	let tabCount = 0;
 	let popupIsOpen = false;
-	let tabChangedFromToggle = false;
+	let tabChangedFromCommand = false;
 	let lastTogglePromise = Promise.resolve();
 	let isNormalIcon = true;
+	let showTabCount = true;
 	let shortcutTimer;
 	let lastWindowID;
 	let lastUsedVersion;
@@ -136,17 +159,24 @@ require([
 		}), MinTabDwellTime);
 
 
-	function onTabActivated(
+	const handleTabRemoved = debounce((tabId, removeInfo) => {
+		if (!gStartingUp) {
+			recentTabs.remove(tabId, removeInfo);
+		}
+	}, TabRemovedDelay);
+
+
+	function handleTabActivated(
 		event)
 	{
 		if (!gIgnoreNextTabActivation) {
-			if (!tabChangedFromToggle) {
-					// invert the icon since we're not toggling between the two
-					// most recent tabs
+			if (tabChangedFromCommand) {
+					// invert the icon since the user is actively navigating
+					// between next/previous tabs with the shortcuts
 				setInvertedIcon();
 			}
 
-			tabChangedFromToggle = false;
+			tabChangedFromCommand = false;
 			addTab(event);
 		}
 
@@ -162,11 +192,13 @@ require([
 
 		switch (command) {
 			case "1-previous-tab":
+				tabChangedFromCommand = true;
 				recentTabs.navigate(-1);
 				backgroundTracker.event("recents", "previous", label);
 				break;
 
 			case "2-next-tab":
+				tabChangedFromCommand = true;
 				recentTabs.navigate(1);
 				backgroundTracker.event("recents", "next", label);
 				break;
@@ -181,9 +213,6 @@ require([
 	function toggleRecentTabs(
 		fromShortcut)
 	{
-			// set tabChangedFromToggle so that addTab() doesn't invert the icon
-		tabChangedFromToggle = true;
-
 			// we have to wait for the last toggle promise chain to resolve before
 			// starting the next one.  otherwise, if the toggle key is held down,
 			// the events fire faster than recentTabs.toggle() can keep up, so
@@ -230,7 +259,7 @@ require([
 									// it, so that if the user than alt-tabs back
 									// to that window, the previous tab will
 									// already be visible.  make sure
-									// onTabActivated() ignores this event.
+									// handleTabActivated() ignores this event.
 								gIgnoreNextTabActivation = true;
 								cp.tabs.update(previousTabID, { active: true })
 									.catch(console.error);
@@ -241,35 +270,85 @@ require([
 	}
 
 
+	function getIconsAndBadgeColor(
+		inverted)
+	{
+		const osMode = matchMedia("(prefers-color-scheme: dark)").matches ?
+			"dark" : "light";
+		const iconMode = inverted ? "inverted" : "normal";
+		const paths = IconPaths[osMode][iconMode];
+		const badgeColor = BadgeColors[osMode][iconMode];
+
+		return { paths, badgeColor };
+	}
+
+
 	function setInvertedIcon()
 	{
 			// only reactivate the last tab in dev mode for now
 		const handler = k.IsDev ? activateLastTab : setNormalIcon;
+			// pass true since we want the inverted colors
+		const {paths, badgeColor} = getIconsAndBadgeColor(true);
 
 		isNormalIcon = false;
 		clearTimeout(shortcutTimer);
 		shortcutTimer = setTimeout(handler, MinTabDwellTime);
-		cp.browserAction.setIcon(InvertedIconPaths)
+
+		return Promise.all([
+			showTabCount
+			? cp.browserAction.setBadgeBackgroundColor({ color: badgeColor })
+			: cp.browserAction.setIcon(paths)
+		])
 			.catch(backgroundTracker.exception);
 	}
 
 
 	function setNormalIcon()
 	{
+		const {paths, badgeColor} = getIconsAndBadgeColor();
+
 		isNormalIcon = true;
-		cp.browserAction.setIcon(IconPaths)
+		cp.browserAction.setIcon(paths);
+
+		return Promise.all([
+			cp.browserAction.setBadgeBackgroundColor({ color: badgeColor }),
+			cp.browserAction.setIcon(paths)
+		])
 			.catch(backgroundTracker.exception);
+	}
+
+
+	function updateTabCount(
+		delta = 0)
+	{
+		tabCount += delta;
+
+		const name = Manifest.short_name;
+		const text = showTabCount
+			? String(tabCount)
+			: "";
+		const title = showTabCount
+			? `${name} - ${tabCount} open tab${tabCount == 1 ? "" : "s"}`
+			: name;
+
+		return Promise.all([
+			cp.browserAction.setBadgeText({ text }),
+			cp.browserAction.setTitle({ title })
+		]
+)			.catch(backgroundTracker.exception);
 	}
 
 
 	chrome.tabs.onActivated.addListener(event => {
 		if (!gStartingUp) {
-			onTabActivated(event);
+			handleTabActivated(event);
 		}
 	});
 
 
 	chrome.tabs.onCreated.addListener(tab => {
+		updateTabCount(1);
+
 		if (!gStartingUp && !tab.active) {
 				// this tab was opened by ctrl-clicking a link or by opening
 				// all the tabs in a bookmark folder, so pass true to insert
@@ -280,14 +359,16 @@ require([
 	});
 
 
-		// debounce the handling of a removed tab since Chrome seems to trigger
-		// the event when shutting down, and we want to ignore those.  hopefully,
-		// Chrome will finish quitting before this handler fires.
-	chrome.tabs.onRemoved.addListener(debounce((tabId, removeInfo) => {
-		if (!gStartingUp) {
-			recentTabs.remove(tabId, removeInfo);
-		}
-	}, TabRemovedDelay));
+	chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
+		updateTabCount(-1);
+
+			// debounce the handling of a removed tab since Chrome seems to
+			// trigger the event when shutting down, and we want to ignore
+			// those.  hopefully, Chrome will finish quitting before this
+			// handler fires.  we don't debounce the listener because we want
+			// to update the tab count immediately above.
+		handleTabRemoved(tabId, removeInfo);
+	});
 
 
 		// tabs seem to get replaced with new IDs when they're auto-discarded by
@@ -309,14 +390,14 @@ require([
 				windowID != lastWindowID) {
 			lastWindowID = windowID;
 			cp.tabs.query({ active: true, windowId: windowID })
-					// pass just the tabId to onTabActivated(), even though we
-					// have the full tab, since most of the time, onTabActivated()
+					// pass just the tabId to handleTabActivated(), even though we
+					// have the full tab, since most of the time, handleTabActivated()
 					// will be called by onActivated, which only gets the tabId.
-					// this simplifies the logic in onTabActivated().  if this
+					// this simplifies the logic in handleTabActivated().  if this
 					// window somehow doesn't have an active tab, which should
 					// never happen, it'll pass undefined to addTab(), which
 					// will catch the exception.
-				.then(([tab = {}]) => onTabActivated({ tabId: tab.id }));
+				.then(([tab = {}]) => handleTabActivated({ tabId: tab.id }));
 		}
 	});
 
@@ -368,6 +449,18 @@ require([
 	});
 
 
+	chrome.runtime.onMessage.addListener(message => {
+		if (k.ShowTabCount.Key in message) {
+			showTabCount = message[k.ShowTabCount.Key];
+
+				// set the normal icon, in case the user switched modes after
+				// the background page was loaded, then add the badge
+			setNormalIcon()
+				.then(() => updateTabCount());
+		}
+	});
+
+
 	chrome.runtime.onUpdateAvailable.addListener(details => {
 		function restartExtension()
 		{
@@ -395,6 +488,14 @@ DEBUG && console.log(e);
 	};
 
 
+		// update the icon, in case we're in dark mode when the extension loads,
+		// and update the badge text depending on the setting of showTabCount
+	settings.get()
+		.then(settings => showTabCount = settings[k.ShowTabCount.Key])
+		.then(() => setNormalIcon())
+		.then(() => cp.tabs.query({}))
+		.then(({length}) => updateTabCount(length));
+
 	storage.set(data => {
 			// save the lastUsedVersion in a global before we return the current
 			// version below, so the onInstalled promise handler knows whether
@@ -408,7 +509,7 @@ DEBUG && console.log(e);
 			// needs to update the stored data
 		return {
 			lastStartupTime: Date.now(),
-			lastUsedVersion: chrome.runtime.getManifest().version
+			lastUsedVersion: Manifest.version
 		};
 	})
 		.then(() => cp.management.getSelf())

@@ -3,43 +3,35 @@ define([
 	"jsx!./keyboard-shortcuts",
 	"jsx!./shortcut-picker",
 	"jsx!./controls",
+	"jsx!common/icons",
 	"background/constants"
 ], function(
 	React,
 	Shortcuts,
 	ShortcutPicker,
 	{Checkbox, RadioButton, RadioGroup},
+	{IncognitoIcon, InPrivateIcon, HistoryIcon, WindowIcon},
 	k
 ) {
 	const {IncognitoNameUC, IncognitoNameLC} = k;
 	const IncognitoAction = k.IsEdge ? "click the checkbox" : "toggle it on";
-	const ClosedIcon = () => <img
-		src="img/history.svg"
-		alt="Closed icon"
-		style={{
-			height: "1.2em",
-			filter: "contrast(0.3)",
-			verticalAlign: "bottom"
-		}}
-	/>;
-	const WindowIcon = () => <img
-		src="img/window.svg"
-		alt="Other window icon"
-		style={{
-			height: "1.2em",
-			paddingLeft: ".15em",
-			filter: "contrast(0.3)",
-			verticalAlign: "bottom"
-		}}
-	/>;
-	const IncognitoIcon = () => <img
-		src="img/incognito.svg"
-		alt="Incognito icon"
-		style={{
-			height: "1.2em",
-			verticalAlign: "bottom"
-		}}
-	/>;
+	const IncognitoIndicator = k.IsEdge ? <InPrivateIcon /> : <IncognitoIcon />;
+
+
+	function NewSetting({
+		addedVersion,
+		lastSeenOptionsVersion,
+		children})
+	{
+		return (
+			<div className="new-setting">
+				{lastSeenOptionsVersion < addedVersion &&
+					<div className="new-indicator">NEW</div>
+				}
+				{children}
+			</div>
+		);
+	}
 
 
 	const OptionsApp = React.createClass({
@@ -88,14 +80,14 @@ define([
 		renderShortcutSetting: function(
 			shortcut)
 		{
-			const shortcutSettings = this.props.shortcuts;
+			const {settings} = this.props;
 			let label = shortcut.label;
 			let validator = shortcut.validate;
 
 				// special-case the navigate button, which depends on the current
 				// Chrome keyboard shortcut for showing the QuicKey popup
 			if (shortcut.id == k.Shortcuts.MRUSelect) {
-				const {modifiers, key} = this.props.chrome.popup;
+				const {modifiers, key} = settings.chrome.popup;
 				const modifier = modifiers[0];
 
 				label = shortcut.createLabel(modifier);
@@ -107,7 +99,10 @@ define([
 			>
 				<div className="label">{label}</div>
 				<ShortcutPicker id={shortcut.id}
-					shortcut={shortcut.shortcut || shortcutSettings[shortcut.id]}
+						// non-customizable shortcuts will come with a shortcut
+						// sequence.  otherwise, look up the current shortcut
+						// in settings.
+					shortcut={shortcut.shortcut || settings.shortcuts[shortcut.id]}
 					disabled={shortcut.disabled}
 					placeholder={shortcut.placeholder}
 					validate={validator}
@@ -128,9 +123,14 @@ define([
 
 		render: function()
 		{
-			const {settings, chrome: { shortcuts: chromeShortcuts }, onChange, onResetShortcuts} = this.props;
+			const {
+				settings,
+				lastSeenOptionsVersion,
+				onChange,
+				onResetShortcuts
+			} = this.props;
 
-			return <main>
+			return <main className={k.IsEdge ? "edge" : "chrome"}>
 				<h1 className="quickey">QuicKey options
 					<div className="help-button"
 						title="Learn more about QuicKey's features"
@@ -138,7 +138,8 @@ define([
 					>?</div>
 				</h1>
 
-				<h2>Search box</h2>
+
+				<h2>General</h2>
 				<RadioGroup
 					id={k.SpaceBehavior.Key}
 					value={settings[k.SpaceBehavior.Key]}
@@ -171,7 +172,6 @@ define([
 					/>
 				</RadioGroup>
 
-				<h2>Search results</h2>
 				<Checkbox
 					id={k.MarkTabsInOtherWindows.Key}
 					label={<span>Mark tabs that are not in the current window with <WindowIcon /></span>}
@@ -180,7 +180,7 @@ define([
 				/>
 				<Checkbox
 					id={k.IncludeClosedTabs.Key}
-					label={<span>Include recently closed tabs in the search results (marked with <ClosedIcon />)</span>}
+					label={<span>Include recently closed tabs in the search results (marked with <HistoryIcon />)</span>}
 					value={settings[k.IncludeClosedTabs.Key]}
 					onChange={onChange}
 				>
@@ -188,6 +188,17 @@ define([
 						Selecting a closed tab will reopen it with its full history.
 					</div>
 				</Checkbox>
+				<NewSetting
+					addedVersion={8}
+					lastSeenOptionsVersion={lastSeenOptionsVersion}
+				>
+					<Checkbox
+						id={k.ShowTabCount.Key}
+						label="Show the number of open tabs on the QuicKey icon"
+						value={settings[k.ShowTabCount.Key]}
+						onChange={onChange}
+					/>
+				</NewSetting>
 
 				<h2>Customizable keyboard shortcuts</h2>
 				{this.renderShortcutList(Shortcuts.customizable)}
@@ -200,7 +211,7 @@ define([
 					title="Click to open the browser's keyboard shortcuts page"
 					onClick={this.handleChangeShortcutsClick}
 				>
-					{this.renderShortcutList(chromeShortcuts)}
+					{this.renderShortcutList(settings.chrome.shortcuts)}
 				</div>
 				<button className="key"
 					onClick={this.handleChangeShortcutsClick}
@@ -218,7 +229,7 @@ define([
 					To enable this functionality, click the button below, then
 					scroll down to the <i>Allow in {IncognitoNameLC}</i> setting
 					and {IncognitoAction}.  {IncognitoNameUC} tabs are marked
-					with <IncognitoIcon />.
+					with {IncognitoIndicator}.
 				</p>
 				<img className="incognito-screenshot"
 					src={`/img/${IncognitoNameLC.toLocaleLowerCase()}-option.png`}

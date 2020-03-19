@@ -13,6 +13,7 @@ comments: true
       <li class="glide__slide"><img src="img/screenshot-2.png"></li>
       <li class="glide__slide"><img src="img/screenshot-3.png"></li>
       <li class="glide__slide"><img src="img/screenshot-4.png"></li>
+      <li class="glide__slide"><img src="img/screenshot-5.png"></li>
     </ul>
   </div>
 </div>
@@ -93,6 +94,8 @@ Selecting from the MRU menu by holding down the <kbd>alt</kbd> key provides the 
 
 You can change any of these shortcuts by clicking the <img src="img/gear.svg" style="height: 1em"> icon in the menu or by right-clicking the *QuicKey* icon and selecting *Options*.  Then scroll down and click *Change browser shortcuts*. Look for the *Switch to the previous/next tab* shortcuts.
 
+If you enable the option to show the number of open tabs on the *QuicKey* icon, the badge containing that number will change color while you navigate to older tabs, rather than the icon inverting.
+
 
 ## Search for a tab quickly
 
@@ -120,9 +123,11 @@ To customize how *QuicKey* behaves, click the <img src="img/gear.svg" style="hei
 
 <img src="img/options-in-menu.png" style="width: 208px;">
 
-On the *QuicKey options* page, you can change the behavior of the <kbd>space</kbd> and <kbd>esc</kbd> keys, hide closed tabs from the search results, and customize many of the keyboard shortcuts described here.
+On the *QuicKey options* page, you can change the behavior of the <kbd>space</kbd> and <kbd>esc</kbd> keys, mark tabs in other windows with an icon, hide closed tabs from the search results, show the number of open tabs, and customize many of the keyboard shortcuts described here.
 
 If you change the keyboard shortcut for showing the *QuicKey* menu to something other than the default <b><kbd>alt</kbd><kbd>Q</kbd></b> or if you have a non-US keyboard, you'll probably want to also change the key that's used to navigate down the list of recently used tabs (which defaults to <kbd>W</kbd>).  For instance, if you change the menu shortcut to <b><kbd>alt</kbd><kbd>Z</kbd></b>, you might want to change the navigation key to <kbd>X</kbd>, which is right next door.  To change it, go to the *Options* page, click in the first keyboard shortcut picker, and press <kbd>X</kbd>.
+
+If new settings have been added to *QuicKey* since the last time you looked at the options page, the <img src="img/gear.svg" style="height: 1em"> icon will display a red dot to let you know.
 
 
 ## Close and reopen tabs
@@ -137,7 +142,7 @@ When you open *QuicKey*, the 25 most recently closed tabs are listed below the r
 
 They are also returned when you type a query, though their rank in the list of results is lower than open tabs.  Click a closed tab to reopen it in its original location and with all of its browsing history intact.
 
-If you don't want any closed tabs to be shown, open the *QuicKey options* page and uncheck *Include recently closed tabs in the search results*.  You can also remove the selected closed tab from the browser's history by pressing <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd</kbd><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS) or by clicking the its <img src="img/clear.svg" style="height: 1em; vertical-align: middle;"> button on the right side of the menu. 
+If you don't want any closed tabs to be shown, open the *QuicKey options* page and uncheck *Include recently closed tabs in the search results*.  You can also remove the selected closed tab from the browser's history by pressing <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd</kbd><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS) or by clicking its <img src="img/clear.svg" style="height: 1em; vertical-align: middle;"> button on the right side of the menu. 
 
 
 ## Move tabs
@@ -164,6 +169,8 @@ To find a bookmark, type <b><kbd>/</kbd><kbd>b</kbd><kbd>space</kbd></b> in the 
   * Press <kbd>enter</kbd> to open the bookmark in the current tab.
   * Press <b><kbd>ctrl</kbd><kbd>enter</kbd></b> (<b><kbd>cmd</kbd><kbd>enter</kbd></b> on macOS) to open it in a new tab in the current window.
   * Press <b><kbd>shift</kbd><kbd>enter</kbd></b> to open it in a new window.
+
+As soon as you type <b><kbd>/</kbd><kbd>b</kbd><kbd>space</kbd></b>, your bookmarks will be listed in alphabetical order, in case you want to browse through them.
 
 
 ## <a name="history"></a>Search the browser history
@@ -209,6 +216,13 @@ Tabs in incognito mode display the incognito icon under the page's favicon, so y
 ![Incognito tab](img/incognito-tab.png)
 
 
+## Dark mode
+
+*QuicKey* will respond to changes in your computer's dark mode setting with darker colors that match your browser's user interface.
+
+![Dark mode](img/dark-mode.png)
+
+
 ## Copy a URL or title
 
 You can also copy the URL and title of the selected tab, bookmark or history item:
@@ -223,11 +237,11 @@ When first installed, *QuicKey* asks for these permissions:
 
 - *Read and change your browsing history on all signed-in devices*
 
-    *QuicKey* uses this permission to let you search the titles and URLs of the open tabs, as well as pages from your history. The *"all signed-in devices"* part is there only so that recently closed tabs can be restored with their full history.
+    *QuicKey* uses this permission to let you search the titles and URLs of the open tabs, as well as pages from your history. The *"all signed-in devices"* part is there only so that recently closed tabs can be restored with their full history. The only time *QuicKey* changes your browsing history is when you choose to delete a history item. 
 
 - *Read and change your bookmarks*
 
-    *QuicKey* uses this permission to let you search the titles and URLs of your bookmarked pages. It will never change your bookmarks.
+    *QuicKey* uses this permission to let you search the titles and URLs of your bookmarked pages. The only time it changes your bookmarks is when you choose to delete one.
 
 *QuicKey* can't access or manipulate the content of any pages you visit and doesn't transmit any information other than some anonymized diagnostic data.
 
@@ -248,6 +262,6 @@ View the changes in [previous releases](./releases).
 
 ## Credits
 
-The <img src="img/gear.svg" style="height: 1em">, <img src="img/search.svg" style="height: 1em"> and <img src="img/clear.svg" style="height: 1em; vertical-align: middle;"> icons are from the [Octicons](https://octicons.github.com/) set, used under the [MIT License](http://opensource.org/licenses/MIT).  The <img src="img/history.svg" style="height: 1em"> icon is from the [Material Icons](https://material.io/tools/icons/) set, used under the [Apache License](https://www.apache.org/licenses/LICENSE-2.0.html).
+The <img src="img/gear.svg" style="height: 1em">, <img src="img/search.svg" style="height: 1em">, <img src="img/alert.svg" style="height: 1em">, <img src="img/window.svg" style="height: 1em"> and <img src="img/clear.svg" style="height: 1em; vertical-align: middle;"> icons are from the [Octicons](https://octicons.github.com/) set, used under the [MIT License](http://opensource.org/licenses/MIT).  The <img src="img/history.svg" style="height: 1em"> icon is from the [Material Icons](https://material.io/tools/icons/) set, used under the [Apache License](https://www.apache.org/licenses/LICENSE-2.0.html).
 
 The string ranking algorithm is modeled on [Quicksilver](https://github.com/quicksilver/Quicksilver/blob/master/Quicksilver/Code-QuickStepCore/QSense.m)'s code.

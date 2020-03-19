@@ -34,11 +34,17 @@ define([
 		array,
 		item)
 	{
-		var index = array.indexOf(item);
+		let startIndex = 0;
+		let index = -1;
 
-		if (index > -1) {
-			array.splice(index, 1);
-		}
+		do {
+			index = array.indexOf(item, startIndex);
+
+			if (index > -1) {
+				array.splice(index, 1);
+				startIndex = index;
+			}
+		} while (index > -1);
 
 		return array;
 	}
@@ -220,10 +226,14 @@ DEBUG && console.log("add", `${tab.id}|${tab.windowId}`, tabIDs.slice(-5), title
 			if (index > -1) {
 DEBUG && console.log("tab closed", tabID, titleOrURL(tabsByID[tabID]));
 				tabIDs.splice(index, 1);
-				delete tabsByID[tabID];
-
-				return { tabIDs, tabsByID };
 			}
+
+				// the user might have focused the tab, then focused 50+ more
+				// tabs, and then closed this one without focusing it again.  so
+				// it would be in tabsByID but not tabIDs.
+			delete tabsByID[tabID];
+
+			return { tabIDs, tabsByID };
 		}, "removeTab");
 	}
 

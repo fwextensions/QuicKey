@@ -20,11 +20,9 @@ define([
 	}
 
 
-	return shared("quickeyStorage", function() {
+	return shared("quickeyStorage", () => {
 		const Updaters = {
-			"3": function(
-				data,
-				version)
+			"3": (data, version) =>
 			{
 					// add installTime in v4
 				data.installTime = Date.now();
@@ -35,18 +33,14 @@ define([
 
 				return [data, increment(version)];
 			},
-			"4": async function(
-				data,
-				version)
+			"4": async (data, version) =>
 			{
 					// add settings in v5
-				data.settings = await DefaultData.settings;
+				data.settings = (await DefaultData).settings;
 
 				return [data, increment(version)];
 			},
-			"5": async function(
-				data,
-				version)
+			"5": async (data, version) =>
 			{
 					// add includeClosedTabs option and lastUsedVersion in
 					// v6.  leave lastUsedVersion empty so the background
@@ -57,17 +51,32 @@ define([
 
 				return [data, increment(version)];
 			},
-			"6": async function(
-				data,
-				version)
+			"6": async (data, version) =>
 			{
 					// add markTabsInOtherWindows option
 				data.settings[k.MarkTabsInOtherWindows.Key] =
 					(await DefaultData).settings[k.MarkTabsInOtherWindows.Key];
 
 				return [data, increment(version)];
+			},
+			"7": async (data, version) =>
+			{
+					// add showTabCount option
+				data.settings[k.ShowTabCount.Key] =
+					(await DefaultData).settings[k.ShowTabCount.Key];
+
+					// we're updating from 7 to 8, so 7 is the last version of
+					// options that the user might have seen
+				data.lastSeenOptionsVersion = 7;
+
+				return [data, increment(version)];
 			}
 		};
+			// calculate the version by incrementing the highest key in the
+			// Updaters hash, so that the version is automatically increased
+			// when an updater is added.  use a proper numeric sort so that
+			// once we go over 9, the order is correct.
+		const CurrentVersion = increment(Object.keys(Updaters).sort((a, b) => a - b).pop());
 		const DefaultSettings = getDefaultSettings();
 		const DefaultData = cp.windows.getAll()
 			.then(windows => {
@@ -79,6 +88,9 @@ define([
 					lastStartupTime: 0,
 					lastUpdateTime: 0,
 					lastUsedVersion: "",
+						// set this to the current storage version so that we
+						// don't show the red badge on a new install
+					lastSeenOptionsVersion: CurrentVersion,
 					previousTabIndex: -1,
 					settings: DefaultSettings,
 					tabIDs: [],
@@ -90,8 +102,9 @@ define([
 		return createStorage({
 				// calculate the version by incrementing the highest key in the
 				// Updaters hash, so that the version is automatically increased
-				// when an updater is added
-			version: increment(Object.keys(Updaters).sort().pop()),
+				// when an updater is added.  use a proper numeric sort so that
+				// once we go over 9, the order is correct.
+			version: CurrentVersion,
 			updaters: Updaters,
 
 

@@ -78,6 +78,22 @@ tab search
 ctrl-tab navigation
 
 
+# Permission justifications
+
+purpose
+QuicKey adds keyboard shortcuts to switch tabs with a Quicksilver-style search or a most recently used menu.  It makes navigating among hundreds of open tabs much easier, while providing similar search access to bookmarks and browser history.
+
+tabs
+QuicKey needs the tabs permissions because the entire purpose of the extension is to let the user easily switch tabs by searching across all of the titles and URLs.  It also tracks tab activation, so it can display a list of recently visited tabs.
+
+history
+QuicKey needs the history permission to let the user search the titles and URLs of pages from the browser history.  The only time QuicKey changes the history is when the user chooses to delete a history item.
+
+sessions
+QuicKey needs the sessions permission so that it can restore recently closed tabs with their full history.  It lists the closed tabs below the recently used tabs, and also lets the user access them via search.
+
+
+
 ★
 ➤
 ↑ ↓
@@ -90,6 +106,11 @@ No mouse needed!
  • Press ALT-Q (CTRL-Q on macOS)
  • Type a few letters
  • Press ENTER to switch to the selected tab
+
+
+★ Now with support for dark mode!
+
+QuicKey will respond to changes in your computer's dark mode setting with darker colors that match your browser's user interface.
 
 
 ★ Use CTRL-TAB as the keyboard shortcut
@@ -139,6 +160,8 @@ Selecting from the MRU menu by holding down the ALT key provides the closest exp
 
 You can change any of these shortcuts by clicking the gear icon in the menu or by right-clicking the QuicKey icon and selecting Options. Then scroll down and click "Change browser shortcuts". Look for the "Switch to the previous/next tab" shortcuts.
 
+If you enable the option to show the number of open tabs on the QuicKey icon, the badge containing that number will change color while you navigate to older tabs, rather than the icon inverting.
+
 
 ★ Search for a tab quickly
 
@@ -162,9 +185,11 @@ Recently used tabs get a slight boost in the search results ranking, so getting 
 
 ★ Customize shortcuts and other options
 
-To customize how QuicKey behaves, click the gear icon in the menu, or right-click its icon on the toolbar and select Options. On the QuicKey options page, you can change the behavior of the SPACE and ESC keys, hide closed tabs from the search results, and customize many of the keyboard shortcuts described here.
+To customize how QuicKey behaves, click the gear icon in the menu, or right-click its icon on the toolbar and select Options. On the QuicKey options page, you can change the behavior of the SPACE and ESC keys, mark tabs in other windows with an icon, hide closed tabs from the search results, show the number of open tabs, and customize many of the keyboard shortcuts described here.
 
 If you change the keyboard shortcut for showing the QuicKey menu to something other than the default ALT-Q or if you have a non-US keyboard, you'll probably want to also change the key that's used to navigate down the list of recently used tabs (which defaults to W). For instance, if you change the menu shortcut to ALT-Z, you might want to change the navigation key to X, which is right next door. To change it, go to the Options page, click in the first keyboard shortcut picker, and press X.
+
+If new settings have been added to QuicKey since the last time you looked at the options page, the gear icon will display a red dot to let you know.
 
 
 ★ Close and reopen tabs
@@ -199,6 +224,8 @@ To find a bookmark, type "/b" and a space in the search box, then part of the bo
  • Press CTRL-ENTER (CMD-ENTER on macOS) to open it in a new tab in
    the current window.
  • Press SHIFT-ENTER to open it in a new window.
+
+As soon as you type "/b ", your bookmarks will be listed in alphabetical order, in case you want to browse through them.
 
 
 ★ Search the browser history
@@ -247,7 +274,8 @@ When first installed, QuicKey asks for these permissions:
       QuicKey uses this permission to let you search the titles and URLs of
       the open tabs, as well as pages from your history. The "all signed-in
       devices" part is there only so that recently closed tabs can be restored
-      with their full history.
+      with their full history. The only time QuicKey changes your browsing
+      history is when you choose to delete a history item.
 
  ➤ "Read and change your bookmarks"
 
