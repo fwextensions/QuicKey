@@ -209,6 +209,8 @@ To find a bookmark, type "/b" and a space in the search box, then part of the bo
    the current window.
  • Press SHIFT-ENTER to open it in a new window.
 
+As soon as you type "/b ", your bookmarks will be listed in alphabetical order, in case you want to browse through them.
+
 
 ★ Search the browser history
 

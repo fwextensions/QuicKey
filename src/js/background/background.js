@@ -452,7 +452,11 @@ require([
 	chrome.runtime.onMessage.addListener(message => {
 		if (k.ShowTabCount.Key in message) {
 			showTabCount = message[k.ShowTabCount.Key];
-			updateTabCount();
+
+				// set the normal icon, in case the user switched modes after
+				// the background page was loaded, then add the badge
+			setNormalIcon()
+				.then(() => updateTabCount());
 		}
 	});
 

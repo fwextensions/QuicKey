@@ -108,6 +108,7 @@ define("popup/app", [
 
 			return {
 				query,
+				searchBoxText: query,
 				matchingItems: this.getMatchingItems(query),
 					// default to the first item being selected if we got an
 					// initial query
@@ -164,7 +165,6 @@ define("popup/app", [
 		loadPromisedItems: function(
 			loader,
 			itemName,
-			command,
 			reload = false)
 		{
 			const promiseName = itemName + "Promise";
@@ -172,15 +172,11 @@ define("popup/app", [
 			if (!this[promiseName] || reload) {
 					// store the promise so we only load the items once
 				this[promiseName] = loader().then(items => {
-						// strip the /b|h from the typed query
-					const originalQuery = this.state.query;
-					const query = originalQuery.slice(command.length);
-
 						// score the the items so the expected keys are added
 						// to each one, and then update the results list with
 						// matches on the current query
 					this[itemName] = scoreItems(items, "");
-					this.setQuery(originalQuery, query);
+					this.setQuery(this.state.query);
 
 					return items;
 				});
@@ -222,53 +218,54 @@ define("popup/app", [
 					}
 
 					return tabs;
-				}), "tabs", "", true);	// pass true to force a reload
+				}), "tabs", true);	// pass true to force a reload
 		},
 
 
 		setQuery: function(
-			originalQuery,
 			query)
 		{
-			var queryToMatch = query || originalQuery;
-
 			this.setState({
-				matchingItems: this.getMatchingItems(queryToMatch),
-				query: originalQuery,
-				selected: queryToMatch ? 0 : -1
+				query,
+				matchingItems: this.getMatchingItems(query),
+				selected: query ? 0 : -1
 			});
 		},
 
 
 		clearQuery: function()
 		{
-			var query = this.state.query;
+			let {searchBoxText} = this.state;
 
-			if (!query || this.settings[k.EscBehavior.Key] == k.EscBehavior.Close) {
-					// pressing esc in an empty field should close the popup
+			if (!searchBoxText || this.settings[k.EscBehavior.Key] == k.EscBehavior.Close) {
+					// pressing esc in an empty field should close the popup, or
+					// if the user checked the always close option
 				this.props.port.postMessage("closedByEsc");
 				window.close();
 			} else {
 					// if we're searching for bookmarks or history, reset the
 					// query to just /b or /h, rather than clearing it, unless
 					// it's already a command, in which case, clear it
-				if (this.mode == "tabs" || this.mode == "command" ||
-						query == BookmarksQuery || query == HistoryQuery) {
-					this.forceUpdate = true;
-					query = "";
+				if (
+					this.mode == "tabs" ||
+					this.mode == "command" ||
+					searchBoxText == BookmarksQuery ||
+					searchBoxText == HistoryQuery
+				) {
+					searchBoxText = "";
 				} else if (this.mode == "bookmarks") {
-					this.forceUpdate = true;
-					query = BookmarksQuery;
+					searchBoxText = BookmarksQuery;
 				} else if (this.mode == "history") {
-					this.forceUpdate = true;
-					query = HistoryQuery;
+					searchBoxText = HistoryQuery;
 				}
 
 					// scroll the list back to the first row, which wouldn't
 					// happen by default if we just cleared the query, since in
-					// that case there's no selected item to scroll to
+					// that case there's no selected item to scroll to.  we need
+					// to set forceUpdate so the input updates.
+				this.forceUpdate = true;
 				this.resultsList.scrollToRow(0);
-				this.onQueryChange({ target: { value: query }});
+				this.onQueryChange({ target: { value: searchBoxText }});
 			}
 		},
 
@@ -276,15 +273,21 @@ define("popup/app", [
 		getMatchingItems: function(
 			query)
 		{
-			if (query == HistoryQuery) {
-					// special case the /h query so that we can sort the history
-					// items by visit date and show them as soon as the command
-					// is typed with no query
-				return this.history.sort(sortHistoryItems);
-			} else if (this.mode == "command" || query == BookmarksQuery) {
-				return [];
-			} else if (this.mode == "tabs" && !query) {
-				return this.recents;
+			if (!query) {
+				switch (this.mode) {
+					case "tabs":
+						return this.recents;
+
+					case "command":
+							// the user's only typed /, so don't show anything
+						return [];
+
+					case "history":
+							// special case the /h query so that we can sort the
+							// history items by visit date and show them as soon
+							// as the command is typed with no query
+						return this.history.sort(sortHistoryItems);
+				}
 			}
 
 			const scores = scoreItems(this[this.mode], query);
@@ -384,18 +387,16 @@ define("popup/app", [
 
 			const deleteItem = (
 				deleteFunc,
-				command = "",
 				eventCategory = mode) =>
 			{
 				deleteFunc(item);
 				_.pull(this[mode], item);
 
-					// call getMatchingItems() directly with just the query,
-					// unless the query is just the command part, in which case
-					// we need to pass that so the right list is returned.  limit
-					// the selected index to the new matching items length, in
-					// case the user deleted the very last item.
-				const matchingItems = this.getMatchingItems(query.slice(command.length) || query);
+					// call getMatchingItems() to get the updated results list
+					// minus the item we removed.  limit the selected index to
+					// the new matching items length, in case the user deleted
+					// the very last item.
+				const matchingItems = this.getMatchingItems(query);
 				const selected = Math.min(this.state.selected, matchingItems.length - 1);
 
 				this.setState({ selected, matchingItems });
@@ -426,12 +427,11 @@ define("popup/app", [
 								// because the onTabRemoved handler calls
 								// loadTabs(), which re-inits recents.
 							_.pull(this.recents, item);
-						}, "", "closed-tab");
+						}, "closed-tab");
 					}
 				} else if (mode == "bookmarks") {
 					if (confirm(DeleteBookmarkConfirmation)) {
-						deleteItem(({id}) => chrome.bookmarks.remove(id),
-							BookmarksQuery);
+						deleteItem(({id}) => chrome.bookmarks.remove(id));
 					}
 				} else if (mode == "history") {
 					const url = item.originalURL;
@@ -439,8 +439,7 @@ define("popup/app", [
 						// we have to use originalURL to delete the history item,
 						// since it may have been a suspended page and we convert
 						// url to the unsuspended version
-					deleteItem(() => chrome.history.deleteUrl({ url }),
-						HistoryQuery);
+					deleteItem(() => chrome.history.deleteUrl({ url }));
 
 						// just in case this URL was also recently closed, remove
 						// it from the tabs and recents lists, since it will no
@@ -582,29 +581,26 @@ define("popup/app", [
 		onQueryChange: function(
 			event)
 		{
-			var query = event.target.value,
-					// remember the original typed value in case it matches a
-					// special mode below and we have to remove the / part in
-					// order to match the items against it
-				originalQuery = query;
+			const searchBoxText = event.target.value;
+			let query = searchBoxText;
 
-			if (query.indexOf(BookmarksQuery) == 0) {
+			if (searchBoxText.indexOf(BookmarksQuery) == 0) {
 				this.mode = "bookmarks";
-				query = query.slice(BookmarksQuery.length);
+				query = searchBoxText.slice(BookmarksQuery.length);
 
 				if (!this.bookmarks.length) {
 						// we haven't fetched the bookmarks yet, so load them
 						// and then call getMatchingItems() after they're ready
-					this.loadPromisedItems(getBookmarks, "bookmarks", BookmarksQuery);
+					this.loadPromisedItems(getBookmarks, "bookmarks");
 				}
-			} else if (query.indexOf(HistoryQuery) == 0) {
+			} else if (searchBoxText.indexOf(HistoryQuery) == 0) {
 				this.mode = "history";
-				query = query.slice(HistoryQuery.length);
+				query = searchBoxText.slice(HistoryQuery.length);
 
 				if (!this.history.length) {
-					this.loadPromisedItems(getHistory, "history", HistoryQuery);
+					this.loadPromisedItems(getHistory, "history");
 				}
-			} else if (CommandQueryPattern.test(query)) {
+			} else if (CommandQueryPattern.test(searchBoxText)) {
 					// we don't know if the user's going to type b or h, so
 					// don't match any items
 				this.mode = "command";
@@ -613,7 +609,8 @@ define("popup/app", [
 				this.mode = "tabs";
 			}
 
-			this.setQuery(originalQuery, query);
+			this.setState({ searchBoxText });
+			this.setQuery(query);
 		},
 
 
@@ -655,13 +652,19 @@ define("popup/app", [
 
 		render: function()
 		{
-			const {query, matchingItems, selected, newSettingsAvailable} = this.state;
+			const {
+				query,
+				searchBoxText,
+				matchingItems,
+				selected,
+				newSettingsAvailable
+			} = this.state;
 
 			return <div className={this.props.platform}>
 				<SearchBox
 					mode={this.mode}
 					forceUpdate={this.forceUpdate}
-					query={query}
+					query={searchBoxText}
 					onChange={this.onQueryChange}
 					onKeyDown={this.onKeyDown}
 					onKeyUp={this.onKeyUp}

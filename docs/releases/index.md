@@ -8,7 +8,7 @@ comments: true
 # Release history
 
 
-## 1.4.0 - 2020-03-16
+## 1.4.0 - 2020-03-19
 
 ### Added
 
@@ -17,6 +17,8 @@ comments: true
 * The number of open tabs can be optionally shown in a badge on the *QuicKey* icon.
 
 * A red dot is shown on the gear icon in the menu when new settings have been added since the last time you've visited the *QuicKey options* page.
+
+* Typing <b><kbd>/</kbd><kbd>b</kbd></b> immediately shows the list of bookmarks, in alphabetical order.  
 
 ### Changed
 

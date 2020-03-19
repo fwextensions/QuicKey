@@ -142,7 +142,7 @@ When you open *QuicKey*, the 25 most recently closed tabs are listed below the r
 
 They are also returned when you type a query, though their rank in the list of results is lower than open tabs.  Click a closed tab to reopen it in its original location and with all of its browsing history intact.
 
-If you don't want any closed tabs to be shown, open the *QuicKey options* page and uncheck *Include recently closed tabs in the search results*.  You can also remove the selected closed tab from the browser's history by pressing <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd</kbd><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS) or by clicking the its <img src="img/clear.svg" style="height: 1em; vertical-align: middle;"> button on the right side of the menu. 
+If you don't want any closed tabs to be shown, open the *QuicKey options* page and uncheck *Include recently closed tabs in the search results*.  You can also remove the selected closed tab from the browser's history by pressing <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd</kbd><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS) or by clicking its <img src="img/clear.svg" style="height: 1em; vertical-align: middle;"> button on the right side of the menu. 
 
 
 ## Move tabs
@@ -169,6 +169,8 @@ To find a bookmark, type <b><kbd>/</kbd><kbd>b</kbd><kbd>space</kbd></b> in the 
   * Press <kbd>enter</kbd> to open the bookmark in the current tab.
   * Press <b><kbd>ctrl</kbd><kbd>enter</kbd></b> (<b><kbd>cmd</kbd><kbd>enter</kbd></b> on macOS) to open it in a new tab in the current window.
   * Press <b><kbd>shift</kbd><kbd>enter</kbd></b> to open it in a new window.
+
+As soon as you type <b><kbd>/</kbd><kbd>b</kbd><kbd>space</kbd></b>, your bookmarks will be listed in alphabetical order, in case you want to browse through them.
 
 
 ## <a name="history"></a>Search the browser history

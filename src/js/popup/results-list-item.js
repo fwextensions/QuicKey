@@ -120,7 +120,13 @@ define([
 
 		render: function()
 		{
-			const {item, query, mode, style, isSelected} = this.props;
+			const {
+				item,
+				query,
+				mode,
+				style,
+				isSelected
+			} = this.props;
 			const {
 				scores,
 				hitMasks,
