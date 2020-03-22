@@ -22,7 +22,7 @@ Chrome extensions can't provide this functionality all by themselves, unfortunat
 You can choose one of these <b><kbd>ctrl</kbd><kbd>tab</kbd></b> behaviors:
 
 1. [<b><kbd>ctrl</kbd><kbd>tab</kbd></b> instantly switches between *only* the two most recent tabs](#option-1)
-2. [<b><kbd>ctrl</kbd><kbd>tab</kbd></b> switches to *any* of the recent tabs, but requires a brief pause before you press it again to switch back](#option-2)
+2. [<b><kbd>ctrl</kbd><kbd>tab</kbd></b> cycles through *any* of the recent tabs, but requires a brief pause before you press it again to switch back](#option-2)
 3. [<b><kbd>ctrl</kbd><kbd>tab</kbd></b> switches between the two most recent tabs *or* you can keep holding <kbd>ctrl</kbd> to select a recent tab from a menu (Windows only)](#option-3)
 
 Just don't follow the steps in more than one of these options.  If you later change your mind, you can always go back to the *Keyboard shortcuts* screen and click the clear button next to the shortcuts, or change them to something else 
@@ -44,7 +44,7 @@ Chrome's *Keyboard shortcuts* screen normally blocks you from using <b><kbd>ctrl
 
     <img src="../img/chrome-shortcuts-button.png" style="width: 485px;">
 
-4. After the *Keyboard shortcuts* page opens, press <b><kbd>ctrl</kbd><kbd>shift</kbd><kbd>J</kbd></b> on Windows/Linux or <b><kbd>cmd</kbd><kbd>opt</kbd><kbd>J</kbd></b> on macOS to open the Chrome DevTools.
+4. After the *Keyboard shortcuts* page opens (`chrome://extensions/shortcuts` should be in the location bar), press <b><kbd>ctrl</kbd><kbd>shift</kbd><kbd>J</kbd></b> on Windows/Linux or <b><kbd>cmd</kbd><kbd>opt</kbd><kbd>J</kbd></b> on macOS to open the Chrome DevTools.
 
     <img src="../img/console-open.png">
 
