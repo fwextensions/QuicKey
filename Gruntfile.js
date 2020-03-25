@@ -221,6 +221,13 @@ module.exports = function(grunt) {
 			}
 		},
 
+		browserify: {
+			all: {
+				src: "build/scripts/pinyin-amd.js",
+				dest: "src/js/lib/pinyin.js"
+			}
+		},
+
 		requirejs: {
 			modulesConfig: {
 				options: modulesConfig
