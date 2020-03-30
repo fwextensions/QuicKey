@@ -2,11 +2,13 @@ define([
 	"bluebird",
 	"cp",
 	"lib/decode",
+	"lib/pinyin",
 	"lodash"
 ], function(
 	Promise,
 	cp,
 	decode,
+	pinyin,
 	_
 ) {
 	const TitlePattern = /ttl=([^&]+)/;
@@ -45,7 +47,8 @@ define([
 	return function initTabs(
 		tabsPromise,
 		markTabsInOtherWindows,
-		normalizeWhitespace)
+		normalizeWhitespace,
+		usePinyin)
 	{
 		let tabsByTitle = {};
 
@@ -125,6 +128,11 @@ define([
 							// insert spaces in the query can match against
 							// these titles
 						tab.title = tab.title.replace(WhitespacePattern, " ");
+					}
+
+					if (usePinyin) {
+						tab.pinyinTitle = pinyin(tab.title);
+						tab.pinyinDisplayURL = pinyin(tab.displayURL);
 					}
 
 					indexDuplicateTitles(tab);

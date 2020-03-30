@@ -14,7 +14,6 @@ define("popup/app", [
 	"./shortcuts/popup-shortcuts",
 	"lib/handle-ref",
 	"lib/copy-to-clipboard",
-	"lib/pinyin",
 	"background/recent-tabs",
 	"background/quickey-storage",
 	"background/settings",
@@ -36,7 +35,6 @@ define("popup/app", [
 	shortcuts,
 	handleRef,
 	copyTextToClipboard,
-	pinyin,
 	recentTabs,
 	storage,
 	settings,
@@ -197,7 +195,9 @@ define("popup/app", [
 						// pass in the space key behavior so initTabs() knows
 						// whether to normalize all whitespace, which is not
 						// needed if space moves the selection
-					settings[k.SpaceBehavior.Key] == k.SpaceBehavior.Space))
+					settings[k.SpaceBehavior.Key] == k.SpaceBehavior.Space,
+// TODO: replace true with setting
+					true))
 				.then(tabs => {
 						// filter out just recent and closed tabs that we have a
 						// last visit time for
@@ -292,7 +292,8 @@ define("popup/app", [
 				}
 			}
 
-			const scores = scoreItems(this[this.mode], query);
+// TODO: replace true with setting
+			const scores = scoreItems(this[this.mode], query, true);
 			const firstScoresDiff = (scores.length > 1 &&
 				scores[0].score > MinScore) ? (scores[0].score - scores[1].score) : 0;
 				// drop barely-matching results, keeping a minimum of 3,

@@ -224,7 +224,15 @@ module.exports = function(grunt) {
 		browserify: {
 			all: {
 				src: "build/scripts/pinyin-amd.js",
-				dest: "src/js/lib/pinyin.js"
+				dest: "src/js/lib/pinyin.js",
+//				options: {
+//					postBundleCB: function(err, src, next)
+//					{
+//						return next(null,
+//							`define("lib/pinyin", () => { let pinyin; ${src}; return pinyin; })`
+//						)
+//					}
+//				}
 			}
 		},
 
@@ -356,6 +364,8 @@ module.exports = function(grunt) {
 	grunt.registerTask("build", function(target = "quickey", env = "dev") {
 		grunt.task.run([
 			"time",
+			"browserify",
+			"clean:rjs",
 			"sync:out",
 			`copy:${target}`,
 			`cleanupManifest:${target}:${env}`,
