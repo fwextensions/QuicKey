@@ -223,16 +223,24 @@ module.exports = function(grunt) {
 
 		browserify: {
 			all: {
-				src: "build/scripts/pinyin-amd.js",
+				src: "build/scripts/pinyin-cjs.js",
 				dest: "src/js/lib/pinyin.js",
-//				options: {
-//					postBundleCB: function(err, src, next)
-//					{
-//						return next(null,
-//							`define("lib/pinyin", () => { let pinyin; ${src}; return pinyin; })`
-//						)
-//					}
-//				}
+				options: {
+						// for some stupid reason, if we try to call define()
+						// from within the browserified module, or if we run the
+						// browserified module within the define() callback,
+						// r.js can't find "lib/pinyin" and gives up. so we have
+						// to wrap it in an IIFE, have the browserified module
+						// set the pinyin local that's outside it, and then
+						// return that from define().
+					postBundleCB: (err, src, next) => next(null, `
+						(() => {
+							let pinyin;
+							${src};
+							define(() => pinyin);
+						})()
+					`)
+				}
 			}
 		},
 

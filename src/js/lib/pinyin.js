@@ -1,32 +1,30 @@
-(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
-define(() => {
-		// this is called within the browserify context which has a local
-		// require(). so browserify will provide the pinyin node module, and
-		// then define makes it available to requirejs modules.
-	const originalPinyin = require("pinyin");
-	const {STYLE_NORMAL, compare} = originalPinyin;
 
+						(() => {
+							let pinyin;
+							(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+	// this is called within the browserify context, which has a local require()
+const originalPinyin = require("pinyin");
+const {STYLE_NORMAL, compare} = originalPinyin;
 
-	function pinyin(
-		string,
-		convertToString = true)
-	{
-		let result = originalPinyin(string, {style: STYLE_NORMAL});
+	// this let is defined within the shim that gets wrapped around the output
+	// of browserify, since calling define() in this file confused r.js, so it
+	// couldn't find "lib/pinyin"
+pinyin = (
+	string,
+	convertToString = true) =>
+{
+	let result = originalPinyin(string, {style: STYLE_NORMAL});
 
-		if (convertToString) {
-				// if there are multiple transliterations for a character, use
-				// the first one and join all of them into one string
-			result = result.map(([firstResult]) => firstResult).join(" ")
-		}
-
-		return result;
+	if (convertToString) {
+			// if there are multiple transliterations for a character, use
+			// the first one and join all of them into one string
+		result = result.map(([firstResult]) => firstResult).join(" ")
 	}
 
+	return result;
+};
 
-	pinyin.compare = compare;
-
-	return pinyin;
-});
+pinyin.compare = compare;
 
 },{"pinyin":6}],2:[function(require,module,exports){
 /*
@@ -2404,3 +2402,7 @@ module.exports.STYLE_INITIALS = Pinyin.STYLE_INITIALS;
 module.exports.STYLE_FIRST_LETTER = Pinyin.STYLE_FIRST_LETTER;
 
 },{"../data/dict-zi-web":3,"./pinyin":5}]},{},[1]);
+;
+							define(() => pinyin);
+						})()
+					
