@@ -131,8 +131,18 @@ define([
 					}
 
 					if (usePinyin) {
-						tab.pinyinTitle = pinyin(tab.title);
-						tab.pinyinDisplayURL = pinyin(tab.displayURL);
+						const pinyinTitle = pinyin(tab.title);
+						const pinyinDisplayURL = pinyin(tab.displayURL);
+
+							// if there's no difference, just store an empty
+							// string that scoreArray() will use to short-circuit
+							// the scoring and return 0
+						tab.pinyinTitle = (pinyinTitle !== tab.title)
+							? pinyinTitle
+							: "";
+						tab.pinyinDisplayURL = (pinyinDisplayURL !== tab.displayURL)
+							? pinyinDisplayURL
+							: "";
 					}
 
 					indexDuplicateTitles(tab);

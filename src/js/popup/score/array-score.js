@@ -4,17 +4,12 @@ define(function() {
 		searchKeyInfo)
 	{
 			// force keyNames to be an array
-		var keys = [].concat(searchKeyInfo || "string").map(function(key) {
-				if (typeof key != "object") {
-					return {
-						key: key,
-						score: score
-					};
-				} else {
-					return key;
-				}
-			}),
-			defaultKeyName = keys[0].key;
+		const keys = [].concat(searchKeyInfo || "string").map(key =>
+			typeof key != "object"
+				? { key, score }
+				: key
+		);
+		const defaultKeyName = keys[0].key;
 
 
 		function compareScoredStrings(
@@ -43,19 +38,22 @@ define(function() {
 					item.scores = {};
 					item.hitMasks = {};
 
-					keys.forEach(function(keyInfo) {
-						item.scores[keyInfo.key] = 0;
-						item.hitMasks[keyInfo.key] = [];
+					keys.forEach(({key}) => {
+						item.scores[key] = 0;
+						item.hitMasks[key] = [];
 					});
 				});
 			}
 
-			items.forEach(function(item) {
+			items.forEach(item => {
 					// find the highest score for each keyed string on this item
-				item.score = keys.reduce(function(currentScore, keyInfo) {
-					var hitMask = [],
-						key = keyInfo.key,
-						newScore = keyInfo.score(item[key], text, hitMask) * (item.recentBoost || 1);
+				item.score = keys.reduce((currentScore, {key, score}) => {
+					const hitMask = [];
+					const string = item[key];
+						// score empty strings as 0
+					const newScore = string
+						? score(string, text, hitMask) * (item.recentBoost || 1)
+						: 0;
 
 					item.scores[key] = newScore;
 					item.hitMasks[key] = hitMask;

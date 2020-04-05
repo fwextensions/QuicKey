@@ -10,12 +10,13 @@ define([
 		string,
 		convertToString = true)
 	{
-		let result = originalPinyin(string, { style: STYLE_NORMAL });
+		let result = originalPinyin(string, { style: STYLE_NORMAL, heteronym: true });
 
 		if (convertToString) {
-				// if there are multiple transliterations for a character, use
-				// the first one and join all of them into one string
-			result = result.map(([firstResult]) => firstResult).join(" ")
+				// if there are multiple transliterations for a character,
+				// include all of them with spaces in between, and then join
+				// everything into one string
+			result = result.map((chars) => chars.join(" ")).join(" ")
 		}
 
 		return result;
