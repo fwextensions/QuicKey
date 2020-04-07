@@ -2,11 +2,13 @@ define([
 	"bluebird",
 	"cp",
 	"lib/decode",
+	"lib/load-script",
 	"lodash"
 ], function(
 	Promise,
 	cp,
 	decode,
+	loadScript,
 	_
 ) {
 	const TitlePattern = /ttl=([^&]+)/;
@@ -48,8 +50,21 @@ define([
 		normalizeWhitespace,
 		usePinyin)
 	{
-		let pinyin = usePinyin && (await import("/js/lib/pinyin.js")).pinyin;
 		let tabsByTitle = {};
+
+		if (usePinyin) {
+			try {
+					// dynamically load the pinyin module into a global var, so
+					// that it's only processed if we actually need to use it.
+					// importing it as a global is ugly, but seems to be the
+					// simplest solution, since a built RequireJS project can't
+					// seem to do lazy-loading without including the full
+					// RequireJS library.
+				await loadScript("/js/lib/pinyin.js");
+			} catch (e) {
+				console.error(e);
+			}
+		}
 
 
 		function indexDuplicateTitles(

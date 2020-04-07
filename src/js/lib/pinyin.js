@@ -1,4 +1,4 @@
-export var pinyin =
+var pinyin =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};

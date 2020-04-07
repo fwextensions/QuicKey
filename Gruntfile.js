@@ -10,7 +10,6 @@ module.exports = function(grunt) {
 		// exclude the jsx plugin so the JSXTransformer isn't included
 	const commonModules = [
 		"jsx",
-		"common/pinyin",
 		"common/react",
 		"common/base"
 	];
@@ -214,7 +213,7 @@ module.exports = function(grunt) {
 					"build/out/js/common/almond.js": "build/almond.js",
 					"build/out/js/common/base.js": "build/rjs/common/base.js",
 					"build/out/js/common/react.js": "build/rjs/common/react.js",
-					"build/out/js/common/pinyin.js": "build/rjs/common/pinyin.js",
+					"build/out/js/lib/pinyin.js": "build/rjs/lib/pinyin.js",
 					"build/out/js/background/background.js": "build/rjs/background/background.js",
 					"build/out/js/popup/init.js": "src/js/popup/init.js",
 					"build/out/js/popup/main.js": "build/rjs/popup/main.js",
@@ -254,20 +253,6 @@ module.exports = function(grunt) {
 
 			// write out the built popup template with the latest React code
 		grunt.file.write(outPopupPath, outPopup);
-	});
-
-	grunt.registerTask("es6ifyPinyin", function() {
-		const pinyinPath = "src/js/lib/pinyin.js";
-		const pinyinLib = grunt.file.read(pinyinPath);
-
-		grunt.file.write(pinyinPath, `export ${pinyinLib}`);
-	});
-
-	grunt.registerTask("buildPinyin", function() {
-		grunt.task.run([
-			"shell:buildPinyin",
-			"es6ifyPinyin"
-		]);
 	});
 
 	function updateManifest(
@@ -371,7 +356,7 @@ module.exports = function(grunt) {
 	grunt.registerTask("build", function(target = "quickey", env = "dev") {
 		grunt.task.run([
 			"time",
-			"buildPinyin",
+			"shell:buildPinyin",
 			"clean:rjs",
 			"sync:out",
 			`copy:${target}`,
