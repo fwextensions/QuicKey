@@ -6,7 +6,7 @@ define(() => {
 			const script = document.createElement("script");
 
 			script.onload = () => resolve(url);
-			script.onerror = () => reject(url);
+			script.onerror = () => reject(new Error(`Failed to load ${url}`));
 			script.type = "text/javascript";
 			script.charset = "utf-8";
 			script.async = false;

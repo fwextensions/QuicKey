@@ -51,6 +51,7 @@ define([
 		usePinyin)
 	{
 		let tabsByTitle = {};
+		let addPinyinStrings = false;
 
 		if (usePinyin) {
 			try {
@@ -59,8 +60,12 @@ define([
 					// importing it as a global is ugly, but seems to be the
 					// simplest solution, since a built RequireJS project can't
 					// seem to do lazy-loading without including the full
-					// RequireJS library.
+					// RequireJS library, which adds extra bloat.
 				await loadScript("/js/lib/pinyin.js");
+
+					// set a flag so we know pinyin() is available and we don't
+					// have to check typeof pinyin on every tab in the loop below
+				addPinyinStrings = typeof pinyin == "function";
 			} catch (e) {
 				console.error(e);
 			}
@@ -144,7 +149,7 @@ define([
 						tab.title = tab.title.replace(WhitespacePattern, " ");
 					}
 
-					if (usePinyin && pinyin) {
+					if (addPinyinStrings) {
 						const pinyinTitle = pinyin(tab.title);
 						const pinyinDisplayURL = pinyin(tab.displayURL);
 
