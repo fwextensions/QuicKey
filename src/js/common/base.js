@@ -10,4 +10,4 @@ define([
 	"background/settings",
 	"background/recent-tabs",
 	"background/page-trackers",
-], function() {});
+], () => {});

@@ -13,6 +13,7 @@ module.exports = {
 	output: {
 		path: `${__dirname}/src/js/lib`,
 		filename: "pinyin.js",
-		libraryTarget: "amd"
+		library: "pinyin"
+//		libraryTarget: "amd"
 	}
 };

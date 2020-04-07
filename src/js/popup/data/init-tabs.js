@@ -2,13 +2,11 @@ define([
 	"bluebird",
 	"cp",
 	"lib/decode",
-	"lib/pinyin",
 	"lodash"
 ], function(
 	Promise,
 	cp,
 	decode,
-	pinyin,
 	_
 ) {
 	const TitlePattern = /ttl=([^&]+)/;
@@ -44,12 +42,13 @@ define([
 	}
 
 
-	return function initTabs(
+	return async function initTabs(
 		tabsPromise,
 		markTabsInOtherWindows,
 		normalizeWhitespace,
 		usePinyin)
 	{
+		let pinyin = usePinyin && (await import("/js/lib/pinyin.js")).pinyin;
 		let tabsByTitle = {};
 
 
@@ -130,7 +129,7 @@ define([
 						tab.title = tab.title.replace(WhitespacePattern, " ");
 					}
 
-					if (usePinyin) {
+					if (usePinyin && pinyin) {
 						const pinyinTitle = pinyin(tab.title);
 						const pinyinDisplayURL = pinyin(tab.displayURL);
 

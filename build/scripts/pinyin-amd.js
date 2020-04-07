@@ -8,9 +8,10 @@ define([
 
 	function pinyin(
 		string,
-		convertToString = true)
+		convertToString = true,
+		heteronym = true)
 	{
-		let result = originalPinyin(string, { style: STYLE_NORMAL, heteronym: true });
+		let result = originalPinyin(string, { style: STYLE_NORMAL, heteronym });
 
 		if (convertToString) {
 				// if there are multiple transliterations for a character,

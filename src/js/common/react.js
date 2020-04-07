@@ -4,4 +4,4 @@ define([
     "react",
     "react-dom",
     "lib/handle-ref"
-], function() {});
+], () => {});

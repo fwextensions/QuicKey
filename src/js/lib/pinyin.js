@@ -1,4 +1,5 @@
-define(function() { return /******/ (function(modules) { // webpackBootstrap
+export var pinyin =
+/******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
 /******/
@@ -98,9 +99,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 
 	function pinyin(
 		string,
-		convertToString = true)
+		convertToString = true,
+		heteronym = true)
 	{
-		let result = originalPinyin(string, { style: STYLE_NORMAL, heteronym: true });
+		let result = originalPinyin(string, { style: STYLE_NORMAL, heteronym });
 
 		if (convertToString) {
 				// if there are multiple transliterations for a character,
@@ -2519,4 +2521,4 @@ module.exports = {
 
 
 /***/ })
-/******/ ])});;
+/******/ ]);
