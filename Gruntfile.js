@@ -356,7 +356,6 @@ module.exports = function(grunt) {
 	grunt.registerTask("build", function(target = "quickey", env = "dev") {
 		grunt.task.run([
 			"time",
-			"shell:buildPinyin",
 			"clean:rjs",
 			"sync:out",
 			`copy:${target}`,

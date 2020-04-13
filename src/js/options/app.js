@@ -205,7 +205,7 @@ define([
 				>
 					<Checkbox
 						id={k.UsePinyin.Key}
-						label="Support pinyin when searching for Chinese titles and URLs"
+						label="Use pinyin to match Chinese characters in titles and URLs"
 						value={settings[k.UsePinyin.Key]}
 						onChange={onChange}
 					/>
