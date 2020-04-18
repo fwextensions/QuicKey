@@ -278,8 +278,7 @@ DEBUG && console.log("tab replaced", oldID, titleOrURL(oldTab));
 			])
 				.spread((freshTabs, closedTabs) => {
 					const {tabIDs, lastUpdateTime, lastStartupTime} = data;
-					const freshTabsByURL = {};
-					const closedTabsByURL = {};
+					const tabsByURL = {};
 					let {tabsByID} = data;
 					let newData = { tabsByID };
 					let tabs;
@@ -311,12 +310,12 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 						}
 
 						tab.lastVisit = lastVisit;
-						freshTabsByURL[url] = true;
+						tabsByURL[url] = true;
 
 							// if the tab is suspended, also store it with the
 							// unsuspendURL so that we can dedupe it against
 							// closed unsuspended tabs below
-						tab.unsuspendURL && (freshTabsByURL[tab.unsuspendURL] = true);
+						tab.unsuspendURL && (tabsByURL[tab.unsuspendURL] = true);
 
 						return tab;
 					});
@@ -328,27 +327,26 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 						// will be in the list, but is then removed from the list
 						// in getTabs().
 					if (tabIDs.length > 1) {
-							// convert the sessions to tab objects and dedupe
-							// them by URL, keeping the most recent version of each
-						tabs = tabs.concat(closedTabs.map(session => {
-							const tabFromSession = session.tab || session.window.tabs[0];
+						const uniqueClosedTabs = [];
 
+							// convert the sessions to tab objects, including
+							// all the tabs in closed windows, and dedupe them
+							// by URL, keeping the most recent version of each
+						closedTabs.forEach(session => {
 								// session lastModified times are in Unix epoch
-							tabFromSession.lastVisit = session.lastModified * 1000;
+							const lastVisit = session.lastModified * 1000;
 
-							return tabFromSession;
-						})
-							.filter(({url}) => {
-								const existingTab = url in closedTabsByURL ||
-									url in freshTabsByURL;
+							[].concat(session.tab || session.window.tabs).forEach(tab => {
+								if (!(tab.url in tabsByURL)) {
+									tabsByURL[tab.url] = true;
+									tab.lastVisit = lastVisit;
+									addURLs(tab);
+									uniqueClosedTabs.push(tab);
+								}
+							});
+						});
 
-								closedTabsByURL[url] = true;
-
-								return !existingTab;
-							})
-								// init the remaining closed tabs
-							.map(closedTab => addURLs(closedTab))
-						);
+						tabs = tabs.concat(uniqueClosedTabs);
 					}
 
 						// save off the updated recent data.  we don't call
