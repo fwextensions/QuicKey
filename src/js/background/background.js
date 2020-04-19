@@ -505,8 +505,8 @@ DEBUG && console.log(e);
 			// below would always think it was being updated.
 		({lastUsedVersion} = data);
 
-			// save the current time so recentTabs.getAll() knows whether it
-			// needs to update the stored data
+			// save the current time and version in settings so recentTabs.getAll()
+			// knows whether it needs to update the stored data
 		return {
 			lastStartupTime: Date.now(),
 			lastUsedVersion: Manifest.version

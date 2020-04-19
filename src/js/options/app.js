@@ -199,6 +199,17 @@ define([
 						onChange={onChange}
 					/>
 				</NewSetting>
+				<NewSetting
+					addedVersion={9}
+					lastSeenOptionsVersion={lastSeenOptionsVersion}
+				>
+					<Checkbox
+						id={k.UsePinyin.Key}
+						label="Use pinyin to match Chinese characters in titles and URLs"
+						value={settings[k.UsePinyin.Key]}
+						onChange={onChange}
+					/>
+				</NewSetting>
 
 				<h2>Customizable keyboard shortcuts</h2>
 				{this.renderShortcutList(Shortcuts.customizable)}

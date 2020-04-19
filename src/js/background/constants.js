@@ -33,6 +33,9 @@ define([
 		ShowTabCount: {
 			Key: "showTabCount"
 		},
+		UsePinyin: {
+			Key: "usePinyin"
+		},
 		Shortcuts: {
 			Key: "shortcuts",
 			MRUSelect: "mruSelect",

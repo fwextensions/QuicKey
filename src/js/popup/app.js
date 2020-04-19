@@ -195,7 +195,8 @@ define("popup/app", [
 						// pass in the space key behavior so initTabs() knows
 						// whether to normalize all whitespace, which is not
 						// needed if space moves the selection
-					settings[k.SpaceBehavior.Key] == k.SpaceBehavior.Space))
+					settings[k.SpaceBehavior.Key] == k.SpaceBehavior.Space,
+					settings[k.UsePinyin.Key]))
 				.then(tabs => {
 						// filter out just recent and closed tabs that we have a
 						// last visit time for
@@ -290,9 +291,10 @@ define("popup/app", [
 				}
 			}
 
-			const scores = scoreItems(this[this.mode], query);
-			const firstScoresDiff = (scores.length > 1 &&
-				scores[0].score > MinScore) ? (scores[0].score - scores[1].score) : 0;
+			const scores = scoreItems(this[this.mode], query, this.settings[k.UsePinyin.Key]);
+			const firstScoresDiff = (scores.length > 1 && scores[0].score > MinScore)
+				? scores[0].score - scores[1].score
+				: 0;
 				// drop barely-matching results, keeping a minimum of 3,
 				// unless there's a big difference in scores between the
 				// first two items, which may mean we need a longer tail

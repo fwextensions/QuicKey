@@ -9,7 +9,9 @@
   "homepage": "https://fwextensions.github.io/QuicKey/",
   "bugs": "https://github.com/fwextensions/QuicKey/issues",
   "scripts": {
-    "build-popup": "node build/scripts/build-popup.js"
+    "build:popup": "node build/scripts/build-popup.js",
+    "build:pinyin": "webpack",
+    "build": "npm run build:popup && npm run build:pinyin"
   },
   "devDependencies": {
     "@babel/core": "^7.4.3",
@@ -26,6 +28,7 @@
     "grunt-contrib-copy": "^1.0.0",
     "grunt-contrib-requirejs": "^1.0.0",
     "grunt-exec": "^3.0.0",
+    "grunt-shell": "^3.0.1",
     "grunt-sync": "^0.8.0",
     "load-grunt-tasks": "^4.0.0",
     "lodash": "^4.17.15",
@@ -33,9 +36,12 @@
     "react": "^15.6.2",
     "react-dom": "^15.6.2",
     "react-virtualized": "^9.21.0",
-    "requirejs": "^2.3.6"
+    "requirejs": "^2.3.6",
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "core-js": "^3.0.1"
+    "core-js": "^3.0.1",
+    "pinyin": "^2.9.0"
   }
 }

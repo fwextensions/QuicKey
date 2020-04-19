@@ -1,4 +1,9 @@
 {
+	"generatorOpts": {
+		"jsescOption": {
+			"minimal": true
+		}
+	},
 	"presets": [
 		[
 			"@babel/preset-env",

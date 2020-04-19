@@ -135,6 +135,8 @@ define([
 				displayURL,
 				unsuspendURL,
 				faviconURL,
+				pinyinTitle,
+				pinyinDisplayURL,
 				sessionId,
 				otherWindow,
 				incognito
@@ -159,8 +161,12 @@ define([
 			let badgeTooltip = "";
 
 			if (IsDev) {
-				tooltip = _.toPairs(scores).concat([["recentBoost", item.recentBoost], ["id", item.id]])
-					.map(keyValue => keyValue.join(": ")).join("\n") + "\n" + tooltip;
+				tooltip = _.toPairs(scores)
+					.concat([["recentBoost", item.recentBoost], ["id", item.id]])
+					.map(keyValue => keyValue.join(": "))
+					.concat([title != pinyinTitle && pinyinTitle, displayURL != pinyinDisplayURL && pinyinDisplayURL])
+					.filter(string => string)
+					.join("\n") + "\n" + tooltip;
 			}
 
 				// blank lines at the end of the tooltip show up in macOS Chrome,
