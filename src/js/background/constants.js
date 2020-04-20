@@ -6,9 +6,14 @@ define([
 	const IsMac = /Mac/i.test(navigator.platform);
 	const IsEdge = /Edg\//i.test(navigator.userAgent);
 
+	const languagePattern = /^(?<lang>[-a-z]+)-(?<locale>[a-z]+)$/i;
+	const primaryLanguage = navigator.languages[0];
+	const languageMatch = primaryLanguage.match(languagePattern);
+
 	return shared("k", () => ({
 		IsMac,
 		Platform: IsMac ? "mac" : "win",
+		Language: languageMatch && languageMatch.groups.lang || primaryLanguage,
 			// this will get overridden in background.js if we're in dev mode
 		IsDev: false,
 		IsEdge,

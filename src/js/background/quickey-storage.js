@@ -95,7 +95,10 @@ define([
 					// won't work, but the user can always enable it manually.
 				try { hanPattern = /\p{Script=Han}/u; } catch (e) {}
 
-				if (hanPattern) {
+				if (k.Language.indexOf("zh") == 0) {
+						// the browser is set to Chinese, so default this on
+					DefaultSettings[k.UsePinyin.Key] = true;
+				} else if (hanPattern) {
 						// default usePinyin to true if any of the currently
 						// open tabs have Chinese characters in their title/URL
 					for (let i = 0, len = tabs.length; i < len; i++) {
