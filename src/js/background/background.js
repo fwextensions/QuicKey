@@ -540,5 +540,6 @@ DEBUG && console.log("=== startup done", performance.now());
 		.then(() => gInstalledPromise)
 		.then(({reason, previousVersion}) => {
 			backgroundTracker.event("extension", reason, previousVersion);
-		});
+		})
+		.catch(error => backgroundTracker.exception(error));
 });
