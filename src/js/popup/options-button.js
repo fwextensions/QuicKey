@@ -11,7 +11,7 @@ define([
 	}) {
 		const qkOptions = "QuicKey options";
 		const tooltip = newSettingsAvailable
-			? `New ${qkOptions} available`
+			? `New ${qkOptions} are available`
 			: qkOptions;
 
 		return (

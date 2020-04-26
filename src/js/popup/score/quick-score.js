@@ -219,9 +219,6 @@ define(function() {
 	};
 
 
-	Range.prototype.toValue = Range.prototype.toString;
-
-
 	function rangeOfString(
 		string,
 		substring,
@@ -246,7 +243,7 @@ define(function() {
 		indexes,
 		range)
 	{
-		for (var i = range.location; i < range.max(); i++) {
+		for (let i = range.location, len = range.max(); i < len; i++) {
 			indexes.push(i);
 		}
 
