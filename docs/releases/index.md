@@ -8,7 +8,7 @@ comments: true
 # Release history
 
 
-## 1.5.0 - 2020-04-30
+## 1.5.0 - 2020-04-29
 
 ### Added
 
