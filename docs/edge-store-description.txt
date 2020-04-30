@@ -78,7 +78,7 @@ tab search
 ctrl-tab navigation
 
 
-Any open tab can be immediately searched after installation.  The list of recent tabs will be empty immediately after the extension is installed, but tabs will be added to the list as you switch between them.
+Any open tab can be searched immediately after installation.  The list of recent tabs will be empty immediately after the extension is installed, but tabs will be added to the list as you switch between them.  Switching the OS to dark mode will update the colors in the menu and options page.
 
 
 ★
@@ -95,9 +95,9 @@ Add keyboard shortcuts to switch tabs with a Quicksilver-style search or a most 
  • Press ENTER to switch to the selected tab
 
 
-★ Now with support for dark mode!
+★ Now with support for pinyin!
 
-QuicKey will respond to changes in your computer's dark mode setting with darker colors that match your browser's user interface.
+You can use pinyin to more easily search for Chinese characters in web page titles and URLs.
 
 
 ★ Use CTRL-TAB as the keyboard shortcut
@@ -165,14 +165,12 @@ Use keyboard shortcuts to navigate the list:
  • HOME: go to the top of the list
  • ESC: clear the search or close the menu
 
-If you type more than 25 letters, which should be plenty to find the right tab, QuicKey switches to an exact string search to stay fast.
-
 Recently used tabs get a slight boost in the search results ranking, so getting back to a tab you were just using should require typing fewer letters.
 
 
 ★ Customize shortcuts and other options
 
-To customize how QuicKey behaves, click the gear icon in the menu, or right-click its icon on the toolbar and select Options. On the QuicKey options page, you can change the behavior of the SPACE and ESC keys, mark tabs in other windows with an icon, hide closed tabs from the search results, show the number of open tabs, and customize many of the keyboard shortcuts described here.
+To customize how QuicKey behaves, click the gear icon in the menu, or right-click its icon on the toolbar and select Options. On the QuicKey options page, you can change the behavior of the SPACE and ESC keys, hide closed tabs from the search results, mark tabs in other windows with an icon, show the number of open tabs, use pinyin to search for Chinese characters, and customize many of the keyboard shortcuts described here.
 
 If you change the keyboard shortcut for showing the QuicKey menu to something other than the default ALT-Q or if you have a non-US keyboard, you'll probably want to also change the key that's used to navigate down the list of recently used tabs (which defaults to W). For instance, if you change the menu shortcut to ALT-Z, you might want to change the navigation key to X, which is right next door. To change it, go to the Options page, click in the first keyboard shortcut picker, and press X.
 
@@ -198,11 +196,6 @@ You can move tabs to the left or right of the current tab, making it easy to pul
 Include SHIFT in the shortcut to also unsuspend the tab while moving it. The CTRL key should be used on both Windows and macOS. Note that you cannot move tabs between normal and InPrivate windows.
 
 
-★ Distinguish tabs with identical titles
-
-A tab that has the same title as other open tabs will display a number to indicate its left-to-right position among those other tabs.  For instance, if you open tabs for two different Google Drive accounts, they'll both be titled "My Drive - Google Drive".  But the one on the left will show a "1" next to its title in the menu and the one on the right will show a "2".  This makes it easier for you to select the tab you want when you know how they're organized in your window.
-
-
 ★ Search bookmarks
 
 To find a bookmark, type "/b" and a space in the search box, then part of the bookmark's name or URL.
@@ -212,16 +205,12 @@ To find a bookmark, type "/b" and a space in the search box, then part of the bo
    the current window.
  • Press SHIFT-ENTER to open it in a new window.
 
-As soon as you type "/b ", your bookmarks will be listed in alphabetical order, in case you want to browse through them.
-
 
 ★ Search the browser history
 
 To find something in the last 2000 pages of your browser history, type "/h" and a space in the search box, then part of the page's name or URL.
 
 The same CTRL-ENTER (CMD-ENTER on macOS) and SHIFT-ENTER shortcuts will open the visited page in a new tab or window.
-
-As soon as you type "/h ", the pages from your history will be listed in order of recency, so you can get back to a page you had recently visited without having to remember its name.
 
 
 ★ Delete bookmarks and history items

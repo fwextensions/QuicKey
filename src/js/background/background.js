@@ -144,6 +144,7 @@ require([
 	let shortcutTimer;
 	let lastWindowID;
 	let lastUsedVersion;
+	let usePinyin;
 
 
 	const addTab = debounce(({tabId}) => cp.tabs.get(tabId)
@@ -503,10 +504,10 @@ DEBUG && console.log(e);
 			// sure that promise is handled as part of the chain started from
 			// getting the lastUsedVersion.  otherwise, the onInstalled promise
 			// below would always think it was being updated.
-		({lastUsedVersion} = data);
+		({lastUsedVersion, settings: {usePinyin}} = data);
 
-			// save the current time so recentTabs.getAll() knows whether it
-			// needs to update the stored data
+			// save the current time and version in settings so recentTabs.getAll()
+			// knows whether it needs to update the stored data
 		return {
 			lastStartupTime: Date.now(),
 			lastUsedVersion: Manifest.version
@@ -540,5 +541,17 @@ DEBUG && console.log("=== startup done", performance.now());
 		.then(() => gInstalledPromise)
 		.then(({reason, previousVersion}) => {
 			backgroundTracker.event("extension", reason, previousVersion);
-		});
+
+			if (reason == "update" && lastUsedVersion == "1.4.0" && usePinyin) {
+					// open the options page with an update message for people
+					// who had previously installed QuicKey and have their
+					// language set to Chinese or who have open tabs with
+					// Chinese characters
+				chrome.tabs.create({
+					url: chrome.extension.getURL("options.html?pinyin")
+				});
+				backgroundTracker.event("extension", "open-options");
+			}
+		})
+		.catch(error => backgroundTracker.exception(error));
 });

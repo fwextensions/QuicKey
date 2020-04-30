@@ -213,11 +213,18 @@ module.exports = function(grunt) {
 					"build/out/js/common/almond.js": "build/almond.js",
 					"build/out/js/common/base.js": "build/rjs/common/base.js",
 					"build/out/js/common/react.js": "build/rjs/common/react.js",
+					"build/out/js/lib/pinyin.js": "build/rjs/lib/pinyin.js",
 					"build/out/js/background/background.js": "build/rjs/background/background.js",
 					"build/out/js/popup/init.js": "src/js/popup/init.js",
 					"build/out/js/popup/main.js": "build/rjs/popup/main.js",
 					"build/out/js/options/main.js": "build/rjs/options/main.js"
 				}
+			}
+		},
+
+		shell: {
+			buildPinyin: {
+				command: "npm run build:pinyin"
 			}
 		},
 
@@ -349,6 +356,7 @@ module.exports = function(grunt) {
 	grunt.registerTask("build", function(target = "quickey", env = "dev") {
 		grunt.task.run([
 			"time",
+			"clean:rjs",
 			"sync:out",
 			`copy:${target}`,
 			`cleanupManifest:${target}:${env}`,

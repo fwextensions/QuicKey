@@ -18,6 +18,10 @@ define([
 		"Del": "Delete",
 		"Comma": ",",
 		"Period": ".",
+		"Media Previous Track": "MediaTrackPrevious",
+		"Media Next Track": "MediaTrackNext",
+		"Media Play/Pause": "MediaPlayPause",
+		"Media Stop": "MediaStop",
 			// Unicode chars used as keys show up as broken chars in Chrome after
 			// r.js combines the files, possibly only after adding bluebird.min.js
 //		"←": "ArrowLeft",
@@ -62,7 +66,9 @@ define([
 				const shortcutText = (chromeShortcut.shortcut || "");
 				let shortcutKeys;
 
-				if (!shortcutText.includes(ShortcutSeparator)) {
+				if (shortcutText.indexOf("Media") > -1) {
+					shortcutKeys = [shortcutText];
+				} else if (!shortcutText.includes(ShortcutSeparator)) {
 						// annoyingly, Mac Chrome returns keyboard shortcuts
 						// using chars like ⇧⌘A instead of Shift+Cmd+A.  so
 						// separate out the primary key name and then split the

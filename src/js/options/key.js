@@ -17,10 +17,15 @@ define([
 		["ArrowUp", "↑"],
 		["ArrowDown", "↓"]
 	];
-		// use the modifier characters as single-width keys on Mac, but use the
-		// full names elsewhere
 	const KeyClasses = {
-		width1: (IsMac ? MacArrows : WindowsArrows).concat(!IsMac ? [] : [
+		width1: (IsMac ? MacArrows : WindowsArrows).concat([
+			["MediaTrackPrevious", "⏮"],
+			["MediaTrackNext", "⏭"],
+			["MediaPlayPause", "⏯"],
+			["MediaStop", "⏹"]
+		]).concat(!IsMac ? [] : [
+				// use the modifier characters as single-width keys on Mac, but
+				// use the full names elsewhere
 			["ctrl", "⌃"],
 			["shift", "⇧"],
 			["opt", "⌥"],

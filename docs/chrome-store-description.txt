@@ -86,8 +86,14 @@ QuicKey adds keyboard shortcuts to switch tabs with a Quicksilver-style search o
 tabs
 QuicKey needs the tabs permissions because the entire purpose of the extension is to let the user easily switch tabs by searching across all of the titles and URLs.  It also tracks tab activation, so it can display a list of recently visited tabs.
 
+bookmarks
+QuicKey needs the bookmarks permission to let the user search the titles and URLs of their bookmarks.  The only time QuicKey changes a bookmark is when the user chooses to delete one, and only after a confirmation dialog.
+
 history
 QuicKey needs the history permission to let the user search the titles and URLs of pages from the browser history.  The only time QuicKey changes the history is when the user chooses to delete a history item.
+
+storage
+QuicKey needs the storage permission so that it can persist the user's settings and the list of recently used tabs across browser sessions.  The tab list is stored only in chrome.storage.local and is never transmitted anywhere.
 
 sessions
 QuicKey needs the sessions permission so that it can restore recently closed tabs with their full history.  It lists the closed tabs below the recently used tabs, and also lets the user access them via search.
@@ -108,9 +114,9 @@ No mouse needed!
  • Press ENTER to switch to the selected tab
 
 
-★ Now with support for dark mode!
+★ Now with support for pinyin!
 
-QuicKey will respond to changes in your computer's dark mode setting with darker colors that match your browser's user interface.
+You can use pinyin to more easily search for Chinese characters in web page titles and URLs.
 
 
 ★ Use CTRL-TAB as the keyboard shortcut
@@ -185,7 +191,7 @@ Recently used tabs get a slight boost in the search results ranking, so getting 
 
 ★ Customize shortcuts and other options
 
-To customize how QuicKey behaves, click the gear icon in the menu, or right-click its icon on the toolbar and select Options. On the QuicKey options page, you can change the behavior of the SPACE and ESC keys, mark tabs in other windows with an icon, hide closed tabs from the search results, show the number of open tabs, and customize many of the keyboard shortcuts described here.
+To customize how QuicKey behaves, click the gear icon in the menu, or right-click its icon on the toolbar and select Options. On the QuicKey options page, you can change the behavior of the SPACE and ESC keys, hide closed tabs from the search results, mark tabs in other windows with an icon, show the number of open tabs, use pinyin to search for Chinese characters, and customize many of the keyboard shortcuts described here.
 
 If you change the keyboard shortcut for showing the QuicKey menu to something other than the default ALT-Q or if you have a non-US keyboard, you'll probably want to also change the key that's used to navigate down the list of recently used tabs (which defaults to W). For instance, if you change the menu shortcut to ALT-Z, you might want to change the navigation key to X, which is right next door. To change it, go to the Options page, click in the first keyboard shortcut picker, and press X.
 

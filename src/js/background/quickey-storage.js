@@ -13,16 +13,44 @@ define([
 	getDefaultSettings,
 	k
 ) {
-	function increment(
-		value)
-	{
-		return parseInt(value) + 1;
-	}
-
-
 	return shared("quickeyStorage", () => {
+		function increment(
+			value)
+		{
+			return parseInt(value) + 1;
+		}
+
+
+		function update(
+			updater)
+		{
+			return async (data, version) => {
+				await updater(data, version);
+
+					// we added highlighting of new options in v8, so set the
+					// lastSeenOptionsVersion to just before that
+				if (version >= 7 && !Number.isInteger(data.lastSeenOptionsVersion)) {
+					data.lastSeenOptionsVersion = 7;
+				}
+
+				return [data, increment(version)];
+			};
+		}
+
+
+		function addDefaultSetting(
+			...keys)
+		{
+			return async data => {
+				const defaults = (await DefaultData).settings;
+
+				keys.forEach(key => data.settings[key] = defaults[key]);
+			};
+		}
+
+
 		const Updaters = {
-			"3": (data, version) =>
+			"3": update(data =>
 			{
 					// add installTime in v4
 				data.installTime = Date.now();
@@ -30,47 +58,23 @@ define([
 					// we no longer need these values
 				delete data.switchFromShortcut;
 				delete data.lastShortcutTabID;
-
-				return [data, increment(version)];
-			},
-			"4": async (data, version) =>
+			}),
+			"4": update(async data =>
 			{
 					// add settings in v5
 				data.settings = (await DefaultData).settings;
-
-				return [data, increment(version)];
-			},
-			"5": async (data, version) =>
+			}),
+			"5": update(async data =>
 			{
 					// add includeClosedTabs option and lastUsedVersion in
 					// v6.  leave lastUsedVersion empty so the background
 					// code can tell this was an update from an older version.
-				data.settings[k.IncludeClosedTabs.Key] =
-					(await DefaultData).settings[k.IncludeClosedTabs.Key];
+				await addDefaultSetting(k.IncludeClosedTabs.Key);
 				data.lastUsedVersion = "";
-
-				return [data, increment(version)];
-			},
-			"6": async (data, version) =>
-			{
-					// add markTabsInOtherWindows option
-				data.settings[k.MarkTabsInOtherWindows.Key] =
-					(await DefaultData).settings[k.MarkTabsInOtherWindows.Key];
-
-				return [data, increment(version)];
-			},
-			"7": async (data, version) =>
-			{
-					// add showTabCount option
-				data.settings[k.ShowTabCount.Key] =
-					(await DefaultData).settings[k.ShowTabCount.Key];
-
-					// we're updating from 7 to 8, so 7 is the last version of
-					// options that the user might have seen
-				data.lastSeenOptionsVersion = 7;
-
-				return [data, increment(version)];
-			}
+			}),
+			"6": update(addDefaultSetting(k.MarkTabsInOtherWindows.Key)),
+			"7": update(addDefaultSetting(k.ShowTabCount.Key)),
+			"8": update(addDefaultSetting(k.UsePinyin.Key))
 		};
 			// calculate the version by incrementing the highest key in the
 			// Updaters hash, so that the version is automatically increased
@@ -78,8 +82,38 @@ define([
 			// once we go over 9, the order is correct.
 		const CurrentVersion = increment(Object.keys(Updaters).sort((a, b) => a - b).pop());
 		const DefaultSettings = getDefaultSettings();
-		const DefaultData = cp.windows.getAll()
-			.then(windows => {
+		const DefaultData = Promise.all([
+				cp.windows.getAll(),
+				cp.tabs.query({})
+			])
+			.then(([windows, tabs]) => {
+				let hanPattern;
+
+					// our minimum Chrome version is 55, but the Unicode property
+					// support was added in 64, so this may throw in older
+					// browsers.  in that case, auto-detecting Chinese characters
+					// won't work, but the user can always enable it manually.
+				try { hanPattern = /\p{Script=Han}/u; } catch (e) {}
+
+				if (k.Language.indexOf("zh") == 0) {
+						// the browser is set to Chinese, so default this on
+					DefaultSettings[k.UsePinyin.Key] = true;
+				} else if (hanPattern) {
+						// default usePinyin to true if any of the currently
+						// open tabs have Chinese characters in their title/URL
+					for (let i = 0, len = tabs.length; i < len; i++) {
+						const {title, url} = tabs[i];
+
+							// decode the URL, since Chinese characters in tab
+							// URLs seem to get encoded when returned by the API
+						if (hanPattern.test(title) || hanPattern.test(decodeURI(url))) {
+							DefaultSettings[k.UsePinyin.Key] = true;
+
+							break;
+						}
+					}
+				}
+
 				DefaultSettings[k.MarkTabsInOtherWindows.Key] = windows.length < 4;
 
 				return {

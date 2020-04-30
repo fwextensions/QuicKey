@@ -40,7 +40,11 @@ define([
 		"delete": 1,
 		"insert": 1,
 		"home": 1,
-		"end": 1
+		"end": 1,
+		"mediatrackprevious": 1,
+		"mediatracknext": 1,
+		"mediaplaypause": 1,
+		"mediastop": 1
 	};
 	const KeyCodes = "AZ09".split("").reduce((result, char) => {
 		result[char] = char.charCodeAt(0);

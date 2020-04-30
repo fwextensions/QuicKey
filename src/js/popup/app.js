@@ -71,6 +71,7 @@ define("popup/app", [
 		bookmarks: [],
 		history: [],
 		recents: [],
+		command: [],
 		bookmarksPromise: null,
 		historyPromise: null,
 		forceUpdate: false,
@@ -109,7 +110,7 @@ define("popup/app", [
 			return {
 				query,
 				searchBoxText: query,
-				matchingItems: this.getMatchingItems(query),
+				matchingItems: [],
 					// default to the first item being selected if we got an
 					// initial query
 				selected: query ? 0 : -1,
@@ -195,7 +196,8 @@ define("popup/app", [
 						// pass in the space key behavior so initTabs() knows
 						// whether to normalize all whitespace, which is not
 						// needed if space moves the selection
-					settings[k.SpaceBehavior.Key] == k.SpaceBehavior.Space))
+					settings[k.SpaceBehavior.Key] == k.SpaceBehavior.Space,
+					settings[k.UsePinyin.Key]))
 				.then(tabs => {
 						// filter out just recent and closed tabs that we have a
 						// last visit time for
@@ -273,30 +275,40 @@ define("popup/app", [
 		getMatchingItems: function(
 			query)
 		{
+				// score the items before checking the query, in case there had
+				// been a previous query, leaving hitMasks on all the items.
+				// if the query is now empty, we need to clear the hitMasks from
+				// all the items so no chars are shown matching.
+			const items = scoreItems(this[this.mode], query, this.settings[k.UsePinyin.Key]);
+
 			if (!query) {
 				switch (this.mode) {
 					case "tabs":
+							// this array is pointing at the same objects that
+							// are in this.tabs, so their hitMasks will have
+							// been cleared when we get here
 						return this.recents;
-
-					case "command":
-							// the user's only typed /, so don't show anything
-						return [];
 
 					case "history":
 							// special case the /h query so that we can sort the
 							// history items by visit date and show them as soon
 							// as the command is typed with no query
 						return this.history.sort(sortHistoryItems);
+
+					default:
+							// return bookmarks sorted alphabetically.  for the
+							// command mode, items is an empty array.
+						return items;
 				}
 			}
 
-			const scores = scoreItems(this[this.mode], query);
-			const firstScoresDiff = (scores.length > 1 &&
-				scores[0].score > MinScore) ? (scores[0].score - scores[1].score) : 0;
+			const firstScoresDiff = (items.length > 1 && items[0].score > MinScore)
+				? items[0].score - items[1].score
+				: 0;
 				// drop barely-matching results, keeping a minimum of 3,
 				// unless there's a big difference in scores between the
 				// first two items, which may mean we need a longer tail
-			const matchingItems = _.dropRightWhile(scores, ({score}, i) =>
+			const matchingItems = _.dropRightWhile(items, ({score}, i) =>
 				score < NearlyZeroScore ||
 					(score < MinScore && (i + 1 > MinItems || firstScoresDiff > MinScoreDiff))
 			);

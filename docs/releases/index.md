@@ -8,6 +8,17 @@ comments: true
 # Release history
 
 
+## 1.5.0 - 2020-04-29
+
+### Added
+
+* [Pinyin](https://en.wikipedia.org/wiki/Pinyin) strings in the search query will now match Chinese characters in tab titles and URLs.  This option is enabled by default if Chrome's language is set to Chinese or if Chinese characters are found in any currently open tabs titles or URLs. 
+
+### Fixed
+
+* When Chrome is running slowly, if a query is typed right after the *QuicKey* shortcut is pressed, and then that query is cleared, letters matching the previous query would still be highlighted in the menu.  
+
+
 ## 1.4.0 - 2020-03-18
 
 ### Added

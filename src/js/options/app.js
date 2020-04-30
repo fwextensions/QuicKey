@@ -16,6 +16,12 @@ define([
 	const {IncognitoNameUC, IncognitoNameLC} = k;
 	const IncognitoAction = k.IsEdge ? "click the checkbox" : "toggle it on";
 	const IncognitoIndicator = k.IsEdge ? <InPrivateIcon /> : <IncognitoIcon />;
+	const UpdateMessage = <div className="update-message"
+		title="Now you can use pinyin to search for Chinese characters in web page titles and URLs. You can always reopen this page by clicking the gear icon in the QuicKey menu."
+	>
+		<h3>现在，您可以使用拼音在网页标题和URL中搜索中文字符。</h3>
+		<h4>您始终可以通过单击QuicKey菜单中的齿轮图标来重新打开此页面。</h4>
+	</div>;
 
 
 	function NewSetting({
@@ -131,6 +137,10 @@ define([
 			} = this.props;
 
 			return <main className={k.IsEdge ? "edge" : "chrome"}>
+				{
+					new URLSearchParams(window.location.search).has("pinyin") &&
+						UpdateMessage
+				}
 				<h1 className="quickey">QuicKey options
 					<div className="help-button"
 						title="Learn more about QuicKey's features"
@@ -173,12 +183,6 @@ define([
 				</RadioGroup>
 
 				<Checkbox
-					id={k.MarkTabsInOtherWindows.Key}
-					label={<span>Mark tabs that are not in the current window with <WindowIcon /></span>}
-					value={settings[k.MarkTabsInOtherWindows.Key]}
-					onChange={onChange}
-				/>
-				<Checkbox
 					id={k.IncludeClosedTabs.Key}
 					label={<span>Include recently closed tabs in the search results (marked with <HistoryIcon />)</span>}
 					value={settings[k.IncludeClosedTabs.Key]}
@@ -188,6 +192,12 @@ define([
 						Selecting a closed tab will reopen it with its full history.
 					</div>
 				</Checkbox>
+				<Checkbox
+					id={k.MarkTabsInOtherWindows.Key}
+					label={<span>Mark tabs that are not in the current window with <WindowIcon /></span>}
+					value={settings[k.MarkTabsInOtherWindows.Key]}
+					onChange={onChange}
+				/>
 				<NewSetting
 					addedVersion={8}
 					lastSeenOptionsVersion={lastSeenOptionsVersion}
@@ -196,6 +206,17 @@ define([
 						id={k.ShowTabCount.Key}
 						label="Show the number of open tabs on the QuicKey icon"
 						value={settings[k.ShowTabCount.Key]}
+						onChange={onChange}
+					/>
+				</NewSetting>
+				<NewSetting
+					addedVersion={9}
+					lastSeenOptionsVersion={lastSeenOptionsVersion}
+				>
+					<Checkbox
+						id={k.UsePinyin.Key}
+						label="Use pinyin to match Chinese characters in titles and URLs"
+						value={settings[k.UsePinyin.Key]}
 						onChange={onChange}
 					/>
 				</NewSetting>
