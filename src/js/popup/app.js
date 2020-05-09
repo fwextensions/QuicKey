@@ -162,6 +162,8 @@ define("popup/app", [
 				// also handles the edge case where the menu is open and a tab
 				// in another window is closed.
 			chrome.tabs.onRemoved.addListener(this.onTabRemoved);
+			gPort.onMessage.addListener(this.onMessage);
+			window.addEventListener("blur", this.onWindowBlur);
 
 			window.addEventListener("unload", () => {
 					// if the restore last query option is off, clear any
@@ -685,6 +687,22 @@ define("popup/app", [
 				url: chrome.extension.getURL("options.html")
 			});
 			this.props.tracker.event("extension", "open-options");
+		},
+
+
+		onMessage: function(
+			message)
+		{
+			if (message.command == "selectDown") {
+				this.modifySelected(1, true);
+			}
+		},
+
+
+		onWindowBlur: function()
+		{
+			this.props.port.postMessage("closedByEsc");
+			window.close();
 		},
 
 
