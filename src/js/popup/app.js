@@ -179,6 +179,8 @@ define("popup/app", [
 				// also handles the edge case where the menu is open and a tab
 				// in another window is closed.
 			chrome.tabs.onRemoved.addListener(this.onTabRemoved);
+			gPort.onMessage.addListener(this.onMessage);
+			window.addEventListener("blur", this.onWindowBlur);
 
 			window.addEventListener("unload", () => {
 					// if the restore last query option is off, clear any
@@ -757,6 +759,22 @@ define("popup/app", [
 				// opening the options tab doesn't automatically close the menu
 				// on Firefox
 			this.closeWindow();
+		},
+
+
+		onMessage: function(
+			message)
+		{
+			if (message.command == "selectDown") {
+				this.modifySelected(1, true);
+			}
+		},
+
+
+		onWindowBlur: function()
+		{
+			this.props.port.postMessage("closedByEsc");
+			window.close();
 		},
 
 
