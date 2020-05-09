@@ -63,6 +63,9 @@
 				"mac": "MacCtrl+Z"
 			},
 			"description": "Switch instantly between the two most recent tabs"
+		},
+		"40-open-popup-window": {
+			"description": "Open menu in popup window"
 		}
 	},
 	"offline_enabled": true
