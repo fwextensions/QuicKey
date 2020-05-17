@@ -92,11 +92,19 @@ define([
 		update: function(
 			settings)
 		{
-			const shortcuts = settings.shortcuts;
+			const {shortcuts, chrome} = settings;
 			const mruSelectKey = shortcuts[k.Shortcuts.MRUSelect];
-			const popupModifiers = settings.chrome.popup.modifiers;
+			const popupModifiers = chrome.popup.modifiers;
+			const windowShortcut = chrome.shortcuts.find(({id}) => id == "40-open-popup-window").shortcut || "";
+			const windowShortcutKeys = windowShortcut.split("+");
+			const windowModifier = windowShortcutKeys[0];
+			const windowBaseKey = windowShortcutKeys.pop();
+			const selectUpShortcuts = [
+				joinKeys(popupModifiers, "ArrowUp"),
+				joinKeys(popupModifiers.concat("shift"), mruSelectKey)
+			];
 
-			Object.keys(shortcuts).forEach(function(id) {
+			Object.keys(shortcuts).forEach(id => {
 				const handler = Handlers[id];
 				const shortcut = [shortcuts[id]];
 
@@ -111,16 +119,17 @@ define([
 				}
 			});
 
+			if (windowBaseKey) {
+				selectUpShortcuts.push(joinKeys([windowModifier, "shift"], windowBaseKey));
+			}
+
 				// add handlers for navigating up and down with the MRU key,
 				// plus the modifiers used to open the popup
 			Manager.bind([
 				joinKeys(popupModifiers, "ArrowDown"),
 				joinKeys(popupModifiers, mruSelectKey)
 			], mruSelectDown);
-			Manager.bind([
-				joinKeys(popupModifiers, "ArrowUp"),
-				joinKeys(popupModifiers.concat("shift"), mruSelectKey)
-			], mruSelectUp);
+			Manager.bind(selectUpShortcuts, mruSelectUp);
 		},
 
 
