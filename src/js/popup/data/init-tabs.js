@@ -109,7 +109,7 @@ define([
 		return tabsPromise
 			.then(tabs => {
 				const currentWindowID = activeTab.windowId;
-				const markTabs = markTabsInOtherWindows && !isNaN(currentWindowID);
+				const markTabs = markTabsInOtherWindows && Number.isInteger(currentWindowID);
 
 				tabs.forEach(tab => {
 					addRecentBoost(tab);
@@ -147,7 +147,7 @@ define([
 						const pinyinDisplayURL = pinyin(tab.displayURL);
 
 							// if there's no difference, just store an empty
-							// string that scoreArray() will use to short-circuit
+							// string so that scoreArray() will short-circuit
 							// the scoring and return 0
 						tab.pinyinTitle = (pinyinTitle !== tab.title)
 							? pinyinTitle

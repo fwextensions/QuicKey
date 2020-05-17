@@ -5,6 +5,8 @@ const TabActivatedOnStartupDelay = 750;
 const TabRemovedDelay = 1000;
 const MinTabDwellTime = 750;
 const RestartDelay = 10 * 1000;
+const PopupInnerWidth = 500;
+const PopupInnerHeight = 488;
 const BadgeColors = {
 	light: {
 		normal: "#a0a0a0",
@@ -141,11 +143,13 @@ require([
 	let lastTogglePromise = Promise.resolve();
 	let isNormalIcon = true;
 	let showTabCount = true;
+	let activeTabs = [];
+	let popupAdjustmentWidth = 0;
+	let popupAdjustmentHeight = 0;
 	let shortcutTimer;
 	let lastWindowID;
 	let lastUsedVersion;
 	let usePinyin;
-	let activeTabs;
 	let popupWindow;
 	let popupPort;
 
@@ -220,6 +224,10 @@ require([
 					popupWindow = openPopupWindow(
 						await cp.windows.get(activeTabs[0].windowId)
 					);
+
+						// we have to wait for onload, because right now, the
+						// window's innerWidth/Height is 0
+					popupWindow.onload = adjustPopupWindowSize;
 				} else {
 					try {
 						popupWindow.focus();
@@ -263,10 +271,8 @@ require([
 		targetWindow)
 	{
 		const {left: targetX, top: targetY, width: targetW, height: targetH} = targetWindow;
-		const widthAdjustment = 16;
-		const heightAdjustment = 39;
-		const width = 500 + widthAdjustment;
-		const height = 488 + heightAdjustment;
+		const width = PopupInnerWidth + popupAdjustmentWidth;
+		const height = PopupInnerHeight + popupAdjustmentHeight;
 		const left = targetX + Math.floor((targetW - width) / 2);
 		const top = targetY + Math.floor((targetH - height) / 2);
 		const options = `toolbar=0,left=${left},top=${top},innerWidth=${width},innerHeight=${height}`;
@@ -274,6 +280,21 @@ require([
 		return window.open("popup.html", "quickey-popup", options, true);
 	}
 
+
+	function adjustPopupWindowSize()
+	{
+		const {innerWidth, innerHeight} = popupWindow;
+		const widthDelta = PopupInnerWidth - innerWidth;
+		const heightDelta = PopupInnerHeight - innerHeight;
+
+		if (widthDelta || heightDelta) {
+				// store the adjustments needed to get the target size so that
+				// the next time we open the window, it'll be the right size
+			popupAdjustmentWidth += widthDelta;
+			popupAdjustmentHeight += heightDelta;
+			popupWindow.resizeBy(widthDelta, heightDelta);
+		}
+	}
 
 
 	function activateLastTab()
@@ -481,7 +502,7 @@ require([
 
 		port.onDisconnect.addListener(() => {
 			popupIsOpen = false;
-			activeTabs = null;
+			activeTabs = [];
 
 			if (!closedByEsc && Date.now() - connectTime < MaxPopupLifetime) {
 					// this was a double-press of alt-Q, so toggle the tabs
