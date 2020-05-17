@@ -84,7 +84,6 @@ define("popup/app", [
 		resultsList: null,
 		settings: settings.getDefaults(),
 		settingsPromise: null,
-		className: "",
 
 
 		getInitialState: function()
@@ -140,13 +139,6 @@ define("popup/app", [
 
 		componentWillMount: function()
 		{
-				// we're saving the initial value of this prop instead of
-				// getting it every time in render, which is normally bad, but
-				// the platform will never change during the life of the app
-			this.className = [
-				this.props.platform,
-				k.IsFirefox ? "firefox" : ""
-			].join(" ");
 			this.loadTabs()
 				.then(tabs => {
 						// by the time we get here, the settings promise will
@@ -172,6 +164,12 @@ define("popup/app", [
 
 		componentDidMount: function()
 		{
+			const {outerWidth, outerHeight} = window;
+
+				// prevent the window from resizing
+			window.addEventListener("resize", () => window.resizeTo(outerWidth, outerHeight));
+			window.addEventListener("blur", this.onWindowBlur);
+
 				// annoyingly, there seems to be a bug in Chrome where the
 				// closed tab is still around when the callback passed to
 				// chrome.tabs.remove() is called.  so we need to add an
@@ -180,7 +178,6 @@ define("popup/app", [
 				// in another window is closed.
 			chrome.tabs.onRemoved.addListener(this.onTabRemoved);
 			gPort.onMessage.addListener(this.onMessage);
-			window.addEventListener("blur", this.onWindowBlur);
 
 			window.addEventListener("unload", () => {
 					// if the restore last query option is off, clear any
@@ -228,9 +225,13 @@ define("popup/app", [
 
 		loadTabs: function()
 		{
-			return this.loadPromisedItems(() => this.settingsPromise
-				.then(settings => initTabs(
+			return this.loadPromisedItems(() => Promise.all([
+					this.settingsPromise,
+					this.getActiveTab()
+				])
+				.then(([settings, [activeTab]]) => initTabs(
 					recentTabs.getAll(settings[k.IncludeClosedTabs.Key]),
+					activeTab,
 					settings[k.MarkTabsInOtherWindows.Key],
 						// pass in the space key behavior so initTabs() knows
 						// whether to normalize all whitespace, which is not
@@ -457,7 +458,9 @@ define("popup/app", [
 					this.props.tracker.event(this.mode, "open");
 				}
 
-				this.closeWindow();
+					// we seem to have to close the window in a timeout so that
+					// the hover state of the button gets cleared
+				setTimeout(function() { window.close(); }, 0);
 			}
 		},
 
@@ -583,7 +586,8 @@ define("popup/app", [
 				active: true,
 				currentWindow: true
 			})
-				.then(activeTabs => {
+				.bind(this)
+				.then(function(activeTabs) {
 					const activeTab = activeTabs[0];
 						// if the active tab is at 0, and we want to move
 						// another tab to the left of it, force that index
@@ -619,12 +623,7 @@ define("popup/app", [
 						index: index
 					})
 				})
-				.then(movedTab => {
-					if (Array.isArray(movedTab)) {
-							// annoyingly, this is returned as an array in FF
-						movedTab = movedTab[0];
-					}
-
+				.then(function(movedTab) {
 						// use the movedTab from this callback, since
 						// the tab reference we had to it from before is
 						// likely stale.  we also have to call addURLs()
@@ -636,10 +635,6 @@ define("popup/app", [
 					this.focusTab(movedTab, unsuspend);
 					this.props.tracker.event(this.state.query.length ? "tabs" : "recents",
 						"move-" + (direction ? "right" : "left"));
-
-						// focusing the tab doesn't close the menu in FF, so
-						// close it explicitly just in case
-					this.closeWindow();
 				});
 		},
 
@@ -686,11 +681,20 @@ define("popup/app", [
 		},
 
 
-		closeWindow: function()
+		getActiveTab: function()
 		{
-				// we seem to have to close the window in a timeout so that
-				// the hover state of the button gets cleared
-			setTimeout(window.close, 0);
+			if (window.name == "quickey-popup") {
+					// since we're in a popup window, get the active tab from
+					// the background, which recorded it before opening this
+					// window.  we can't use cp.runtime.sendMessage() because
+					// it's a shared instance that's on the background page, so
+					// calling sendMessage() from there would be going from the
+					// background to this window, but we want the opposite.
+				return new Promise(resolve =>
+					chrome.runtime.sendMessage("getActiveTab", resolve));
+			} else {
+				return cp.tabs.query({ active: true, currentWindow: true });
+			}
 		},
 
 
@@ -755,10 +759,6 @@ define("popup/app", [
 				url: chrome.extension.getURL("options.html")
 			});
 			this.props.tracker.event("extension", "open-options");
-
-				// opening the options tab doesn't automatically close the menu
-				// on Firefox
-			this.closeWindow();
 		},
 
 
@@ -788,7 +788,7 @@ define("popup/app", [
 				newSettingsAvailable
 			} = this.state;
 
-			return <div className={this.className}>
+			return <div className={this.props.platform}>
 				<SearchBox
 					mode={this.mode}
 					forceUpdate={this.forceUpdate}
