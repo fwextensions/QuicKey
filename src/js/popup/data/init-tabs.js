@@ -46,6 +46,11 @@ define([
 
 	return async function initTabs(
 		tabsPromise,
+			// there should normally be an active tab, unless we've refreshed
+			// the open popup via devtools, which seemed to return a normal
+			// active tab in Chrome pre-65.  default to an empty object so the
+			// .id access below won't throw an exception.
+		activeTab = {},
 		markTabsInOtherWindows,
 		normalizeWhitespace,
 		usePinyin)
@@ -101,20 +106,8 @@ define([
 		}
 
 
-		return Promise.all([
-			tabsPromise,
-			cp.tabs.query({
-				active: true,
-				currentWindow: true
-			})
-		])
-			.spread((tabs, activeTabs) => {
-					// there should normally be an active tab, unless we've
-					// refreshed the open popup via devtools, which seemed to
-					// return a normal active tab in Chrome pre-65.  default to
-					// an empty object so the .id access below won't throw
-					// an exception.
-				const activeTab = activeTabs[0] || {};
+		return tabsPromise
+			.then(tabs => {
 				const currentWindowID = activeTab.windowId;
 				const markTabs = markTabsInOtherWindows && !isNaN(currentWindowID);
 
@@ -170,9 +163,8 @@ define([
 					// remove the active tab from the array so it doesn't show
 					// up in the results, making it clearer if you have duplicate
 					// tabs open.  but do this after processing all the tabs, so
-					// that if the current tab has the same title as another in
-					// the same window, the indexes displayed for the other tabs
-					// will be correct.
+					// that if the current tab has the same title as another one,
+					// the indexes displayed for the other tabs will be correct.
 				_.remove(tabs, { id: activeTab.id });
 
 					// make sure this index of tabs gets GC'd

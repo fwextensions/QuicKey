@@ -155,6 +155,12 @@ define("popup/app", [
 
 		componentDidMount: function()
 		{
+			const {outerWidth, outerHeight} = window;
+
+				// prevent the window from resizing
+			window.addEventListener("resize", () => window.resizeTo(outerWidth, outerHeight));
+			window.addEventListener("blur", this.onWindowBlur);
+
 				// annoyingly, there seems to be a bug in Chrome where the
 				// closed tab is still around when the callback passed to
 				// chrome.tabs.remove() is called.  so we need to add an
@@ -163,7 +169,6 @@ define("popup/app", [
 				// in another window is closed.
 			chrome.tabs.onRemoved.addListener(this.onTabRemoved);
 			gPort.onMessage.addListener(this.onMessage);
-			window.addEventListener("blur", this.onWindowBlur);
 
 			window.addEventListener("unload", () => {
 					// if the restore last query option is off, clear any
@@ -211,9 +216,13 @@ define("popup/app", [
 
 		loadTabs: function()
 		{
-			return this.loadPromisedItems(() => this.settingsPromise
-				.then(settings => initTabs(
+			return this.loadPromisedItems(() => Promise.all([
+					this.settingsPromise,
+					this.getActiveTab()
+				])
+				.then(([settings, [activeTab]]) => initTabs(
 					recentTabs.getAll(settings[k.IncludeClosedTabs.Key]),
+					activeTab,
 					settings[k.MarkTabsInOtherWindows.Key],
 						// pass in the space key behavior so initTabs() knows
 						// whether to normalize all whitespace, which is not
@@ -623,6 +632,23 @@ define("popup/app", [
 			}
 
 			this.setState({ selected: index });
+		},
+
+
+		getActiveTab: function()
+		{
+			if (window.name == "quickey-popup") {
+					// since we're in a popup window, get the active tab from
+					// the background, which recorded it before opening this
+					// window.  we can't use cp.runtime.sendMessage() because
+					// it's a shared instance that's on the background page, so
+					// calling sendMessage() from there would be going from the
+					// background to this window, but we want the opposite.
+				return new Promise(resolve =>
+					chrome.runtime.sendMessage("getActiveTab", resolve));
+			} else {
+				return cp.tabs.query({ active: true, currentWindow: true });
+			}
 		},
 
 

@@ -145,6 +145,7 @@ require([
 	let lastWindowID;
 	let lastUsedVersion;
 	let usePinyin;
+	let activeTabs;
 	let popupWindow;
 	let popupPort;
 
@@ -212,7 +213,13 @@ require([
 
 			case "40-open-popup-window":
 				if (!popupWindow || popupWindow.closed) {
-					popupWindow = await openPopupWindow();
+					activeTabs = await cp.tabs.query({
+						active: true,
+						lastFocusedWindow: true
+					});
+					popupWindow = openPopupWindow(
+						await cp.windows.get(activeTabs[0].windowId)
+					);
 				} else {
 					try {
 						popupWindow.focus();
@@ -252,10 +259,10 @@ require([
 	}
 
 
-	async function openPopupWindow()
+	function openPopupWindow(
+		targetWindow)
 	{
-		const activeWindow = await cp.windows.getCurrent();
-		const {left: targetX, top: targetY, width: targetW, height: targetH} = activeWindow;
+		const {left: targetX, top: targetY, width: targetW, height: targetH} = targetWindow;
 		const widthAdjustment = 16;
 		const heightAdjustment = 39;
 		const width = 500 + widthAdjustment;
@@ -474,6 +481,7 @@ require([
 
 		port.onDisconnect.addListener(() => {
 			popupIsOpen = false;
+			activeTabs = null;
 
 			if (!closedByEsc && Date.now() - connectTime < MaxPopupLifetime) {
 					// this was a double-press of alt-Q, so toggle the tabs
@@ -487,8 +495,10 @@ require([
 	});
 
 
-	chrome.runtime.onMessage.addListener(message => {
-		if (k.ShowTabCount.Key in message) {
+	chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+		if (message == "getActiveTab") {
+			sendResponse(activeTabs);
+		} else if (k.ShowTabCount.Key in message) {
 			showTabCount = message[k.ShowTabCount.Key];
 
 				// set the normal icon, in case the user switched modes after
