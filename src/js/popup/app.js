@@ -168,7 +168,7 @@ define("popup/app", [
 
 				// prevent the window from resizing
 			window.addEventListener("resize", () => window.resizeTo(outerWidth, outerHeight));
-			window.addEventListener("blur", this.onWindowBlur);
+			!k.IsDev && window.addEventListener("blur", this.onWindowBlur);
 
 				// annoyingly, there seems to be a bug in Chrome where the
 				// closed tab is still around when the callback passed to
@@ -342,7 +342,7 @@ define("popup/app", [
 			this.setState({
 				query,
 				matchingItems: this.getMatchingItems(query),
-				selected: query ? 0 : -1
+				selected: query || !menubar.visible ? 0 : -1
 			});
 		},
 
@@ -683,7 +683,7 @@ define("popup/app", [
 
 		getActiveTab: function()
 		{
-			if (window.name == "quickey-popup") {
+			if (!menubar.visible) {
 					// since we're in a popup window, get the active tab from
 					// the background, which recorded it before opening this
 					// window.  we can't use cp.runtime.sendMessage() because
