@@ -90,7 +90,7 @@ define([
 		return tabsPromise
 			.then(tabs => {
 				const currentWindowID = activeTab.windowId;
-				const markTabs = markTabsInOtherWindows && !isNaN(currentWindowID);
+				const markTabs = markTabsInOtherWindows && Number.isInteger(currentWindowID);
 
 				tabs.forEach(tab => {
 					addRecentBoost(tab);
