@@ -218,7 +218,6 @@ define("popup/app", [
 					settings[k.SpaceBehavior.Key] == k.SpaceBehavior.Space,
 					settings[k.UsePinyin.Key]))
 				.then(tabs => {
-// TODO: don't add the popup window to recent tabs in the first place
 					_.remove(tabs, { windowId: this.windowID });
 
 						// filter out just recent and closed tabs that we have a

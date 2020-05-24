@@ -177,7 +177,7 @@ require([
 	function handleTabActivated(
 		event)
 	{
-		if (!gIgnoreNextTabActivation) {
+		if (!gIgnoreNextTabActivation && event.windowId !== popupWindowID) {
 			if (tabChangedFromCommand) {
 					// invert the icon since the user is actively navigating
 					// between next/previous tabs with the shortcuts
@@ -277,9 +277,13 @@ require([
 				width,
 				height
 			});
-			cp.windows.update(popupWindowID, {focused: true});
+			cp.windows.update(popupWindowID, { focused: true });
 		} else {
-			popupPort.postMessage({ command: "selectDown" });
+			try {
+				popupPort.postMessage({ command: "selectDown" });
+			} catch (e) {
+				console.error(e);
+			}
 		}
 	}
 
@@ -493,7 +497,10 @@ require([
 					// window somehow doesn't have an active tab, which should
 					// never happen, it'll pass undefined to addTab(), which
 					// will catch the exception.
-				.then(([tab = {}]) => handleTabActivated({ tabId: tab.id }));
+				.then(([tab = {}]) => handleTabActivated({
+					tabId: tab.id,
+					windowId: windowID
+				}));
 		}
 	});
 
