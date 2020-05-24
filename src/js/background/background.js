@@ -151,8 +151,8 @@ require([
 	let lastUsedVersion;
 	let usePinyin;
 	let popupWindow;
+	let popupWindowID;
 	let popupPort;
-
 
 	const addTab = debounce(({tabId}) => cp.tabs.get(tabId)
 		.then(recentTabs.add)
@@ -192,7 +192,7 @@ require([
 	}
 
 
-	async function handleCommand(
+	function handleCommand(
 		command)
 	{
 			// track whether the user is navigating farther back in the stack
@@ -216,24 +216,7 @@ require([
 				break;
 
 			case "40-open-popup-window":
-				if (!popupWindow || popupWindow.closed) {
-					activeTabs = await cp.tabs.query({
-						active: true,
-						lastFocusedWindow: true
-					});
-					popupWindow = openPopupWindow(
-						await cp.windows.get(activeTabs[0].windowId)
-					);
-
-						// we have to wait for onload, because right now, the
-						// window's innerWidth/Height is 0
-					popupWindow.onload = adjustPopupWindowSize;
-				} else {
-					try {
-						popupWindow.focus();
-						popupPort.postMessage({ command: "selectDown" });
-					} catch (e) {}
-				}
+				openPopupWindow();
 				break;
 		}
 	}
@@ -261,7 +244,47 @@ require([
 	}
 
 
-	function openPopupWindow(
+	async function openPopupWindow()
+	{
+		activeTabs = await cp.tabs.query({
+			active: true,
+			lastFocusedWindow: true
+		});
+
+		if (!popupWindow || popupWindow.closed) {
+				// the popup window isn't open, so create a new one
+			popupWindow = createPopupWindow(
+				await cp.windows.get(activeTabs[0].windowId)
+			);
+			popupWindowID = (await cp.windows.getCurrent()).id;
+		} else if (activeTabs[0].windowId !== popupWindowID) {
+				// the popup window isn't focused, so get the position to show
+				// it centered on the current browser window
+			const {left, top, width, height} = calcPopupPosition(
+				await cp.windows.get(activeTabs[0].windowId)
+			);
+
+				// ffs, this was an annoying Chrome bug.  focusing a minimized
+				// popup window didn't properly focus the activeElement within
+				// it.  after much flailing, it seems like restoring it to a
+				// normal but unfocused state first and then focusing it works.
+				// wtf?!?
+			cp.windows.update(popupWindowID, {
+				focused: false,
+				state: "normal",
+				left,
+				top,
+				width,
+				height
+			});
+			cp.windows.update(popupWindowID, {focused: true});
+		} else {
+			popupPort.postMessage({ command: "selectDown" });
+		}
+	}
+
+
+	function calcPopupPosition(
 		targetWindow)
 	{
 		const {left: targetX, top: targetY, width: targetW, height: targetH} = targetWindow;
@@ -269,9 +292,8 @@ require([
 		const height = PopupInnerHeight + popupAdjustmentHeight;
 		const left = targetX + Math.floor((targetW - width) / 2);
 		const top = targetY + Math.floor((targetH - height) / 2);
-		const options = `toolbar=0,left=${left},top=${top},innerWidth=${width},innerHeight=${height}`;
 
-		return window.open("popup.html", "quickey-popup", options, true);
+		return { left, top, width, height };
 	}
 
 
@@ -288,6 +310,21 @@ require([
 			popupAdjustmentHeight += heightDelta;
 			popupWindow.resizeBy(widthDelta, heightDelta);
 		}
+	}
+
+
+	function createPopupWindow(
+		targetWindow)
+	{
+		const {left, top, width, height} = calcPopupPosition(targetWindow);
+		const options = `toolbar=0,left=${left},top=${top},innerWidth=${width},innerHeight=${height}`;
+		const popup = window.open("popup.html", "quickey-popup", options, true);
+
+			// we have to wait for onload, because just after creation, the
+			// window's innerWidth/Height is 0
+		popup.onload = adjustPopupWindowSize;
+
+		return popup;
 	}
 
 

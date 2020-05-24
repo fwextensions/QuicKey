@@ -107,6 +107,9 @@ define("popup/app", [
 					return settings;
 				});
 
+			cp.windows.getCurrent()
+				.then(({id}) => this.windowID = id);
+
 			return {
 				query,
 				searchBoxText: query,
@@ -146,11 +149,17 @@ define("popup/app", [
 
 		componentDidMount: function()
 		{
-			const {outerWidth, outerHeight} = window;
+			if (!menubar.visible) {
+					// we're being opened in a popup window
+				const {outerWidth, outerHeight} = window;
 
-				// prevent the window from resizing
-			window.addEventListener("resize", () => window.resizeTo(outerWidth, outerHeight));
-			!k.IsDev && window.addEventListener("blur", this.onWindowBlur);
+					// prevent the window from resizing
+				window.addEventListener("resize",
+					() => window.resizeTo(outerWidth, outerHeight));
+				window.addEventListener("focus", this.onWindowFocus);
+				window.addEventListener("blur", this.onWindowBlur);
+				this.props.port.onMessage.addListener(this.onMessage);
+			}
 
 				// annoyingly, there seems to be a bug in Chrome where the
 				// closed tab is still around when the callback passed to
@@ -159,7 +168,6 @@ define("popup/app", [
 				// also handles the edge case where the menu is open and a tab
 				// in another window is closed.
 			chrome.tabs.onRemoved.addListener(this.onTabRemoved);
-			gPort.onMessage.addListener(this.onMessage);
 		},
 
 
@@ -210,6 +218,9 @@ define("popup/app", [
 					settings[k.SpaceBehavior.Key] == k.SpaceBehavior.Space,
 					settings[k.UsePinyin.Key]))
 				.then(tabs => {
+// TODO: don't add the popup window to recent tabs in the first place
+					_.remove(tabs, { windowId: this.windowID });
+
 						// filter out just recent and closed tabs that we have a
 						// last visit time for
 					this.recents = tabs
@@ -254,7 +265,7 @@ define("popup/app", [
 					// pressing esc in an empty field should close the popup, or
 					// if the user checked the always close option
 				this.props.port.postMessage("closedByEsc");
-				window.close();
+				this.closeWindow();
 			} else {
 					// if we're searching for bookmarks or history, reset the
 					// query to just /b or /h, rather than clearing it, unless
@@ -359,7 +370,7 @@ define("popup/app", [
 
 					// we seem to have to close the window in a timeout so that
 					// the hover state of the button gets cleared
-				setTimeout(function() { window.close(); }, 0);
+				setTimeout(this.closeWindow, 0);
 			}
 		},
 
@@ -582,7 +593,9 @@ define("popup/app", [
 
 		getActiveTab: function()
 		{
-			if (!menubar.visible) {
+			if (menubar.visible) {
+				return cp.tabs.query({ active: true, currentWindow: true });
+			} else {
 					// since we're in a popup window, get the active tab from
 					// the background, which recorded it before opening this
 					// window.  we can't use cp.runtime.sendMessage() because
@@ -591,8 +604,16 @@ define("popup/app", [
 					// background to this window, but we want the opposite.
 				return new Promise(resolve =>
 					chrome.runtime.sendMessage("getActiveTab", resolve));
+			}
+		},
+
+
+		closeWindow: function()
+		{
+			if (menubar.visible) {
+				window.close();
 			} else {
-				return cp.tabs.query({ active: true, currentWindow: true });
+				chrome.windows.update(this.windowID, { state: "minimized" });
 			}
 		},
 
@@ -699,10 +720,19 @@ define("popup/app", [
 		},
 
 
+		onWindowFocus: function()
+		{
+			if (!document.hidden) {
+				this.loadTabs();
+				this.setSelectedIndex(0, true);
+			}
+		},
+
+
 		onWindowBlur: function()
 		{
-			this.props.port.postMessage("closedByEsc");
-			window.close();
+			this.clearQuery();
+//			this.closeWindow();
 		},
 
 
@@ -718,6 +748,7 @@ define("popup/app", [
 
 			return <div className={this.props.platform}>
 				<SearchBox
+					autoFocus
 					mode={this.mode}
 					forceUpdate={this.forceUpdate}
 					query={searchBoxText}
