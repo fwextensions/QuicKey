@@ -66,15 +66,18 @@ define("popup/app", [
 
 
 	var App = React.createClass({
+		visible: true,
 		mode: "tabs",
 		tabs: [],
 		bookmarks: [],
 		history: [],
 		recents: [],
 		command: [],
+		tabsPromise: null,
 		bookmarksPromise: null,
 		historyPromise: null,
 		forceUpdate: false,
+		closeWindowCalled: false,
 		gotModifierUp: false,
 		gotMRUKey: true,
 		mruModifier: "Alt",
@@ -150,7 +153,8 @@ define("popup/app", [
 		componentDidMount: function()
 		{
 			if (!menubar.visible) {
-					// we're being opened in a popup window
+					// we're being opened in a popup window, so add event
+					// handlers we only need in that case
 				const {outerWidth, outerHeight} = window;
 
 					// prevent the window from resizing
@@ -218,6 +222,7 @@ define("popup/app", [
 					settings[k.SpaceBehavior.Key] == k.SpaceBehavior.Space,
 					settings[k.UsePinyin.Key]))
 				.then(tabs => {
+						// filter out the popup window
 					_.remove(tabs, { windowId: this.windowID });
 
 						// filter out just recent and closed tabs that we have a
@@ -251,7 +256,7 @@ define("popup/app", [
 			this.setState({
 				query,
 				matchingItems: this.getMatchingItems(query),
-				selected: query || !menubar.visible ? 0 : -1
+				selected: (query || !menubar.visible) ? 0 : -1
 			});
 		},
 
@@ -264,7 +269,7 @@ define("popup/app", [
 					// pressing esc in an empty field should close the popup, or
 					// if the user checked the always close option
 				this.props.port.postMessage("closedByEsc");
-				this.closeWindow();
+				this.closeWindow(true);
 			} else {
 					// if we're searching for bookmarks or history, reset the
 					// query to just /b or /h, rather than clearing it, unless
@@ -370,6 +375,10 @@ define("popup/app", [
 					// we seem to have to close the window in a timeout so that
 					// the hover state of the button gets cleared
 				setTimeout(this.closeWindow, 0);
+
+					// set this manually, since the onblur handler will fire when
+					// the item is opened and before the timed out closeWindow()
+				this.closeWindowCalled = true;
 			}
 		},
 
@@ -592,7 +601,7 @@ define("popup/app", [
 
 		getActiveTab: function()
 		{
-			if (menubar.visible) {
+			if (menubar.visible || !this.visible) {
 				return cp.tabs.query({ active: true, currentWindow: true });
 			} else {
 					// since we're in a popup window, get the active tab from
@@ -607,12 +616,32 @@ define("popup/app", [
 		},
 
 
-		closeWindow: function()
+		closeWindow: function(
+			closedByEsc)
 		{
+			this.closeWindowCalled = true;
+
 			if (menubar.visible) {
 				window.close();
 			} else {
-				chrome.windows.update(this.windowID, { state: "minimized" });
+				const options = {
+					left: -32000,
+					top: -32000
+				};
+
+				if (closedByEsc) {
+						// we're being closed by esc, not by losing focus or by
+						// focusing another tab.  so in addition to moving off
+						// screen, force the popup to lose focus so some other
+						// window comes forward.
+					options.focused = false;
+				}
+
+				chrome.windows.update(this.windowID, options);
+ 				this.forceUpdate = true;
+				this.resultsList.scrollToRow(0);
+				this.onQueryChange({ target: { value: "" }});
+				this.visible = false;
 			}
 		},
 
@@ -710,28 +739,42 @@ define("popup/app", [
 		},
 
 
-		onMessage: function(
-			message)
+		onMessage: function({
+			command})
 		{
-			if (message.command == "selectDown") {
+			if (command == "selectDown") {
 				this.modifySelected(1, true);
+			} else if (command == "tabActivated") {
+				this.loadTabs();
 			}
 		},
 
 
 		onWindowFocus: function()
 		{
-			if (!document.hidden) {
-				this.loadTabs();
-				this.setSelectedIndex(0, true);
-			}
+				// set visible before calling loadTabs(), since that will call
+				// getActiveTab(), which checks visible
+			this.visible = true;
+			this.closeWindowCalled = false;
+
+				// the tab list should already be correct in most cases, but
+				// load them again just to make sure.  also select the first
+				// item with mruKey down, so that when it's released, we'll
+				// navigate to that item.
+			this.loadTabs();
+			this.setSelectedIndex(0, true);
 		},
 
 
 		onWindowBlur: function()
 		{
-			this.clearQuery();
-//			this.closeWindow();
+			if (!this.closeWindowCalled) {
+					// only call this if we're losing focus because the user
+					// clicked another window, and not from pressing esc
+				this.closeWindow();
+			}
+
+			this.closeWindowCalled = false;
 		},
 
 
