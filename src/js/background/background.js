@@ -177,6 +177,7 @@ require([
 	function handleTabActivated(
 		event)
 	{
+			// don't add the popup window to the recent tabs
 		if (!gIgnoreNextTabActivation && event.windowId !== popupWindowID) {
 			if (tabChangedFromCommand) {
 					// invert the icon since the user is actively navigating
@@ -186,6 +187,20 @@ require([
 
 			tabChangedFromCommand = false;
 			addTab(event);
+
+			if (popupPort) {
+				storage.get(({tabIDs}) => {
+						// if the newly activated tab is the same as the most
+						// recent one in tabIDs, that means it was just
+						// reactivated after the popup was hidden, so we don't
+						// need to tell the popup to re-render
+					if (event.tabId !== tabIDs.slice(-1)[0]) {
+						try {
+							popupPort.postMessage({ command: "tabActivated" });
+						} catch (e) {}
+					}
+				})
+			}
 		}
 
 		gIgnoreNextTabActivation = false;
@@ -266,7 +281,7 @@ require([
 		} else if (activeTabs[0].windowId !== popupWindowID) {
 				// the popup window isn't focused, so get the position to show
 				// it centered on the current browser window
-			const {left, top, width, height} = calcPopupPosition(
+			const {left, top} = calcPopupPosition(
 				await cp.windows.get(activeTabs[0].windowId)
 			);
 
@@ -276,19 +291,19 @@ require([
 				// normal but unfocused state first and then focusing it works.
 				// wtf?!?
 			cp.windows.update(popupWindowID, {
-				focused: false,
-				state: "normal",
+				focused: true,
 				left,
-				top,
-				width,
-				height
+				top
 			});
-			cp.windows.update(popupWindowID, { focused: true });
 		} else {
 			try {
 				popupPort.postMessage({ command: "selectDown" });
 			} catch (e) {
 				console.error(e);
+
+				if (popupWindow) {
+					popupWindow.close();
+				}
 			}
 		}
 	}
@@ -300,8 +315,8 @@ require([
 		const {left: targetX, top: targetY, width: targetW, height: targetH} = targetWindow;
 		const width = PopupInnerWidth + popupAdjustmentWidth;
 		const height = PopupInnerHeight + popupAdjustmentHeight;
-		const left = targetX + Math.floor((targetW - width) / 2);
-		const top = targetY + Math.floor((targetH - height) / 2);
+		const left = Math.max(0, targetX + Math.floor((targetW - width) / 2));
+		const top = Math.max(0, targetY + Math.floor((targetH - height) / 2));
 
 		return { left, top, width, height };
 	}
@@ -455,7 +470,7 @@ require([
 	chrome.tabs.onCreated.addListener(tab => {
 		updateTabCount(1);
 
-		if (!gStartingUp && !tab.active) {
+		if (!gStartingUp && !tab.active && tab.windowId !== popupWindowID) {
 				// this tab was opened by ctrl-clicking a link or by opening
 				// all the tabs in a bookmark folder, so pass true to insert
 				// this tab in the penultimate position, which makes it the
@@ -546,6 +561,7 @@ require([
 
 		port.onDisconnect.addListener(() => {
 			popupIsOpen = false;
+			popupPort = null;
 			activeTabs = [];
 
 			if (!closedByEsc && Date.now() - connectTime < MaxPopupLifetime) {
