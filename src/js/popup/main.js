@@ -54,9 +54,10 @@ require([
 			React.createElement(App, {
 				initialQuery: query,
 				initialShortcuts: shortcuts,
-				platform: platform,
-				tracker: tracker,
-				port: gPort
+				port: gPort,
+				isPopup: !!window.opener,
+				platform,
+				tracker
 			}),
 			document.getElementById("root")
 		);

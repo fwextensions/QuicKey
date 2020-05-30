@@ -95,7 +95,7 @@ define([
 			const {shortcuts, chrome} = settings;
 			const mruSelectKey = shortcuts[k.Shortcuts.MRUSelect];
 			const popupModifiers = chrome.popup.modifiers;
-			const windowShortcut = chrome.shortcuts.find(({id}) => id == "40-open-popup-window").shortcut || "";
+			const windowShortcut = chrome.shortcuts.find(({id}) => id == k.CommandIDs.OpenPopupCommand).shortcut || "";
 			const windowShortcutKeys = windowShortcut.split("+");
 			const windowModifier = windowShortcutKeys[0];
 			const windowBaseKey = windowShortcutKeys.pop();
