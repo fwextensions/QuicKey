@@ -24,6 +24,14 @@ define([
 		IsEdge,
 		IncognitoNameUC: IsEdge ? "InPrivate" : "Incognito",
 		IncognitoNameLC: IsEdge ? "InPrivate" : "incognito",
+		OffscreenX: -13000,
+		OffscreenY: -13000,
+		CommandIDs: {
+			OpenPopupCommand: "00-open-popup-window",
+			PreviousTabCommand: "1-previous-tab",
+			NextTabCommand: "2-next-tab",
+			ToggleTabsCommand: "30-toggle-recent-tabs"
+		},
 		SpaceBehavior: {
 			Key: "spaceBehavior",
 			Select: "select",

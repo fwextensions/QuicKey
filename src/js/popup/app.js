@@ -161,7 +161,7 @@ define("popup/app", [
 
 		componentDidMount: function()
 		{
-			if (!menubar.visible) {
+			if (this.props.isPopup) {
 					// we're being opened in a popup window, so add event
 					// handlers we only need in that case
 				const {outerWidth, outerHeight} = window;
@@ -311,7 +311,7 @@ define("popup/app", [
 			this.setState({
 				query,
 				matchingItems: this.getMatchingItems(query),
-				selected: (query || !menubar.visible) ? 0 : -1
+				selected: (query || this.props.isPopup) ? 0 : -1
 			});
 		},
 
@@ -427,9 +427,13 @@ define("popup/app", [
 					this.props.tracker.event(this.mode, "open");
 				}
 
-					// we seem to have to close the window in a timeout so that
-					// the hover state of the button gets cleared
-				setTimeout(this.closeWindow, 0);
+				if (this.props.isPopup) {
+					this.closeWindow();
+				} else {
+						// we seem to have to close the window in a timeout so that
+						// the hover state of the button gets cleared
+					setTimeout(this.closeWindow, 0);
+				}
 
 					// set this manually, since the onblur handler will fire when
 					// the item is opened and before the timed out closeWindow()
@@ -656,7 +660,7 @@ define("popup/app", [
 
 		getActiveTab: function()
 		{
-			if (menubar.visible || !this.visible) {
+			if (!this.props.isPopup || !this.visible) {
 				return cp.tabs.query({ active: true, currentWindow: true });
 			} else {
 					// since we're in a popup window, get the active tab from
@@ -676,12 +680,14 @@ define("popup/app", [
 		{
 			this.closeWindowCalled = true;
 
-			if (menubar.visible) {
+			if (!this.props.isPopup) {
 				window.close();
+
+				return Promise.resolve();
 			} else {
 				const options = {
-					left: -32000,
-					top: -32000
+					left: k.OffscreenX,
+					top: k.OffscreenY
 				};
 
 				if (closedByEsc) {
@@ -692,11 +698,12 @@ define("popup/app", [
 					options.focused = false;
 				}
 
-				chrome.windows.update(this.windowID, options);
  				this.forceUpdate = true;
 				this.resultsList.scrollToRow(0);
 				this.onQueryChange({ target: { value: "" }});
 				this.visible = false;
+
+				return cp.windows.update(this.windowID, options);
 			}
 		},
 

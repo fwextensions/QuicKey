@@ -43,6 +43,9 @@
 				"mac": "MacCtrl+Q"
 			}
 		},
+		"00-open-popup-window": {
+			"description": "Open in alt-tab-style popup"
+		},
 		"1-previous-tab": {
 			"suggested_key": {
 				"default": "Alt+A",
@@ -63,9 +66,6 @@
 				"mac": "MacCtrl+Z"
 			},
 			"description": "Switch instantly between the two most recent tabs"
-		},
-		"40-open-popup-window": {
-			"description": "Open menu in popup window"
 		}
 	},
 	"offline_enabled": true

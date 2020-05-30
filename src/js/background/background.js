@@ -136,6 +136,8 @@ require([
 	settings,
 	k
 ) {
+	const {OpenPopupCommand, PreviousTabCommand, NextTabCommand, ToggleTabsCommand} = k.CommandIDs;
+
 	const backgroundTracker = trackers.background;
 	let tabCount = 0;
 	let popupIsOpen = false;
@@ -146,13 +148,13 @@ require([
 	let activeTabs = [];
 	let popupAdjustmentWidth = 0;
 	let popupAdjustmentHeight = 0;
+	let popupWindowID = 0;
 	let shortcutTimer;
 	let lastWindowID;
 	let lastUsedVersion;
 	let usePinyin;
-	let popupWindow;
-	let popupWindowID;
 	let popupPort;
+
 
 	const addTab = debounce(({tabId}) => cp.tabs.get(tabId)
 		.then(recentTabs.add)
@@ -214,24 +216,24 @@ require([
 		const label = isNormalIcon ? "single" : "repeated";
 
 		switch (command) {
-			case "1-previous-tab":
+			case OpenPopupCommand:
+				openPopupWindow();
+				break;
+
+			case PreviousTabCommand:
 				tabChangedFromCommand = true;
 				recentTabs.navigate(-1);
 				backgroundTracker.event("recents", "previous", label);
 				break;
 
-			case "2-next-tab":
+			case NextTabCommand:
 				tabChangedFromCommand = true;
 				recentTabs.navigate(1);
 				backgroundTracker.event("recents", "next", label);
 				break;
 
-			case "30-toggle-recent-tabs":
+			case ToggleTabsCommand:
 				toggleRecentTabs(true);
-				break;
-
-			case "40-open-popup-window":
-				openPopupWindow();
 				break;
 		}
 	}
@@ -267,17 +269,19 @@ require([
 
 	async function openPopupWindow()
 	{
+		let [popupWindow] = chrome.extension.getViews({ windowId: popupWindowID });
+
 		activeTabs = await cp.tabs.query({
 			active: true,
 			lastFocusedWindow: true
 		});
 
-		if (!popupWindow || popupWindow.closed) {
+		if (!popupWindow || popupWindow.closed || !popupPort) {
 				// the popup window isn't open, so create a new one
-			popupWindow = createPopupWindow(
+			popupWindow = await createPopupWindow(
 				await cp.windows.get(activeTabs[0].windowId)
 			);
-			popupWindowID = (await cp.windows.getCurrent()).id;
+			popupWindowID = popupWindow.id;
 		} else if (activeTabs[0].windowId !== popupWindowID) {
 				// the popup window isn't focused, so get the position to show
 				// it centered on the current browser window
@@ -285,11 +289,6 @@ require([
 				await cp.windows.get(activeTabs[0].windowId)
 			);
 
-				// ffs, this was an annoying Chrome bug.  focusing a minimized
-				// popup window didn't properly focus the activeElement within
-				// it.  after much flailing, it seems like restoring it to a
-				// normal but unfocused state first and then focusing it works.
-				// wtf?!?
 			cp.windows.update(popupWindowID, {
 				focused: true,
 				left,
@@ -302,7 +301,7 @@ require([
 				console.error(e);
 
 				if (popupWindow) {
-					popupWindow.close();
+					closePopupWindow(popupWindowID)
 				}
 			}
 		}
@@ -322,34 +321,43 @@ require([
 	}
 
 
-	function adjustPopupWindowSize()
+	async function createPopupWindow(
+		targetWindow)
 	{
-		const {innerWidth, innerHeight} = popupWindow;
+		let {left, top, width, height} = calcPopupPosition(targetWindow);
+		const popup = await cp.windows.create({
+			url: "popup.html",
+			type: "popup",
+			setSelfAsOpener: true,
+			left,
+			top,
+			width,
+			height
+		});
+		const {width: innerWidth, height: innerHeight} = popup.tabs[0];
 		const widthDelta = PopupInnerWidth - innerWidth;
 		const heightDelta = PopupInnerHeight - innerHeight;
 
 		if (widthDelta || heightDelta) {
 				// store the adjustments needed to get the target size so that
-				// the next time we open the window, it'll be the right size
+				// the next time we open the window, it'll be the right size.
+				// then adjust the new window to the correct size.
 			popupAdjustmentWidth += widthDelta;
 			popupAdjustmentHeight += heightDelta;
-			popupWindow.resizeBy(widthDelta, heightDelta);
+			width += popupAdjustmentWidth;
+			height += popupAdjustmentHeight;
+			await cp.windows.update(popup.id, { width, height });
 		}
+
+		return popup;
 	}
 
 
-	function createPopupWindow(
-		targetWindow)
+	function closePopupWindow(
+		windowID)
 	{
-		const {left, top, width, height} = calcPopupPosition(targetWindow);
-		const options = `toolbar=0,left=${left},top=${top},innerWidth=${width},innerHeight=${height}`;
-		const popup = window.open("popup.html", "quickey-popup", options, true);
-
-			// we have to wait for onload, because just after creation, the
-			// window's innerWidth/Height is 0
-		popup.onload = adjustPopupWindowSize;
-
-		return popup;
+		return cp.windows.remove(windowID)
+			.catch(console.error);
 	}
 
 
@@ -563,6 +571,7 @@ require([
 			popupIsOpen = false;
 			popupPort = null;
 			activeTabs = [];
+			closePopupWindow(popupWindowID);
 
 			if (!closedByEsc && Date.now() - connectTime < MaxPopupLifetime) {
 					// this was a double-press of alt-Q, so toggle the tabs
