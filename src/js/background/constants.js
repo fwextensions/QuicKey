@@ -9,19 +9,6 @@ define([
 	const IsMac = /Mac/i.test(platform);
 	const IsLinux = /Linux/i.test(platform);
 	const IsEdge = /Edg\//i.test(userAgent);
-	const IsFirefox = /Firefox\//i.test(userAgent);
-
-	const IncognitoNameUC = IsFirefox
-		? "Private"
-		: IsEdge
-			? "InPrivate"
-			: "Incognito";
-	const IncognitoNameLC = IsEdge
-		? "InPrivate"
-		: IncognitoNameUC.toLowerCase();
-	const IncognitoPermission = IsFirefox
-		? "Run in Private Windows"
-		: `Allow in ${IncognitoNameLC}`;
 
 	const languagePattern = /^(?<lang>[-a-z]+)-(?<locale>[a-z]+)$/i;
 	const primaryLanguage = languages[0];
@@ -35,10 +22,16 @@ define([
 			// this will get overridden in background.js if we're in dev mode
 		IsDev: false,
 		IsEdge,
-		IsFirefox,
-		IncognitoNameUC,
-		IncognitoNameLC,
-		IncognitoPermission,
+		IncognitoNameUC: IsEdge ? "InPrivate" : "Incognito",
+		IncognitoNameLC: IsEdge ? "InPrivate" : "incognito",
+		OffscreenX: -13000,
+		OffscreenY: -13000,
+		CommandIDs: {
+			OpenPopupCommand: "00-open-popup-window",
+			PreviousTabCommand: "1-previous-tab",
+			NextTabCommand: "2-next-tab",
+			ToggleTabsCommand: "30-toggle-recent-tabs"
+		},
 		SpaceBehavior: {
 			Key: "spaceBehavior",
 			Select: "select",
