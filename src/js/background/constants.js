@@ -24,10 +24,9 @@ define([
 		IsEdge,
 		IncognitoNameUC: IsEdge ? "InPrivate" : "Incognito",
 		IncognitoNameLC: IsEdge ? "InPrivate" : "incognito",
-		OffscreenX: -13000,
-		OffscreenY: -13000,
 		CommandIDs: {
-			OpenPopupCommand: "00-open-popup-window",
+			OpenPopupCommand: "010-open-popup-window",
+			FocusPopupCommand: "020-focus-search",
 			PreviousTabCommand: "1-previous-tab",
 			NextTabCommand: "2-next-tab",
 			ToggleTabsCommand: "30-toggle-recent-tabs"

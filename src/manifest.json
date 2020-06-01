@@ -43,8 +43,11 @@
 				"mac": "MacCtrl+Q"
 			}
 		},
-		"00-open-popup-window": {
+		"010-open-popup-window": {
 			"description": "Open in alt-tab-style popup"
+		},
+		"020-focus-search": {
+			"description": "Search in alt-tab-style popup"
 		},
 		"1-previous-tab": {
 			"suggested_key": {
