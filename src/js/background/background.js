@@ -5,8 +5,6 @@ const TabActivatedOnStartupDelay = 750;
 const TabRemovedDelay = 1000;
 const MinTabDwellTime = 750;
 const RestartDelay = 10 * 1000;
-const PopupInnerWidth = 500;
-const PopupInnerHeight = 488;
 const BadgeColors = {
 	light: {
 		normal: "#a0a0a0",
@@ -123,6 +121,7 @@ DEBUG && console.log("== onStartup");
 
 require([
 	"cp",
+	"background/popup-window",
 	"background/recent-tabs",
 	"background/page-trackers",
 	"background/quickey-storage",
@@ -130,13 +129,20 @@ require([
 	"background/constants"
 ], function(
 	cp,
+	popupWindow,
 	recentTabs,
 	trackers,
 	storage,
 	settings,
 	k
 ) {
-	const {OpenPopupCommand, PreviousTabCommand, NextTabCommand, ToggleTabsCommand} = k.CommandIDs;
+	const {
+		OpenPopupCommand,
+		PreviousTabCommand,
+		NextTabCommand,
+		ToggleTabsCommand,
+		FocusPopupCommand
+	} = k.CommandIDs;
 
 	const backgroundTracker = trackers.background;
 	let tabCount = 0;
@@ -146,9 +152,6 @@ require([
 	let isNormalIcon = true;
 	let showTabCount = true;
 	let activeTabs = [];
-	let popupAdjustmentWidth = 0;
-	let popupAdjustmentHeight = 0;
-	let popupWindowID = 0;
 	let shortcutTimer;
 	let lastWindowID;
 	let lastUsedVersion;
@@ -180,7 +183,7 @@ require([
 		event)
 	{
 			// don't add the popup window to the recent tabs
-		if (!gIgnoreNextTabActivation && event.windowId !== popupWindowID) {
+		if (!gIgnoreNextTabActivation && event.windowId !== popupWindow.id) {
 			if (tabChangedFromCommand) {
 					// invert the icon since the user is actively navigating
 					// between next/previous tabs with the shortcuts
@@ -197,11 +200,9 @@ require([
 						// reactivated after the popup was hidden, so we don't
 						// need to tell the popup to re-render
 					if (event.tabId !== tabIDs.slice(-1)[0]) {
-						try {
-							popupPort.postMessage({ command: "tabActivated" });
-						} catch (e) {}
+						sendPopupMessage("tabActivated");
 					}
-				})
+				});
 			}
 		}
 
@@ -218,6 +219,10 @@ require([
 		switch (command) {
 			case OpenPopupCommand:
 				openPopupWindow();
+				break;
+
+			case FocusPopupCommand:
+				openPopupWindow(true);
 				break;
 
 			case PreviousTabCommand:
@@ -261,97 +266,42 @@ require([
 	}
 
 
-	async function openPopupWindow()
+	async function openPopupWindow(
+		focusSearch)
 	{
-		let [popupWindow] = chrome.extension.getViews({ windowId: popupWindowID });
-
 		activeTabs = await cp.tabs.query({
 			active: true,
 			lastFocusedWindow: true
 		});
 
-		if (!popupWindow || popupWindow.closed || !popupPort) {
+		if (!popupWindow.isOpen || !popupPort) {
 				// the popup window isn't open, so create a new one
-			popupWindow = await createPopupWindow(
-				await cp.windows.get(activeTabs[0].windowId)
-			);
-			popupWindowID = popupWindow.id;
-		} else if (activeTabs[0].windowId !== popupWindowID) {
-				// the popup window isn't focused, so get the position to show
-				// it centered on the current browser window
-			const {left, top} = calcPopupPosition(
-				await cp.windows.get(activeTabs[0].windowId)
-			);
-
-			cp.windows.update(popupWindowID, {
-				focused: true,
-				left,
-				top
-			});
+			popupWindow.create(activeTabs[0]);
+		} else if (activeTabs[0].windowId !== popupWindow.id) {
+				// the popup window isn't focused, so tell it to show itself
+				// centered on the current browser window, and whether to
+				// select the first item
+			sendPopupMessage("showWindow", { focusSearch, activeTab: activeTabs[0] });
 		} else {
-			try {
-				popupPort.postMessage({ command: "selectDown" });
-			} catch (e) {
-				console.error(e);
-
-				if (popupWindow) {
-					closePopupWindow(popupWindowID)
-				}
+				// it's open and focused, so use the shortcut to move the selection
+			if (sendPopupMessage("selectDown")) {
+					// an error was returned from sending the message, so close
+					// the popup
+				popupWindow.close();
 			}
 		}
 	}
 
 
-	function calcPopupPosition(
-		targetWindow)
+	function sendPopupMessage(
+		message,
+		payload = {})
 	{
-		const {left: targetX, top: targetY, width: targetW, height: targetH} = targetWindow;
-		const width = PopupInnerWidth + popupAdjustmentWidth;
-		const height = PopupInnerHeight + popupAdjustmentHeight;
-		const left = Math.max(0, targetX + Math.floor((targetW - width) / 2));
-		const top = Math.max(0, targetY + Math.floor((targetH - height) / 2));
-
-		return { left, top, width, height };
-	}
-
-
-	async function createPopupWindow(
-		targetWindow)
-	{
-		let {left, top, width, height} = calcPopupPosition(targetWindow);
-		const popup = await cp.windows.create({
-			url: "popup.html",
-			type: "popup",
-			setSelfAsOpener: true,
-			left,
-			top,
-			width,
-			height
-		});
-		const {width: innerWidth, height: innerHeight} = popup.tabs[0];
-		const widthDelta = PopupInnerWidth - innerWidth;
-		const heightDelta = PopupInnerHeight - innerHeight;
-
-		if (widthDelta || heightDelta) {
-				// store the adjustments needed to get the target size so that
-				// the next time we open the window, it'll be the right size.
-				// then adjust the new window to the correct size.
-			popupAdjustmentWidth += widthDelta;
-			popupAdjustmentHeight += heightDelta;
-			width += popupAdjustmentWidth;
-			height += popupAdjustmentHeight;
-			await cp.windows.update(popup.id, { width, height });
+		try {
+			popupPort.postMessage({ message, ...payload });
+		} catch (error) {
+			return error;
 		}
-
-		return popup;
-	}
-
-
-	function closePopupWindow(
-		windowID)
-	{
-		return cp.windows.remove(windowID)
-			.catch(console.error);
 	}
 
 
@@ -472,7 +422,7 @@ require([
 	chrome.tabs.onCreated.addListener(tab => {
 		updateTabCount(1);
 
-		if (!gStartingUp && !tab.active && tab.windowId !== popupWindowID) {
+		if (!gStartingUp && !tab.active && tab.windowId !== popupWindow.id) {
 				// this tab was opened by ctrl-clicking a link or by opening
 				// all the tabs in a bookmark folder, so pass true to insert
 				// this tab in the penultimate position, which makes it the
@@ -565,7 +515,7 @@ require([
 			popupIsOpen = false;
 			popupPort = null;
 			activeTabs = [];
-			closePopupWindow(popupWindowID);
+//			popupWindow.close();
 
 			if (!closedByEsc && Date.now() - connectTime < MaxPopupLifetime) {
 					// this was a double-press of alt-Q, so toggle the tabs
