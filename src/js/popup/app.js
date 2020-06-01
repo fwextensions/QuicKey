@@ -14,6 +14,7 @@ define("popup/app", [
 	"./shortcuts/popup-shortcuts",
 	"lib/handle-ref",
 	"lib/copy-to-clipboard",
+	"background/popup-window",
 	"background/recent-tabs",
 	"background/quickey-storage",
 	"background/settings",
@@ -35,6 +36,7 @@ define("popup/app", [
 	shortcuts,
 	handleRef,
 	copyTextToClipboard,
+	popupWindow,
 	recentTabs,
 	storage,
 	settings,
@@ -118,9 +120,6 @@ define("popup/app", [
 
 					return settings;
 				});
-
-			cp.windows.getCurrent()
-				.then(({id}) => this.windowID = id);
 
 			return {
 				query,
@@ -243,7 +242,7 @@ define("popup/app", [
 					settings[k.UsePinyin.Key]))
 				.then(tabs => {
 						// filter out the popup window
-					_.remove(tabs, { windowId: this.windowID });
+					_.remove(tabs, { windowId: popupWindow.id });
 
 						// filter out just recent and closed tabs that we have a
 						// last visit time for
@@ -675,6 +674,25 @@ define("popup/app", [
 		},
 
 
+		showWindow: function({
+			focusSearch,
+			activeTab})
+		{
+				// set visible before calling loadTabs(), since that will call
+				// getActiveTab(), which checks visible
+			this.visible = true;
+			this.closeWindowCalled = false;
+
+				// the tab list should already be correct in most cases, but
+				// load them again just to make sure.  also select the first
+				// item with mruKey down, so that when it's released, we'll
+				// navigate to that item.
+			return this.loadTabs()
+				.then(() => this.setSelectedIndex(focusSearch ? -1 : 0, true))
+				.then(() => popupWindow.show(activeTab));
+		},
+
+
 		closeWindow: function(
 			closedByEsc)
 		{
@@ -685,25 +703,16 @@ define("popup/app", [
 
 				return Promise.resolve();
 			} else {
-				const options = {
-					left: k.OffscreenX,
-					top: k.OffscreenY
-				};
-
-				if (closedByEsc) {
-						// we're being closed by esc, not by losing focus or by
-						// focusing another tab.  so in addition to moving off
-						// screen, force the popup to lose focus so some other
-						// window comes forward.
-					options.focused = false;
-				}
-
  				this.forceUpdate = true;
 				this.resultsList.scrollToRow(0);
 				this.onQueryChange({ target: { value: "" }});
 				this.visible = false;
 
-				return cp.windows.update(this.windowID, options);
+					// we're being closed by esc, not by losing focus or by
+					// focusing another tab.  so in addition to moving off
+					// screen, force the popup to lose focus so some other
+					// window comes forward.
+				return popupWindow.hide(closedByEsc);
 			}
 		},
 
@@ -773,29 +782,27 @@ define("popup/app", [
 
 
 		onMessage: function({
-			command})
+			message,
+			...payload})
 		{
-			if (command == "selectDown") {
-				this.modifySelected(1, true);
-			} else if (command == "tabActivated") {
-				this.loadTabs();
+			switch (message) {
+				case "selectDown":
+					this.modifySelected(1, true);
+					break;
+
+				case "tabActivated":
+					this.loadTabs();
+					break;
+
+				case "showWindow":
+					this.showWindow(payload);
+					break;
+
+				case "focusSearch":
+					this.gotMRUKey = false;
+					this.tabsPromise.then(() => this.setState({ selected: -1 }));
+					break;
 			}
-		},
-
-
-		onWindowFocus: function()
-		{
-				// set visible before calling loadTabs(), since that will call
-				// getActiveTab(), which checks visible
-			this.visible = true;
-			this.closeWindowCalled = false;
-
-				// the tab list should already be correct in most cases, but
-				// load them again just to make sure.  also select the first
-				// item with mruKey down, so that when it's released, we'll
-				// navigate to that item.
-			this.loadTabs();
-			this.setSelectedIndex(0, true);
 		},
 
 
