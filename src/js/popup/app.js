@@ -356,10 +356,12 @@ define("popup/app", [
 		setQuery: function(
 			query)
 		{
+log("setQuery", query)
 			this.setState({
 				query,
 				matchingItems: this.getMatchingItems(query),
-				selected: (query || (this.props.isPopup && !this.openedForSearch)) ? 0 : -1
+				selected: query  ? 0 : -1
+//				selected: (query || this.props.isPopup) ? 0 : -1
 			});
 		},
 
@@ -523,6 +525,7 @@ define("popup/app", [
 					// fix any focus issues.
 				return cp.windows.update(tab.windowId, { focused: true })
 					.then(() => cp.tabs.update(tab.id, updateData))
+					.then(() => popupWindow.show(tab))
 					.catch(error => {
 						this.props.tracker.exception(error);
 						log(error);
@@ -687,7 +690,13 @@ define("popup/app", [
 			delta,
 			mruKey)
 		{
-			this.setSelectedIndex(this.state.selected + delta, mruKey);
+			const index = this.state.selected + delta;
+
+			this.setSelectedIndex(index, mruKey);
+//			this.setSelectedIndex(this.state.selected + delta, mruKey);
+log("modifySelected", index, this.state.matchingItems[index])
+//			this.setState(({selected}) => this.focusTab(this.state.matchingItems[selected + delta]));
+			this.focusTab(this.state.matchingItems[index]);
 		},
 
 
@@ -707,6 +716,7 @@ define("popup/app", [
 					// wrap around the end or beginning of the list
 				index = (index + length) % length;
 			}
+log("setSelectedIndex", index)
 
 			this.setState({ selected: index });
 		},
@@ -861,7 +871,13 @@ define("popup/app", [
 		{
 			if (event.key == this.mruModifier) {
 				if (!this.gotModifierUp && this.gotMRUKey && this.state.selected > -1) {
-					this.openItem(this.state.matchingItems[this.state.selected]);
+					this.setSelectedIndex(-1);
+					this.closeWindow();
+
+					const tab = this.state.matchingItems[this.state.selected];
+					cp.windows.update(tab.windowId, { focused: true })
+						.then(() => cp.tabs.update(tab.id, { active: true }));
+//					this.openItem(this.state.matchingItems[this.state.selected]);
 				}
 
 				this.gotModifierUp = true;
@@ -889,10 +905,11 @@ define("popup/app", [
 					break;
 
 				case "tabActivated":
-					this.loadTabs();
+//					this.loadTabs();
 					break;
 
 				case "showWindow":
+log("showWindow", payload)
 					this.showWindow(payload);
 					break;
 
