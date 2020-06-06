@@ -47,8 +47,10 @@ define([
 		const {left: targetX, top: targetY, width: targetW, height: targetH} = targetWindow;
 		const width = PopupInnerWidth + popupAdjustmentWidth;
 		const height = PopupInnerHeight + popupAdjustmentHeight;
-		const left = Math.max(0, targetX + Math.floor((targetW - width) / 2));
-		const top = Math.max(0, targetY + Math.floor((targetH - height) / 2));
+		const left = Math.max(0, targetX + targetW - width - 10);
+		const top = Math.max(0, targetY + 10);
+//		const left = Math.max(0, targetX + Math.floor((targetW - width) / 2));
+//		const top = Math.max(0, targetY + Math.floor((targetH - height) / 2));
 
 		return { left, top, width, height };
 	}
@@ -99,6 +101,7 @@ define([
 		const {width: innerWidth, height: innerHeight} = popupTab;
 		const widthDelta = PopupInnerWidth - innerWidth;
 		const heightDelta = PopupInnerHeight - innerHeight;
+log(innerWidth, innerHeight, widthDelta, heightDelta);
 
 		if (widthDelta || heightDelta) {
 				// the current adjustments weren't enough to hit the target size,
