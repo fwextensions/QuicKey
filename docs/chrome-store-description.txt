@@ -281,8 +281,8 @@ When first installed, QuicKey asks for these permissions:
  ➤ "Read and change your bookmarks"
 
       QuicKey uses this permission to let you search the titles and URLs of
-      your bookmarked pages. The only time it changes your bookmarks is when
-      you choose to delete one.
+      your bookmarked pages. The only time it changes your bookmarks is
+      when you choose to delete one.
 
 QuicKey can't access or manipulate the content of any pages you visit and doesn't transmit any information other than some anonymized diagnostic data.
 
