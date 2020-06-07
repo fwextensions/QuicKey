@@ -170,17 +170,17 @@ define("popup/app", [
 		componentDidMount: function()
 		{
 			if (this.props.isPopup) {
-					// we're being opened in a popup window, so add event
-					// handlers we only need in that case
+					// we're being opened in a popup window, so add the event
+					// handlers that are only needed in that case
 				const {outerWidth, outerHeight} = window;
 
 					// prevent the window from resizing
 				window.addEventListener("resize",
 					() => window.resizeTo(outerWidth, outerHeight));
-				window.addEventListener("focus", this.onWindowFocus);
 				window.addEventListener("blur", this.onWindowBlur);
-				this.props.port.onMessage.addListener(this.onMessage);
 			}
+
+			this.props.port.onMessage.addListener(this.onMessage);
 
 				// annoyingly, there seems to be a bug in Chrome where the
 				// closed tab is still around when the callback passed to
@@ -726,6 +726,10 @@ define("popup/app", [
 			this.visible = true;
 			this.closeWindowCalled = false;
 
+				// get the latest settings, in case they've changed, so that
+				// they'll be available in loadTabs()
+			this.settingsPromise = settings.get();
+
 				// the tab list should already be correct in most cases, but
 				// load them again just to make sure.  also select the first
 				// item with mruKey down, so that when it's released, we'll
@@ -829,8 +833,8 @@ define("popup/app", [
 			...payload})
 		{
 			switch (message) {
-				case "selectDown":
-					this.modifySelected(1, true);
+				case "modifySelected":
+					this.modifySelected(payload.direction, true);
 					break;
 
 				case "tabActivated":

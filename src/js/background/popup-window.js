@@ -15,6 +15,7 @@ define([
 
 	let popupAdjustmentWidth = 0;
 	let popupAdjustmentHeight = 0;
+	let isVisible = false;
 	let window;
 	let lastActiveTab;
 
@@ -51,6 +52,7 @@ define([
 			height
 		});
 		lastActiveTab = activeTab;
+		isVisible = true;
 
 		const {width: innerWidth, height: innerHeight} = window.tabs[0];
 		const widthDelta = PopupInnerWidth - innerWidth;
@@ -81,6 +83,7 @@ define([
 
 			await cp.windows.update(window.id, { focused: true, left, top });
 			lastActiveTab = activeTab;
+			isVisible = true;
 		}
 	}
 
@@ -99,6 +102,7 @@ define([
 			}
 
 			await cp.windows.update(window.id, options);
+			isVisible = false;
 		}
 	}
 
@@ -114,6 +118,7 @@ define([
 		}
 
 		window = null;
+		isVisible = false;
 	}
 
 
@@ -129,6 +134,9 @@ define([
 			return window
 				? chrome.extension.getViews({ windowId: window.id }).length == 1
 				: false;
+		},
+		get isVisible() {
+			return isVisible;
 		},
 		get activeTab() {
 			return lastActiveTab;
