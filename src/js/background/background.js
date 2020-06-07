@@ -144,10 +144,10 @@ require([
 		FocusPopupCommand
 	} = k.CommandIDs;
 
+
 	const backgroundTracker = trackers.background;
+	const ports = {};
 	let tabCount = 0;
-	let popupIsOpen = false;
-	let tabChangedFromCommand = false;
 	let lastTogglePromise = Promise.resolve();
 	let isNormalIcon = true;
 	let showTabCount = true;
@@ -156,7 +156,6 @@ require([
 	let lastWindowID;
 	let lastUsedVersion;
 	let usePinyin;
-	let popupPort;
 
 
 	const addTab = debounce(({tabId}) => cp.tabs.get(tabId)
@@ -182,18 +181,14 @@ require([
 	function handleTabActivated(
 		event)
 	{
-			// don't add the popup window to the recent tabs
+			// don't add the popup window to the recent tabs.  even though
+			// recentTabs.add() will ignore the popup window, we don't want to
+			// notify the popup about its own activation, which would happen
+			// because the last tab in tabIDs wouldn't match the event.
 		if (!gIgnoreNextTabActivation && event.windowId !== popupWindow.id) {
-			if (tabChangedFromCommand) {
-					// invert the icon since the user is actively navigating
-					// between next/previous tabs with the shortcuts
-				setInvertedIcon();
-			}
-
-			tabChangedFromCommand = false;
 			addTab(event);
 
-			if (popupPort) {
+			if (ports.popup) {
 				storage.get(({tabIDs}) => {
 						// if the newly activated tab is the same as the most
 						// recent one in tabIDs, that means it was just
@@ -213,9 +208,6 @@ require([
 	function handleCommand(
 		command)
 	{
-			// track whether the user is navigating farther back in the stack
-		const label = isNormalIcon ? "single" : "repeated";
-
 		switch (command) {
 			case OpenPopupCommand:
 				openPopupWindow();
@@ -226,20 +218,78 @@ require([
 				break;
 
 			case PreviousTabCommand:
-				tabChangedFromCommand = true;
-				recentTabs.navigate(-1);
-				backgroundTracker.event("recents", "previous", label);
+				navigateTabs(-1);
 				break;
 
 			case NextTabCommand:
-				tabChangedFromCommand = true;
-				recentTabs.navigate(1);
-				backgroundTracker.event("recents", "next", label);
+				navigateTabs(1);
 				break;
 
 			case ToggleTabsCommand:
 				toggleRecentTabs(true);
 				break;
+		}
+	}
+
+
+	async function openPopupWindow(
+		focusSearch)
+	{
+		activeTabs = await cp.tabs.query({
+			active: true,
+			lastFocusedWindow: true
+		});
+
+		if (!popupWindow.isOpen || !ports.popup) {
+				// the popup window isn't open, so create a new one
+			popupWindow.create(activeTabs[0]);
+		} else if (activeTabs[0].windowId !== popupWindow.id) {
+				// the popup window isn't focused, so tell it to show itself
+				// centered on the current browser window, and whether to
+				// select the first item
+			sendPopupMessage("showWindow", { focusSearch, activeTab: activeTabs[0] });
+		} else {
+				// it's open and focused, so use the shortcut to move the
+				// selection DOWN
+			if (sendPopupMessage("modifySelected", { direction: 1 })) {
+					// an error was returned from sending the message, so close
+					// the popup
+				popupWindow.close();
+			}
+		}
+	}
+
+
+	function sendPopupMessage(
+		message,
+		payload = {})
+	{
+		try {
+				// default to sending the message to the menu if it's open
+			(ports.menu || ports.popup).postMessage({ message, ...payload });
+		} catch (error) {
+			return error;
+		}
+	}
+
+
+	function navigateTabs(
+		direction)
+	{
+		if ((ports.popup && popupWindow.isVisible) || ports.menu) {
+				// for recentTabs.navigate(), -1 is further back in the stack,
+				// but for the menu, 1 is moving the selection down, which is
+				// equivalent to going further back in the stack, so negate
+				// the value
+			sendPopupMessage("modifySelected", { direction: -direction });
+		} else {
+				// track whether the user is navigating farther back in the stack
+			const label = isNormalIcon ? "single" : "repeated";
+			const action = direction == -1 ? "previous" : "next";
+
+			setInvertedIcon();
+			recentTabs.navigate(direction);
+			backgroundTracker.event("recents", action, label);
 		}
 	}
 
@@ -263,45 +313,6 @@ require([
 			.then(recentTabs.toggle)
 			.then(() => backgroundTracker.event("recents",
 				fromShortcut ? "toggle-shortcut" : "toggle"));
-	}
-
-
-	async function openPopupWindow(
-		focusSearch)
-	{
-		activeTabs = await cp.tabs.query({
-			active: true,
-			lastFocusedWindow: true
-		});
-
-		if (!popupWindow.isOpen || !popupPort) {
-				// the popup window isn't open, so create a new one
-			popupWindow.create(activeTabs[0]);
-		} else if (activeTabs[0].windowId !== popupWindow.id) {
-				// the popup window isn't focused, so tell it to show itself
-				// centered on the current browser window, and whether to
-				// select the first item
-			sendPopupMessage("showWindow", { focusSearch, activeTab: activeTabs[0] });
-		} else {
-				// it's open and focused, so use the shortcut to move the selection
-			if (sendPopupMessage("selectDown")) {
-					// an error was returned from sending the message, so close
-					// the popup
-				popupWindow.close();
-			}
-		}
-	}
-
-
-	function sendPopupMessage(
-		message,
-		payload = {})
-	{
-		try {
-			popupPort.postMessage({ message, ...payload });
-		} catch (error) {
-			return error;
-		}
 	}
 
 
@@ -504,18 +515,19 @@ require([
 			// until the first tab is manually activated.  set gStartingUp to
 			// false here in case the user opens the menu before that happens.
 		gStartingUp = false;
-		popupIsOpen = true;
-		popupPort = port;
+		ports[port.name] = port;
 
 		port.onMessage.addListener(message => {
 			closedByEsc = (message == "closedByEsc");
 		});
 
-		port.onDisconnect.addListener(() => {
-			popupIsOpen = false;
-			popupPort = null;
+		port.onDisconnect.addListener(port => {
+			ports[port.name] = null;
 			activeTabs = [];
-//			popupWindow.close();
+
+			if (port.name == "popup") {
+				popupWindow.close();
+			}
 
 			if (!closedByEsc && Date.now() - connectTime < MaxPopupLifetime) {
 					// this was a double-press of alt-Q, so toggle the tabs
@@ -546,7 +558,7 @@ require([
 	chrome.runtime.onUpdateAvailable.addListener(details => {
 		function restartExtension()
 		{
-			if (!popupIsOpen) {
+			if (!ports.menu) {
 DEBUG && console.log("=== reloading");
 				chrome.runtime.reload();
 			} else {
@@ -569,6 +581,14 @@ DEBUG && console.log(e);
 		DEBUG && console.log.apply(console, args);
 	};
 
+		// if any of our popups were already open because we're getting reloaded,
+		// close them
+	cp.tabs.query({
+		windowType:"popup",
+		url: `chrome-extension://${chrome.runtime.id}/*`
+	})
+		.then(popups => popups.map(({windowId}) => cp.windows.remove(windowId)))
+		.catch(console.error);
 
 		// update the icon, in case we're in dark mode when the extension loads,
 		// and update the badge text depending on the setting of showTabCount

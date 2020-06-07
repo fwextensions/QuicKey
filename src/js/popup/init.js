@@ -1,7 +1,8 @@
 	// connect to the default port so the background page will get the
 	// onDisconnect event when the popup is closed.  do it first thing, in case
-	// the user quickly hits the shortcut again.
-const gPort = chrome.runtime.connect();
+	// the user quickly hits the shortcut again.  pass in a name based on
+	// whether we're in a popup window so the background knows where it's from.
+const gPort = chrome.runtime.connect({ name: opener ? "popup" : "menu" });
 const gInitTime = performance.now();
 
 let gKeyCache = [];

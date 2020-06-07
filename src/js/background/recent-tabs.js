@@ -16,6 +16,7 @@ define([
 	const MaxTabsLength = 50;
 	const MaxSwitchDelay = 750;
 	const TabKeys = ["id", "url", "windowId"];
+	const PopupURL = `chrome-extension://${chrome.runtime.id}/popup.html`;
 
 
 	function titleOrURL(
@@ -150,7 +151,8 @@ DEBUG && console.log("updateFromFreshTabs result", result);
 		tab,
 		penultimately)
 	{
-		if (!tab) {
+			// ignore the extension's own popups
+		if (!tab || tab.url.includes(PopupURL)) {
 			return Promise.resolve();
 		}
 
@@ -281,18 +283,18 @@ DEBUG && console.log("tab replaced", oldID, titleOrURL(oldTab));
 					const tabsByURL = {};
 					let {tabsByID} = data;
 					let newData = { tabsByID };
-					let tabs;
+					let tabs = freshTabs.filter(({url}) => !url.includes(PopupURL));
 
 						// lastUpdateTime shouldn't be undefined, but just in case
 					if (isNaN(lastUpdateTime) || lastStartupTime > lastUpdateTime) {
 DEBUG && console.log("====== calling updateFromFreshTabs");
 
-						newData = updateFromFreshTabs(data, freshTabs);
+						newData = updateFromFreshTabs(data, tabs);
 						tabsByID = newData.tabsByID;
 					}
 
 						// update the fresh tabs with any recent data we have
-					tabs = freshTabs.map(tab => {
+					tabs = tabs.map(tab => {
 						const {id, url} = addURLs(tab);
 						const oldTab = tabsByID[id];
 						let lastVisit = 0;
@@ -337,7 +339,7 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 							const lastVisit = session.lastModified * 1000;
 
 							[].concat(session.tab || session.window.tabs).forEach(tab => {
-								if (!(tab.url in tabsByURL)) {
+								if (!(tab.url in tabsByURL) && !tab.url.includes(PopupURL)) {
 									tabsByURL[tab.url] = true;
 									tab.lastVisit = lastVisit;
 									addURLs(tab);
