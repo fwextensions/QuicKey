@@ -446,8 +446,42 @@ require([
 		return Promise.all([
 			cp.browserAction.setBadgeText({ text }),
 			cp.browserAction.setTitle({ title })
-		]
-)			.catch(backgroundTracker.exception);
+		])
+			.catch(backgroundTracker.exception);
+	}
+
+
+	function onCommandListener(
+		command)
+	{
+		if (!gStartingUp) {
+			handleCommand(command);
+		} else {
+				// as below in the onConnect handler, the user is interacting
+				// with the extension before the last onActivated event happened,
+				// so we're clearly not starting up anymore.  since the onActivated
+				// handler didn't call updateAll(), we need to do that before
+				// handling the command.  otherwise, the stored tab IDs are likely
+				// to be out of sync with the reopened tabs and navigation will fail.
+			gStartingUp = false;
+			recentTabs.updateAll()
+				.then(() => handleCommand(command));
+		}
+	}
+
+
+	function enableCommands()
+	{
+			// just in case the listener hasn't already been removed, call this
+			// so we don'd add two listeners
+		disableCommands();
+		chrome.commands.onCommand.addListener(onCommandListener);
+	}
+
+
+	function disableCommands()
+	{
+		chrome.commands.onCommand.removeListener(onCommandListener);
 	}
 
 
@@ -517,23 +551,6 @@ require([
 	});
 
 
-	chrome.commands.onCommand.addListener(command => {
-		if (!gStartingUp) {
-			handleCommand(command);
-		} else {
-				// as below in the onConnect handler, the user is interacting
-				// with the extension before the last onActivated event happened,
-				// so we're clearly not starting up anymore.  since the onActivated
-				// handler didn't call updateAll(), we need to do that before
-				// handling the command.  otherwise, the stored tab IDs are likely
-				// to be out of sync with the reopened tabs and navigation will fail.
-			gStartingUp = false;
-			recentTabs.updateAll()
-				.then(() => handleCommand(command));
-		}
-	});
-
-
 	chrome.runtime.onConnect.addListener(port => {
 		const connectTime = Date.now();
 		let closedByEsc = false;
@@ -545,6 +562,10 @@ require([
 		gStartingUp = false;
 		ports[port.name] = port;
 
+		if (port.name == "menu") {
+			disableCommands();
+		}
+
 		port.onMessage.addListener(message => {
 			closedByEsc = (message == "closedByEsc");
 		});
@@ -555,6 +576,8 @@ require([
 
 			if (port.name == "popup") {
 				popupWindow.close();
+			} else {
+				enableCommands();
 			}
 
 			if (!closedByEsc && Date.now() - connectTime < MaxPopupLifetime) {
@@ -608,6 +631,8 @@ DEBUG && console.log(e);
 	window.log = function(...args) {
 		DEBUG && console.log.apply(console, args);
 	};
+
+	enableCommands();
 
 		// if any of our popups were already open because we're getting reloaded,
 		// close them
