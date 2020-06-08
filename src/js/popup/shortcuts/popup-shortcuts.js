@@ -52,6 +52,7 @@ define([
 	};
 	const {
 		OpenPopupCommand,
+		FocusPopupCommand,
 		PreviousTabCommand,
 		NextTabCommand
 	} = k.CommandIDs;
@@ -101,6 +102,18 @@ define([
 	}
 
 
+	function createShiftedShortcut(
+		shortcuts,
+		shortcutID)
+	{
+		const keys = findShortcut(shortcuts, shortcutID).split("+");
+		const modifier = keys[0];
+		const baseKey = keys.pop();
+
+		return baseKey && joinKeys([modifier, "shift"], baseKey);
+	}
+
+
 	return {
 		update: function(
 			settings)
@@ -112,19 +125,19 @@ define([
 					shortcuts: chromeShortcuts}
 			} = settings;
 			const mruSelectKey = shortcuts[k.Shortcuts.MRUSelect];
-			const windowShortcutKeys = findShortcut(chromeShortcuts, OpenPopupCommand).split("+");
-			const windowModifier = windowShortcutKeys[0];
-			const windowBaseKey = windowShortcutKeys.pop();
 			const selectDownShortcuts = [
 				joinKeys(popupModifiers, "ArrowDown"),
 				joinKeys(popupModifiers, mruSelectKey),
-				findShortcut(chromeShortcuts, PreviousTabCommand)
+				findShortcut(chromeShortcuts, PreviousTabCommand),
+				findShortcut(chromeShortcuts, OpenPopupCommand),
+				findShortcut(chromeShortcuts, FocusPopupCommand)
 			];
 			const selectUpShortcuts = [
 				joinKeys(popupModifiers, "ArrowUp"),
 				joinKeys(popupModifiers.concat("shift"), mruSelectKey),
 				findShortcut(chromeShortcuts, NextTabCommand),
-				windowBaseKey && joinKeys([windowModifier, "shift"], windowBaseKey)
+				createShiftedShortcut(chromeShortcuts, OpenPopupCommand),
+				createShiftedShortcut(chromeShortcuts, FocusPopupCommand)
 			];
 
 			Object.keys(shortcuts).forEach(id => {
