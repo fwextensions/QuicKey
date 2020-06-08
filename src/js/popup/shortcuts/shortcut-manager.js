@@ -50,11 +50,7 @@ define(function() {
 		this.bindings = {};
 
 		if (bindings instanceof Array) {
-			bindings.forEach(function(binding) {
-				if (binding) {
-					this.bind(binding[0], binding[1]);
-				}
-			}, this);
+			bindings.forEach(binding => binding && this.bind(binding[0], binding[1]));
 		}
 	}
 
@@ -65,7 +61,11 @@ define(function() {
 			callback)
 		{
 				// convert shortcuts to an array if necessary
-			[].concat(shortcuts).forEach(function(shortcut) {
+			[].concat(shortcuts).forEach(shortcut => {
+				if (!shortcut) {
+					return;
+				}
+
 				const info = this.extractShortcutInfo(shortcut);
 
 					// only store the binding if no platform was specified, or
@@ -82,7 +82,7 @@ define(function() {
 						callback: callback
 					});
 				}
-			}, this);
+			});
 		},
 
 
@@ -138,7 +138,7 @@ define(function() {
 			};
 			const modifiers = [];
 			const shortcutString = platformMatch ? platformMatch[2] : shortcut;
-			const keys = shortcutString.split(ModifierSeparator).map(function(key) {
+			const keys = shortcutString.split(ModifierSeparator).map(key => {
 					// lowercase all the key names so we'll match even if a
 					// modifier was written as Ctrl, and we want regular keys
 					// lowercase anyway to handle shift shortcuts and capslock
@@ -166,7 +166,7 @@ define(function() {
 			info.modifiers = modifiers.sort().join("+");
 
 			return info;
-		},
+		}
 	});
 
 
