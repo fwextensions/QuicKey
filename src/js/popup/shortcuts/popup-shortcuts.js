@@ -50,6 +50,11 @@ define([
 		[k.Shortcuts.MoveTabLeft]: 1,
 		[k.Shortcuts.MoveTabRight]: 1
 	};
+	const {
+		OpenPopupCommand,
+		PreviousTabCommand,
+		NextTabCommand
+	} = k.CommandIDs;
 
 
 		// the self module global will be set in handleEvent()
@@ -88,20 +93,38 @@ define([
 	}
 
 
+	function findShortcut(
+		shortcuts,
+		shortcutID)
+	{
+		return (shortcuts.find(({id}) => id == shortcutID).shortcut || "");
+	}
+
+
 	return {
 		update: function(
 			settings)
 		{
-			const {shortcuts, chrome} = settings;
+			const {
+				shortcuts,
+				chrome: {
+					popup: {modifiers: popupModifiers},
+					shortcuts: chromeShortcuts}
+			} = settings;
 			const mruSelectKey = shortcuts[k.Shortcuts.MRUSelect];
-			const popupModifiers = chrome.popup.modifiers;
-			const windowShortcut = chrome.shortcuts.find(({id}) => id == k.CommandIDs.OpenPopupCommand).shortcut || "";
-			const windowShortcutKeys = windowShortcut.split("+");
+			const windowShortcutKeys = findShortcut(chromeShortcuts, OpenPopupCommand).split("+");
 			const windowModifier = windowShortcutKeys[0];
 			const windowBaseKey = windowShortcutKeys.pop();
+			const selectDownShortcuts = [
+				joinKeys(popupModifiers, "ArrowDown"),
+				joinKeys(popupModifiers, mruSelectKey),
+				findShortcut(chromeShortcuts, PreviousTabCommand)
+			];
 			const selectUpShortcuts = [
 				joinKeys(popupModifiers, "ArrowUp"),
-				joinKeys(popupModifiers.concat("shift"), mruSelectKey)
+				joinKeys(popupModifiers.concat("shift"), mruSelectKey),
+				findShortcut(chromeShortcuts, NextTabCommand),
+				windowBaseKey && joinKeys([windowModifier, "shift"], windowBaseKey)
 			];
 
 			Object.keys(shortcuts).forEach(id => {
@@ -119,23 +142,13 @@ define([
 				}
 			});
 
-			if (windowBaseKey) {
-				selectUpShortcuts.push(joinKeys([windowModifier, "shift"], windowBaseKey));
-			}
-
 				// add handlers for navigating up and down with the MRU key,
 				// plus the modifiers used to open the popup.  pass true to let
 				// the app know the MRU key was used, so that when the modifier
 				// up event happens, the selected tab will be switched to
 				// (unlike the plain up/down arrow keys bound above).
-			Manager.bind([
-				joinKeys(popupModifiers, "ArrowDown"),
-				joinKeys(popupModifiers, mruSelectKey)
-			], () => self.modifySelected(1, true));
-			Manager.bind([
-				joinKeys(popupModifiers, "ArrowUp"),
-				joinKeys(popupModifiers.concat("shift"), mruSelectKey)
-			], () => self.modifySelected(-1, true));
+			Manager.bind(selectDownShortcuts, () => self.modifySelected(1, true));
+			Manager.bind(selectUpShortcuts, () => self.modifySelected(-1, true));
 		},
 
 
