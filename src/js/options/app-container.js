@@ -11,7 +11,7 @@ define([
 	trackers,
 	storage,
 	settings,
-	{Platform, ShowTabCount, CurrentWindowLimitRecents, CurrentWindowLimitSearch}
+	{Platform, ShowTabCount, CurrentWindowLimitRecents, CurrentWindowLimitSearch, PopupType}
 ) {
 	const PlusPattern = /\+/g;
 
@@ -100,6 +100,8 @@ define([
 							|| key == CurrentWindowLimitRecents.Key
 							|| key == CurrentWindowLimitSearch.Key) {
 						chrome.runtime.sendMessage({ [key]: value });
+					} else if (key == PopupType.Key) {
+						chrome.runtime.sendMessage({ [PopupType.Key]: value });
 					}
 
 					return settings;

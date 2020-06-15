@@ -46,6 +46,11 @@ define([
 			ResultsList: "resultsList",
 			SearchBox: "searchBox"
 		},
+		PopupType: {
+			Key: "popupType",
+			Window: "window",
+			Tab: "tab"
+		},
 		MarkTabsInOtherWindows: {
 			Key: "markTabsInOtherWindows"
 		},
