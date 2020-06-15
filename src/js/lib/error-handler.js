@@ -46,7 +46,9 @@
 					const timestamp = new Date().toLocaleString();
 
 					if (event.reason) {
-						console.log(`Caught unhandled promise rejection at ${timestamp}: ${event.reason}`);
+						const message = event.reason.message || event.reason;
+
+						console.log(`Caught unhandled promise rejection at ${timestamp}: ${message}`);
 						tracker.exception(event.reason, true);
 					} else if (event.preventDefault) {
 							// error may be null in some cases, like when
