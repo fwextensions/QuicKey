@@ -15,6 +15,7 @@ require([
 	const now = performance.now();
 	const background = chrome.extension.getBackgroundPage();
 	const tracker = trackers.popup;
+	const params = new URLSearchParams(location.search);
 
 	if (gClose) {
 			// the user hit esc before we started loading, so just close the

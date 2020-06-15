@@ -261,7 +261,7 @@ require([
 
 
 	async function openPopupWindow(
-		focusSearch)
+		focusSearch = false)
 	{
 		activeTabs = await cp.tabs.query({
 			active: true,
@@ -269,8 +269,9 @@ require([
 		});
 
 		if (!popupWindow.isOpen || !ports.popup) {
-				// the popup window isn't open, so create a new one
-			popupWindow.create(activeTabs[0]);
+				// the popup window isn't open, so create a new one, with the
+				// search box either focused or not
+			popupWindow.create(activeTabs[0], focusSearch);
 		} else if (activeTabs[0].windowId !== popupWindow.id) {
 				// the popup window isn't focused, so tell it to show itself
 				// centered on the current browser window, and whether to
@@ -315,7 +316,13 @@ require([
 			const label = isNormalIcon ? "single" : "repeated";
 			const action = direction == -1 ? "previous" : "next";
 
-			setInvertedIcon();
+				// don't invert the icon if the user presses the switch to next
+				// shortcut when they're not actively navigating so that it
+				// doesn't invert for no reason
+			if (direction == -1 || !isNormalIcon) {
+				setInvertedIcon();
+			}
+
 			recentTabs.navigate(direction);
 			backgroundTracker.event("recents", action, label);
 		}
@@ -634,13 +641,12 @@ DEBUG && console.log(e);
 
 	enableCommands();
 
-		// if any of our popups were already open because we're getting reloaded,
+		// if any of our tabs were already open when we're getting reloaded,
 		// close them
 	cp.tabs.query({
-		windowType:"popup",
 		url: `chrome-extension://${chrome.runtime.id}/*`
 	})
-		.then(popups => popups.map(({windowId}) => cp.windows.remove(windowId)))
+		.then(tabs => cp.tabs.remove(tabs.map(({id}) => id)))
 		.catch(console.error);
 
 		// update the icon, in case we're in dark mode when the extension loads,
