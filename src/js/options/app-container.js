@@ -11,7 +11,7 @@ define([
 	trackers,
 	storage,
 	settings,
-	{Platform, ShowTabCount}
+	{Platform, ShowTabCount, PopupType}
 ) {
 	const PlusPattern = /\+/g;
 
@@ -86,6 +86,8 @@ define([
 				.then(settings => {
 					if (key == ShowTabCount.Key) {
 						chrome.runtime.sendMessage({ [ShowTabCount.Key]: value });
+					} else if (key == PopupType.Key) {
+						chrome.runtime.sendMessage({ [PopupType.Key]: value });
 					}
 
 					return settings;

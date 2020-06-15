@@ -182,6 +182,29 @@ define([
 					/>
 				</RadioGroup>
 
+{/*
+				<NewSetting
+					addedVersion={10}
+					lastSeenOptionsVersion={lastSeenOptionsVersion}
+				>
+*/}
+					<RadioGroup
+						id={k.PopupType.Key}
+						value={settings[k.PopupType.Key]}
+						label={<span>Hide the alt-tab-style popup:</span>}
+						onChange={onChange}
+					>
+						<RadioButton
+							label="As an off-screen window"
+							value={k.PopupType.Window}
+						/>
+						<RadioButton
+							label="As a tab"
+							value={k.PopupType.Tab}
+						/>
+					</RadioGroup>
+				{/*</NewSetting>*/}
+
 				<Checkbox
 					id={k.IncludeClosedTabs.Key}
 					label={<span>Include recently closed tabs in the search results (marked with <HistoryIcon />)</span>}

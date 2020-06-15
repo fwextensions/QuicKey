@@ -581,6 +581,8 @@ require([
 				// the background page was loaded, then add the badge
 			setNormalIcon()
 				.then(() => updateTabCount());
+		} else if (k.PopupType.Key in message) {
+			popupWindow.type = message[k.PopupType.Key];
 		}
 	});
 
@@ -624,7 +626,10 @@ DEBUG && console.log(e);
 		// update the icon, in case we're in dark mode when the extension loads,
 		// and update the badge text depending on the setting of showTabCount
 	settings.get()
-		.then(settings => showTabCount = settings[k.ShowTabCount.Key])
+		.then(settings => {
+			showTabCount = settings[k.ShowTabCount.Key];
+			popupWindow.type = settings[k.PopupType.Key];
+		})
 		.then(() => setNormalIcon())
 		.then(() => cp.tabs.query({}))
 		.then(({length}) => updateTabCount(length));

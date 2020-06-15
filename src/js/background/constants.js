@@ -36,6 +36,11 @@ define([
 			Clear: "clear",
 			Close: "close"
 		},
+		PopupType: {
+			Key: "popupType",
+			Window: "window",
+			Tab: "tab"
+		},
 		MarkTabsInOtherWindows: {
 			Key: "markTabsInOtherWindows"
 		},
