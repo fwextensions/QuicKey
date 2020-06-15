@@ -83,6 +83,7 @@ define("popup/app", [
 		forceUpdate: false,
 		selectAllSearchBoxText: false,
 		closeWindowCalled: false,
+		openedForSearch: false,
 		gotModifierUp: false,
 		gotMRUKey: false,
 		mruModifier: "Alt",
@@ -130,13 +131,15 @@ define("popup/app", [
 					return settings;
 				});
 
+			this.openedForSearch = this.props.focusSearch;
+
 			return {
 				query,
 				searchBoxText: query,
 				matchingItems: [],
 					// default to the first item being selected if we got an
-					// initial query
-				selected: query ? 0 : -1,
+					// initial query or if the popup was opened in nav mode
+				selected: (query || !this.openedForSearch) ? 0 : -1,
 				newSettingsAvailable: false
 			};
 		},
@@ -353,7 +356,7 @@ define("popup/app", [
 			this.setState({
 				query,
 				matchingItems: this.getMatchingItems(query),
-				selected: (query || this.props.isPopup) ? 0 : -1
+				selected: (query || (this.props.isPopup && !this.openedForSearch)) ? 0 : -1
 			});
 		},
 
@@ -726,16 +729,23 @@ define("popup/app", [
 			this.visible = true;
 			this.closeWindowCalled = false;
 
+				// set our flag to the latest value so that the correct item is
+				// selected after tabs are loaded
+			this.openedForSearch = focusSearch;
+
+				// set these so that when the modifier key is released (it had
+				// to have been pressed for showWindow() to be called), it
+				// activates the selected item
+			this.gotModifierUp = false;
+			this.gotMRUKey = true;
+
 				// get the latest settings, in case they've changed, so that
 				// they'll be available in loadTabs()
 			this.settingsPromise = settings.get();
 
 				// the tab list should already be correct in most cases, but
-				// load them again just to make sure.  also select the first
-				// item with mruKey down, so that when it's released, we'll
-				// navigate to that item.
+				// load them again just to make sure
 			return this.loadTabs()
-				.then(() => this.setSelectedIndex(focusSearch ? -1 : 0, true))
 				.then(() => popupWindow.show(activeTab));
 		},
 
