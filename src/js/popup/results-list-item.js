@@ -41,6 +41,15 @@ define([
 		mouseMoveCount: 0,
 
 
+		componentWillReceiveProps: function(
+			nextProps)
+		{
+			if (nextProps.item !== this.props.item || !nextProps.visible) {
+				this.mouseMoveCount = 0;
+			}
+		},
+
+
 		onClick: function(
 			event)
 		{
@@ -112,7 +121,7 @@ define([
 		{
 			const {props} = this;
 
-			if (props.selectedIndex > 0 || this.mouseMoveCount > MinMouseMoveCount) {
+			if (this.mouseMoveCount > MinMouseMoveCount) {
 				props.setSelectedIndex(props.index);
 			}
 		},

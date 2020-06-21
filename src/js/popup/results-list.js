@@ -7,11 +7,11 @@ define([
 	ReactVirtualized,
 	handleRef
 ) {
-	const RowHeight = 45,
-		Width = 490;
+	const RowHeight = 45;
+	const Width = 490;
 
 
-	var ResultsList = React.createClass({
+	const ResultsList = React.createClass({
 		startIndex: 0,
 		stopIndex: 0,
 		list: null,
@@ -20,26 +20,25 @@ define([
 		scrollByPage: function(
 			direction)
 		{
-			var props = this.props,
-				selectedIndex = props.selectedIndex,
-				items = props.items,
-				itemCount = Math.min(props.maxItems, items.length) - 1;
+			const {items: {length: itemCount}, maxItems, setSelectedIndex} = this.props;
+			const rowCount = Math.min(maxItems, itemCount) - 1;
+			let {selectedIndex} = this.props;
 
 			if (direction == "down") {
 				if (selectedIndex == this.stopIndex) {
-					selectedIndex = Math.min(selectedIndex + itemCount, items.length - 1);
+					selectedIndex = Math.min(selectedIndex + rowCount, itemCount - 1);
 				} else {
 					selectedIndex = this.stopIndex;
 				}
 			} else {
 				if (selectedIndex == this.startIndex) {
-					selectedIndex = Math.max(selectedIndex - itemCount, 0);
+					selectedIndex = Math.max(selectedIndex - rowCount, 0);
 				} else {
 					selectedIndex = this.startIndex;
 				}
 			}
 
-			props.setSelectedIndex(selectedIndex);
+			setSelectedIndex(selectedIndex);
 		},
 
 
@@ -67,15 +66,16 @@ define([
 		rowRenderer: function(
 			data)
 		{
-			var props = this.props,
-				item = props.items[data.index],
-				ItemComponent = item.component || props.itemComponent;
+			const {props} = this;
+			const {itemComponent, selectedIndex} = props;
+			const item = props.items[data.index];
+			const ItemComponent = item.component || itemComponent;
 
 			return <ItemComponent
 				key={data.key}
 				item={item}
 				index={data.index}
-				isSelected={props.selectedIndex == data.index}
+				isSelected={selectedIndex == data.index}
 				style={data.style}
 				{...props}
 			/>
@@ -84,12 +84,10 @@ define([
 
 		render: function()
 		{
-			var props = this.props,
-				itemCount = props.items.length,
-				height = Math.min(itemCount, props.maxItems) * RowHeight,
-				style = {
-					display: height ? "block" : "none"
-				};
+			const {props} = this;
+			const {items: {length: itemCount}, maxItems, selectedIndex} = props;
+			const height = Math.min(itemCount, maxItems) * RowHeight;
+			const style = { display: height ? "block" : "none" };
 
 			return <div className="results-list-container"
 				style={style}
@@ -103,7 +101,7 @@ define([
 					rowCount={itemCount}
 					rowHeight={RowHeight}
 					rowRenderer={this.rowRenderer}
-					scrollToIndex={props.selectedIndex}
+					scrollToIndex={selectedIndex}
 					onRowsRendered={this.onRowsRendered}
 					{...props}
 				/>
