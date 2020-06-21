@@ -41,6 +41,15 @@ define([
 		mouseMoveCount: 0,
 
 
+		componentWillReceiveProps: function(
+			nextProps)
+		{
+			if (nextProps.item !== this.props.item || !nextProps.visible) {
+				this.mouseMoveCount = 0;
+			}
+		},
+
+
 		onClick: function(
 			event)
 		{

@@ -7,8 +7,6 @@ define([
 ) => {
 	const PopupInnerWidth = 500;
 	const PopupInnerHeight = 488;
-//	const OffscreenX = 2000;
-//	const OffscreenY = 0;
 	const OffscreenX = 13000;
 	const OffscreenY = 13000;
 
@@ -31,7 +29,8 @@ define([
 
 			// return the last unfocused window, or just the last one, if
 			// there's only one open and it's focused
-		return windows.filter(({focused}) => !focused).pop() || windows.pop();
+		return windows.filter(({focused, incognito}) => !focused && !incognito).pop()
+			|| windows.pop();
 	}
 
 
@@ -43,6 +42,7 @@ define([
 		const height = PopupInnerHeight + popupAdjustmentHeight;
 		const left = Math.max(0, targetX + Math.floor((targetW - width) / 2));
 		const top = Math.max(0, targetY + Math.floor((targetH - height) / 2));
+
 		return { left, top, width, height };
 	}
 
@@ -115,12 +115,13 @@ define([
 	{
 		const targetWindow = await cp.windows.get(activeTab.windowId);
 		let {left, top, width, height} = calcPosition(targetWindow);
+		let result = Promise.resolve();
 
 		lastActiveTab = activeTab;
 		isVisible = true;
 
 		if (type == "window" && windowID) {
-			return cp.windows.update(windowID, { focused: true, left, top });
+			result = cp.windows.update(windowID, { focused: true, left, top });
 		} else if (type == "tab" && tabID) {
 				// create a popup window with the tab that's hiding in another
 				// window, instead of passing in a URL
@@ -137,14 +138,18 @@ define([
 
 			windowID = window.id;
 
-			return window;
+			result = Promise.resolve(window);
 		}
+
+		return result.catch(console.error);
 	}
 
 
 	async function hide(
 		unfocus)
 	{
+		let result = Promise.resolve();
+
 		isVisible = false;
 
 		if (type == "window" && windowID) {
@@ -157,19 +162,17 @@ define([
 				options.focused = false;
 			}
 
-			return cp.windows.update(windowID, options);
+			result = cp.windows.update(windowID, options);
 		} else if (type == "tab" && tabID) {
 			const lastWindow = await getLastWindow();
 
-			try {
-				return cp.tabs.move(tabID, {
-					windowId: lastWindow.id,
-					index: -1
-				});
-			} catch (e) {
-				console.log(e);
-			}
+			result = cp.tabs.move(tabID, {
+				windowId: lastWindow.id,
+				index: -1
+			});
 		}
+
+		return result.catch(console.error);
 	}
 
 
