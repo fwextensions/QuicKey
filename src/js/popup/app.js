@@ -244,7 +244,7 @@ define("popup/app", [
 					this.settingsPromise,
 					this.getActiveTab()
 				])
-				.then(([settings, [activeTab]]) => initTabs(
+				.then(([settings, activeTab]) => initTabs(
 					recentTabs.getAll(settings[k.IncludeClosedTabs.Key]),
 					activeTab,
 					settings[k.MarkTabsInOtherWindows.Key],
@@ -493,11 +493,11 @@ define("popup/app", [
 			unsuspend)
 		{
 			if (tab) {
-				var updateData = { active: true },
-					queryLength = this.state.query.length,
-					category = queryLength ? "tabs" : "recents",
-					event = (category == "recents" && this.gotMRUKey) ?
-						"focus-mru" : "focus";
+				const updateData = {active: true};
+				const queryLength = this.state.query.length;
+				const category = queryLength ? "tabs" : "recents";
+				let event = (category == "recents" && this.gotMRUKey) ?
+					"focus-mru" : "focus";
 
 				if (unsuspend && tab.unsuspendURL) {
 						// change to the unsuspended URL
@@ -605,13 +605,8 @@ define("popup/app", [
 		{
 				// get the current active tab, in case the user had closed the
 				// previously active tab
-			cp.tabs.query({
-				active: true,
-				currentWindow: true
-			})
-				.bind(this)
-				.then(function(activeTabs) {
-					const activeTab = activeTabs[0];
+			this.getActiveTab()
+				.then(activeTab => {
 						// if the active tab is at 0, and we want to move
 						// another tab to the left of it, force that index
 						// to be 0, which shifts the active tab to index: 1
@@ -644,9 +639,11 @@ define("popup/app", [
 					return cp.tabs.move(tab.id, {
 						windowId: activeTab.windowId,
 						index: index
-					})
+					});
 				})
-				.then(function(movedTab) {
+				.then(movedTab => {
+//					const {selected} = this.state;
+
 						// use the movedTab from this callback, since
 						// the tab reference we had to it from before is
 						// likely stale.  we also have to call addURLs()
@@ -654,10 +651,13 @@ define("popup/app", [
 						// unsuspendURL added to it if necessary, so that
 						// unsuspending it will work.
 					addURLs(movedTab);
-
 					this.focusTab(movedTab, unsuspend);
 					this.props.tracker.event(this.state.query.length ? "tabs" : "recents",
 						"move-" + (direction ? "right" : "left"));
+
+// TODO: this is only needed if we don't focus the tab after moving it
+//					return this.loadTabs()
+//						.then(() => this.setState({ selected }));
 				});
 		},
 
@@ -707,7 +707,8 @@ define("popup/app", [
 		getActiveTab: function()
 		{
 			if (!this.props.isPopup || !this.visible) {
-				return cp.tabs.query({ active: true, currentWindow: true });
+				return cp.tabs.query({ active: true, currentWindow: true })
+					.then(([activeTab]) => activeTab);
 			} else {
 					// since we're in a popup window, get the active tab from
 					// the background, which recorded it before opening this
