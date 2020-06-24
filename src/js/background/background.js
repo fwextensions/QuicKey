@@ -152,7 +152,7 @@ require([
 	let isNormalIcon = true;
 	let showTabCount = true;
 	let currentWindowLimitRecents = false;
-	let activeTabs = [];
+	let activeTab;
 	let shortcutTimer;
 	let lastWindowID;
 	let lastUsedVersion;
@@ -270,7 +270,7 @@ require([
 	async function openPopupWindow(
 		focusSearch = false)
 	{
-		activeTabs = await cp.tabs.query({
+		[activeTab] = await cp.tabs.query({
 			active: true,
 			lastFocusedWindow: true
 		});
@@ -278,12 +278,12 @@ require([
 		if (!popupWindow.isOpen || !ports.popup) {
 				// the popup window isn't open, so create a new one, with the
 				// search box either focused or not
-			popupWindow.create(activeTabs[0], focusSearch);
-		} else if (activeTabs[0].windowId !== popupWindow.id) {
+			popupWindow.create(activeTab, focusSearch);
+		} else if (activeTab.windowId !== popupWindow.id) {
 				// the popup window isn't focused, so tell it to show itself
 				// centered on the current browser window, and whether to
 				// select the first item
-			sendPopupMessage("showWindow", { focusSearch, activeTab: activeTabs[0] });
+			sendPopupMessage("showWindow", { focusSearch, activeTab });
 		} else {
 				// it's open and focused, so use the shortcut to move the
 				// selection DOWN
@@ -589,7 +589,7 @@ require([
 
 		port.onDisconnect.addListener(port => {
 			ports[port.name] = null;
-			activeTabs = [];
+			activeTab = null;
 
 			if (port.name == "popup") {
 				popupWindow.close();
@@ -611,7 +611,7 @@ require([
 
 	chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 		if (message == "getActiveTab") {
-			sendResponse(activeTabs);
+			sendResponse(activeTab);
 		} else if (k.ShowTabCount.Key in message) {
 			showTabCount = message[k.ShowTabCount.Key];
 
