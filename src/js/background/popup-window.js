@@ -1,9 +1,13 @@
 define([
 	"cp",
-	"shared"
+	"shared",
+	"background/quickey-storage",
+	"background/constants"
 ], (
 	cp,
-	shared
+	shared,
+	storage,
+	{IsMac}
 ) => {
 	const PopupInnerWidth = 500;
 	const PopupInnerHeight = 488;
@@ -18,6 +22,9 @@ define([
 	let windowID;
 	let tabID;
 	let lastActiveTab;
+
+
+	storage.get(data => ({popupAdjustmentWidth, popupAdjustmentHeight} = data));
 
 
 	async function getLastWindow()
@@ -72,8 +79,8 @@ define([
 			});
 			windowID = window.id;
 		} else {
-				// first add the tab to the last unfocused window, then show()
-				// move that tab to a new popup window
+				// first add the tab to the last unfocused window, then move
+				// that tab to a new popup window
 			const lastWindow = await getLastWindow();
 			const tab = await cp.tabs.create({
 				url,
@@ -92,15 +99,16 @@ define([
 		const heightDelta = PopupInnerHeight - innerHeight;
 
 		if (widthDelta || heightDelta) {
-				// store the adjustments needed to get the target size so that
-				// the next time we open the window, it'll be the right size.
-				// then adjust the new window to the correct size.
+				// the current adjustments weren't enough to hit the target size,
+				// so update them with the latest deltas, and then adjust the
+				// popup size
 			popupAdjustmentWidth += widthDelta;
 			popupAdjustmentHeight += heightDelta;
-			width += popupAdjustmentWidth;
-			height += popupAdjustmentHeight;
+			width += widthDelta;
+			height += heightDelta;
 
 			await cp.windows.update(window.id, { width, height });
+			await storage.set(() => ({ popupAdjustmentWidth, popupAdjustmentHeight }));
 		}
 
 		lastActiveTab = activeTab;
@@ -146,26 +154,40 @@ define([
 
 
 	async function hide(
-		unfocus)
+		unfocus,
+		targetTabOrWindow)
 	{
 		let result = Promise.resolve();
+		let options = {
+			left: OffscreenX,
+			top: OffscreenY
+		};
+
+		if (targetTabOrWindow && (IsMac || devicePixelRatio !== 1)) {
+				// hide the popup behind the focused window
+			const {left, top} = calcPosition(
+				targetTabOrWindow.windowId
+					? await cp.windows.get(targetTabOrWindow.windowId)
+					: targetTabOrWindow
+			);
+
+			options = { left, top };
+		}
+
+		if (unfocus) {
+			options.focused = false;
+		}
 
 		isVisible = false;
 
 		if (type == "window" && windowID) {
-			const options = {
-				left: OffscreenX,
-				top: OffscreenY
-			};
-
-			if (unfocus) {
-				options.focused = false;
-			}
-
 			result = cp.windows.update(windowID, options);
 		} else if (type == "tab" && tabID) {
 			const lastWindow = await getLastWindow();
 
+				// move the popup behind the target window before moving the tab
+				// to a window, to reduce the screen flicker
+			await cp.windows.update(windowID, options);
 			result = cp.tabs.move(tabID, {
 				windowId: lastWindow.id,
 				index: -1
