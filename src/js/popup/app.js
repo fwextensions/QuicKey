@@ -172,7 +172,20 @@ define("popup/app", [
 					// prevent the window from resizing
 				window.addEventListener("resize",
 					() => window.resizeTo(outerWidth, outerHeight));
+
+					// hide the window if it loses focus
 				window.addEventListener("blur", this.onWindowBlur);
+
+					// listen for resolution changes so we can close the popup
+					// and reset the sizing adjustments
+				matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`).addListener(event => {
+					if (!event.matches) {
+							// close the window when the resolution changes, not
+							// just hide it off-screen, so it then will get
+							// recreated with the right size offsets
+						popupWindow.close();
+					}
+				})
 			}
 
 			this.props.port.onMessage.addListener(this.onMessage);
@@ -316,7 +329,7 @@ define("popup/app", [
 		},
 
 
-		clearQuery: function()
+		clearQuery: async function()
 		{
 			let {searchBoxText} = this.state;
 
@@ -324,7 +337,7 @@ define("popup/app", [
 					// pressing esc in an empty field should close the popup, or
 					// if the user checked the always close option
 				this.props.port.postMessage("closedByEsc");
-				this.closeWindow(true);
+				this.closeWindow(true, await this.getActiveTab());
 			} else {
 					// if we're searching for bookmarks or history, reset the
 					// query to just /b or /h, rather than clearing it, unless
@@ -398,46 +411,49 @@ define("popup/app", [
 		},
 
 
-		openItem: function(
+		openItem: async function(
 			item,
 			shiftKey,
 			modKey)
 		{
 			if (item) {
+				const {url} = item;
+				let tabOrWindow;
+
+					// set this manually before awaiting any calls below, since
+					// the onblur handler will fire when the item is opened
+				this.closeWindowCalled = true;
+
 				if (this.mode == "tabs") {
 					if (item.sessionId) {
 							// this is a closed tab, so restore it
-						chrome.sessions.restore(item.sessionId);
+						tabOrWindow = await cp.sessions.restore(item.sessionId);
 						this.props.tracker.event("tabs", "restore");
 					} else {
 							// switch to the tab
-						this.focusTab(item, shiftKey);
+						tabOrWindow = await this.focusTab(item, shiftKey);
 					}
 				} else if (shiftKey) {
 						// open in a new window
-					chrome.windows.create({ url: item.url });
+					tabOrWindow = await cp.windows.create({ url });
 					this.props.tracker.event(this.mode, "open-new-win");
 				} else if (modKey) {
 						// open in a new tab
-					chrome.tabs.create({ url: item.url });
+					tabOrWindow = await cp.tabs.create({ url });
 					this.props.tracker.event(this.mode, "open-new-tab");
 				} else {
 						// open in the same tab
-					chrome.tabs.update({ url: item.url });
+					tabOrWindow = await cp.tabs.update({ url });
 					this.props.tracker.event(this.mode, "open");
 				}
 
 				if (this.props.isPopup) {
-					this.closeWindow();
+					this.closeWindow(false, tabOrWindow);
 				} else {
 						// we seem to have to close the window in a timeout so that
 						// the hover state of the button gets cleared
 					setTimeout(this.closeWindow, 0);
 				}
-
-					// set this manually, since the onblur handler will fire when
-					// the item is opened and before the timed out closeWindow()
-				this.closeWindowCalled = true;
 			}
 		},
 
@@ -447,7 +463,7 @@ define("popup/app", [
 			unsuspend)
 		{
 			if (tab) {
-				const updateData = {active: true};
+				const updateData = { active: true };
 				const queryLength = this.state.query.length;
 				const category = queryLength ? "tabs" : "recents";
 				let event = (category == "recents" && this.gotMRUKey) ?
@@ -459,20 +475,20 @@ define("popup/app", [
 					event = "unsuspend";
 				}
 
+				this.props.tracker.event(category, event,
+					queryLength ? queryLength : this.state.selected);
+
 					// bring the tab's window forward *before* focusing the tab,
 					// since activating the window can sometimes put keyboard
-					// focus on the very first tab button on macOS 12.14 (could
-					// never repro on 12.12).  then focus the tab, which should
+					// focus on the very first tab button on macOS 10.14 (could
+					// never repro on 10.12).  then focus the tab, which should
 					// fix any focus issues.
-				cp.windows.update(tab.windowId, { focused: true })
+				return cp.windows.update(tab.windowId, { focused: true })
 					.then(() => cp.tabs.update(tab.id, updateData))
 					.catch(error => {
 						this.props.tracker.exception(error);
 						log(error);
 					});
-
-				this.props.tracker.event(category, event,
-					queryLength ? queryLength : this.state.selected);
 			}
 		},
 
@@ -713,7 +729,8 @@ define("popup/app", [
 
 
 		closeWindow: function(
-			closedByEsc)
+			closedByEsc,
+			focusedTabOrWindow)
 		{
 			this.closeWindowCalled = true;
 
@@ -727,11 +744,11 @@ define("popup/app", [
 				this.onQueryChange({ target: { value: "" }});
 				this.visible = false;
 
-					// we're being closed by esc, not by losing focus or by
-					// focusing another tab.  so in addition to moving off
+					// if we're being closed by esc, not by losing focus or by
+					// focusing another tab, then in addition to moving off
 					// screen, force the popup to lose focus so some other
-					// window comes forward.
-				return popupWindow.hide(closedByEsc);
+					// window comes forward
+				return popupWindow.hide(closedByEsc, focusedTabOrWindow);
 			}
 		},
 
@@ -828,12 +845,14 @@ define("popup/app", [
 		},
 
 
-		onWindowBlur: function()
+		onWindowBlur: async function()
 		{
 			if (!this.closeWindowCalled) {
 					// only call this if we're losing focus because the user
-					// clicked another window, and not from pressing esc
-				this.closeWindow();
+					// clicked another window, and not from pressing esc.  get
+					// the active tab so it can get passed to popupWindow.hide(),
+					// where it'll be the target window to hide the popup behind.
+				this.closeWindow(false, await this.getActiveTab());
 			}
 
 			this.closeWindowCalled = false;

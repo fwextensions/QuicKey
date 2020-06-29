@@ -149,6 +149,8 @@ define([
 					lastSeenOptionsVersion: CurrentVersion,
 					lastQuery: "",
 					previousTabIndex: -1,
+					popupAdjustmentWidth: 0,
+					popupAdjustmentHeight: 0,
 					settings: DefaultSettings,
 					tabIDs: [],
 					tabsByID: {}
