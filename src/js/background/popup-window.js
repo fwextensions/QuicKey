@@ -47,8 +47,10 @@ define([
 		const {left: targetX, top: targetY, width: targetW, height: targetH} = targetWindow;
 		const width = PopupInnerWidth + popupAdjustmentWidth;
 		const height = PopupInnerHeight + popupAdjustmentHeight;
-		const left = Math.max(0, targetX + targetW - width - 10);
-		const top = Math.max(0, targetY + 10);
+		const left = Math.floor((screen.availWidth - width) / 2);
+		const top = Math.floor((screen.availHeight - height) / 2);
+//		const left = Math.max(0, targetX + targetW - width - 10);
+//		const top = Math.max(0, targetY + 10);
 //		const left = Math.max(0, targetX + Math.floor((targetW - width) / 2));
 //		const top = Math.max(0, targetY + Math.floor((targetH - height) / 2));
 
