@@ -58,11 +58,13 @@ define([
 		activeTab,
 		focusSearch)
 	{
-			// close any existing window, in case wasn't already closed
+			// close any existing window, in case one was still open
 		await close();
 
+			// get the full URL with the extension ID in it so that we can
+			// delete it from the history below, which requres an exact match
+		const url = chrome.runtime.getURL(`popup.html?${new URLSearchParams({ type, focusSearch })}`);
 		const targetWindow = await cp.windows.get(activeTab.windowId);
-		const url = `popup.html?${new URLSearchParams({ type, focusSearch })}`;
 		let {left, top, width, height} = calcPosition(targetWindow);
 		let window;
 
@@ -113,6 +115,12 @@ define([
 
 		lastActiveTab = activeTab;
 		isVisible = true;
+
+			// after opening the popup, we want to remove its entry from the
+			// history, since it's not a real webpage.  doing this in a timeout
+			// is kludgy, but the history doesn't seem to have been updated by
+			// this point, so wait a second and then delete it.
+		setTimeout(() => cp.history.deleteUrl({ url }), 1000);
 
 		return window;
 	}

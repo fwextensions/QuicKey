@@ -387,8 +387,11 @@ define("popup/app", [
 					tabOrWindow = await cp.tabs.create({ url });
 					this.props.tracker.event(this.mode, "open-new-tab");
 				} else {
-						// open in the same tab
-					tabOrWindow = await cp.tabs.update({ url });
+						// open in the active tab, which, in the case of a popup,
+						// is not in the current window (since it's the popup)
+					const {id} = await this.getActiveTab();
+
+					tabOrWindow = await cp.tabs.update(id, { url });
 					this.props.tracker.event(this.mode, "open");
 				}
 
