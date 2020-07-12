@@ -191,15 +191,15 @@ define([
 					<RadioGroup
 						id={k.PopupType.Key}
 						value={settings[k.PopupType.Key]}
-						label={<span>Hide the alt-tab-style popup:</span>}
+						label={<span>When the alt-tab-style popup closes:</span>}
 						onChange={onChange}
 					>
 						<RadioButton
-							label="As an off-screen window"
+							label="Hide it off-screen"
 							value={k.PopupType.Window}
 						/>
 						<RadioButton
-							label="As a tab"
+							label="Hide it in a tab"
 							value={k.PopupType.Tab}
 						/>
 					</RadioGroup>
