@@ -100,8 +100,11 @@ define(function() {
 
 				if (binding.modifiers == modifiers) {
 						// the callback can return true to not do the standard
-						// handling, which is to call preventDefault()
-					if (!binding.callback(event)) {
+						// handling, which is to call preventDefault().  use
+						// strict inequality to make sure true was actually
+						// returned, in case the handler happens to return a
+						// promise or something.
+					if (binding.callback(event) !== true) {
 						event.preventDefault();
 					}
 

@@ -76,6 +76,8 @@ define("popup/app", [
 		bookmarks: [],
 		history: [],
 		recents: [],
+			// this array is always empty, and is only used by getMatchingItems()
+			// when a / is typed and the mode is "command"
 		command: [],
 		tabsPromise: null,
 		bookmarksPromise: null,
@@ -383,7 +385,7 @@ define("popup/app", [
 					// pressing esc in an empty field should close the popup, or
 					// if the user checked the always close option
 				this.props.port.postMessage("closedByEsc");
-				this.closeWindow(true, await this.getActiveTab());
+				await this.closeWindow(true, await this.getActiveTab());
 			} else {
 					// if we're searching for bookmarks or history, reset the
 					// query to just /b or /h, rather than clearing it, unless
@@ -792,6 +794,15 @@ define("popup/app", [
 				this.resultsList.scrollToRow(0);
 				this.onQueryChange({ target: { value: "" }});
 				this.visible = false;
+
+					// clear any bookmarks or history we might have loaded while
+					// the window was open, since they may be different the next
+					// time the user accesses them.  this way we won't show
+					// stale data.
+				this.bookmarks = [];
+				this.bookmarksPromise = null;
+				this.history = [];
+				this.historyPromise = null;
 
 					// if we're being closed by esc, not by losing focus or by
 					// focusing another tab, then in addition to moving off
