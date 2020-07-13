@@ -48,10 +48,7 @@ define(function() {
 		bindings)
 	{
 		this.bindings = {};
-
-		if (bindings instanceof Array) {
-			bindings.forEach(binding => binding && this.bind(binding[0], binding[1]));
-		}
+		this.bindAll(bindings)
 	}
 
 
@@ -79,10 +76,49 @@ define(function() {
 					bindings.unshift({
 						key: info.key,
 						modifiers: info.modifiers,
-						callback: callback
+						callback
 					});
 				}
 			});
+		},
+
+
+		bindAll: function(
+			bindings)
+		{
+			if (bindings instanceof Array) {
+				bindings.forEach(binding => binding && this.bind(binding[0], binding[1]));
+			}
+		},
+
+
+		unbind: function(
+			shortcuts)
+		{
+			[].concat(shortcuts).forEach(shortcut => {
+				if (!shortcut) {
+					return;
+				}
+
+				const info = this.extractShortcutInfo(shortcut);
+				const keyIndex = info.keyCode || info.key;
+				const keyBindings = this.bindings[keyIndex];
+
+				if (keyBindings && keyBindings.length) {
+					this.bindings[keyIndex] = keyBindings.filter(({key, modifiers}) =>
+						key !== info.key && modifiers !== info.modifiers);
+
+					if (!this.bindings[keyIndex].length) {
+						delete this.bindings[keyIndex];
+					}
+				}
+			});
+		},
+
+
+		unbindAll: function()
+		{
+			this.bindings = {};
 		},
 
 

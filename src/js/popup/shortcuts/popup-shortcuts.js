@@ -5,7 +5,7 @@ define([
 	ShortcutManager,
 	k
 ) {
-	const Bindings = [
+	const MenuBindings = [
 		[["ArrowUp", "Ctrl+P", "Ctrl+K"], () => self.modifySelected(-1)],
 		[["ArrowDown", "Ctrl+N", "Ctrl+J"], () => self.modifySelected(1)],
 		["PageUp", () => self.resultsList.scrollByPage("up")],
@@ -38,7 +38,7 @@ define([
 				}
 			}]
 	];
-	const Manager = new ShortcutManager(Bindings);
+	const Manager = new ShortcutManager();
 	const Handlers = {
 		[k.Shortcuts.CloseTab]: () => self.closeTab(selectedTab()),
 		[k.Shortcuts.MoveTabLeft]: event => moveTab(-1, event.shiftKey),
@@ -140,6 +140,12 @@ define([
 				createShiftedShortcut(chromeShortcuts, FocusPopupCommand)
 			];
 
+				// first reset all the bindings, in case we're getting called
+				// with updated settings, then bind the non-customizable keys
+			Manager.unbindAll();
+			Manager.bindAll(MenuBindings);
+
+				// bind the customizable shortcuts
 			Object.keys(shortcuts).forEach(id => {
 				const handler = Handlers[id];
 				const shortcut = [shortcuts[id]];
