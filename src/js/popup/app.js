@@ -117,13 +117,7 @@ define("popup/app", [
 						// doesn't have to get its own copy of it
 					return settings.get(data);
 				})
-				.then(settings => {
-					this.settings = settings;
-					this.mruModifier = settings.chrome.popup.modifierEventName;
-					shortcuts.update(settings);
-
-					return settings;
-				});
+				.then(this.updateSettings);
 
 			this.openedForSearch = this.props.focusSearch;
 
@@ -697,6 +691,17 @@ define("popup/app", [
 		},
 
 
+		updateSettings: function(
+			settings)
+		{
+			this.settings = settings;
+			this.mruModifier = settings.chrome.popup.modifierEventName;
+			shortcuts.update(settings);
+
+			return settings;
+		},
+
+
 		showWindow: function({
 			focusSearch,
 			activeTab})
@@ -724,7 +729,8 @@ define("popup/app", [
 
 				// get the latest settings, in case they've changed, so that
 				// they'll be available in loadTabs()
-			this.settingsPromise = settings.get();
+			this.settingsPromise = settings.get()
+				.then(this.updateSettings);
 
 				// the tab list should already be correct in most cases, but
 				// load them again just to make sure

@@ -295,7 +295,7 @@ define([
 					onClick={this.handleChangeShortcutsClick}
 				>Change browser shortcuts</button>
 				<button className="key"
-					title="Learn how to make Chrome use ctrl-tab as a shortcut"
+					title={`Learn how to make ${k.IsEdge ? "Edge" : "Chrome"} use ctrl-tab as a shortcut`}
 					onClick={this.handleCtrlTabClick}
 				>Use ctrl-tab as a shortcut</button>
 
