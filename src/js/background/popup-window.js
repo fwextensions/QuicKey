@@ -165,7 +165,6 @@ define([
 		unfocus,
 		targetTabOrWindow)
 	{
-		let result = Promise.resolve();
 		let options = {
 			left: OffscreenX,
 			top: OffscreenY
@@ -189,20 +188,36 @@ define([
 		isVisible = false;
 
 		if (type == "window" && windowID) {
-			result = cp.windows.update(windowID, options);
+			try {
+				await cp.windows.update(windowID, options);
+			} catch (e) {
+					// we couldn't move the window for some reason, so close it
+				await close();
+			}
 		} else if (type == "tab" && tabID) {
 			const lastWindow = await getLastWindow();
 
-				// move the popup behind the target window before moving the tab
-				// to a window, to reduce the screen flicker
-			await cp.windows.update(windowID, options);
-			result = cp.tabs.move(tabID, {
-				windowId: lastWindow.id,
-				index: -1
-			});
+			if (lastWindow) {
+				try {
+						// move the popup behind the target window before moving
+						// the tab to a window, to reduce the screen flicker
+					await cp.windows.update(windowID, options);
+					await cp.tabs.move(tabID, {
+						windowId: lastWindow.id,
+						index: -1
+					});
+				} catch (e) {
+					// ignore this error, as it's most likely due to the user
+					// switching to the hidden tab and then away, causing it to
+					// lose focus, which then calls hide(), but the popup window
+					// in which the tab was previously shown is already closed
+				}
+			} else {
+					// there's no window in which to stash the tab, so just
+					// close it
+				await close();
+			}
 		}
-
-		return result.catch(console.error);
 	}
 
 

@@ -5,7 +5,7 @@ define([
 	ShortcutManager,
 	k
 ) {
-	const Bindings = [
+	const MenuBindings = [
 		["ArrowUp", () => self.modifySelected(-1)],
 		["ArrowDown", () => self.modifySelected(1)],
 		["PageUp", () => self.resultsList.scrollByPage("up")],
@@ -26,7 +26,7 @@ define([
 				}
 			}]
 	];
-	const Manager = new ShortcutManager(Bindings);
+	const Manager = new ShortcutManager();
 	const Handlers = {
 		[k.Shortcuts.CloseTab]: () => self.closeTab(selectedTab()),
 		[k.Shortcuts.MoveTabLeft]: event => moveTab(-1, event.shiftKey),
@@ -140,6 +140,12 @@ define([
 				createShiftedShortcut(chromeShortcuts, FocusPopupCommand)
 			];
 
+				// first reset all the bindings, in case we're getting called
+				// with updated settings, then bind the non-customizable keys
+			Manager.unbindAll();
+			Manager.bindAll(MenuBindings);
+
+				// bind the customizable shortcuts
 			Object.keys(shortcuts).forEach(id => {
 				const handler = Handlers[id];
 				const shortcut = [shortcuts[id]];
@@ -156,7 +162,7 @@ define([
 			});
 
 				// add handlers for navigating up and down with the MRU key,
-				// plus the modifiers used to open the popup
+				// plus the shortcuts used to open the popup
 			Manager.bind(selectDownShortcuts, mruSelectDown);
 			Manager.bind(selectUpShortcuts, mruSelectUp);
 		},
