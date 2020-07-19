@@ -75,7 +75,8 @@ define([
 			"6": update(addDefaultSetting(k.MarkTabsInOtherWindows.Key)),
 			"7": update(addDefaultSetting(k.ShowTabCount.Key)),
 			"8": update(addDefaultSetting(k.UsePinyin.Key)),
-			"9": update(async data => {
+			"9": update(async data =>
+			{
 				data.popupAdjustmentWidth = 0;
 				data.popupAdjustmentHeight = 0;
 				await addDefaultSetting(k.PopupType.Key);

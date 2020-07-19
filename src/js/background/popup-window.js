@@ -114,7 +114,12 @@ log(innerWidth, innerHeight, widthDelta, heightDelta);
 			width += widthDelta;
 			height += heightDelta;
 
-			await cp.windows.update(window.id, { width, height });
+				// shift the position by half a negative delta to keep the
+				// window centered in the target area
+			left += -Math.floor(widthDelta / 2);
+			top += -Math.floor(heightDelta / 2);
+
+			await cp.windows.update(window.id, { left, top, width, height });
 			await storage.set(() => ({ popupAdjustmentWidth, popupAdjustmentHeight }));
 		}
 
