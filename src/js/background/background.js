@@ -125,24 +125,30 @@ require([
 	let usePinyin;
 
 
-	const addTab = debounce(({tabId}) => cp.tabs.get(tabId)
-		.then(recentTabs.add)
-		.catch(error => {
-				// ignore the "No tab with id:" errors, which will happen
-				// closing a window with multiple tabs.  since addTab()
-				// is debounced and will fire after the window is closed,
-				// the tab no longer exists at that point.
-			if (error && error.message && error.message.indexOf("No tab") != 0) {
-				backgroundTracker.exception(error);
-			}
-		}), MinTabDwellTime);
+	const addTab = debounce(
+			// if the popupWindow is visible, then the user is navigating through
+			// tabs and activating each one as it's selected.  so we don't want
+			// to update the recents list in that case, until the user finishes
+			// and the window closes.
+		({tabId}) => !popupWindow.isVisible && cp.tabs.get(tabId)
+			.then(recentTabs.add)
+			.catch(error => {
+					// ignore the "No tab with id:" errors, which will happen
+					// closing a window with multiple tabs.  since addTab()
+					// is debounced and will fire after the window is closed,
+					// the tab no longer exists at that point.
+				if (error && error.message && error.message.indexOf("No tab") != 0) {
+					backgroundTracker.exception(error);
+				}
+			}),
+		MinTabDwellTime
+	);
 
 
-	const handleTabRemoved = debounce((tabId, removeInfo) => {
-		if (!gStartingUp) {
-			recentTabs.remove(tabId, removeInfo);
-		}
-	}, TabRemovedDelay);
+	const handleTabRemoved = debounce(
+		(tabId, removeInfo) => !gStartingUp && recentTabs.remove(tabId, removeInfo),
+		TabRemovedDelay
+	);
 
 
 	function handleTabActivated(
@@ -155,7 +161,7 @@ require([
 		if (event.windowId !== popupWindow.id) {
 			addTab(event);
 
-			if (ports.popup) {
+			if (ports.popup && !popupWindow.isVisible) {
 				storage.get(({tabIDs}) => {
 						// if the newly activated tab is the same as the most
 						// recent one in tabIDs, that means it was just

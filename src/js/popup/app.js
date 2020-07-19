@@ -356,12 +356,11 @@ define("popup/app", [
 		setQuery: function(
 			query)
 		{
-log("setQuery", query)
 			this.setState({
 				query,
 				matchingItems: this.getMatchingItems(query),
-				selected: query  ? 0 : -1
-//				selected: (query || this.props.isPopup) ? 0 : -1
+				selected: query ? 0 : -1
+//				selected: (query || (this.props.isPopup && !this.openedForSearch)) ? 0 : -1
 			});
 		},
 
@@ -525,7 +524,6 @@ log("setQuery", query)
 					// fix any focus issues.
 				return cp.windows.update(tab.windowId, { focused: true })
 					.then(() => cp.tabs.update(tab.id, updateData))
-					.then(() => popupWindow.show(tab))
 					.catch(error => {
 						this.props.tracker.exception(error);
 						log(error);
@@ -696,7 +694,8 @@ log("setQuery", query)
 //			this.setSelectedIndex(this.state.selected + delta, mruKey);
 log("modifySelected", index, this.state.matchingItems[index])
 //			this.setState(({selected}) => this.focusTab(this.state.matchingItems[selected + delta]));
-			this.focusTab(this.state.matchingItems[index]);
+			this.focusTab(this.state.matchingItems[index])
+				.then(() => popupWindow.show(this.state.matchingItems[index]))
 		},
 
 
@@ -784,6 +783,7 @@ log("setSelectedIndex", index)
 				// the tab list should already be correct in most cases, but
 				// load them again just to make sure
 			return this.loadTabs()
+				.then(() => !focusSearch && this.modifySelected(1, true))
 				.then(() => popupWindow.show(activeTab));
 		},
 
@@ -871,12 +871,8 @@ log("setSelectedIndex", index)
 		{
 			if (event.key == this.mruModifier) {
 				if (!this.gotModifierUp && this.gotMRUKey && this.state.selected > -1) {
-					this.setSelectedIndex(-1);
-					this.closeWindow();
-
-					const tab = this.state.matchingItems[this.state.selected];
-					cp.windows.update(tab.windowId, { focused: true })
-						.then(() => cp.tabs.update(tab.id, { active: true }));
+					this.onQueryChange({ target: { value: "" }});
+					this.closeWindow(true, this.state.matchingItems[this.state.selected])
 //					this.openItem(this.state.matchingItems[this.state.selected]);
 				}
 
@@ -905,7 +901,7 @@ log("setSelectedIndex", index)
 					break;
 
 				case "tabActivated":
-//					this.loadTabs();
+					this.loadTabs();
 					break;
 
 				case "showWindow":
