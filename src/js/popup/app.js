@@ -598,8 +598,6 @@ define("popup/app", [
 
 			this.setSelectedIndex(index, mruKey);
 //			this.setSelectedIndex(this.state.selected + delta, mruKey);
-log("modifySelected", index, this.state.matchingItems[index])
-//			this.setState(({selected}) => this.focusTab(this.state.matchingItems[selected + delta]));
 			this.focusTab(this.state.matchingItems[index])
 				.then(() => popupWindow.show(this.state.matchingItems[index]))
 		},
@@ -621,7 +619,6 @@ log("modifySelected", index, this.state.matchingItems[index])
 					// wrap around the end or beginning of the list
 				index = (index + length) % length;
 			}
-log("setSelectedIndex", index)
 
 			this.setState({ selected: index });
 		},
@@ -783,12 +780,10 @@ log("setSelectedIndex", index)
 				this.mode = "tabs";
 			}
 
-//			if (query !== this.state.query) {
-//				this.setState({ searchBoxText });
-//				this.setQuery(query);
-//			}
-			this.setState({ searchBoxText });
-			this.setQuery(query);
+			if (query !== this.state.query) {
+				this.setState({ searchBoxText });
+				this.setQuery(query);
+			}
 		},
 
 
@@ -810,8 +805,7 @@ log("setSelectedIndex", index)
 		{
 			if (event.key == this.mruModifier) {
 				if (!this.gotModifierUp && this.gotMRUKey && this.state.selected > -1) {
-					this.onQueryChange({ target: { value: "" }});
-					this.closeWindow(true, this.state.matchingItems[this.state.selected])
+					this.closeWindow(true, this.state.matchingItems[this.state.selected]);
 //					this.openItem(this.state.matchingItems[this.state.selected]);
 				}
 
@@ -840,11 +834,14 @@ log("setSelectedIndex", index)
 					break;
 
 				case "tabActivated":
-					this.loadTabs();
+// TODO: calling loadTabs will mess up the selection, which we don't want to do
+// while the user is navigating through previous tabs.  we tried to not call this
+// in handleTabActivated by checking if the popup was visible, but there seem to
+// be timing issues.  need some other navigation state to be tracked in the app.
+//					this.loadTabs();
 					break;
 
 				case "showWindow":
-log("showWindow", payload)
 					this.showWindow(payload);
 					break;
 
