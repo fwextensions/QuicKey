@@ -3,7 +3,7 @@
 const MaxPopupLifetime = 450;
 const TabActivatedOnStartupDelay = 750;
 const TabRemovedDelay = 1000;
-const MinTabDwellTime = 750;
+const MinTabDwellTime = 1250;
 const RestartDelay = 10 * 1000;
 
 
@@ -350,7 +350,7 @@ require([
 	function enableCommands()
 	{
 			// just in case the listener hasn't already been removed, call this
-			// so we don'd add two listeners
+			// so we don't add two listeners
 		disableCommands();
 		chrome.commands.onCommand.addListener(onCommandListener);
 	}

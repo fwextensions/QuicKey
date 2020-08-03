@@ -13,6 +13,7 @@ define([
 	const PopupInnerHeight = 488;
 	const OffscreenX = 13000;
 	const OffscreenY = 13000;
+	const PopupPadding = 50;
 
 
 	let popupAdjustmentWidth = 0;
@@ -41,20 +42,50 @@ define([
 	}
 
 
-	function calcPosition(
-		targetWindow)
+	function getScreen()
 	{
-		const {left: targetX, top: targetY, width: targetW, height: targetH} = targetWindow;
+		return {
+			left: screen.availLeft || 0,
+			top: screen.availTop || 0,
+			width: screen.availWidth,
+			height: screen.availHeight
+		};
+	}
+
+
+	function getAlignedPosition(
+		alignment,
+		size,
+		start,
+		availableSpace,
+		padding)
+	{
+		switch (alignment) {
+			case "left":
+			case "top":
+				return start + padding;
+
+			case "center":
+				return start + Math.floor((start + availableSpace - size) / 2);
+
+			case "right":
+			case "bottom":
+				return start + availableSpace - padding - size;
+		}
+	}
+
+
+	function calcPosition(
+		targetWindow,
+		alignment = "center-center")
+	{
+		const {left: targetX, top: targetY, width: targetW, height: targetH} =
+			targetWindow || getScreen();
 		const width = PopupInnerWidth + popupAdjustmentWidth;
 		const height = PopupInnerHeight + popupAdjustmentHeight;
-		const left = Math.floor((screen.availWidth - width) - 50);
-		const top = Math.floor((screen.availHeight - height) / 2);
-//		const left = Math.floor((screen.availWidth - width) / 2);
-//		const top = Math.floor((screen.availHeight - height) / 2);
-//		const left = Math.max(0, targetX + targetW - width - 10);
-//		const top = Math.max(0, targetY + 10);
-//		const left = Math.max(0, targetX + Math.floor((targetW - width) / 2));
-//		const top = Math.max(0, targetY + Math.floor((targetH - height) / 2));
+		const [horizontal, vertical] = alignment.split("-");
+		const left = getAlignedPosition(horizontal, width, targetX, targetW, PopupPadding);
+		const top = getAlignedPosition(vertical, height, targetY, targetH, PopupPadding);
 
 		return { left, top, width, height };
 	}
@@ -62,7 +93,8 @@ define([
 
 	async function create(
 		activeTab,
-		focusSearch)
+		focusSearch,
+		alignment)
 	{
 			// close any existing window, in case one was still open
 		await close();
@@ -71,7 +103,7 @@ define([
 			// delete it from the history below, which requres an exact match
 		const url = chrome.runtime.getURL(`popup.html?${new URLSearchParams({ type, focusSearch })}`);
 		const targetWindow = await cp.windows.get(activeTab.windowId);
-		let {left, top, width, height} = calcPosition(targetWindow);
+		let {left, top, width, height} = calcPosition(targetWindow, alignment);
 		let window;
 
 		if (type == "window") {
@@ -138,16 +170,17 @@ define([
 
 
 	async function show(
-		activeTab)
+		activeTab,
+		alignment)
 	{
-		const targetWindow = await cp.windows.get(activeTab.windowId);
-		let {left, top, width, height} = calcPosition(targetWindow);
+		const targetWindow = activeTab && await cp.windows.get(activeTab.windowId);
+		let {left, top, width, height} = calcPosition(targetWindow, alignment);
 		let result = Promise.resolve();
 
-		lastActiveTab = activeTab;
-		isVisible = true;
-
-		if (type == "window" && windowID) {
+			// if we're already visible and show() is being called again, that
+			// means the user is navigating recent tabs while keeping the popup
+			// open, so focus the existing window even if it's in tab mode
+		if (isVisible || (type == "window" && windowID)) {
 			result = cp.windows.update(windowID, { focused: true, left, top });
 		} else if (type == "tab" && tabID) {
 				// create a popup window with the tab that's hiding in another
@@ -167,6 +200,9 @@ define([
 
 			result = Promise.resolve(window);
 		}
+
+		lastActiveTab = activeTab;
+		isVisible = true;
 
 		return result.catch(console.error);
 	}
