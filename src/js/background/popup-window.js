@@ -66,7 +66,7 @@ define([
 				return start + padding;
 
 			case "center":
-				return start + Math.floor((start + availableSpace - size) / 2);
+				return start + Math.floor((availableSpace - size) / 2);
 
 			case "right":
 			case "bottom":
