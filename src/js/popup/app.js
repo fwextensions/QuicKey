@@ -161,7 +161,7 @@ define("popup/app", [
 					() => window.resizeTo(outerWidth, outerHeight));
 
 					// hide the window if it loses focus
-				window.addEventListener("blur", this.onWindowBlur);
+//				window.addEventListener("blur", this.onWindowBlur);
 
 					// listen for resolution changes so we can close the popup
 					// and reset the sizing adjustments
@@ -599,7 +599,7 @@ define("popup/app", [
 			this.setSelectedIndex(index, mruKey);
 //			this.setSelectedIndex(this.state.selected + delta, mruKey);
 			this.focusTab(this.state.matchingItems[index])
-				.then(() => popupWindow.show(this.state.matchingItems[index]))
+				.then(() => this.showPopupWindow(this.state.matchingItems[index]));
 		},
 
 
@@ -687,7 +687,7 @@ define("popup/app", [
 				// load them again just to make sure
 			return this.loadTabs()
 				.then(() => !focusSearch && this.modifySelected(1, true))
-				.then(() => popupWindow.show(activeTab));
+				.then(() => this.showPopupWindow(activeTab));
 		},
 
 
@@ -722,6 +722,13 @@ define("popup/app", [
 					// window comes forward
 				return popupWindow.hide(closedByEsc, focusedTabOrWindow);
 			}
+		},
+
+
+		showPopupWindow: function(
+			activeTab)
+		{
+			popupWindow.show(null, "right-center");
 		},
 
 
