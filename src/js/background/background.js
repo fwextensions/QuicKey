@@ -119,6 +119,7 @@ require([
 	const ports = {};
 	let lastTogglePromise = Promise.resolve();
 	let currentWindowLimitRecents = false;
+	let navigateRecentsWithPopup = true;
 	let activeTab;
 	let lastWindowID;
 	let lastUsedVersion;
@@ -192,14 +193,14 @@ require([
 //				tabChangedFromCommand = true;
 //				recentTabs.navigate(-1, currentWindowLimitRecents);
 //				backgroundTracker.event("recents", "previous", label);
-				navigateTabs(-1);
+				navigateRecents(-1);
 				break;
 
 			case NextTabCommand:
 //				tabChangedFromCommand = true;
 //				recentTabs.navigate(1, currentWindowLimitRecents);
 //				backgroundTracker.event("recents", "next", label);
-				navigateTabs(1);
+				navigateRecents(1);
 				break;
 
 			case ToggleTabsCommand:
@@ -279,20 +280,35 @@ require([
 	}
 
 
-	function navigateTabs(
+	async function navigateRecents(
 		direction)
 	{
-		if ((ports.popup && popupWindow.isVisible) || ports.menu) {
+			// track whether the user is navigating farther back in the stack
+		const label = toolbarIcon.isNormal ? "single" : "repeated";
+		const action = direction == -1 ? "previous" : "next";
+
+		if ((ports.popup && popupWindow.isVisible) || ports.menu || navigateRecentsWithPopup) {
+			if (navigateRecentsWithPopup) {
+				if (!popupWindow.isOpen || !ports.popup) {
+					await openPopupWindow();
+				} else if (!popupWindow.isVisible) {
+						// make the activeTab empty, so that the current tab
+						// won't be filtered out in the recents list
+					activeTab = {};
+				}
+
+				backgroundTracker.event("recents", action, label);
+			}
+
 				// for recentTabs.navigate(), -1 is further back in the stack,
 				// but for the menu, 1 is moving the selection down, which is
 				// equivalent to going further back in the stack, so negate
 				// the value
-			sendPopupMessage("modifySelected", { direction: -direction });
+			sendPopupMessage("modifySelected", {
+				direction: -direction,
+				openPopup: navigateRecentsWithPopup
+			});
 		} else {
-				// track whether the user is navigating farther back in the stack
-			const label = toolbarIcon.isNormal ? "single" : "repeated";
-			const action = direction == -1 ? "previous" : "next";
-
 				// don't invert the icon if the user presses the switch to next
 				// shortcut when they're not actively navigating so that it
 				// doesn't invert for no reason

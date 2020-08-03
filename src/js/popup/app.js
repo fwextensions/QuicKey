@@ -86,6 +86,7 @@ define("popup/app", [
 		selectAllSearchBoxText: false,
 		closeWindowCalled: false,
 		openedForSearch: false,
+		navigatingRecents: false,
 		gotModifierUp: false,
 		gotMRUKey: false,
 		mruModifier: "Alt",
@@ -172,7 +173,7 @@ define("popup/app", [
 					() => window.resizeTo(outerWidth, outerHeight));
 
 					// hide the window if it loses focus
-//				window.addEventListener("blur", this.onWindowBlur);
+				window.addEventListener("blur", this.onWindowBlur);
 
 					// listen for resolution changes so we can close the popup
 					// and reset the sizing adjustments
@@ -359,8 +360,9 @@ define("popup/app", [
 			this.setState({
 				query,
 				matchingItems: this.getMatchingItems(query),
-				selected: query ? 0 : -1
-//				selected: (query || (this.props.isPopup && !this.openedForSearch)) ? 0 : -1
+				selected: (query || (this.props.isPopup && !this.openedForSearch))
+					? 0
+					: -1
 			});
 		},
 
@@ -691,9 +693,8 @@ define("popup/app", [
 			const index = this.state.selected + delta;
 
 			this.setSelectedIndex(index, mruKey);
-//			this.setSelectedIndex(this.state.selected + delta, mruKey);
-			this.focusTab(this.state.matchingItems[index])
-				.then(() => this.showPopupWindow(this.state.matchingItems[index]));
+
+			return index;
 		},
 
 
@@ -780,7 +781,6 @@ define("popup/app", [
 				// the tab list should already be correct in most cases, but
 				// load them again just to make sure
 			return this.loadTabs()
-				.then(() => !focusSearch && this.modifySelected(1, true))
 				.then(() => this.showPopupWindow(activeTab));
 		},
 
@@ -800,6 +800,7 @@ define("popup/app", [
 				this.resultsList.scrollToRow(0);
 				this.onQueryChange({ target: { value: "" }});
 				this.visible = false;
+				this.navigatingRecents = false;
 
 					// clear any bookmarks or history we might have loaded while
 					// the window was open, since they may be different the next
@@ -822,7 +823,7 @@ define("popup/app", [
 		showPopupWindow: function(
 			activeTab)
 		{
-			popupWindow.show(null, "right-center");
+			popupWindow.show(activeTab, activeTab ? "center-center" : "right-center");
 		},
 
 
@@ -875,8 +876,14 @@ define("popup/app", [
 		{
 			if (event.key == this.mruModifier) {
 				if (!this.gotModifierUp && this.gotMRUKey && this.state.selected > -1) {
-					this.closeWindow(true, this.state.matchingItems[this.state.selected]);
-//					this.openItem(this.state.matchingItems[this.state.selected]);
+					const selectedTab = this.state.matchingItems[this.state.selected];
+
+					if (this.navigatingRecents) {
+						this.navigatingRecents = false;
+						this.closeWindow(true, selectedTab);
+					} else {
+						this.openItem(selectedTab);
+					}
 				}
 
 				this.gotModifierUp = true;
@@ -900,15 +907,28 @@ define("popup/app", [
 		{
 			switch (message) {
 				case "modifySelected":
-					this.modifySelected(payload.direction, true);
+					if (payload.openPopup) {
+						this.navigatingRecents = true;
+						(this.visible
+							? Promise.resolve()
+							: this.showWindow({ focusSearch: false, activeTab: null })
+						)
+							.then(() => {
+								const index = this.modifySelected(payload.direction, true);
+
+								return this.state.matchingItems[index];
+							})
+							.then(selectedTab => this.focusTab(selectedTab))
+							.then(() => this.showPopupWindow(null, "right-center"));
+					} else {
+						this.modifySelected(payload.direction, true);
+					}
 					break;
 
 				case "tabActivated":
-// TODO: calling loadTabs will mess up the selection, which we don't want to do
-// while the user is navigating through previous tabs.  we tried to not call this
-// in handleTabActivated by checking if the popup was visible, but there seem to
-// be timing issues.  need some other navigation state to be tracked in the app.
-//					this.loadTabs();
+					if (!this.navigatingRecents) {
+						this.loadTabs();
+					}
 					break;
 
 				case "showWindow":
@@ -925,7 +945,7 @@ define("popup/app", [
 
 		onWindowBlur: async function()
 		{
-			if (!this.closeWindowCalled) {
+			if (!this.closeWindowCalled && !this.navigatingRecents) {
 					// only call this if we're losing focus because the user
 					// clicked another window, and not from pressing esc.  get
 					// the active tab so it can get passed to popupWindow.hide(),
