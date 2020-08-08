@@ -13,7 +13,6 @@ require([
 	const initialShortcuts = gShortcutCache;
 	const platform = /Mac/i.test(navigator.platform) ? "mac" : "win";
 	const now = performance.now();
-	const background = chrome.extension.getBackgroundPage();
 	const tracker = trackers.popup;
 	const params = new URLSearchParams(location.search);
 
@@ -29,7 +28,6 @@ require([
 	}
 
 	DEBUG && console.log("=== popup startup time", now - gInitTime, now);
-	window.log = background.log;
 	window.log && log("=== popup startup time", now - gInitTime, now);
 
 	if (tracker) {
