@@ -84,6 +84,7 @@ define("popup/app", [
 		selectAllSearchBoxText: false,
 		closeWindowCalled: false,
 		openedForSearch: false,
+		ignoreNextBlur: false,
 		navigatingRecents: false,
 		gotModifierUp: false,
 		gotMRUKey: false,
@@ -336,7 +337,7 @@ define("popup/app", [
 					// pressing esc in an empty field should close the popup, or
 					// if the user checked the always close option
 				this.props.port.postMessage("closedByEsc");
-				await this.closeWindow(true, await this.getActiveTab());
+				this.closeWindow(true, await this.getActiveTab());
 			} else {
 					// if we're searching for bookmarks or history, reset the
 					// query to just /b or /h, rather than clearing it, unless
@@ -419,9 +420,17 @@ define("popup/app", [
 				const {url} = item;
 				let tabOrWindow;
 
-					// set this manually before awaiting any calls below, since
-					// the onblur handler will fire when the item is opened
-				this.closeWindowCalled = true;
+				if (this.props.isPopup) {
+						// set this so that when we blur the popup next, the
+						// blur handler won't do anything.  we blur it so that
+						// it goes behind the active tab before we focus a
+						// different tab below.  that way, the new active tab
+						// and the previous one will be the top two items in
+						// the window MRU list, and the user can alt-tab between
+						// them, instead of the popup being second on the list.
+					this.ignoreNextBlur = true;
+					await popupWindow.blur();
+				}
 
 				if (this.mode == "tabs") {
 					if (item.sessionId) {
@@ -449,13 +458,7 @@ define("popup/app", [
 					this.props.tracker.event(this.mode, "open");
 				}
 
-				if (this.props.isPopup) {
-					this.closeWindow(false, tabOrWindow);
-				} else {
-						// we seem to have to close the window in a timeout so that
-						// the hover state of the button gets cleared
-					setTimeout(this.closeWindow, 0);
-				}
+				this.closeWindow(false, tabOrWindow);
 			}
 		},
 
@@ -716,7 +719,7 @@ define("popup/app", [
 				// set visible before calling loadTabs(), since that will call
 				// getActiveTab(), which checks visible
 			this.visible = true;
-			this.closeWindowCalled = false;
+			this.ignoreNextBlur = false;
 
 				// set our flag to the latest value so that the correct item is
 				// selected after tabs are loaded
@@ -750,12 +753,12 @@ define("popup/app", [
 			closedByEsc,
 			focusedTabOrWindow)
 		{
-			this.closeWindowCalled = true;
+			this.ignoreNextBlur = true;
 
 			if (!this.props.isPopup) {
-				window.close();
-
-				return Promise.resolve();
+					// we seem to have to close the window in a timeout so that
+					// the hover state of the browser action button gets cleared
+				setTimeout(window.close, 0);
 			} else {
  				this.forceUpdate = true;
 				this.resultsList.scrollToRow(0);
@@ -776,7 +779,7 @@ define("popup/app", [
 					// focusing another tab, then in addition to moving off
 					// screen, force the popup to lose focus so some other
 					// window comes forward
-				return popupWindow.hide(closedByEsc, focusedTabOrWindow);
+				popupWindow.hide(closedByEsc, focusedTabOrWindow);
 			}
 		},
 
@@ -784,7 +787,7 @@ define("popup/app", [
 		showPopupWindow: function(
 			activeTab)
 		{
-			popupWindow.show(activeTab, activeTab ? "center-center" : "right-center");
+			return popupWindow.show(activeTab, activeTab ? "center-center" : "right-center");
 		},
 
 
@@ -837,13 +840,13 @@ define("popup/app", [
 		{
 			if (event.key == this.mruModifier) {
 				if (!this.gotModifierUp && this.gotMRUKey && this.state.selected > -1) {
-					const selectedTab = this.state.matchingItems[this.state.selected];
+					const selectedItem = this.state.matchingItems[this.state.selected];
 
 					if (this.navigatingRecents) {
 						this.navigatingRecents = false;
-						this.closeWindow(true, selectedTab);
+						this.closeWindow(true, selectedItem);
 					} else {
-						this.openItem(selectedTab);
+						this.openItem(selectedItem);
 					}
 				}
 
@@ -877,9 +880,8 @@ define("popup/app", [
 							.then(() => {
 								const index = this.modifySelected(payload.direction, true);
 
-								return this.state.matchingItems[index];
+								return this.focusTab(this.state.matchingItems[index]);
 							})
-							.then(selectedTab => this.focusTab(selectedTab))
 							.then(() => this.showPopupWindow(null, "right-center"));
 					} else {
 						this.modifySelected(payload.direction, true);
@@ -906,7 +908,7 @@ define("popup/app", [
 
 		onWindowBlur: async function()
 		{
-			if (!this.closeWindowCalled && !this.navigatingRecents) {
+			if (!this.ignoreNextBlur && !this.navigatingRecents) {
 					// only call this if we're losing focus because the user
 					// clicked another window, and not from pressing esc.  get
 					// the active tab so it can get passed to popupWindow.hide(),
@@ -914,7 +916,7 @@ define("popup/app", [
 				this.closeWindow(false, await this.getActiveTab());
 			}
 
-			this.closeWindowCalled = false;
+			this.ignoreNextBlur = false;
 		},
 
 

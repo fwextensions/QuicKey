@@ -268,6 +268,12 @@ define([
 	}
 
 
+	async function blur()
+	{
+		await cp.windows.update(windowID, { focused: false });
+	}
+
+
 	async function close()
 	{
 		if (tabID) {
@@ -292,6 +298,7 @@ define([
 		create,
 		show,
 		hide,
+		blur,
 		close,
 		get type() {
 			return type;
