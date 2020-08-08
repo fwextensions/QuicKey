@@ -13,6 +13,8 @@ let gOnKeyDown;
 	// check lastError to suppress errors showing up in the extensions page
 chrome.runtime.lastError && console.log("Chrome error:", chrome.runtime.lastError);
 
+window.log = chrome.extension.getBackgroundPage().log;
+
 
 (function() {
 	const AllowedPattern = /[-'!"#$%&()\*+,\.\/:;<=>?@\[\\\]\^_`{|}~ \w]/;
