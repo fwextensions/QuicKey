@@ -3,7 +3,7 @@
 const MaxPopupLifetime = 450;
 const TabActivatedOnStartupDelay = 750;
 const TabRemovedDelay = 1000;
-const MinTabDwellTime = 750;
+const MinTabDwellTime = 1250;
 const RestartDelay = 10 * 1000;
 
 
@@ -118,30 +118,37 @@ require([
 	const backgroundTracker = trackers.background;
 	const ports = {};
 	let lastTogglePromise = Promise.resolve();
+	let navigateRecentsWithPopup = true;
 	let activeTab;
 	let lastWindowID;
 	let lastUsedVersion;
 	let usePinyin;
 
 
-	const addTab = debounce(({tabId}) => cp.tabs.get(tabId)
-		.then(recentTabs.add)
-		.catch(error => {
-				// ignore the "No tab with id:" errors, which will happen
-				// closing a window with multiple tabs.  since addTab()
-				// is debounced and will fire after the window is closed,
-				// the tab no longer exists at that point.
-			if (error && error.message && error.message.indexOf("No tab") != 0) {
-				backgroundTracker.exception(error);
-			}
-		}), MinTabDwellTime);
+	const addTab = debounce(
+			// if the popupWindow is visible, then the user is navigating through
+			// tabs and activating each one as it's selected.  so we don't want
+			// to update the recents list in that case, until the user finishes
+			// and the window closes.
+		({tabId}) => !popupWindow.isVisible && cp.tabs.get(tabId)
+			.then(recentTabs.add)
+			.catch(error => {
+					// ignore the "No tab with id:" errors, which will happen
+					// closing a window with multiple tabs.  since addTab()
+					// is debounced and will fire after the window is closed,
+					// the tab no longer exists at that point.
+				if (error && error.message && error.message.indexOf("No tab") != 0) {
+					backgroundTracker.exception(error);
+				}
+			}),
+		MinTabDwellTime
+	);
 
 
-	const handleTabRemoved = debounce((tabId, removeInfo) => {
-		if (!gStartingUp) {
-			recentTabs.remove(tabId, removeInfo);
-		}
-	}, TabRemovedDelay);
+	const handleTabRemoved = debounce(
+		(tabId, removeInfo) => !gStartingUp && recentTabs.remove(tabId, removeInfo),
+		TabRemovedDelay
+	);
 
 
 	function handleTabActivated(
@@ -154,7 +161,7 @@ require([
 		if (event.windowId !== popupWindow.id) {
 			addTab(event);
 
-			if (ports.popup) {
+			if (ports.popup && !popupWindow.isVisible) {
 				storage.get(({tabIDs}) => {
 						// if the newly activated tab is the same as the most
 						// recent one in tabIDs, that means it was just
@@ -182,11 +189,11 @@ require([
 				break;
 
 			case PreviousTabCommand:
-				navigateTabs(-1);
+				navigateRecents(-1);
 				break;
 
 			case NextTabCommand:
-				navigateTabs(1);
+				navigateRecents(1);
 				break;
 
 			case ToggleTabsCommand:
@@ -238,20 +245,35 @@ require([
 	}
 
 
-	function navigateTabs(
+	async function navigateRecents(
 		direction)
 	{
-		if ((ports.popup && popupWindow.isVisible) || ports.menu) {
+			// track whether the user is navigating farther back in the stack
+		const label = toolbarIcon.isNormal ? "single" : "repeated";
+		const action = direction == -1 ? "previous" : "next";
+
+		if ((ports.popup && popupWindow.isVisible) || ports.menu || navigateRecentsWithPopup) {
+			if (navigateRecentsWithPopup) {
+				if (!popupWindow.isOpen || !ports.popup) {
+					await openPopupWindow();
+				} else if (!popupWindow.isVisible) {
+						// make the activeTab empty, so that the current tab
+						// won't be filtered out in the recents list
+					activeTab = {};
+				}
+
+				backgroundTracker.event("recents", action, label);
+			}
+
 				// for recentTabs.navigate(), -1 is further back in the stack,
 				// but for the menu, 1 is moving the selection down, which is
 				// equivalent to going further back in the stack, so negate
 				// the value
-			sendPopupMessage("modifySelected", { direction: -direction });
+			sendPopupMessage("modifySelected", {
+				direction: -direction,
+				openPopup: navigateRecentsWithPopup
+			});
 		} else {
-				// track whether the user is navigating farther back in the stack
-			const label = toolbarIcon.isNormal ? "single" : "repeated";
-			const action = direction == -1 ? "previous" : "next";
-
 				// don't invert the icon if the user presses the switch to next
 				// shortcut when they're not actively navigating so that it
 				// doesn't invert for no reason
@@ -309,7 +331,7 @@ require([
 	function enableCommands()
 	{
 			// just in case the listener hasn't already been removed, call this
-			// so we don'd add two listeners
+			// so we don't add two listeners
 		disableCommands();
 		chrome.commands.onCommand.addListener(onCommandListener);
 	}
