@@ -106,11 +106,11 @@ define([
 			value)
 		{
 			return storage.set(({settings}) => {
-				const shortcuts = settings.shortcuts[Platform];
-
 				if (key in settings) {
 					settings[key] = value;
 				} else {
+					const shortcuts = settings.shortcuts[Platform];
+
 					shortcuts[key] = value;
 
 					Object.keys(shortcuts).forEach(shortcutID => {

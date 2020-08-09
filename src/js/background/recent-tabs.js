@@ -14,7 +14,7 @@ define([
 	pageTrackers
 ) {
 	const MaxTabsLength = 50;
-	const MaxSwitchDelay = 750;
+	const MaxSwitchDelay = 1250;
 	const TabKeys = ["id", "url", "windowId"];
 	const PopupURL = `chrome-extension://${chrome.runtime.id}/popup.html`;
 

@@ -246,9 +246,15 @@ define([
 
 			if (lastWindow) {
 				try {
-						// move the popup behind the target window before moving
-						// the tab to a window, to reduce the screen flicker
-					await cp.windows.update(windowID, options);
+					if (!IsMac) {
+							// move the popup behind the target window before
+							// moving the tab to a window, so you don't see the
+							// popup get painted black as it's closing in Win10.
+							// on macOS, this doesn't happen, and the process of
+							// centering the popup on the window is visible.
+						await cp.windows.update(windowID, options);
+					}
+
 					await cp.tabs.move(tabID, {
 						windowId: lastWindow.id,
 						index: -1

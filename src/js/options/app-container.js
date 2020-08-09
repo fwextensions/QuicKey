@@ -96,12 +96,12 @@ define([
 		{
 			settings.set(key, value)
 				.then(settings => {
-					if (key == ShowTabCount.Key
-							|| key == CurrentWindowLimitRecents.Key
-							|| key == CurrentWindowLimitSearch.Key) {
-						chrome.runtime.sendMessage({ [key]: value });
-					} else if (key == PopupType.Key) {
-						chrome.runtime.sendMessage({ [PopupType.Key]: value });
+					if (key == ShowTabCount.Key || key == PopupType.Key) {
+						chrome.runtime.sendMessage({
+							message: "settingChanged",
+							key,
+							value
+						});
 					}
 
 					return settings;
