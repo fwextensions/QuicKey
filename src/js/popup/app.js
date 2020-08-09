@@ -379,7 +379,9 @@ define("popup/app", [
 				if (this.mode == "tabs") {
 					if (item.sessionId) {
 							// this is a closed tab, so restore it
-						tabOrWindow = await cp.sessions.restore(item.sessionId);
+						tabOrWindow = await this.sendMessage("restoreSession",
+							{ sessionID: item.sessionId });
+//						tabOrWindow = await cp.sessions.restore(item.sessionId);
 						this.props.tracker.event("tabs", "restore");
 					} else {
 							// switch to the tab
@@ -387,18 +389,21 @@ define("popup/app", [
 					}
 				} else if (shiftKey) {
 						// open in a new window
-					tabOrWindow = await cp.windows.create({ url });
+					tabOrWindow = await this.sendMessage("createWindow", { url });
+//					tabOrWindow = await cp.windows.create({ url });
 					this.props.tracker.event(this.mode, "open-new-win");
 				} else if (modKey) {
 						// open in a new tab
-					tabOrWindow = await cp.tabs.create({ url });
+					tabOrWindow = await this.sendMessage("createTab", { url });
+//					tabOrWindow = await cp.tabs.create({ url });
 					this.props.tracker.event(this.mode, "open-new-tab");
 				} else {
 						// open in the active tab, which, in the case of a popup,
-						// is not in the current window (since it's the popup)
+						// is not in the current window (since that's the popup)
 					const {id} = await this.getActiveTab();
 
-					tabOrWindow = await cp.tabs.update(id, { url });
+					tabOrWindow = await this.sendMessage("setURL", { tabID: id, url });
+//					tabOrWindow = await cp.tabs.update(id, { url });
 					this.props.tracker.event(this.mode, "open");
 				}
 
@@ -412,15 +417,17 @@ define("popup/app", [
 			unsuspend)
 		{
 			if (tab) {
-				const updateData = { active: true };
+//				const updateData = { active: true };
 				const queryLength = this.state.query.length;
 				const category = queryLength ? "tabs" : "recents";
 				let event = (category == "recents" && this.gotMRUKey) ?
 					"focus-mru" : "focus";
+				let options;
 
 				if (unsuspend && tab.unsuspendURL) {
 						// change to the unsuspended URL
-					updateData.url = tab.unsuspendURL;
+//					updateData.url = tab.unsuspendURL;
+					options = { url: tab.unsuspendURL };
 					event = "unsuspend";
 				}
 
@@ -432,12 +439,13 @@ define("popup/app", [
 					// focus on the very first tab button on macOS 10.14 (could
 					// never repro on 10.12).  then focus the tab, which should
 					// fix any focus issues.
-				return cp.windows.update(tab.windowId, { focused: true })
-					.then(() => cp.tabs.update(tab.id, updateData))
-					.catch(error => {
-						this.props.tracker.exception(error);
-						log(error);
-					});
+				return this.sendMessage("focusTab", { tab, options });
+//				return cp.windows.update(tab.windowId, { focused: true })
+//					.then(() => cp.tabs.update(tab.id, updateData))
+//					.catch(error => {
+//						this.props.tracker.exception(error);
+//						log(error);
+//					});
 			}
 		},
 
@@ -633,14 +641,9 @@ define("popup/app", [
 				return cp.tabs.query({ active: true, currentWindow: true })
 					.then(([activeTab]) => activeTab);
 			} else {
-					// since we're in a popup window, get the active tab from
-					// the background, which recorded it before opening this
-					// window.  we can't use cp.runtime.sendMessage() because
-					// it's a shared instance that's on the background page, so
-					// calling sendMessage() from there would be going from the
-					// background to this window, but we want the opposite.
-				return new Promise(resolve =>
-					chrome.runtime.sendMessage("getActiveTab", resolve));
+					// since we're in a popup, get the active tab from the
+					// background, which recorded it before opening this window
+				return this.sendMessage("getActiveTab");
 			}
 		},
 
@@ -699,6 +702,11 @@ define("popup/app", [
 		{
 			this.ignoreNextBlur = true;
 
+//			if (closedByEsc) {
+//					// send this message regardless of menu or popup mode
+//				this.props.port.postMessage("closedByEsc");
+//			}
+
 			if (!this.props.isPopup) {
 					// we seem to have to close the window in a timeout so that
 					// the hover state of the browser action button gets cleared
@@ -723,7 +731,7 @@ define("popup/app", [
 					// focusing another tab, then in addition to moving off
 					// screen, force the popup to lose focus so some other
 					// window comes forward
-				popupWindow.hide(closedByEsc, focusedTabOrWindow);
+				return popupWindow.hide(closedByEsc, focusedTabOrWindow);
 			}
 		},
 
@@ -732,6 +740,19 @@ define("popup/app", [
 			activeTab)
 		{
 			return popupWindow.show(activeTab, activeTab ? "center-center" : "right-center");
+		},
+
+
+		sendMessage: function(
+			message,
+			payload = {})
+		{
+				// we can't use cp.runtime.sendMessage() because it's a shared
+				// instance that's on the background page, so calling
+				// sendMessage() from there would be going from the background
+				// to this window, but we want the opposite
+			return new Promise(resolve =>
+				chrome.runtime.sendMessage({ message, ...payload }, resolve));
 		},
 
 
@@ -810,7 +831,7 @@ define("popup/app", [
 		},
 
 
-		onKeyUp: function(
+		onKeyUp: async function(
 			event)
 		{
 			if (event.key == this.mruModifier) {
@@ -819,9 +840,10 @@ define("popup/app", [
 
 					if (this.navigatingRecents) {
 						this.navigatingRecents = false;
-						this.closeWindow(true, selectedItem);
+						await this.closeWindow(true, selectedItem);
+						await this.sendMessage("fireAddTab");
 					} else {
-						this.openItem(selectedItem);
+						await this.openItem(selectedItem);
 					}
 				}
 
