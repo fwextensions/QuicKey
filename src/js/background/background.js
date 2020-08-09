@@ -1,10 +1,4 @@
-	// if the popup is opened and closed within this time, switch to the
-	// previous tab
-const MaxPopupLifetime = 450;
 const TabActivatedOnStartupDelay = 750;
-const TabRemovedDelay = 1000;
-const MinTabDwellTime = 1250;
-const RestartDelay = 10 * 1000;
 
 
 let gStartingUp = false;
@@ -106,6 +100,12 @@ require([
 	settings,
 	k
 ) {
+		// if the popup is opened and closed within this time, switch to the
+		// previous tab
+	const MaxPopupLifetime = 450;
+	const TabRemovedDelay = 1000;
+	const MinTabDwellTime = 1250;
+	const RestartDelay = 10 * 1000;
 	const {
 		OpenPopupCommand,
 		PreviousTabCommand,
@@ -113,6 +113,19 @@ require([
 		ToggleTabsCommand,
 		FocusPopupCommand
 	} = k.CommandIDs;
+	const MessageHandlers = {
+		focusTab: ({tab: {id, windowId}, options = {}}) =>
+			cp.windows.update(windowId, { focused: true })
+				.then(() => cp.tabs.update(id, { active: true, ...options }))
+				.catch(error => {
+					backgroundTracker.exception(error);
+					log(error);
+				}),
+		restoreSession: ({sessionID}) => cp.sessions.restore(sessionID),
+		createWindow: ({url}) => cp.windows.create({ url }),
+		createTab: ({url}) => cp.tabs.create({ url }),
+		setURL: ({tabID, url}) => cp.tabs.update(tabID, { url })
+	};
 
 
 	const backgroundTracker = trackers.background;
@@ -339,6 +352,7 @@ require([
 				// stack, even though a different tab was now active.
 			.then(addTab.execute)
 			.then(recentTabs.toggle)
+			.then(addTab.execute)
 			.then(() => backgroundTracker.event("recents",
 				fromShortcut ? "toggle-shortcut" : "toggle"));
 	}
@@ -485,16 +499,29 @@ require([
 	});
 
 
-	chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-		if (message == "getActiveTab") {
+	chrome.runtime.onMessage.addListener(async ({message, ...payload}, sender, sendResponse) => {
+		const handler = MessageHandlers[message];
+
+		if (handler) {
+			sendResponse(await handler(payload));
+			await addTab.execute();
+		} else if (message === "fireAddTab") {
+			await addTab.execute();
+		} else if (message === "getActiveTab") {
 			sendResponse(activeTab);
-		} else if (k.ShowTabCount.Key in message) {
-			toolbarIcon.showTabCount(message[k.ShowTabCount.Key]);
-		} else if (k.CurrentWindowLimitRecents.Key in message) {
-			currentWindowLimitRecents = message[k.CurrentWindowLimitRecents.Key];
-		} else if (k.PopupType.Key in message) {
-			popupWindow.type = message[k.PopupType.Key];
+		} else if (message === "settingChanged") {
+			const {key, value} = payload;
+
+			if (key == k.ShowTabCount.Key) {
+				toolbarIcon.showTabCount(value);
+			} else if (key == k.CurrentWindowLimitRecents.Key) {
+				currentWindowLimitRecents = value;
+			} else if (key == k.PopupType.Key) {
+				popupWindow.type = value;
+			}
 		}
+
+		return true;
 	});
 
 
