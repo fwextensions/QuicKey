@@ -4,17 +4,18 @@ define([
 	"shared",
 	"popup/data/add-urls",
 	"./quickey-storage",
-	"./page-trackers"
+	"./page-trackers",
+	"./constants"
 ], function(
 	Promise,
 	cp,
 	shared,
 	addURLs,
 	storage,
-	pageTrackers
+	pageTrackers,
+	{MinTabDwellTime}
 ) {
 	const MaxTabsLength = 50;
-	const MaxSwitchDelay = 1250;
 	const TabKeys = ["id", "url", "windowId"];
 	const PopupURL = `chrome-extension://${chrome.runtime.id}/popup.html`;
 
@@ -411,10 +412,14 @@ DEBUG && console.log("=== updateAll");
 			const maxIndex = tabIDCount - 1;
 			let previousTabIndex;
 
-			if (now - data.lastShortcutTime < MaxSwitchDelay
-					&& data.previousTabIndex > -1) {
-				previousTabIndex = calcNavigationIndex(direction,
-					data.previousTabIndex, tabIDCount);
+			if (now - data.lastShortcutTime < MinTabDwellTime && data.previousTabIndex > -1) {
+				if (direction == -1) {
+						// when going backwards, wrap around if necessary
+					previousTabIndex = (data.previousTabIndex - 1 + tabIDCount) % tabIDCount;
+				} else {
+						// don't let the user go past the most recently used tab
+					previousTabIndex = Math.min(data.previousTabIndex + 1, maxIndex);
+				}
 			} else if (direction == -1) {
 					// if the user is not actively navigating, we want to ignore
 					// alt-S keypresses so the icon doesn't invert for no reason,

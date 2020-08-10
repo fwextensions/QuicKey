@@ -104,7 +104,6 @@ require([
 		// previous tab
 	const MaxPopupLifetime = 450;
 	const TabRemovedDelay = 1000;
-	const MinTabDwellTime = 1250;
 	const RestartDelay = 10 * 1000;
 	const {
 		OpenPopupCommand,
@@ -114,6 +113,10 @@ require([
 		FocusPopupCommand
 	} = k.CommandIDs;
 	const MessageHandlers = {
+			// bring the tab's window forward *before* focusing the tab, since
+			// activating the window can sometimes put keyboard focus on the
+			// very first tab button on macOS 10.14 (could never repro on
+			// 10.12).  then focus the tab, which should fix any focus issues.
 		focusTab: ({tab: {id, windowId}, options = {}}) =>
 			cp.windows.update(windowId, { focused: true })
 				.then(() => cp.tabs.update(id, { active: true, ...options }))
@@ -140,11 +143,7 @@ require([
 
 
 	const addTab = debounce(
-			// if the popupWindow is visible, then the user is navigating through
-			// tabs and activating each one as it's selected.  so we don't want
-			// to update the recents list in that case, until the user finishes
-			// and the window closes.
-		({tabId}) => !popupWindow.isVisible && cp.tabs.get(tabId)
+		({tabId}) => cp.tabs.get(tabId)
 			.then(recentTabs.add)
 			.catch(error => {
 					// ignore the "No tab with id:" errors, which will happen
@@ -155,7 +154,7 @@ require([
 					backgroundTracker.exception(error);
 				}
 			}),
-		MinTabDwellTime
+		k.MinTabDwellTime
 	);
 
 
@@ -171,11 +170,15 @@ require([
 			// don't add the popup window to the recent tabs.  even though
 			// recentTabs.add() will ignore the popup window, we don't want to
 			// notify the popup about its own activation, which would happen
-			// because the last tab in tabIDs wouldn't match the event.
-		if (event.windowId !== popupWindow.id) {
+			// because the last tab in tabIDs wouldn't match the event. if the
+			// popupWindow is visible, then the user is navigating through tabs
+			// and activating each one as it's selected.  so we don't want to
+			// update the recents list in that case, until the user finishes
+			// and the window closes.
+		if (event.windowId !== popupWindow.id && !popupWindow.isVisible) {
 			addTab(event);
 
-			if (ports.popup && !popupWindow.isVisible) {
+			if (ports.popup) {
 				storage.get(({tabIDs}) => {
 						// if the newly activated tab is the same as the most
 						// recent one in tabIDs, that means it was just
@@ -344,14 +347,12 @@ require([
 			// the tabIDs array isn't updated before the next navigation happens,
 			// and the wrong tab is navigated to.
 		lastTogglePromise = lastTogglePromise
-				// if there's a debounced addTab() call waiting, fire it now, so
-				// that when we navigate to the "previous" tab below, that'll be
-				// the tab the user started from when they began navigating
-				// backwards into the stack.  otherwise, the debounced add would
-				// fire after we navigate, putting that tab on the top of the
-				// stack, even though a different tab was now active.
-			.then(addTab.execute)
 			.then(recentTabs.toggle)
+				// fire the debounced addTab() so the tab we just toggled to will
+				// be the most recent, in case the user quickly toggles again.
+				// otherwise, the debounced add would fire after we navigate,
+				// putting that tab on the top of the stack, even though a
+				// different tab was now active.
 			.then(addTab.execute)
 			.then(() => backgroundTracker.event("recents",
 				fromShortcut ? "toggle-shortcut" : "toggle"));
@@ -505,7 +506,7 @@ require([
 		if (handler) {
 			sendResponse(await handler(payload));
 			await addTab.execute();
-		} else if (message === "fireAddTab") {
+		} else if (message === "executeAddTab") {
 			await addTab.execute();
 		} else if (message === "getActiveTab") {
 			sendResponse(activeTab);
