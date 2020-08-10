@@ -4,17 +4,18 @@ define([
 	"shared",
 	"popup/data/add-urls",
 	"./quickey-storage",
-	"./page-trackers"
+	"./page-trackers",
+	"./constants"
 ], function(
 	Promise,
 	cp,
 	shared,
 	addURLs,
 	storage,
-	pageTrackers
+	pageTrackers,
+	{MinTabDwellTime}
 ) {
 	const MaxTabsLength = 50;
-	const MaxSwitchDelay = 750;
 	const TabKeys = ["id", "url", "windowId"];
 	const PopupURL = `chrome-extension://${chrome.runtime.id}/popup.html`;
 
@@ -391,7 +392,7 @@ DEBUG && console.log("=== updateAll");
 			const maxIndex = tabIDCount - 1;
 			let previousTabIndex;
 
-			if (now - data.lastShortcutTime < MaxSwitchDelay && data.previousTabIndex > -1) {
+			if (now - data.lastShortcutTime < MinTabDwellTime && data.previousTabIndex > -1) {
 				if (direction == -1) {
 						// when going backwards, wrap around if necessary
 					previousTabIndex = (data.previousTabIndex - 1 + tabIDCount) % tabIDCount;
