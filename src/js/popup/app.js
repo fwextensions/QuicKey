@@ -280,7 +280,6 @@ define("popup/app", [
 			if (!searchBoxText || this.settings[k.EscBehavior.Key] == k.EscBehavior.Close) {
 					// pressing esc in an empty field should close the popup, or
 					// if the user checked the always close option
-				this.props.port.postMessage("closedByEsc");
 				this.closeWindow(true, await this.getActiveTab());
 			} else {
 					// if we're searching for bookmarks or history, reset the
@@ -381,7 +380,6 @@ define("popup/app", [
 							// this is a closed tab, so restore it
 						tabOrWindow = await this.sendMessage("restoreSession",
 							{ sessionID: item.sessionId });
-//						tabOrWindow = await cp.sessions.restore(item.sessionId);
 						this.props.tracker.event("tabs", "restore");
 					} else {
 							// switch to the tab
@@ -390,12 +388,10 @@ define("popup/app", [
 				} else if (shiftKey) {
 						// open in a new window
 					tabOrWindow = await this.sendMessage("createWindow", { url });
-//					tabOrWindow = await cp.windows.create({ url });
 					this.props.tracker.event(this.mode, "open-new-win");
 				} else if (modKey) {
 						// open in a new tab
 					tabOrWindow = await this.sendMessage("createTab", { url });
-//					tabOrWindow = await cp.tabs.create({ url });
 					this.props.tracker.event(this.mode, "open-new-tab");
 				} else {
 						// open in the active tab, which, in the case of a popup,
@@ -403,7 +399,6 @@ define("popup/app", [
 					const {id} = await this.getActiveTab();
 
 					tabOrWindow = await this.sendMessage("setURL", { tabID: id, url });
-//					tabOrWindow = await cp.tabs.update(id, { url });
 					this.props.tracker.event(this.mode, "open");
 				}
 
@@ -412,12 +407,11 @@ define("popup/app", [
 		},
 
 
-		focusTab: function(
+		focusTab: async function(
 			tab,
 			unsuspend)
 		{
 			if (tab) {
-//				const updateData = { active: true };
 				const queryLength = this.state.query.length;
 				const category = queryLength ? "tabs" : "recents";
 				let event = (category == "recents" && this.gotMRUKey) ?
@@ -426,7 +420,6 @@ define("popup/app", [
 
 				if (unsuspend && tab.unsuspendURL) {
 						// change to the unsuspended URL
-//					updateData.url = tab.unsuspendURL;
 					options = { url: tab.unsuspendURL };
 					event = "unsuspend";
 				}
@@ -434,18 +427,7 @@ define("popup/app", [
 				this.props.tracker.event(category, event,
 					queryLength ? queryLength : this.state.selected);
 
-					// bring the tab's window forward *before* focusing the tab,
-					// since activating the window can sometimes put keyboard
-					// focus on the very first tab button on macOS 10.14 (could
-					// never repro on 10.12).  then focus the tab, which should
-					// fix any focus issues.
-				return this.sendMessage("focusTab", { tab, options });
-//				return cp.windows.update(tab.windowId, { focused: true })
-//					.then(() => cp.tabs.update(tab.id, updateData))
-//					.catch(error => {
-//						this.props.tracker.exception(error);
-//						log(error);
-//					});
+				await this.sendMessage("focusTab", { tab, options });
 			}
 		},
 
@@ -702,10 +684,10 @@ define("popup/app", [
 		{
 			this.ignoreNextBlur = true;
 
-//			if (closedByEsc) {
-//					// send this message regardless of menu or popup mode
-//				this.props.port.postMessage("closedByEsc");
-//			}
+			if (closedByEsc) {
+					// send this message regardless of menu or popup mode
+				this.props.port.postMessage("closedByEsc");
+			}
 
 			if (!this.props.isPopup) {
 					// we seem to have to close the window in a timeout so that
@@ -841,7 +823,7 @@ define("popup/app", [
 					if (this.navigatingRecents) {
 						this.navigatingRecents = false;
 						await this.closeWindow(true, selectedItem);
-						await this.sendMessage("fireAddTab");
+						await this.sendMessage("executeAddTab");
 					} else {
 						await this.openItem(selectedItem);
 					}
@@ -862,7 +844,7 @@ define("popup/app", [
 		},
 
 
-		onMessage: function({
+		onMessage: async function({
 			message,
 			...payload})
 		{
@@ -870,16 +852,15 @@ define("popup/app", [
 				case "modifySelected":
 					if (payload.openPopup) {
 						this.navigatingRecents = true;
-						(this.visible
-							? Promise.resolve()
-							: this.showWindow({ focusSearch: false, activeTab: null })
-						)
-							.then(() => {
-								const index = this.modifySelected(payload.direction, true);
 
-								return this.focusTab(this.state.matchingItems[index]);
-							})
-							.then(() => this.showPopupWindow(null, "right-center"));
+						if (!this.visible) {
+							await this.showWindow({ focusSearch: false, activeTab: null });
+						}
+
+						const index = this.modifySelected(payload.direction, true);
+
+						await this.focusTab(this.state.matchingItems[index]);
+						await this.showPopupWindow(null, "right-center");
 					} else {
 						this.modifySelected(payload.direction, true);
 					}
