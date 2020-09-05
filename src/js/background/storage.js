@@ -101,10 +101,7 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 		function saveWithVersion(
 			data)
 		{
-			return cp.storage.local.set({
-				version: version,
-				data: data
-			})
+			return cp.storage.local.set({ version, data })
 				.return(data);
 		}
 
@@ -112,7 +109,7 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 		function save(
 			data)
 		{
-			return cp.storage.local.set({ data: data })
+			return cp.storage.local.set({ data })
 				.return(data);
 		}
 
