@@ -58,7 +58,7 @@ define([
 		let tabsByTitle = {};
 		let addPinyinStrings = false;
 
-		if (usePinyin) {
+		if (usePinyin && typeof pinyin !== "function") {
 			try {
 					// dynamically load the pinyin module into a global var, so
 					// that it's only processed if we actually need to use it.

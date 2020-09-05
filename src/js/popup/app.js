@@ -419,17 +419,12 @@ define("popup/app", [
 				const {url} = item;
 				let tabOrWindow;
 
-				if (this.props.isPopup) {
-						// set this so that when we blur the popup next, the
-						// blur handler won't do anything.  we blur it so that
-						// it goes behind the active tab before we focus a
-						// different tab below.  that way, the new active tab
-						// and the previous one will be the top two items in
-						// the window MRU list, and the user can alt-tab between
-						// them, instead of the popup being second on the list.
-					this.ignoreNextBlur = true;
-					await popupWindow.blur();
-				}
+					// blur the popup so that it goes behind the active tab
+					// before we focus a different tab below.  that way, the new
+					// active tab and the previous one will be the top two items
+					// in the window MRU list, and the user can alt-tab between
+					// them, instead of the popup being second on the list.
+				await this.blurPopupWindow();
 
 				if (this.mode == "tabs") {
 					if (item.sessionId) {
@@ -781,6 +776,22 @@ define("popup/app", [
 		},
 
 
+		blurPopupWindow: async function()
+		{
+			if (this.props.isPopup) {
+					// set this so that when we blur the popup next, the
+					// blur handler won't do anything.  we blur it so that
+					// it goes behind the active tab before we focus a
+					// different tab below.  that way, the new active tab
+					// and the previous one will be the top two items in
+					// the window MRU list, and the user can alt-tab between
+					// them, instead of the popup being second on the list.
+				this.ignoreNextBlur = true;
+				await popupWindow.blur();
+			}
+		},
+
+
 		sendMessage: function(
 			message,
 			payload = {})
@@ -846,7 +857,14 @@ define("popup/app", [
 					const selectedItem = this.state.matchingItems[this.state.selected];
 
 					if (this.navigatingRecents) {
+							// the user has stopped navigating through recents,
+							// so tell the background to change its state so that
+							// when the popup closes, the current tab's activation
+							// will be detected.  then tell it to add it to
+							// recents immediately so the user could quickly
+							// switch to another tab while keeping recents correct.
 						this.navigatingRecents = false;
+						await this.sendMessage("stopNavigatingRecents");
 						await this.closeWindow(true, selectedItem);
 						await this.sendMessage("executeAddTab");
 					} else {
@@ -860,11 +878,19 @@ define("popup/app", [
 		},
 
 
-		onOptionsClick: function()
+		onOptionsClick: async function()
 		{
-			chrome.tabs.create({
-				url: chrome.extension.getURL("options.html")
-			});
+			const url = chrome.extension.getURL("options.html");
+			const [tab] = await cp.tabs.query({ url });
+
+			this.searchBox.focus();
+
+			if (tab) {
+				await this.sendMessage("focusTab", { tab });
+			} else {
+				await this.sendMessage("createTab", { url });
+			}
+
 			this.props.tracker.event("extension", "open-options");
 		},
 
@@ -899,6 +925,10 @@ define("popup/app", [
 
 				case "showWindow":
 					this.showWindow(payload);
+					break;
+
+				case "stopNavigatingRecents":
+					this.navigatingRecents = false;
 					break;
 
 				case "focusSearch":

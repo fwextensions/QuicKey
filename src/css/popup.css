@@ -218,6 +218,7 @@ img {
 	padding: 3px;
 	border-radius: 50%;
 	text-align: center;
+	background-color: transparent;
 	position: absolute;
 	display: inline-block;
 }
@@ -236,7 +237,7 @@ img {
 	background-color: var(--background, #dcdcdc);
 }
 
-.options-button:hover:active {
+.options-button:active {
 	background-color: var(--background, #bbb);
 }
 

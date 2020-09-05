@@ -474,7 +474,7 @@ DEBUG && console.error(error);
 	function print(
 		count = 20)
 	{
-		cp.storage.local.get(null)
+		return cp.storage.local.get(null)
 			.then(({data}) => {
 				const {tabsByID, tabIDs} = data;
 
