@@ -122,7 +122,7 @@ require([
 				.then(() => cp.tabs.update(id, { active: true, ...options }))
 				.catch(error => {
 					backgroundTracker.exception(error);
-					log(error);
+					console.error(error);
 				}),
 		restoreSession: ({sessionID}) => cp.sessions.restore(sessionID),
 		createWindow: ({url}) => cp.windows.create({ url }),
@@ -136,6 +136,7 @@ require([
 	let lastTogglePromise = Promise.resolve();
 	let currentWindowLimitRecents = false;
 	let navigateRecentsWithPopup = true;
+	let navigatingRecents = false;
 	let activeTab;
 	let lastWindowID;
 	let lastUsedVersion;
@@ -164,18 +165,17 @@ require([
 	);
 
 
-	function handleTabActivated(
+	async function handleTabActivated(
 		event)
 	{
 			// don't add the popup window to the recent tabs.  even though
 			// recentTabs.add() will ignore the popup window, we don't want to
 			// notify the popup about its own activation, which would happen
-			// because the last tab in tabIDs wouldn't match the event. if the
-			// popupWindow is visible, then the user is navigating through tabs
-			// and activating each one as it's selected.  so we don't want to
-			// update the recents list in that case, until the user finishes
-			// and the window closes.
-		if (event.windowId !== popupWindow.id && !popupWindow.isVisible) {
+			// because the last tab in tabIDs wouldn't match the event.  if the
+			// user is navigating through tabs and activating each one as it's
+			// selected, we don't want to update the recents list until they
+			// finish and the window closes.
+		if (event.windowId !== popupWindow.id && !navigatingRecents) {
 			addTab(event);
 
 			if (ports.popup) {
@@ -226,31 +226,16 @@ require([
 	}
 
 
-	function toggleRecentTabs(
-		fromShortcut)
+	function sendPopupMessage(
+		message,
+		payload = {})
 	{
-			// we have to wait for the last toggle promise chain to resolve before
-			// starting the next one.  otherwise, if the toggle key is held down,
-			// the events fire faster than recentTabs.toggle() can keep up, so
-			// the tabIDs array isn't updated before the next navigation happens,
-			// and the wrong tab is navigated to.
-		lastTogglePromise = lastTogglePromise
-				// if there's a debounced addTab() call waiting, fire it now, so
-				// that when we navigate to the "previous" tab below, that'll be
-				// the tab the user started from when they began navigating
-				// backwards into the stack.  otherwise, the debounced add would
-				// fire after we navigate, putting that tab on the top of the
-				// stack, even though a different tab was now active.
-			.then(addTab.execute)
-			.then(() => recentTabs.toggle(currentWindowLimitRecents))
-				// fire the debounced addTab() so the tab we just toggled to will
-				// be the most recent, in case the user quickly toggles again.
-				// otherwise, the debounced add would fire after we navigate,
-				// putting that tab on the top of the stack, even though a
-				// different tab was now active.
-			.then(addTab.execute)
-			.then(() => backgroundTracker.event("recents",
-				fromShortcut ? "toggle-shortcut" : "toggle"));
+		try {
+				// default to sending the message to the menu if it's open
+			(ports.menu || ports.popup).postMessage({ message, ...payload });
+		} catch (error) {
+			return error;
+		}
 	}
 
 
@@ -261,6 +246,7 @@ require([
 			active: true,
 			lastFocusedWindow: true
 		});
+		navigatingRecents = false;
 
 		if (!popupWindow.isOpen || !ports.popup) {
 				// the popup window isn't open, so create a new one, with the
@@ -283,19 +269,6 @@ require([
 	}
 
 
-	function sendPopupMessage(
-		message,
-		payload = {})
-	{
-		try {
-				// default to sending the message to the menu if it's open
-			(ports.menu || ports.popup).postMessage({ message, ...payload });
-		} catch (error) {
-			return error;
-		}
-	}
-
-
 	async function navigateRecents(
 		direction)
 	{
@@ -303,9 +276,20 @@ require([
 		const label = toolbarIcon.isNormal ? "single" : "repeated";
 		const action = direction == -1 ? "previous" : "next";
 
-		if ((ports.popup && popupWindow.isVisible) || ports.menu || navigateRecentsWithPopup) {
+		if ((ports.popup && popupWindow.isVisible && !navigatingRecents) || ports.menu) {
+				// for recentTabs.navigate(), -1 is further back in the stack,
+				// but for the menu, 1 is moving the selection down, which is
+				// equivalent to going further back in the stack, so negate
+				// the value
+			sendPopupMessage("modifySelected", {
+				direction: -direction
+			});
+		} else {
 			if (navigateRecentsWithPopup) {
 				if (!popupWindow.isOpen || !ports.popup) {
+						// execute any pending tab activation event so the recents
+						// list is up-to-date before we start navigating
+					await addTab.execute();
 					await openPopupWindow();
 				} else if (!popupWindow.isVisible) {
 						// make the activeTab empty, so that the current tab
@@ -313,26 +297,22 @@ require([
 					activeTab = {};
 				}
 
-				backgroundTracker.event("recents", action, label);
+				navigatingRecents = true;
+				sendPopupMessage("modifySelected", {
+					direction: -direction,
+					openPopup: true
+				});
+			} else {
+					// don't invert the icon if the user presses the switch to
+					// next shortcut when they're not actively navigating so
+					// that it doesn't invert for no reason
+				if (direction == -1 || !toolbarIcon.isNormal) {
+					toolbarIcon.invertFor(k.MinTabDwellTime);
+				}
+
+				recentTabs.navigate(direction);
 			}
 
-				// for recentTabs.navigate(), -1 is further back in the stack,
-				// but for the menu, 1 is moving the selection down, which is
-				// equivalent to going further back in the stack, so negate
-				// the value
-			sendPopupMessage("modifySelected", {
-				direction: -direction,
-				openPopup: navigateRecentsWithPopup
-			});
-		} else {
-				// don't invert the icon if the user presses the switch to next
-				// shortcut when they're not actively navigating so that it
-				// doesn't invert for no reason
-			if (direction == -1 || !toolbarIcon.isNormal) {
-				toolbarIcon.invertFor(MinTabDwellTime);
-			}
-
-			recentTabs.navigate(direction);
 			backgroundTracker.event("recents", action, label);
 		}
 	}
@@ -345,8 +325,26 @@ require([
 			// starting the next one.  otherwise, if the toggle key is held down,
 			// the events fire faster than recentTabs.toggle() can keep up, so
 			// the tabIDs array isn't updated before the next navigation happens,
-			// and the wrong tab is navigated to.
+			// and the wrong tab is navigated to.  even if we made this an async
+			// function, we'd still have to store the promise it returns somewhere
+			// and await that before calling this function again; otherwise, the
+			// event handler would keep starting new chains.  seems cleanest to
+			// keep the promise chain handling just within this function.
 		lastTogglePromise = lastTogglePromise
+				// if the user navigated to a tab but hasn't waited for the min
+				// dwell time before toggling back, add the current tab before
+				// toggling so it becomes the most recent
+			.then(addTab.execute)
+			.then(() => {
+				if (navigatingRecents) {
+						// tell the popup that the user's no longer navigating
+						// recents, so that when it gets blurred after we toggle
+						// to the previous tab, it'll close itself
+					sendPopupMessage("stopNavigatingRecents");
+				}
+
+				navigatingRecents = false;
+			})
 			.then(recentTabs.toggle)
 				// fire the debounced addTab() so the tab we just toggled to will
 				// be the most recent, in case the user quickly toggles again.
@@ -506,6 +504,8 @@ require([
 		if (handler) {
 			sendResponse(await handler(payload));
 			await addTab.execute();
+		} else if (message === "stopNavigatingRecents") {
+			navigatingRecents = false;
 		} else if (message === "executeAddTab") {
 			await addTab.execute();
 		} else if (message === "getActiveTab") {

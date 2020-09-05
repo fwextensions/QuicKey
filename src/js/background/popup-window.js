@@ -276,6 +276,7 @@ define([
 
 	async function blur()
 	{
+		isVisible = false;
 		await cp.windows.update(windowID, { focused: false });
 	}
 
