@@ -498,16 +498,25 @@ require([
 	});
 
 
-	chrome.runtime.onMessage.addListener(async ({message, ...payload}, sender, sendResponse) => {
+	chrome.runtime.onMessage.addListener(({message, ...payload}, sender, sendResponse) => {
 		const handler = MessageHandlers[message];
+		let asyncResponse = false;
 
+			// all of the messages from the popup expect a response, even if
+			// there isn't any actual data, so call sendResponse() to avoid
+			// "The message port closed before a response was received" errors
 		if (handler) {
-			sendResponse(await handler(payload));
-			await addTab.execute();
+			(async () => {
+				sendResponse(await handler(payload));
+				await addTab.execute();
+			})();
+			asyncResponse = true;
+		} else if (message === "executeAddTab") {
+			(async () => sendResponse(await addTab.execute()))();
+			asyncResponse = true;
 		} else if (message === "stopNavigatingRecents") {
 			navigatingRecents = false;
-		} else if (message === "executeAddTab") {
-			await addTab.execute();
+			sendResponse();
 		} else if (message === "getActiveTab") {
 			sendResponse(activeTab);
 		} else if (message === "settingChanged") {
@@ -522,7 +531,7 @@ require([
 			}
 		}
 
-		return true;
+		return asyncResponse;
 	});
 
 

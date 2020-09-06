@@ -904,6 +904,10 @@ define("popup/app", [
 							// switch to another tab while keeping recents correct.
 						this.navigatingRecents = false;
 						await this.sendMessage("stopNavigatingRecents");
+
+							// pass true for closedByEsc so that the background
+							// doesn't interpret a quick open and close as a
+							// toggle recents action
 						await this.closeWindow(true, selectedItem);
 						await this.sendMessage("executeAddTab");
 					} else {
