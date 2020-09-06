@@ -512,11 +512,9 @@ require([
 			})();
 			asyncResponse = true;
 		} else if (message === "executeAddTab") {
-			(async () => sendResponse(await addTab.execute()))();
-			asyncResponse = true;
+			addTab.execute();
 		} else if (message === "stopNavigatingRecents") {
 			navigatingRecents = false;
-			sendResponse();
 		} else if (message === "getActiveTab") {
 			sendResponse(activeTab);
 		} else if (message === "settingChanged") {
