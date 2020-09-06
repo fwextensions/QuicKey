@@ -247,7 +247,9 @@ define("popup/app", [
 					this.getActiveTab()
 				])
 				.then(([settings, activeTab]) => initTabs(
-					recentTabs.getAll(settings[k.IncludeClosedTabs.Key]),
+						// don't include recently closed tabs when navigating
+						// recents, since you can't navigate to them
+					recentTabs.getAll(!this.navigatingRecents && settings[k.IncludeClosedTabs.Key]),
 					activeTab,
 					settings[k.MarkTabsInOtherWindows.Key],
 						// pass in the space key behavior so initTabs() knows
@@ -794,14 +796,23 @@ define("popup/app", [
 
 		sendMessage: function(
 			message,
-			payload = {})
+			payload = {},
+			awaitResponse = true)
 		{
-				// we can't use cp.runtime.sendMessage() because it's a shared
-				// instance that's on the background page, so calling
-				// sendMessage() from there would be going from the background
-				// to this window, but we want the opposite
-			return new Promise(resolve =>
-				chrome.runtime.sendMessage({ message, ...payload }, resolve));
+			const messageBody = { message, ...payload };
+
+			if (awaitResponse) {
+					// we can't use cp.runtime.sendMessage() because it's a
+					// shared instance that's on the background page, so calling
+					// sendMessage() from there would be going from the
+					// background to this window, but we want the opposite
+				return new Promise(resolve =>
+					chrome.runtime.sendMessage(messageBody, resolve));
+			} else {
+					// no response is required, so don't send a callback.
+					// otherwise, we'll get runtime errors about the port closing.
+				chrome.runtime.sendMessage(messageBody);
+			}
 		},
 
 
@@ -860,17 +871,19 @@ define("popup/app", [
 							// the user has stopped navigating through recents,
 							// so tell the background to change its state so that
 							// when the popup closes, the current tab's activation
-							// will be detected.  then tell it to add it to
-							// recents immediately so the user could quickly
-							// switch to another tab while keeping recents correct.
+							// will be detected
 						this.navigatingRecents = false;
-						await this.sendMessage("stopNavigatingRecents");
+						this.sendMessage("stopNavigatingRecents", undefined, false);
 
 							// pass true for closedByEsc so that the background
 							// doesn't interpret a quick open and close as a
 							// toggle recents action
 						await this.closeWindow(true, selectedItem);
-						await this.sendMessage("executeAddTab");
+
+							// tell the background to add the newly focused tab
+							// to recents immediately so the user could quickly
+							// switch to another tab while keeping recents correct
+						this.sendMessage("executeAddTab", undefined, false);
 					} else {
 						await this.openItem(selectedItem);
 					}
