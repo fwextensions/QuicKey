@@ -10,6 +10,9 @@ define([
 
 
 	global.chrome = {
+		runtime: {
+			id: "ldlghkoiihaelfnggonhjnfiabmaficg"
+		},
 		extension: {
 			getBackgroundPage: () => ({})
 		}
