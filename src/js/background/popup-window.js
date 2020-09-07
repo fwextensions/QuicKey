@@ -20,6 +20,7 @@ define([
 	let popupAdjustmentHeight = 0;
 	let isVisible = false;
 	let type = "window";
+	let hideBehavior = "offscreen";
 	let windowID;
 	let tabID;
 	let lastActiveTab;
@@ -217,7 +218,8 @@ define([
 			top: OffscreenY
 		};
 
-		if (targetTabOrWindow && (IsMac || devicePixelRatio !== 1)) {
+		if (targetTabOrWindow &&
+			(hideBehavior == "behind" || (hideBehavior == "offscreen" && devicePixelRatio !== 1))) {
 				// hide the popup behind the focused window
 			const {left, top} = calcPosition(
 				targetTabOrWindow.windowId
@@ -307,15 +309,16 @@ define([
 		hide,
 		blur,
 		close,
-		get type() {
-			return type;
+		get hideBehavior() {
+			return hideBehavior;
 		},
-		set type(value) {
-			if (type !== value) {
+		set hideBehavior(value) {
+			if (hideBehavior !== value) {
 				close();
 			}
 
-			type = value;
+			hideBehavior = value;
+			type = hideBehavior == "tab" ? "tab" : "window";
 		},
 		get id() {
 			return windowID;

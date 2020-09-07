@@ -524,8 +524,8 @@ require([
 				toolbarIcon.showTabCount(value);
 			} else if (key == k.CurrentWindowLimitRecents.Key) {
 				currentWindowLimitRecents = value;
-			} else if (key == k.PopupType.Key) {
-				popupWindow.type = value;
+			} else if (key == k.HidePopupBehavior.Key) {
+				popupWindow.hideBehavior = value;
 			}
 		}
 
@@ -574,7 +574,7 @@ DEBUG && console.log(e);
 		.then(settings => {
 			toolbarIcon.showTabCount(settings[k.ShowTabCount.Key]);
 			currentWindowLimitRecents = settings[k.CurrentWindowLimitRecents.Key];
-			popupWindow.type = settings[k.PopupType.Key];
+			popupWindow.hideBehavior = settings[k.HidePopupBehavior.Key];
 		});
 
 	storage.set(data => {
