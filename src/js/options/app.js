@@ -271,6 +271,14 @@ define([
 							label="Move the cursor to the beginning or end of the search box"
 							value={k.HomeEndBehavior.SearchBox}
 						/>
+						<RadioButton
+							label="In a tab"
+							value={k.HidePopupBehavior.Tab}
+						/>
+						<RadioButton
+							label="In a minimized window"
+							value={k.HidePopupBehavior.Minimize}
+						/>
 					</RadioGroup>
 				</NewSetting>
 

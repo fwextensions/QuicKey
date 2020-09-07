@@ -515,8 +515,8 @@ require([
 
 			if (key == k.ShowTabCount.Key) {
 				toolbarIcon.showTabCount(value);
-			} else if (key == k.PopupType.Key) {
-				popupWindow.type = value;
+			} else if (key == k.HidePopupBehavior.Key) {
+				popupWindow.hideBehavior = value;
 			}
 		}
 
@@ -564,7 +564,7 @@ DEBUG && console.log(e);
 	settings.get()
 		.then(settings => {
 			toolbarIcon.showTabCount(settings[k.ShowTabCount.Key]);
-			popupWindow.type = settings[k.PopupType.Key];
+			popupWindow.hideBehavior = settings[k.HidePopupBehavior.Key];
 		});
 
 	storage.set(data => {
