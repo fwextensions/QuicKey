@@ -37,10 +37,12 @@ define([
 			Clear: "clear",
 			Close: "close"
 		},
-		PopupType: {
-			Key: "popupType",
-			Window: "window",
-			Tab: "tab"
+		HidePopupBehavior: {
+			Key: "hidePopupBehavior",
+			Offscreen: "offscreen",
+			Behind: "behind",
+			Tab: "tab",
+			Minimize: "minimize"
 		},
 		MarkTabsInOtherWindows: {
 			Key: "markTabsInOtherWindows"

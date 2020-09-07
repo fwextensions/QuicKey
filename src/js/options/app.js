@@ -189,18 +189,26 @@ define([
 				>
 */}
 					<RadioGroup
-						id={k.PopupType.Key}
-						value={settings[k.PopupType.Key]}
-						label={<span>When the alt-tab-style popup closes:</span>}
+						id={k.HidePopupBehavior.Key}
+						value={settings[k.HidePopupBehavior.Key]}
+						label={<span>When the alt-tab-style popup closes, hide it:</span>}
 						onChange={onChange}
 					>
 						<RadioButton
-							label="Hide it off-screen"
-							value={k.PopupType.Window}
+							label="Off-screen"
+							value={k.HidePopupBehavior.Offscreen}
 						/>
 						<RadioButton
-							label="Hide it in a tab"
-							value={k.PopupType.Tab}
+							label="Behind the active window"
+							value={k.HidePopupBehavior.Behind}
+						/>
+						<RadioButton
+							label="In a tab"
+							value={k.HidePopupBehavior.Tab}
+						/>
+						<RadioButton
+							label="In a minimized window"
+							value={k.HidePopupBehavior.Minimize}
 						/>
 					</RadioGroup>
 				{/*</NewSetting>*/}

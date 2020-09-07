@@ -79,7 +79,7 @@ define([
 			{
 				data.popupAdjustmentWidth = 0;
 				data.popupAdjustmentHeight = 0;
-				await addDefaultSetting(k.PopupType.Key);
+				await addDefaultSetting(k.HidePopupBehavior.Key);
 			})
 		};
 			// calculate the version by incrementing the highest key in the
