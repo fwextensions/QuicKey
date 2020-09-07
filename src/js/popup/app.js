@@ -819,7 +819,8 @@ define("popup/app", [
 
 		blurPopupWindow: async function()
 		{
-			if (this.props.isPopup) {
+			if (this.props.isPopup
+					&& this.settings[k.HidePopupBehavior.Key] !== k.HidePopupBehavior.Minimize) {
 					// set this so that when we blur the popup next, the
 					// blur handler won't do anything.  we blur it so that
 					// it goes behind the active tab before we focus a
