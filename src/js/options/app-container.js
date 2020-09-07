@@ -11,7 +11,7 @@ define([
 	trackers,
 	storage,
 	settings,
-	{Platform, ShowTabCount, CurrentWindowLimitRecents, CurrentWindowLimitSearch, PopupType}
+	{Platform, ShowTabCount, CurrentWindowLimitRecents, CurrentWindowLimitSearch, HidePopupBehavior}
 ) {
 	const PlusPattern = /\+/g;
 
@@ -96,7 +96,7 @@ define([
 		{
 			settings.set(key, value)
 				.then(settings => {
-					if (key == ShowTabCount.Key || key == PopupType.Key) {
+					if (key == ShowTabCount.Key || key == HidePopupBehavior.Key) {
 						chrome.runtime.sendMessage({
 							message: "settingChanged",
 							key,
