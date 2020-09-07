@@ -182,6 +182,17 @@ define([
 			// means the user is navigating recent tabs while keeping the popup
 			// open, so focus the existing window even if it's in tab mode
 		if (isVisible || (type == "window" && windowID)) {
+				// to get a minimized window to change position, we seem to have
+				// to make an additional update() call with the position, but
+				// only if the window is currently not visible.  otherwise, it
+				// won't move back to the focused window after it's shown while
+				// navigating recents.  also, we have to update it as unfocused
+				// but with state normal if the position is included.  otherwise,
+				// the active element won't regain focus.  annoying Chrome bug.
+			if (hideBehavior == "minimize" && !isVisible) {
+				await cp.windows.update(windowID, { focused: false, state: "normal", left, top });
+			}
+
 			result = cp.windows.update(windowID, { focused: true, left, top });
 		} else if (type == "tab" && tabID) {
 				// create a popup window with the tab that's hiding in another
@@ -218,6 +229,10 @@ define([
 			top: OffscreenY
 		};
 
+		if (unfocus) {
+			options.focused = false;
+		}
+
 		if (targetTabOrWindow &&
 			(hideBehavior == "behind" || (hideBehavior == "offscreen" && devicePixelRatio !== 1))) {
 				// hide the popup behind the focused window
@@ -227,11 +242,10 @@ define([
 					: targetTabOrWindow
 			);
 
-			options = { left, top };
-		}
-
-		if (unfocus) {
-			options.focused = false;
+			options.left = left;
+			options.top = top;
+		} else if (hideBehavior == "minimize") {
+			options = { state: "minimized" };
 		}
 
 		isVisible = false;
