@@ -3,6 +3,7 @@ define([
 	"jsx!./keyboard-shortcuts",
 	"jsx!./shortcut-picker",
 	"jsx!./controls",
+	"jsx!./sections",
 	"jsx!common/icons",
 	"background/constants"
 ], function(
@@ -10,28 +11,19 @@ define([
 	Shortcuts,
 	ShortcutPicker,
 	{Checkbox, RadioButton, RadioGroup},
+	{Sections, Section, SectionList, SectionLabel},
 	{IncognitoIcon, InPrivateIcon, HistoryIcon, WindowIcon},
 	k
 ) {
-	const {IncognitoNameUC, IncognitoNameLC, IncognitoPermission} = k;
+	const {IncognitoNameUC, IncognitoNameLC} = k;
 	const IncognitoAction = k.IsEdge ? "click the checkbox" : "toggle it on";
-	const IncognitoInstructions = k.IsFirefox
-		? <span>right-click the QuicKey toolbar icon, select <i>Manage
-			Extension</i>, and then click <i>Allow</i> next to the <i>Run in
-			Private Windows</i> option</span>
-		: <span>click the button below, then scroll down to
-			the <i>{IncognitoPermission}</i> setting and {IncognitoAction}</span>;
+	const IncognitoIndicator = k.IsEdge ? <InPrivateIcon /> : <IncognitoIcon />;
 	const UpdateMessage = <div className="update-message"
 		title="Now you can use pinyin to search for Chinese characters in web page titles and URLs. You can always reopen this page by clicking the gear icon in the QuicKey menu."
 	>
 		<h3>现在，您可以使用拼音在网页标题和URL中搜索中文字符。</h3>
 		<h4>您始终可以通过单击QuicKey菜单中的齿轮图标来重新打开此页面。</h4>
 	</div>;
-	const BrowserClassName = k.IsFirefox
-		? "firefox"
-		: k.IsEdge
-			? "edge"
-			: "chrome";
 
 
 	function NewSetting({
@@ -51,10 +43,25 @@ define([
 
 
 	const OptionsApp = React.createClass({
+		getInitialState: function()
+		{
+			return {
+				selectedSection: "search"
+			};
+		},
+
+
 		openExtensionsTab: function(
 			page = "")
 		{
 			chrome.tabs.create({ url: "chrome://extensions/" + page });
+		},
+
+
+		handleSectionClick: function(
+			section)
+		{
+			this.setState({ selectedSection: section });
 		},
 
 
@@ -81,11 +88,8 @@ define([
 
 		handleChangeIncognitoClick: function()
 		{
-				// FF doesn't support opening the settings tab directly
-			if (!k.IsFirefox) {
-				this.openExtensionsTab("?id=" + chrome.runtime.id);
-				this.props.tracker.event("extension", "options-incognito");
-			}
+			this.openExtensionsTab("?id=" + chrome.runtime.id);
+			this.props.tracker.event("extension", "options-incognito");
 		},
 
 
@@ -142,6 +146,7 @@ define([
 
 		render: function()
 		{
+			const {selectedSection} = this.state;
 			const {
 				settings,
 				showPinyinUpdateMessage,
@@ -150,7 +155,7 @@ define([
 				onResetShortcuts
 			} = this.props;
 
-			return <main className={BrowserClassName}>
+			return <main className={k.IsEdge ? "edge" : "chrome"}>
 				{
 					showPinyinUpdateMessage && UpdateMessage
 				}
@@ -163,243 +168,181 @@ define([
 					>?</div>
 				</h1>
 
-
-				<h2>Search results</h2>
-
-				<Checkbox
-					id={k.IncludeClosedTabs.Key}
-					label={<span>Include recently closed tabs in the search results (marked with <HistoryIcon />)</span>}
-					value={settings[k.IncludeClosedTabs.Key]}
-					onChange={onChange}
+				<SectionList
+					selected={selectedSection}
+					onClick={this.handleSectionClick}
 				>
-					<div className="subtitle">
-						Selecting a closed tab will reopen it with its full history.
-					</div>
-				</Checkbox>
-				<NewSetting
-					addedVersion={10}
-					lastSeenOptionsVersion={lastSeenOptionsVersion}
-				>
-					<Checkbox
-						id={k.ShowBookmarkPaths.Key}
-						label="Show the folder path to each bookmark in its title"
-						value={settings[k.ShowBookmarkPaths.Key]}
-						onChange={onChange}
-					/>
-				</NewSetting>
-				<NewSetting
-					addedVersion={10}
-					lastSeenOptionsVersion={lastSeenOptionsVersion}
-				>
-					<Checkbox
-						id={k.RestoreLastQuery.Key}
-						label="Restore the last search query when the menu is reopened"
-						value={settings[k.RestoreLastQuery.Key]}
-						onChange={onChange}
-					/>
-				</NewSetting>
-				<NewSetting
-					addedVersion={9}
-					lastSeenOptionsVersion={lastSeenOptionsVersion}
-				>
-					<Checkbox
-						id={k.UsePinyin.Key}
-						label="Use pinyin to match Chinese characters in titles and URLs"
-						value={settings[k.UsePinyin.Key]}
-						onChange={onChange}
-					/>
-				</NewSetting>
+					<SectionLabel id="search" label="Search" />
+					<SectionLabel id="popup" label="Popup window" />
+					<SectionLabel id="shortcuts" label="Keyboard shortcuts" />
+					<SectionLabel id="incognito" label="Incognito windows" />
+					<SectionLabel id="about" label="About" />
+				</SectionList>
 
+				<Sections selected={selectedSection}>
+					<Section id="search">
+						<h2>Search</h2>
+						<RadioGroup
+							id={k.SpaceBehavior.Key}
+							value={settings[k.SpaceBehavior.Key]}
+							label={<span>Press <kbd>space</kbd> to:</span>}
+							onChange={onChange}
+						>
+							<RadioButton
+								label="Select the next item in the menu"
+								value={k.SpaceBehavior.Select}
+							/>
+							<RadioButton
+								label="Insert a space in the search query"
+								value={k.SpaceBehavior.Space}
+							/>
+						</RadioGroup>
 
-				<h2>Multiple browser windows</h2>
+						<RadioGroup
+							id={k.EscBehavior.Key}
+							value={settings[k.EscBehavior.Key]}
+							label={<span>Press <kbd>esc</kbd> to:</span>}
+							onChange={onChange}
+						>
+							<RadioButton
+								label="Clear the search query, or close the menu if the query is empty"
+								value={k.EscBehavior.Clear}
+							/>
+							<RadioButton
+								label="Close the menu immediately"
+								value={k.EscBehavior.Close}
+							/>
+						</RadioGroup>
 
-				<NewSetting
-					addedVersion={11}
-					lastSeenOptionsVersion={lastSeenOptionsVersion}
-				>
-					<Checkbox
-						id={k.CurrentWindowLimitRecents.Key}
-						label="Limit recent tabs to the current browser window"
-						value={settings[k.CurrentWindowLimitRecents.Key]}
-						onChange={(value, key) => {
-								// uncheck the search option if we're unchecked
-							if (!value && settings[k.CurrentWindowLimitSearch.Key]) {
-								onChange(false, k.CurrentWindowLimitSearch.Key);
-							}
-
-							onChange(value, key);
-						}}
-					>
 						<Checkbox
-							id={k.CurrentWindowLimitSearch.Key}
-							label="Also limit search results to the current browser window"
-							value={settings[k.CurrentWindowLimitSearch.Key]}
-							onChange={(value, key) => {
-									// make sure the recents option is checked if
-									// we get checked
-								if (value && !settings[k.CurrentWindowLimitRecents.Key]) {
-									onChange(true, k.CurrentWindowLimitRecents.Key);
-								}
-
-								onChange(value, key);
-							}}
-						/>
-					</Checkbox>
-				</NewSetting>
-				<Checkbox
-					id={k.MarkTabsInOtherWindows.Key}
-					label={<span>Mark tabs in other browser windows with <WindowIcon /></span>}
-					value={settings[k.MarkTabsInOtherWindows.Key]}
-					disabled={settings[k.CurrentWindowLimitRecents.Key] && settings[k.CurrentWindowLimitSearch.Key]}
-					tooltipDisabled="When recent tabs and search results are limited to the current window, no tabs from other windows will be visible"
-					onChange={onChange}
-				/>
-
-
-				<h2>Toolbar icon</h2>
-
-				<NewSetting
-					addedVersion={8}
-					lastSeenOptionsVersion={lastSeenOptionsVersion}
-				>
-					<Checkbox
-						id={k.ShowTabCount.Key}
-						label="Show the number of open tabs in a badge on the QuicKey icon"
-						value={settings[k.ShowTabCount.Key]}
-						onChange={onChange}
-					/>
-				</NewSetting>
-
-
-				<h2>Search box keyboard shortcuts</h2>
-
-				<RadioGroup
-					id={k.SpaceBehavior.Key}
-					value={settings[k.SpaceBehavior.Key]}
-					label={<span>Press <kbd>space</kbd> to:</span>}
-					onChange={onChange}
-				>
-					<RadioButton
-						label="Select the next item in the menu"
-						value={k.SpaceBehavior.Select}
-					/>
-					<RadioButton
-						label="Insert a space in the search query"
-						value={k.SpaceBehavior.Space}
-					/>
-				</RadioGroup>
-
-				<RadioGroup
-					id={k.EscBehavior.Key}
-					value={settings[k.EscBehavior.Key]}
-					label={<span>Press <kbd>esc</kbd> to:</span>}
-					onChange={onChange}
-				>
-					<RadioButton
-						label="Clear the search query, or close the menu if the query is empty"
-						value={k.EscBehavior.Clear}
-						disabled={k.IsFirefox}
-					/>
-					<RadioButton
-						label="Close the menu immediately"
-						value={k.EscBehavior.Close}
-						disabled={k.IsFirefox}
-					>
-						{k.IsFirefox &&
+							id={k.IncludeClosedTabs.Key}
+							label={<span>Include recently closed tabs in the search results (marked with <HistoryIcon />)</span>}
+							value={settings[k.IncludeClosedTabs.Key]}
+							onChange={onChange}
+						>
 							<div className="subtitle">
-								Firefox always closes the menu when <kbd>esc</kbd> is pressed.
+								Selecting a closed tab will reopen it with its full history.
 							</div>
-						}
-					</RadioButton>
-				</RadioGroup>
+						</Checkbox>
+						<Checkbox
+							id={k.MarkTabsInOtherWindows.Key}
+							label={<span>Mark tabs that are not in the current window with <WindowIcon /></span>}
+							value={settings[k.MarkTabsInOtherWindows.Key]}
+							onChange={onChange}
+						/>
+						<NewSetting
+							addedVersion={8}
+							lastSeenOptionsVersion={lastSeenOptionsVersion}
+						>
+							<Checkbox
+								id={k.ShowTabCount.Key}
+								label="Show the number of open tabs on the QuicKey icon"
+								value={settings[k.ShowTabCount.Key]}
+								onChange={onChange}
+							/>
+						</NewSetting>
+						<NewSetting
+							addedVersion={9}
+							lastSeenOptionsVersion={lastSeenOptionsVersion}
+						>
+							<Checkbox
+								id={k.UsePinyin.Key}
+								label="Use pinyin to match Chinese characters in titles and URLs"
+								value={settings[k.UsePinyin.Key]}
+								onChange={onChange}
+							/>
+						</NewSetting>
+					</Section>
 
+					<Section id="popup">
+						<h2>Popup window</h2>
+{/*
 				<NewSetting
 					addedVersion={10}
 					lastSeenOptionsVersion={lastSeenOptionsVersion}
 				>
-					<RadioGroup
-						id={k.HomeEndBehavior.Key}
-						value={settings[k.HomeEndBehavior.Key]}
-						label={<span>Press <kbd>home</kbd> or <kbd>end</kbd> to:</span>}
-						onChange={onChange}
-					>
-						<RadioButton
-							label="Jump to the top or bottom of the search results"
-							value={k.HomeEndBehavior.ResultsList}
+						<RadioGroup
+							id={k.HidePopupBehavior.Key}
+							value={settings[k.HidePopupBehavior.Key]}
+							label={<span>When the alt-tab-style popup closes, hide it:</span>}
+							onChange={onChange}
+						>
+							<RadioButton
+								label="Off-screen"
+								value={k.HidePopupBehavior.Offscreen}
+							/>
+							<RadioButton
+								label="Behind the active window"
+								value={k.HidePopupBehavior.Behind}
+							/>
+							<RadioButton
+								label="In a tab"
+								value={k.HidePopupBehavior.Tab}
+							/>
+							<RadioButton
+								label="In a minimized window"
+								value={k.HidePopupBehavior.Minimize}
+							/>
+						</RadioGroup>
+					{/*</NewSetting>*/}
+					</Section>
+
+					<Section id="shortcuts">
+						<h2>Customizable shortcuts</h2>
+						{this.renderShortcutList(Shortcuts.customizable)}
+						<button className="key"
+							onClick={onResetShortcuts}
+						>Reset shortcuts</button>
+
+						<h2>Browser shortcuts</h2>
+						<div className="chrome-shortcuts"
+							title="Click to open the browser's keyboard shortcuts page"
+							onClick={this.handleChangeShortcutsClick}
+						>
+							{this.renderShortcutList(settings.chrome.shortcuts)}
+						</div>
+						<button className="key"
+							onClick={this.handleChangeShortcutsClick}
+						>Change browser shortcuts</button>
+						<button className="key"
+							title={`Learn how to make ${k.IsEdge ? "Edge" : "Chrome"} use ctrl-tab as a shortcut`}
+							onClick={this.handleCtrlTabClick}
+						>Use ctrl-tab as a shortcut</button>
+
+						<h2>Other shortcuts</h2>
+						{this.renderShortcutList(Shortcuts.fixed)}
+					</Section>
+
+					<Section id="incognito">
+						<h2>{IncognitoNameUC} windows</h2>
+						<p>By default, QuicKey can't switch to tabs in {IncognitoNameLC} windows.
+							To enable this functionality, click the button below, then
+							scroll down to the <i>Allow in {IncognitoNameLC}</i> setting
+							and {IncognitoAction}.  {IncognitoNameUC} tabs are marked
+							with {IncognitoIndicator}.
+						</p>
+						<img className="incognito-screenshot"
+							src={`/img/${IncognitoNameLC.toLocaleLowerCase()}-option.png`}
+							alt={`${IncognitoNameUC} option`}
+							title={`Change ${IncognitoNameLC} setting`}
+							onClick={this.handleChangeIncognitoClick}
 						/>
-						<RadioButton
-							label="Move the cursor to the beginning or end of the search box"
-							value={k.HomeEndBehavior.SearchBox}
-						/>
-						<RadioButton
-							label="In a tab"
-							value={k.HidePopupBehavior.Tab}
-						/>
-						<RadioButton
-							label="In a minimized window"
-							value={k.HidePopupBehavior.Minimize}
-						/>
-					</RadioGroup>
-				</NewSetting>
+						<button className="key"
+							onClick={this.handleChangeIncognitoClick}
+						>Change {IncognitoNameLC} setting</button>
+					</Section>
 
-
-				<h2>Customizable keyboard shortcuts</h2>
-
-				{this.renderShortcutList(Shortcuts.customizable)}
-				<button className="key"
-					onClick={onResetShortcuts}
-				>Reset shortcuts</button>
-
-
-				<h2>Browser keyboard shortcuts</h2>
-
-				<div className="chrome-shortcuts"
-					title="Click to open the browser's keyboard shortcuts page"
-					onClick={this.handleChangeShortcutsClick}
-				>
-					{this.renderShortcutList(settings.chrome.shortcuts)}
-				</div>
-				<button className="key"
-					onClick={this.handleChangeShortcutsClick}
-				>Change browser shortcuts</button>
-				<button className="key"
-					title={`Learn how to make ${k.IsEdge ? "Edge" : "Chrome"} use ctrl-tab as a shortcut`}
-					onClick={this.handleCtrlTabClick}
-				>Use ctrl-tab as a shortcut</button>
-
-				<h2>Other keyboard shortcuts</h2>
-
-				{this.renderShortcutList(Shortcuts.fixed)}
-
-
-				{!k.IsFirefox && <div>
-					<h2>{IncognitoNameUC} windows</h2>
-
-					<p>By default, QuicKey can't switch to tabs in {IncognitoNameLC} windows.
-						To enable this functionality, {IncognitoInstructions}.  {IncognitoNameUC} tabs
-						are marked with <IncognitoIcon />.
-					</p>
-					<img className="incognito-screenshot"
-						src={`/img/${IncognitoNameLC.toLocaleLowerCase()}-option.png`}
-						alt={`${IncognitoNameUC} option`}
-						title={`Change ${IncognitoNameLC} setting`}
-						onClick={this.handleChangeIncognitoClick}
-					/>
-					<button className="key"
-						onClick={this.handleChangeIncognitoClick}
-					>Change {IncognitoNameLC} setting</button>
-				</div>}
-
-
-				<h2>Feedback and support</h2>
-
-				<p>If you have a question, found a bug, or thought of a new
-					feature you'd like to see, please visit the support page and
-					leave a comment.
-				</p>
-				<button className="key"
-					onClick={this.handleSupportClick}
-				>Open support page</button>
+					<Section id="about">
+						<h2>Feedback and support</h2>
+						<p>If you have a question, found a bug, or thought of a new
+							feature you'd like to see, please visit the support page and
+							leave a comment.
+						</p>
+						<button className="key"
+							onClick={this.handleSupportClick}
+						>Open support page</button>
+					</Section>
+				</Sections>
 			</main>
 		}
 	});
