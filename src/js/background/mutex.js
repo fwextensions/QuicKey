@@ -22,7 +22,8 @@ define(function() {
 		},
 
 
-		_dequeue: function() {
+		_dequeue: function()
+		{
 			var next = this._queue.shift();
 
 			if (next) {

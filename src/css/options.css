@@ -112,6 +112,14 @@
 		--color: #aaa;
 	}
 
+	.pro, .con {
+		--color: #ccc;
+	}
+
+	.pro::before, .con::before {
+		--color: #888;
+	}
+
 	.shortcut-setting .label b {
 		--opacity: .8;
 	}
@@ -171,8 +179,8 @@
 }
 
 html {
-    width: 100vw;
-    overflow-x: hidden;
+	width: 100vw;
+	overflow-x: hidden;
 }
 
 body {
@@ -320,7 +328,7 @@ main {
 	color: var(--color, #666);
 	padding: 0 .75em;
 	margin: 0;
-	transition: background-color .3s ease-out;
+	transition: background-color .15s ease-out;
 }
 
 .section-label:hover {
@@ -542,8 +550,33 @@ main {
 }
 
 @keyframes red-fade {
-    0% { color: #f33; }
-    100% { color: #d70000; }
+	0% { color: #f33; }
+	100% { color: #d70000; }
+}
+
+
+.pro, .con {
+	color: var(--color, #666);
+	font-size: .9em;
+	margin: .2em 0 0 1.5em;
+	text-indent: -2.5em;
+	padding-left: 2.5em;
+}
+
+.pro::before, .con::before {
+	color: var(--color, #aaa);
+	font-weight: bold;
+	width: 2.5em;
+	text-indent: 0;
+	display: inline-block;
+}
+
+.pro::before {
+	content: 'PRO';
+}
+
+.con::before {
+	content: 'CON';
 }
 
 
