@@ -4,13 +4,18 @@
 	React
 ) {
 	const Controls = {
-		Checkbox: function(
-			props)
+		Checkbox: function({
+			id,
+			label,
+			value,
+			disabled,
+			onChange,
+			children})
 		{
-			function onChange(
+			function handleChange(
 				event)
 			{
-				props.onChange(event.target.checked, props.id);
+				onChange(event.target.checked, id);
 			}
 
 
@@ -23,21 +28,27 @@
 					}
 				>
 					<input type="checkbox"
-						checked={props.value}
-						disabled={props.disabled}
+						checked={value}
+						disabled={disabled}
 						tabIndex="0"
-						onChange={onChange}
+						onChange={handleChange}
 					/>
 					<div className="indicator" />
-					<span>{props.label}</span>
-					{props.children}
+					<span>{label}</span>
+					{children}
 				</label>
 			</div>
 		},
 
 
-		RadioButton: function(
-			props)
+		RadioButton: function({
+			name,
+			label,
+			value,
+			checked,
+			disabled,
+			onChange,
+			children})
 		{
 			return <li className="control">
 				<label
@@ -48,54 +59,57 @@
 					}
 				>
 					<input type="radio"
-						checked={props.checked}
-						disabled={props.disabled}
-						name={props.name}
-						value={props.value}
+						checked={checked}
+						disabled={disabled}
+						name={name}
+						value={value}
 						tabIndex="0"
-						onChange={props.onChange}
+						onChange={onChange}
 					/>
 					<div className="indicator" />
-					<span>{props.label}</span>
-					{props.children}
+					<span>{label}</span>
+					{children}
 				</label>
 			</li>
 		},
 
 
-		Group: function(
-			props)
+		Group: function({
+			label,
+			children})
 		{
 			return <div className="control-group">
-				<div className="label">{props.label}</div>
-				{props.children}
+				<div className="label">{label}</div>
+				{children}
 			</div>
 		},
 
 
-		RadioGroup: function(
-			props)
+		RadioGroup: function({
+			id,
+			label,
+			value,
+			onChange,
+			children})
 		{
-			const id = props.id;
-			const value = props.value;
-			const radioButtons = props.children.map(function(child) {
+			const radioButtons = children.map(function(child) {
 				return React.cloneElement(child, {
 					name: id,
 					checked: child.props.value == value,
-					onChange: onChange
+					onChange: handleChange
 				});
 			});
 
 
-			function onChange(
+			function handleChange(
 				event)
 			{
-				props.onChange(event.target.value, props.id);
+				onChange(event.target.value, id);
 			}
 
 
 			return <Controls.Group
-				label={props.label}
+				label={label}
 			>
 				<ul>
 					{radioButtons}
