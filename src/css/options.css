@@ -112,8 +112,12 @@
 		--color: #ccc;
 	}
 
-	.pro::before, .con::before {
-		--color: #888;
+	.pro::before {
+		--color: hsl(120, 100%, 30%);
+	}
+
+	.con::before {
+		--color: hsl(0, 80%, 40%);
 	}
 
 	.shortcut-setting .label b {
@@ -543,7 +547,6 @@ main {
 }
 
 .pro::before, .con::before {
-	color: var(--color, #aaa);
 	font-weight: bold;
 	width: 2.5em;
 	text-indent: 0;
@@ -552,10 +555,18 @@ main {
 
 .pro::before {
 	content: 'PRO';
+	color: var(--color, hsl(120, 100%, 17%));
 }
 
 .con::before {
 	content: 'CON';
+	color: var(--color, hsl(0, 80%, 33%));
+}
+
+.proscons {
+	width: 15em;
+	margin-top: 2em;
+	float: left;
 }
 
 

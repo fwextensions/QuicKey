@@ -4,6 +4,7 @@ define([
 	"jsx!./shortcut-picker",
 	"jsx!./controls",
 	"jsx!./sections",
+	"jsx!./popup-section",
 	"jsx!common/icons",
 	"background/constants"
 ], function(
@@ -12,6 +13,7 @@ define([
 	ShortcutPicker,
 	{Checkbox, RadioButton, RadioGroup},
 	{Sections, Section, SectionList, SectionLabel},
+	PopupSection,
 	{IncognitoIcon, InPrivateIcon, HistoryIcon, WindowIcon},
 	k
 ) {
@@ -26,20 +28,18 @@ define([
 	</div>;
 
 
-	function NewSetting({
+	const NewSetting = ({
 		addedVersion,
 		lastSeenOptionsVersion,
-		children})
-	{
-		return (
-			<div className="new-setting">
-				{lastSeenOptionsVersion < addedVersion &&
-					<div className="new-indicator">NEW</div>
-				}
-				{children}
-			</div>
-		);
-	}
+		children}) =>
+	(
+		<div className="new-setting">
+			{lastSeenOptionsVersion < addedVersion &&
+				<div className="new-indicator">NEW</div>
+			}
+			{children}
+		</div>
+	);
 
 
 	const OptionsApp = React.createClass({
@@ -256,53 +256,12 @@ define([
 						</NewSetting>
 					</Section>
 
-					<Section id="popup">
-						<h2>Popup window</h2>
-{/*
-				<NewSetting
-					addedVersion={10}
-					lastSeenOptionsVersion={lastSeenOptionsVersion}
-				>
-						<RadioGroup
-							id={k.HidePopupBehavior.Key}
-							value={settings[k.HidePopupBehavior.Key]}
-							label={<span>When the alt-tab-style popup closes, hide it:</span>}
-							onChange={onChange}
-						>
-							<RadioButton
-								label="Off-screen"
-								value={k.HidePopupBehavior.Offscreen}
-							>
-								<div className="pro">Popup window shows/hides instantly</div>
-								<div className="con">Popup window is left near the top of the alt-tab list</div>
-								<div className="con">Doesn't work on macOS or when the UI isn't scaled to 100%</div>
-							</RadioButton>
-							<RadioButton
-								label="Behind the active window"
-								value={k.HidePopupBehavior.Behind}
-							>
-								<div className="pro">Popup window shows/hides instantly</div>
-								<div className="con">Popup window is left near the top of the alt-tab list</div>
-								<div className="con">Popup window is visible if other windows are moved out of the way</div>
-							</RadioButton>
-							<RadioButton
-								label="In a tab"
-								value={k.HidePopupBehavior.Tab}
-							>
-								<div className="pro">Popup window is removed from the alt-tab list</div>
-								<div className="con">Popup window shows/hides a little more slowly</div>
-								<div className="con">An extra tab is added to the bottom window</div>
-							</RadioButton>
-							<RadioButton
-								label="In a minimized window"
-								value={k.HidePopupBehavior.Minimize}
-							>
-								<div className="pro">Popup window is at the bottom of the alt-tab list</div>
-								<div className="con">Popup window shows/hides a little more slowly, due to animations</div>
-							</RadioButton>
-						</RadioGroup>
-					{/*</NewSetting>*/}
-					</Section>
+					<PopupSection
+						id="popup"
+						settings={settings}
+						lastSeenOptionsVersion={lastSeenOptionsVersion}
+						onChange={onChange}
+					/>
 
 					<Section id="shortcuts">
 						<h2>Customizable shortcuts</h2>
