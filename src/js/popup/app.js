@@ -709,9 +709,10 @@ define("popup/app", [
 		},
 
 
-		getActiveTab: function()
+		getActiveTab: function(
+			blurred)
 		{
-			if (!this.props.isPopup || !this.visible) {
+			if (!this.props.isPopup || !this.visible || blurred) {
 				return cp.tabs.query({ active: true, currentWindow: true })
 					.then(([activeTab]) => activeTab);
 			} else {
@@ -1003,7 +1004,10 @@ define("popup/app", [
 					// clicked another window, and not from pressing esc.  get
 					// the active tab so it can get passed to popupWindow.hide(),
 					// where it'll be the target window to hide the popup behind.
-				this.closeWindow(false, await this.getActiveTab());
+					// pass true to getActiveTab() so it ignores the fact that
+					// the popup is still visible, since we want to query to get
+					// the tab that was just focused, which we want to hide behind.
+				this.closeWindow(false, await this.getActiveTab(true));
 			}
 
 			this.ignoreNextBlur = false;
