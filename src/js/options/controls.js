@@ -10,7 +10,8 @@
 			value,
 			disabled,
 			onChange,
-			children})
+			children,
+			...props})
 		{
 			function handleChange(
 				event)
@@ -19,7 +20,7 @@
 			}
 
 
-			return <div className="control">
+			return <div className="control" {...props}>
 				<label
 					title={
 						props.disabled
@@ -48,9 +49,10 @@
 			checked,
 			disabled,
 			onChange,
-			children})
+			children,
+			...props})
 		{
-			return <li className="control">
+			return <li className="control" {...props}>
 				<label
 					title={
 						props.disabled
@@ -76,9 +78,10 @@
 
 		Group: function({
 			label,
-			children})
+			children,
+			...props})
 		{
-			return <div className="control-group">
+			return <div className="control-group" {...props}>
 				<div className="label">{label}</div>
 				{children}
 			</div>
@@ -90,7 +93,8 @@
 			label,
 			value,
 			onChange,
-			children})
+			children,
+			...props})
 		{
 			const radioButtons = children.map(function(child) {
 				return React.cloneElement(child, {
@@ -110,6 +114,7 @@
 
 			return <Controls.Group
 				label={label}
+				 {...props}
 			>
 				<ul>
 					{radioButtons}
