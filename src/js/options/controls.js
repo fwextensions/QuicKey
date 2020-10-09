@@ -77,11 +77,16 @@
 
 
 		Group: function({
+			id,
 			label,
 			children,
 			...props})
 		{
-			return <div className="control-group" {...props}>
+			return <div
+				id={id}
+				className="control-group"
+				{...props}
+			>
 				<div className="label">{label}</div>
 				{children}
 			</div>
@@ -113,10 +118,11 @@
 
 
 			return <Controls.Group
+				id={id}
 				label={label}
 				 {...props}
 			>
-				<ul>
+				<ul className="radio-list">
 					{radioButtons}
 				</ul>
 			</Controls.Group>
