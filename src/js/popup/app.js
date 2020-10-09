@@ -168,8 +168,17 @@ define("popup/app", [
 				const {outerWidth, outerHeight} = window;
 
 					// prevent the window from resizing
-				window.addEventListener("resize",
-					() => window.resizeTo(outerWidth, outerHeight));
+				window.addEventListener("resize", () => {
+					if (innerWidth == outerWidth) {
+							// sometimes, something forces the popup to redraw in
+							// a weird way, where the borders and window drop
+							// shadow are lost.  seems like the only solution is
+							// to close and reopen the window.
+						popupWindow.close();
+					} else {
+						window.resizeTo(outerWidth, outerHeight);
+					}
+				});
 
 					// hide the window if it loses focus
 				window.addEventListener("blur", this.onWindowBlur);
