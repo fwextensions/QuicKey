@@ -406,7 +406,7 @@ main {
    =========================================================================== */
 
 .control {
-	margin-bottom: .5em;
+	padding: .25em 0;
 }
 
 .control label {
@@ -512,17 +512,21 @@ main {
 	margin: 1em 0 2em 0;
 }
 
-.control-group label {
-	margin-left: 1.25em;
-}
-
 .control-group .label {
 	line-height: 1.5;
-	margin-bottom: .5em;
+	margin-bottom: .25em;
 }
 
 .control-group .label kbd {
 	line-height: 1.2;
+}
+
+.radio-list {
+	padding: 0 0 0 1em;
+}
+
+.radio-list .control {
+	padding: .25em;
 }
 
 .chrome-shortcuts {
@@ -559,10 +563,19 @@ main {
 }
 
 
+#hidePopupBehavior .label {
+	height: 1.5em;
+}
+
+#hidePopupBehavior .control {
+	height: 2em;
+}
+
 .pro, .con {
 	color: var(--color, #666);
 	font-size: .9em;
-	margin: .2em 0 0 1.5em;
+	line-height: 1.3;
+	margin: 0 0 .5em 1em;
 	text-indent: -2.5em;
 	padding-left: 2.5em;
 }
@@ -586,8 +599,24 @@ main {
 
 .proscons {
 	width: 15em;
-	margin-top: 2em;
+	margin-top: 1.75em;
 	float: left;
+}
+
+.proscons div#offscreen {
+	margin-top: .5em;
+}
+
+.proscons div#behind {
+	margin-top: 2.5em;
+}
+
+.proscons div#tab {
+	margin-top: 4.5em;
+}
+
+.proscons div#minimize {
+	margin-top: 6.5em;
 }
 
 
