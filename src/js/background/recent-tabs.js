@@ -380,7 +380,9 @@ DEBUG && console.log("=== updateAll");
 	{
 		const now = Date.now();
 		const newData = {
-			lastShortcutTime: now,
+				// only record the lastShortcutTime if we're actually navigating
+				// through the stack and not toggling between the two most recent
+			lastShortcutTime: direction == "toggle" ? 0 : now,
 			previousTabIndex: -1
 		};
 
@@ -420,7 +422,7 @@ DEBUG && console.log("=== updateAll");
 						// don't let the user go past the most recently used tab
 					previousTabIndex = Math.min(data.previousTabIndex + 1, maxIndex);
 				}
-			} else if (direction == -1) {
+			} else if (direction == -1 || direction == "toggle") {
 					// if the user is not actively navigating, we want to ignore
 					// alt-S keypresses so the icon doesn't invert for no reason,
 					// so we only set previousTabIndex when going backwards
@@ -507,8 +509,9 @@ DEBUG && console.error(error);
 			// back into the stack and then pressed the toggle shortcut within
 			// 750ms.  if previousTabIndex was still set, we'd toggle to the
 			// wrong tab.
-		return storage.set(() => ({ lastShortcutTime: 0, previousTabIndex: -1 }), "toggle")
-			.then(() => navigate(-1, limitToCurrentWindow));
+//		return storage.set(() => ({ lastShortcutTime: 0, previousTabIndex: -1 }), "toggle")
+//			.then(() => navigate(-1, limitToCurrentWindow));
+		return navigate("toggle");
 	}
 
 
