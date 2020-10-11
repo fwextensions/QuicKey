@@ -7,7 +7,7 @@ define([
 	cp,
 	shared,
 	storage,
-	{IsMac}
+	{IsMac, PopupURL}
 ) => {
 	const PopupInnerWidth = 500;
 	const PopupInnerHeight = 488;
@@ -101,8 +101,8 @@ define([
 		await close();
 
 			// get the full URL with the extension ID in it so that we can
-			// delete it from the history below, which requres an exact match
-		const url = chrome.runtime.getURL(`popup.html?${new URLSearchParams({ type, focusSearch })}`);
+			// delete it from the history below, which requires an exact match
+		const url = `${PopupURL}?${new URLSearchParams({ type, focusSearch })}`;
 		const targetWindow = await cp.windows.get(activeTab.windowId);
 		let {left, top, width, height} = calcPosition(targetWindow, alignment);
 		let window;
@@ -186,11 +186,9 @@ define([
 				// to make an additional update() call with the position, but
 				// only if the window is currently not visible.  otherwise, it
 				// won't move back to the focused window after it's shown while
-				// navigating recents.  also, we have to update it as unfocused
-				// but with state normal if the position is included.  otherwise,
-				// the active element won't regain focus.  annoying Chrome bug.
+				// navigating recents.
 			if (hideBehavior == "minimize" && !isVisible) {
-				await cp.windows.update(windowID, { focused: false, state: "normal", left, top });
+				await cp.windows.update(windowID, { focused: true, left, top });
 			}
 
 			result = cp.windows.update(windowID, { focused: true, left, top });
@@ -299,17 +297,13 @@ define([
 
 	async function close()
 	{
-		if (tabID) {
-			try {
-				await cp.tabs.remove(tabID);
-			} catch (e) {}
-		}
+			// look for any open popup tabs.  there should only ever be one, but
+			// but at least one time, two got opened, so get them all to be safe.
+		const openTabs = await cp.tabs.query({ url: `${PopupURL}*` });
 
-		if (windowID) {
-			try {
-				await cp.windows.remove(windowID);
-			} catch (e) {}
-		}
+		try {
+			await cp.tabs.remove(openTabs.map(({id}) => id));
+		} catch (e) {}
 
 		windowID = 0;
 		tabID = 0;
@@ -328,11 +322,13 @@ define([
 		},
 		set hideBehavior(value) {
 			if (hideBehavior !== value) {
+				hideBehavior = value;
+				type = hideBehavior == "tab" ? "tab" : "window";
+
+					// do this after updating hideBehavior, since we're not
+					// awaiting the call
 				close();
 			}
-
-			hideBehavior = value;
-			type = hideBehavior == "tab" ? "tab" : "window";
 		},
 		get id() {
 			return windowID;
