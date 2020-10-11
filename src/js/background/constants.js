@@ -25,6 +25,7 @@ define([
 		IncognitoNameUC: IsEdge ? "InPrivate" : "Incognito",
 		IncognitoNameLC: IsEdge ? "InPrivate" : "incognito",
 		MinTabDwellTime: 1250,
+		PopupURL: chrome.runtime.getURL("popup.html"),
 		CommandIDs: {
 			OpenPopupCommand: "010-open-popup-window",
 			FocusPopupCommand: "020-focus-search",
