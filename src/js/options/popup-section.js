@@ -70,7 +70,7 @@ define([
 
 			return (
 				<Section id={id}>
-					<h2>Popup window</h2>
+					<h2>Hide popup window</h2>
 
 					<RadioGroup
 						id={Key}

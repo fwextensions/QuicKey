@@ -120,7 +120,7 @@
 		--color: hsl(0, 80%, 40%);
 	}
 
-	.shortcut-setting .label b {
+	label b, .label b {
 		--opacity: .8;
 	}
 
@@ -187,7 +187,7 @@ body {
 	cursor: default;
 	position: relative;
 	margin: 0;
-	padding: 10em 0;
+	padding: 8em 0;
 	display: flex;
 	justify-content: center;
 	flex-flow: column;
@@ -206,7 +206,7 @@ section {
 h1 {
 	font-size: 2em;
 	color: var(--color, #333);
-	margin: 0 0 1.5em 0;
+	margin: 0 0 1.75em 0;
 	position: relative;
 }
 
@@ -226,8 +226,12 @@ h2 {
 	font-size: 1.3em;
 	line-height: 2;
 	color: var(--color, #666);
-	margin: 2.75em 0 1.2em 0;
+	margin: 2.5em 0 1.2em 0;
 	border-bottom: 1px solid var(--border-color, #ddd);
+}
+
+h2:first-of-type {
+	margin-top: 0;
 }
 
 ul {
@@ -272,7 +276,7 @@ button.key:active {
 }
 
 main {
-	width: 35em;
+	width: 52em;
 	position: relative;
 }
 
@@ -311,15 +315,18 @@ main {
 	Section List
    =========================================================================== */
 
+.sections-container {
+	display: grid;
+	grid-template-columns: 28% 69%;
+	grid-column-gap: 3%;
+}
+
 .section-list {
-	left: -50%;
-	padding: 0 .15em 0 0;
-	margin: 0;
-	position: absolute;
+	font-size: 1.3em;
+	margin-left: -.75em;
 }
 
 .section-label {
-	font-size: 1.3em;
 	line-height: 2;
 	color: var(--color, #666);
 	padding: 0 .75em;
@@ -615,7 +622,7 @@ main {
 	flex: 1;
 }
 
-.shortcut-setting .label b {
+label b, .label b {
 	opacity: var(--opacity, .65);
 }
 
