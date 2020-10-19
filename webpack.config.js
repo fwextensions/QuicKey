@@ -1,18 +1,60 @@
+const webpack = require("webpack");
+
+
+const JSXLoaderPattern = /^jsx!/;
+
+
 module.exports = {
 	mode: "production",
-	optimization: {
-			// when webpack minifies the function that returns the module, it
-			// wraps it in parens for some reason, which confuses r.js, so just
-			// let babel minify the file
-		minimize: false
+	module: {
+		rules: [
+			{
+				test: /\.(js|jsx)$/,
+				exclude: /node_modules/,
+				use: ["babel-loader"]
+			}
+		]
 	},
-	performance: {
-		hints: false
+	resolve: {
+		modules: ["src/js", "node_modules"],
+		extensions: ["*", ".js", ".jsx"],
+		alias: {
+			react: "lib/react.min",
+			"react-dom": "lib/react-dom.min",
+			ReactDOM: "lib/react-dom.min",
+			jsx: "lib/jsx",
+			text: "lib/text",
+			JSXTransformer: "lib/JSXTransformer",
+			"react-virtualized": "lib/react-virtualized",
+			lodash: "lib/lodash",
+			cp: "lib/cp",
+			shared: "lib/shared",
+			bluebird: "lib/bluebird.core.min"
+		}
 	},
-	entry: "./build/scripts/pinyin-amd.js",
+	plugins: [
+			// strip out the jsx! plugin from all the component paths, since
+			// babel will transpile those
+		new webpack.NormalModuleReplacementPlugin(
+			JSXLoaderPattern,
+			res => res.request = res.request.replace(JSXLoaderPattern, "")
+		)
+	],
+//	performance: {
+//		hints: false
+//	},
+	entry: {
+		background: "./src/js/background/background.js",
+		popup: "./src/js/popup/main.js",
+		options: "./src/js/options/main.js",
+//		pinyin: "./build/scripts/pinyin-amd.js"
+	},
 	output: {
-		path: `${__dirname}/src/js/lib`,
-		filename: "pinyin.js",
-		library: "pinyin"
+		path: `${__dirname}/build/out/js`,
 	}
+//	output: {
+//		path: `${__dirname}/src/js/lib`,
+//		filename: "pinyin.js",
+//		library: "pinyin"
+//	}
 };

@@ -112,6 +112,7 @@ require([
 		ToggleTabsCommand,
 		FocusPopupCommand
 	} = k.CommandIDs;
+	const spread = (...args) => Object.assign(...args);
 	const MessageHandlers = {
 			// bring the tab's window forward *before* focusing the tab, since
 			// activating the window can sometimes put keyboard focus on the
@@ -119,7 +120,8 @@ require([
 			// 10.12).  then focus the tab, which should fix any focus issues.
 		focusTab: ({tab: {id, windowId}, options = {}}) =>
 			cp.windows.update(windowId, { focused: true })
-				.then(() => cp.tabs.update(id, { active: true, ...options }))
+				.then(() => cp.tabs.update(id, spread({ active: true }, options)))
+//				.then(() => cp.tabs.update(id, { active: true, ...options }))
 				.catch(error => {
 					backgroundTracker.exception(error);
 					console.error(error);
@@ -225,7 +227,8 @@ require([
 	{
 		try {
 				// default to sending the message to the menu if it's open
-			(ports.menu || ports.popup).postMessage({ message, ...payload });
+			(ports.menu || ports.popup).postMessage(spread({ message }, payload));
+//			(ports.menu || ports.popup).postMessage({ message, ...payload });
 		} catch (error) {
 			return error;
 		}
@@ -491,7 +494,10 @@ require([
 	});
 
 
-	chrome.runtime.onMessage.addListener(({message, ...payload}, sender, sendResponse) => {
+	chrome.runtime.onMessage.addListener((data, sender, sendResponse) => {
+//	chrome.runtime.onMessage.addListener(({message, ...payload}, sender, sendResponse) => {
+		const {message} = data;
+		const payload = data;
 		const handler = MessageHandlers[message];
 		let asyncResponse = false;
 

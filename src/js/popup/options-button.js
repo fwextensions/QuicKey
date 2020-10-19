@@ -7,8 +7,8 @@ define([
 ) {
 	return function OptionsButton({
 		newSettingsAvailable,
-		onClick
-	}) {
+		onClick})
+	{
 		const qkOptions = "QuicKey options";
 		const tooltip = newSettingsAvailable
 			? `New ${qkOptions} are available`
