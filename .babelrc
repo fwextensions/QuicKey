@@ -9,7 +9,7 @@
 			"@babel/preset-env",
 			{
 				"targets": {
-					"chrome": 55
+					"chrome": 60
 				},
 				"loose": true,
 				"corejs": 3,

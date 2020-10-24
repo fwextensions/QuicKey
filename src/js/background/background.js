@@ -104,7 +104,7 @@ require([
 		// previous tab
 	const MaxPopupLifetime = 450;
 	const TabRemovedDelay = 1000;
-	const RestartDelay = 10 * 1000;
+	const RestartDelay = 60 * 1000;
 	const {
 		OpenPopupCommand,
 		PreviousTabCommand,
@@ -526,7 +526,7 @@ require([
 	chrome.runtime.onUpdateAvailable.addListener(details => {
 		function restartExtension()
 		{
-			if (!ports.menu) {
+			if (!ports.menu && !popupWindow.isVisible) {
 DEBUG && console.log("=== reloading");
 				chrome.runtime.reload();
 			} else {
