@@ -325,8 +325,8 @@ main {
 
 .sections-container {
 	display: grid;
-	grid-template-columns: 28% 69%;
-	grid-column-gap: 3%;
+	grid-template-columns: 25% 69%;
+	grid-column-gap: 6%;
 }
 
 .section-list {

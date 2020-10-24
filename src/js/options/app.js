@@ -1,20 +1,18 @@
 define([
 	"react",
-	"jsx!./keyboard-shortcuts",
-	"jsx!./shortcut-picker",
-	"jsx!./controls",
 	"jsx!./sections",
+	"jsx!./general-section",
 	"jsx!./popup-section",
+	"jsx!./shortcuts-section",
 	"jsx!common/icons",
 	"background/constants"
 ], function(
 	React,
-	Shortcuts,
-	ShortcutPicker,
-	{Checkbox, RadioButton, RadioGroup},
 	{Sections, Section, SectionList, SectionLabel},
+	GeneralSection,
 	PopupSection,
-	{IncognitoIcon, InPrivateIcon, HistoryIcon, WindowIcon},
+	ShortcutsSection,
+	{IncognitoIcon, InPrivateIcon},
 	k
 ) {
 	const {IncognitoNameUC, IncognitoNameLC} = k;
@@ -28,33 +26,12 @@ define([
 	</div>;
 
 
-	const NewSetting = ({
-		addedVersion,
-		lastSeenOptionsVersion,
-		children}) =>
-	(
-		<div className="new-setting">
-			{lastSeenOptionsVersion < addedVersion &&
-				<div className="new-indicator">NEW</div>
-			}
-			{children}
-		</div>
-	);
-
-
 	const OptionsApp = React.createClass({
 		getInitialState: function()
 		{
 			return {
-				selectedSection: new URLSearchParams(location.search).get("section") || "search"
+				selectedSection: new URLSearchParams(location.search).get("section") || "general"
 			};
-		},
-
-
-		openExtensionsTab: function(
-			page = "")
-		{
-			chrome.tabs.create({ url: "chrome://extensions/" + page });
 		},
 
 
@@ -72,23 +49,9 @@ define([
 		},
 
 
-		handleChangeShortcutsClick: function()
-		{
-			this.openExtensionsTab("shortcuts");
-			this.props.tracker.event("extension", "options-shortcuts");
-		},
-
-
-		handleCtrlTabClick: function()
-		{
-			chrome.tabs.create({ url: "https://fwextensions.github.io/QuicKey/ctrl-tab/" });
-			this.props.tracker.event("extension", "options-ctrl-tab");
-		},
-
-
 		handleChangeIncognitoClick: function()
 		{
-			this.openExtensionsTab("?id=" + chrome.runtime.id);
+			chrome.tabs.create({ url: `chrome://extensions/?id=${chrome.runtime.id}` });
 			this.props.tracker.event("extension", "options-incognito");
 		},
 
@@ -100,50 +63,6 @@ define([
 		},
 
 
-		renderShortcutSetting: function(
-			shortcut)
-		{
-			const {settings} = this.props;
-			let label = shortcut.label;
-			let validator = shortcut.validate;
-
-				// special-case the navigate button, which depends on the current
-				// Chrome keyboard shortcut for showing the QuicKey popup
-			if (shortcut.id == k.Shortcuts.MRUSelect) {
-				const {modifiers, key} = settings.chrome.popup;
-				const modifier = modifiers[0];
-
-				label = shortcut.createLabel(modifier);
-				validator = shortcut.createValidator(modifier, key);
-			}
-
-			return <li className="shortcut-setting"
-					title={shortcut.tooltip}
-			>
-				<div className="label">{label}</div>
-				<ShortcutPicker id={shortcut.id}
-						// non-customizable shortcuts will come with a shortcut
-						// sequence.  otherwise, look up the current shortcut
-						// in settings.
-					shortcut={shortcut.shortcut || settings.shortcuts[shortcut.id]}
-					disabled={shortcut.disabled}
-					placeholder={shortcut.placeholder}
-					validate={validator}
-					onChange={this.props.onChange}
-				/>
-			</li>
-		},
-
-
-		renderShortcutList: function(
-			shortcuts)
-		{
-			return <ul>
-				{shortcuts.map(this.renderShortcutSetting, this)}
-			</ul>
-		},
-
-
 		render: function()
 		{
 			const {selectedSection} = this.state;
@@ -151,6 +70,7 @@ define([
 				settings,
 				showPinyinUpdateMessage,
 				lastSeenOptionsVersion,
+				tracker,
 				onChange,
 				onResetShortcuts
 			} = this.props;
@@ -175,7 +95,7 @@ define([
 						selected={selectedSection}
 						onClick={this.handleSectionClick}
 					>
-						<SectionLabel id="search" label="General" />
+						<SectionLabel id="general" label="General" />
 						<SectionLabel id="popup" label="Popup window" />
 						<SectionLabel id="shortcuts" label="Keyboard shortcuts" />
 						<SectionLabel id="incognito" label="Incognito windows" />
@@ -183,49 +103,12 @@ define([
 					</SectionList>
 
 					<Sections selected={selectedSection}>
-						<Section id="search">
-							<h2>Search results</h2>
-							<Checkbox
-								id={k.IncludeClosedTabs.Key}
-								label={<span>Include recently closed tabs (marked with <HistoryIcon />)</span>}
-								value={settings[k.IncludeClosedTabs.Key]}
-								onChange={onChange}
-							>
-								<div className="subtitle">
-									Selecting a closed tab will reopen it with its full history.
-								</div>
-							</Checkbox>
-							<Checkbox
-								id={k.MarkTabsInOtherWindows.Key}
-								label={<span>Mark tabs that are not in the current window with <WindowIcon /></span>}
-								value={settings[k.MarkTabsInOtherWindows.Key]}
-								onChange={onChange}
-							/>
-							<NewSetting
-								addedVersion={9}
-								lastSeenOptionsVersion={lastSeenOptionsVersion}
-							>
-								<Checkbox
-									id={k.UsePinyin.Key}
-									label="Use pinyin to match Chinese characters in titles and URLs"
-									value={settings[k.UsePinyin.Key]}
-									onChange={onChange}
-								/>
-							</NewSetting>
-
-							<h2>Toolbar icon</h2>
-							<NewSetting
-								addedVersion={8}
-								lastSeenOptionsVersion={lastSeenOptionsVersion}
-							>
-								<Checkbox
-									id={k.ShowTabCount.Key}
-									label="Show the number of open tabs on the QuicKey toolbar icon"
-									value={settings[k.ShowTabCount.Key]}
-									onChange={onChange}
-								/>
-							</NewSetting>
-						</Section>
+						<GeneralSection
+							id="general"
+							settings={settings}
+							lastSeenOptionsVersion={lastSeenOptionsVersion}
+							onChange={onChange}
+						/>
 
 						<PopupSection
 							id="popup"
@@ -234,67 +117,18 @@ define([
 							onChange={onChange}
 						/>
 
-						<Section id="shortcuts">
-							<h2>Search box shortcuts</h2>
-							<RadioGroup
-								id={k.SpaceBehavior.Key}
-								value={settings[k.SpaceBehavior.Key]}
-								label={<span>Press <kbd>space</kbd> to:</span>}
-								onChange={onChange}
-							>
-								<RadioButton
-									label={<span>Select the next item (include <b>shift</b> to select the previous one)</span>}
-									value={k.SpaceBehavior.Select}
-								/>
-								<RadioButton
-									label="Insert a space in the search query"
-									value={k.SpaceBehavior.Space}
-								/>
-							</RadioGroup>
-
-							<RadioGroup
-								id={k.EscBehavior.Key}
-								value={settings[k.EscBehavior.Key]}
-								label={<span>Press <kbd>esc</kbd> to:</span>}
-								onChange={onChange}
-							>
-								<RadioButton
-									label="Clear the search query, or close the menu if the query is empty"
-									value={k.EscBehavior.Clear}
-								/>
-								<RadioButton
-									label="Close the menu immediately"
-									value={k.EscBehavior.Close}
-								/>
-							</RadioGroup>
-
-							<h2>Customizable shortcuts</h2>
-							{this.renderShortcutList(Shortcuts.customizable)}
-							<button className="key"
-								onClick={onResetShortcuts}
-							>Reset shortcuts</button>
-
-							<h2>Browser shortcuts</h2>
-							<div className="chrome-shortcuts"
-								title="Click to open the browser's keyboard shortcuts page"
-								onClick={this.handleChangeShortcutsClick}
-							>
-								{this.renderShortcutList(settings.chrome.shortcuts)}
-							</div>
-							<button className="key"
-								onClick={this.handleChangeShortcutsClick}
-							>Change browser shortcuts</button>
-							<button className="key"
-								title={`Learn how to make ${k.IsEdge ? "Edge" : "Chrome"} use ctrl-tab as a shortcut`}
-								onClick={this.handleCtrlTabClick}
-							>Use ctrl-tab as a shortcut</button>
-
-							<h2>Other shortcuts</h2>
-							{this.renderShortcutList(Shortcuts.fixed)}
-						</Section>
+						<ShortcutsSection
+							id="shortcuts"
+							settings={settings}
+							lastSeenOptionsVersion={lastSeenOptionsVersion}
+							tracker={tracker}
+							onChange={onChange}
+							onResetShortcuts={onResetShortcuts}
+						/>
 
 						<Section id="incognito">
 							<h2>{IncognitoNameUC} windows</h2>
+
 							<p>By default, QuicKey can't switch to tabs in {IncognitoNameLC} windows.
 								To enable this functionality, click the button below, then
 								scroll down to the <i>Allow in {IncognitoNameLC}</i> setting
@@ -314,6 +148,7 @@ define([
 
 						<Section id="about">
 							<h2>Feedback and support</h2>
+
 							<p>If you have a question, found a bug, or thought of a new
 								feature you'd like to see, please visit the support page and
 								leave a comment.
