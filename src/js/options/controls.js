@@ -3,24 +3,25 @@
 ], function(
 	React
 ) {
-	const Controls = {
-		Checkbox: function({
-			id,
-			label,
-			value,
-			disabled,
-			onChange,
-			children,
-			...props})
+	function Checkbox({
+		id,
+		label,
+		value,
+		disabled,
+		className,
+		onChange,
+		children,
+		...props})
+	{
+		function handleChange(
+			event)
 		{
-			function handleChange(
-				event)
-			{
-				onChange(event.target.checked, id);
-			}
+			onChange(event.target.checked, id);
+		}
 
 
-			return <div className="control" {...props}>
+		return (
+			<div className={["control", className].join(" ")} {...props}>
 				<label
 					title={
 						props.disabled
@@ -39,20 +40,23 @@
 					{children}
 				</label>
 			</div>
-		},
+		);
+	}
 
 
-		RadioButton: function({
-			name,
-			label,
-			value,
-			checked,
-			disabled,
-			onChange,
-			children,
-			...props})
-		{
-			return <li className="control" {...props}>
+	function RadioButton({
+		name,
+		label,
+		value,
+		checked,
+		disabled,
+		className,
+		onChange,
+		children,
+		...props})
+	{
+		return (
+			<li className={["control", className].join(" ")} {...props}>
 				<label
 					title={
 						props.disabled
@@ -73,16 +77,18 @@
 					{children}
 				</label>
 			</li>
-		},
+		);
+	}
 
 
-		Group: function({
-			id,
-			label,
-			children,
-			...props})
-		{
-			return <div
+	function Group({
+		id,
+		label,
+		children,
+		...props})
+	{
+		return (
+			<div
 				id={id}
 				className="control-group"
 				{...props}
@@ -90,56 +96,63 @@
 				<div className="label">{label}</div>
 				{children}
 			</div>
-		},
+		);
+	}
 
 
-		RadioGroup: function({
-			id,
-			label,
-			value,
-			onChange,
-			children,
-			...props})
-		{
-			const radioButtons = children.map(function(child) {
-				return React.cloneElement(child, {
-					name: id,
-					checked: child.props.value == value,
-					onChange: handleChange
-				});
+	function RadioGroup({
+		id,
+		label,
+		value,
+		onChange,
+		children,
+		...props})
+	{
+		const radioButtons = children.map(function(child) {
+			return React.cloneElement(child, {
+				name: id,
+				checked: child.props.value == value,
+				onChange: handleChange
 			});
+		});
 
 
-			function handleChange(
-				event)
-			{
-				onChange(event.target.value, id);
-			}
+		function handleChange(
+			event)
+		{
+			onChange(event.target.value, id);
+		}
 
 
-			return <Controls.Group
+		return (
+			<Group
 				id={id}
 				label={label}
-				 {...props}
+				{...props}
 			>
 				<ul className="radio-list">
 					{radioButtons}
 				</ul>
-			</Controls.Group>
-		}
-	};
+			</Group>
+		);
+	}
 
 
 	function noop() {}
 
 
-	Controls.Checkbox.defaultProps = {
+	Checkbox.defaultProps = {
 		onChange: noop
 	};
-	Controls.RadioGroup.defaultProps = {
+	RadioGroup.defaultProps = {
 		onChange: noop
 	};
 
 
-	return Controls;
+	return {
+		Checkbox,
+		RadioButton,
+		Group,
+		RadioGroup
+	}
 });
