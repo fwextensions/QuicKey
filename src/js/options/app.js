@@ -74,6 +74,7 @@ define([
 				onChange,
 				onResetShortcuts
 			} = this.props;
+			const {version} = chrome.runtime.getManifest();
 
 			return <main className={k.IsEdge ? "edge" : "chrome"}>
 				{
@@ -98,7 +99,7 @@ define([
 						<SectionLabel id="general" label="General" />
 						<SectionLabel id="popup" label="Popup window" />
 						<SectionLabel id="shortcuts" label="Keyboard shortcuts" />
-						<SectionLabel id="incognito" label="Incognito windows" />
+						<SectionLabel id="incognito" label={`${IncognitoNameUC} windows`} />
 						<SectionLabel id="about" label="About" />
 					</SectionList>
 
@@ -147,11 +148,25 @@ define([
 						</Section>
 
 						<Section id="about">
+							<h2>About</h2>
+
+							<p>QuicKey adds keyboard shortcuts to switch tabs with a
+								Quicksilver-style search or a most recently used menu.
+							</p>
+							<p>
+								<a href="https://chrome.google.com/webstore/detail/quickey-%E2%80%93-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg" target="_blank">Version {version}</a>
+							</p>
+							<p>
+								<a href="https://github.com/fwextensions/QuicKey" target="_blank">Source code</a>
+							</p>
+
 							<h2>Feedback and support</h2>
 
 							<p>If you have a question, found a bug, or thought of a new
 								feature you'd like to see, please visit the support page and
-								leave a comment.
+								leave a comment.  Many of QuicKey's features, like searching
+								with pinyin, indicating which tabs are in other windows, and
+								so on, have been suggested by users like you.
 							</p>
 							<button className="key"
 								onClick={this.handleSupportClick}

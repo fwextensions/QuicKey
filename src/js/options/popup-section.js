@@ -46,16 +46,16 @@ define([
 			id,
 			label])
 		{
-			const background = this.state.currentOption == id
-				? "#fafafa"
-				: "transparent";
+			const className = this.state.currentOption == id
+				? "current-popup-option"
+				: "";
 
 			return (
 				<RadioButton
 					id={id}
+					className={className}
 					value={id}
 					label={label}
-					style={{ background }}
 					onMouseEnter={this.handleMouseEnter}
 					onMouseLeave={this.handleMouseLeave}
 				/>
@@ -79,7 +79,7 @@ define([
 						onChange={onChange}
 						style={{
 							width: "20em",
-							marginTop: "0",
+							margin: "0 0 5em 0",
 							float: "left"
 						}}
 					>
