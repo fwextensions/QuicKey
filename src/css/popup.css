@@ -18,7 +18,7 @@
 
 	.inprivate.icon {
 		filter: none !important;
-		opacity: .8 !important;
+		opacity: 1 !important;
 	}
 
 	.search-box, .command-placeholder {

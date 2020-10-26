@@ -48,7 +48,7 @@
 
 	.inprivate.icon {
 		filter: none !important;
-		opacity: .8 !important;
+		opacity: 1 !important;
 	}
 
 	.help-button {
@@ -106,6 +106,10 @@
 
 	.control .subtitle {
 		--color: #aaa;
+	}
+
+	.control.current-popup-option {
+		--background: #2a2a2a;
 	}
 
 	.pro, .con {
@@ -273,6 +277,14 @@ button.key:hover {
 
 button.key:active {
 	opacity: .5;
+}
+
+a {
+	color: inherit;
+}
+
+a:hover {
+	opacity: .8;
 }
 
 main {
@@ -555,6 +567,10 @@ main {
 
 #hidePopupBehavior .control {
 	height: 2em;
+}
+
+.control.current-popup-option {
+	background: var(--background, #fafafa);
 }
 
 .pro, .con {
