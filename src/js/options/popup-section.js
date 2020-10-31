@@ -7,7 +7,7 @@ define([
 	React,
 	{RadioButton, RadioGroup},
 	{Section},
-	{HidePopupBehavior: {Key, Offscreen, Behind, Tab, Minimize}}
+	{IsMac, HidePopupBehavior: {Key, Offscreen, Behind, Tab, Minimize}}
 ) => {
 	const ProsCons = ({
 		option,
@@ -17,7 +17,6 @@ define([
 			{children.filter(({props: {id}}) => id == option)}
 		</div>
 	);
-
 
 	const PopupSection = React.createClass({
 		getInitialState: function()
@@ -44,11 +43,14 @@ define([
 
 		renderOption: function([
 			id,
-			label])
+			label,
+				// it would be better to use a default value here, but esprima
+				// and r.js can't handle it
+			disabled])
 		{
 			const className = this.state.currentOption == id
-				? "current-popup-option"
-				: "";
+				? "hide-popup current-popup-option"
+				: "hide-popup";
 
 			return (
 				<RadioButton
@@ -56,6 +58,7 @@ define([
 					className={className}
 					value={id}
 					label={label}
+					disabled={disabled}
 					onMouseEnter={this.handleMouseEnter}
 					onMouseLeave={this.handleMouseLeave}
 				/>
@@ -67,6 +70,13 @@ define([
 		{
 			const {id, settings, onChange} = this.props;
 			const {currentOption} = this.state;
+			const hideOptions = [
+					// disable this option on macOS, since it doesn't work
+				[Offscreen, "Off-screen", IsMac],
+				[Behind, "Behind the active window"],
+				[Tab, "In a tab"],
+				[Minimize, "In a minimized window"]
+			].map(this.renderOption);
 
 			return (
 				<Section id={id}>
@@ -83,14 +93,7 @@ define([
 							float: "left"
 						}}
 					>
-						{
-							[
-								[Offscreen, "Off-screen"],
-								[Behind, "Behind the active window"],
-								[Tab, "In a tab"],
-								[Minimize, "In a minimized window"],
-							].map(this.renderOption)
-						}
+						{hideOptions}
 					</RadioGroup>
 
 					<ProsCons option={currentOption}>

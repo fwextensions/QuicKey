@@ -22,8 +22,9 @@ define([
 		[k.SpaceBehavior.Key]: k.SpaceBehavior.Select,
 		[k.EscBehavior.Key]: k.EscBehavior.Clear,
 		[k.HomeEndBehavior.Key]: k.HomeEndBehavior.ResultsList,
-		[k.PopupType.Key]: k.PopupType.Window,
-		[k.HidePopupBehavior.Key]: k.HidePopupBehavior.Offscreen,
+		[k.HidePopupBehavior.Key]: k.IsMac
+			? k.HidePopupBehavior.Behind
+			: k.HidePopupBehavior.Offscreen,
 		[k.MarkTabsInOtherWindows.Key]: true,
 		[k.IncludeClosedTabs.Key]: true,
 		[k.ShowTabCount.Key]: false,
