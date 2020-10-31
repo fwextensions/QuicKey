@@ -74,18 +74,18 @@
 		--background: #555;
 	}
 
-	.control label:hover input:not([disabled]) ~ .indicator {
+	.control label:hover input:not(:disabled) ~ .indicator {
 		--background: #666;
 	}
 
 	.control input:checked ~ .indicator,
 	.control input:checked:focus ~ .indicator,
-	.control label:hover input:not([disabled]):checked ~ .indicator {
+	.control label:hover input:not(:disabled):checked ~ .indicator {
 		--background: #e6e6e7;
 	}
 
 	.control input:disabled ~ .indicator {
-		--background: #333;
+		--background: #555;
 	}
 
 	.control input[type="checkbox"] ~ .indicator:after {
@@ -463,20 +463,25 @@ main {
 	display: none;
 }
 
-.control label:hover input:not([disabled]) ~ .indicator {
+.control label:hover input:not(:disabled) ~ .indicator {
 	background: var(--background, #ebebeb);
 }
 
 .control input:checked ~ .indicator,
 .control input:checked:focus ~ .indicator,
-.control label:hover input:not([disabled]):checked ~ .indicator {
+.control label:hover input:not(:disabled):checked ~ .indicator {
 	background: var(--background, #313536);
 }
 
 .control input:disabled ~ .indicator {
 	background: var(--background, #e6e6e6);
 	opacity: 0.4;
+	opacity: 0.3;
 	pointer-events: none;
+}
+
+.control input:disabled ~ span {
+	opacity: 0.3;
 }
 
 .control input:checked ~ .indicator:after {
@@ -588,6 +593,10 @@ main {
 
 #hidePopupBehavior .control {
 	height: 2em;
+}
+
+.control.hide-popup label {
+	width: 100%;
 }
 
 .control.current-popup-option {
