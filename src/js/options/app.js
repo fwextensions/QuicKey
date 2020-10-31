@@ -157,6 +157,12 @@ define([
 								<a href="https://chrome.google.com/webstore/detail/quickey-%E2%80%93-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg" target="_blank">Version {version}</a>
 							</p>
 							<p>
+								<a href="https://fwextensions.github.io/QuicKey/" target="_blank">Help page</a>
+							</p>
+							<p>
+								<a href="https://fwextensions.github.io/QuicKey/privacy/" target="_blank">Privacy policy</a>
+							</p>
+							<p>
 								<a href="https://github.com/fwextensions/QuicKey" target="_blank">Source code</a>
 							</p>
 

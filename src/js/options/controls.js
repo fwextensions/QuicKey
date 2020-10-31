@@ -20,8 +20,10 @@
 		}
 
 
+		const classes = ["control", disabled ? "disabled" : "", className].join(" ");
+
 		return (
-			<div className={["control", className].join(" ")} {...props}>
+			<div className={classes} {...props}>
 				<label
 					title={
 						props.disabled
@@ -55,8 +57,10 @@
 		children,
 		...props})
 	{
+		const classes = ["control", disabled ? "disabled" : "", className].join(" ");
+
 		return (
-			<li className={["control", className].join(" ")} {...props}>
+			<li className={classes} {...props}>
 				<label
 					title={
 						props.disabled
