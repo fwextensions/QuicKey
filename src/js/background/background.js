@@ -144,7 +144,7 @@ require([
 
 
 	const addTab = debounce(
-		({tabId}) => cp.tabs.get(tabId)
+		tabId => cp.tabs.get(tabId)
 			.then(recentTabs.add)
 			.catch(error => {
 					// ignore the "No tab with id:" errors, which will happen
@@ -165,8 +165,9 @@ require([
 	);
 
 
-	async function handleTabActivated(
-		event)
+	function handleTabActivated({
+		tabId,
+		windowId})
 	{
 			// don't add the popup window to the recent tabs.  even though
 			// recentTabs.add() will ignore the popup window, we don't want to
@@ -175,8 +176,8 @@ require([
 			// user is navigating through tabs and activating each one as it's
 			// selected, we don't want to update the recents list until they
 			// finish and the window closes.
-		if (event.windowId !== popupWindow.id && !navigatingRecents) {
-			addTab(event);
+		if (windowId !== popupWindow.id && !navigatingRecents) {
+			addTab(tabId);
 
 			if (ports.popup) {
 				storage.get(({tabIDs}) => {
@@ -184,7 +185,7 @@ require([
 						// recent one in tabIDs, that means it was just
 						// reactivated after the popup was hidden, so we don't
 						// need to tell the popup to re-render
-					if (event.tabId !== tabIDs.slice(-1)[0]) {
+					if (tabId !== tabIDs.slice(-1)[0]) {
 						sendPopupMessage("tabActivated");
 					}
 				});
@@ -441,13 +442,9 @@ require([
 				windowID != lastWindowID) {
 			lastWindowID = windowID;
 			cp.tabs.query({ active: true, windowId: windowID })
-					// pass just the tabId to handleTabActivated(), even though we
-					// have the full tab, since most of the time, handleTabActivated()
-					// will be called by onActivated, which only gets the tabId.
-					// this simplifies the logic in handleTabActivated().  if this
-					// window somehow doesn't have an active tab, which should
-					// never happen, it'll pass undefined to addTab(), which
-					// will catch the exception.
+					// if this window somehow doesn't have an active tab, which
+					// should never happen, it'll pass undefined to addTab(),
+					// which will catch the exception.
 				.then(([tab = {}]) => handleTabActivated({
 					tabId: tab.id,
 					windowId: windowID
@@ -480,7 +477,9 @@ require([
 			activeTab = null;
 
 			if (port.name == "popup") {
-				popupWindow.close();
+				if (popupWindow.isOpen) {
+					popupWindow.close();
+				}
 			} else {
 				enableCommands();
 			}
@@ -501,10 +500,11 @@ require([
 		const handler = MessageHandlers[message];
 		let asyncResponse = false;
 
-			// all of the messages from the popup expect a response, even if
-			// there isn't any actual data, so call sendResponse() to avoid
-			// "The message port closed before a response was received" errors
 		if (handler) {
+				// all of the messages from the popup with a handler expect a
+				// response, even if there isn't any actual data, so call
+				// sendResponse() to avoid "The message port closed before a
+				// response was received" errors
 			(async () => {
 				sendResponse(await handler(payload));
 				await addTab.execute();
@@ -516,6 +516,22 @@ require([
 			navigatingRecents = false;
 		} else if (message === "getActiveTab") {
 			sendResponse(activeTab);
+		} else if (message === "reopenPopup") {
+			(async () => {
+				const currentActiveTab = activeTab;
+
+					// instead of closing the popup and then calling
+					// openPopupWindow() to reopen it, we just call create(),
+					// which always closes the window first, and pass the current
+					// activeTab, since the query openPopupWindow() does seems
+					// to not find a last focused window, so we end up with an
+					// undefined activeTab
+				await popupWindow.create(currentActiveTab, payload.focusSearch);
+
+					// restore activeTab, which gets cleared when the port from
+					// the popup is closed
+				activeTab = currentActiveTab;
+			})();
 		} else if (message === "settingChanged") {
 			const {key, value} = payload;
 

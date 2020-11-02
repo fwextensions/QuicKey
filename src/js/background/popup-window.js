@@ -301,13 +301,16 @@ define([
 			// but at least one time, two got opened, so get them all to be safe.
 		const openTabs = await cp.tabs.query({ url: `${PopupURL}*` });
 
-		try {
-			await cp.tabs.remove(openTabs.map(({id}) => id));
-		} catch (e) {}
-
+			// set the IDs to 0 before calling remove(), so that if someone
+			// calls isOpen() before the tab is fully closed, isOpen will
+			// return false
 		windowID = 0;
 		tabID = 0;
 		isVisible = false;
+
+		try {
+			await cp.tabs.remove(openTabs.map(({id}) => id));
+		} catch (e) {}
 	}
 
 
