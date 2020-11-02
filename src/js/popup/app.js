@@ -95,6 +95,7 @@ define("popup/app", [
 		searchBox: null,
 		settings: settings.getDefaults(),
 		settingsPromise: null,
+		popupTabID: -1,
 
 
 		getInitialState: function()
@@ -124,6 +125,11 @@ define("popup/app", [
 				.then(this.updateSettings);
 
 			this.openedForSearch = this.props.focusSearch;
+
+			if (this.props.isPopup) {
+				this.getActiveTab(true)
+					.then(({id}) => this.popupTabID = id);
+			}
 
 			return {
 				query,
@@ -175,8 +181,10 @@ define("popup/app", [
 							// sometimes, something forces the popup to redraw in
 							// a weird way, where the borders and window drop
 							// shadow are lost.  seems like the only solution is
-							// to close and reopen the window.
-						popupWindow.close();
+							// to close and reopen the window.  ignore the blur
+							// event triggered by closing the popup.
+						this.ignoreNextBlur = true;
+						this.sendMessage("reopenPopup", { focusSearch: this.openedForSearch }, false);
 					} else {
 						window.resizeTo(outerWidth, outerHeight);
 					}
@@ -872,21 +880,26 @@ define("popup/app", [
 		handleSearchBoxRef: handleRef("searchBox"),
 
 
-		onTabRemoved: function()
+		onTabRemoved: function(
+			tabID)
 		{
 			const {selected} = this.state;
 
-				// refresh the results list so that the newly closed tab
-				// will show in the closed list, and if there are multiple
-				// tabs with the same name, their index numbers will update.
-				// loadTabs() calls loadPromisedItems(), which calls setQuery(),
-				// which will reset the selected index to 0.  so after the tabs
-				// are reloaded, set selected back to what it was, limiting it
-				// to the current items length, in case the user had closed the
-				// very last item in the list.
-			this.loadTabs()
-				.then(() => this.setState(({matchingItems}) =>
-					({ selected: Math.min(selected, matchingItems.length - 1) })));
+				// if we're getting called because the popup itself is being
+				// closed, ignore the event, since there's no reason to load tabs
+			if (tabID !== this.popupTabID) {
+					// refresh the results list so that the newly closed tab
+					// will show in the closed list, and if there are multiple
+					// tabs with the same name, their index numbers will update.
+					// loadTabs() calls loadPromisedItems(), which calls
+					// setQuery(), which will reset the selected index to 0.  so
+					// after the tabs are reloaded, set selected back to what it
+					// was, limiting it to the current items length, in case the
+					// user had closed the very last item in the list.
+				this.loadTabs()
+					.then(() => this.setState(({matchingItems}) =>
+						({ selected: Math.min(selected, matchingItems.length - 1) })));
+			}
 		},
 
 
