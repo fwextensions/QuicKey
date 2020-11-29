@@ -167,7 +167,7 @@ define([
 			pressedKeys)
 		{
 				// filter any undefineds from the modifiers array
-			const modifiers = pressedKeys.slice(0, KeyOrder.char).filter(function(key) { return key });
+			const modifiers = pressedKeys.slice(0, KeyOrder.char).filter(key => key);
 			const baseKey = pressedKeys[KeyOrder.char];
 			const shortcut = this.getShortcutFromKeys(pressedKeys);
 
@@ -200,7 +200,7 @@ define([
 				errorKey: "",
 				errorMessage: "",
 				focused: false,
-				pressedKeys: state.arePressedKeysValid ? state. pressedKeys : []
+				pressedKeys: state.arePressedKeysValid ? state.pressedKeys : []
 			}));
 			this.lastKeyDown = "";
 		},

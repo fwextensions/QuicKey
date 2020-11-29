@@ -35,6 +35,7 @@ define([
 		[k.ShowBookmarkPaths.Key]: true,
 		[k.CurrentWindowLimitRecents.Key]: false,
 		[k.CurrentWindowLimitSearch.Key]: false,
+		[k.NavigateRecentsWithPopup.Key]: false,
 		[k.Shortcuts.Key]: {
 			mac: MacDefaults,
 			win: DefaultShortcuts

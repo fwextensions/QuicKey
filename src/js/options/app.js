@@ -165,6 +165,9 @@ define([
 							<p>
 								<a href="https://github.com/fwextensions/QuicKey" target="_blank">Source code</a>
 							</p>
+							<p>
+								<a href="https://chrome.google.com/webstore/detail/quickey-%E2%80%93-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg/reviews" target="_blank">Add a review</a>
+							</p>
 
 							<h2>Feedback and support</h2>
 

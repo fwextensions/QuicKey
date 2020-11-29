@@ -79,6 +79,9 @@ define([
 		CurrentWindowLimitSearch: {
 			Key: "currentWindowLimitSearch"
 		},
+		NavigateRecentsWithPopup: {
+			Key: "navigateRecentsWithPopup"
+		},
 		Shortcuts: {
 			Key: "shortcuts",
 			MRUSelect: "mruSelect",

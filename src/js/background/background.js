@@ -135,7 +135,7 @@ require([
 	const ports = {};
 	let lastTogglePromise = Promise.resolve();
 	let currentWindowLimitRecents = false;
-	let navigateRecentsWithPopup = true;
+	let navigateRecentsWithPopup = false;
 	let navigatingRecents = false;
 	let activeTab;
 	let lastWindowID;
@@ -186,7 +186,10 @@ require([
 						// reactivated after the popup was hidden, so we don't
 						// need to tell the popup to re-render
 					if (tabId !== tabIDs.slice(-1)[0]) {
+//console.log("=== sending tabActivated");
 						sendPopupMessage("tabActivated");
+					} else {
+//console.log("=== NOT sending tabActivated");
 					}
 				});
 			}
@@ -541,6 +544,8 @@ require([
 				currentWindowLimitRecents = value;
 			} else if (key == k.HidePopupBehavior.Key) {
 				popupWindow.hideBehavior = value;
+			} else if (key == k.NavigateRecentsWithPopup.Key) {
+				navigateRecentsWithPopup = value;
 			}
 		}
 
@@ -590,6 +595,7 @@ DEBUG && console.log(e);
 			toolbarIcon.showTabCount(settings[k.ShowTabCount.Key]);
 			currentWindowLimitRecents = settings[k.CurrentWindowLimitRecents.Key];
 			popupWindow.hideBehavior = settings[k.HidePopupBehavior.Key];
+			navigateRecentsWithPopup = settings[k.NavigateRecentsWithPopup.Key];
 		});
 
 	storage.set(data => {

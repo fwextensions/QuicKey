@@ -2,12 +2,16 @@ define([
 	"react",
 	"jsx!./controls",
 	"jsx!./sections",
+	"jsx!./new-setting",
+	"jsx!./shortcut",
 	"background/constants"
 ], (
 	React,
-	{RadioButton, RadioGroup},
+	{Checkbox, RadioButton, RadioGroup},
 	{Section},
-	{IsMac, HidePopupBehavior: {Key, Offscreen, Behind, Tab, Minimize}}
+	NewSetting,
+	Shortcut,
+	k
 ) => {
 	const ProsCons = ({
 		option,
@@ -22,7 +26,7 @@ define([
 		getInitialState: function()
 		{
 			return {
-				currentOption: this.props.settings[Key]
+				currentOption: this.props.settings[k.HidePopupBehavior.Key]
 			};
 		},
 
@@ -37,7 +41,7 @@ define([
 		handleMouseLeave: function(
 			event)
 		{
-			this.setState({ currentOption: this.props.settings[Key] });
+			this.setState({ currentOption: this.props.settings[k.HidePopupBehavior.Key] });
 		},
 
 
@@ -68,23 +72,38 @@ define([
 
 		render: function()
 		{
-			const {id, settings, onChange} = this.props;
+			const {id, settings, lastSeenOptionsVersion, onChange} = this.props;
 			const {currentOption} = this.state;
 			const hideOptions = [
 					// disable this option on macOS, since it doesn't work
-				[Offscreen, "Off-screen", IsMac],
-				[Behind, "Behind the active window"],
-				[Tab, "In a tab"],
-				[Minimize, "In a minimized window"]
+				[k.HidePopupBehavior.Offscreen, "Off-screen", k.IsMac],
+				[k.HidePopupBehavior.Behind, "Behind the active window"],
+				[k.HidePopupBehavior.Tab, "In a tab"],
+				[k.HidePopupBehavior.Minimize, "In a minimized window"]
 			].map(this.renderOption);
 
 			return (
 				<Section id={id}>
+					<h2>Show popup window while navigating recent tabs</h2>
+
+					<NewSetting
+						addedVersion={10}
+						lastSeenOptionsVersion={lastSeenOptionsVersion}
+					>
+						<Checkbox
+							id={k.NavigateRecentsWithPopup.Key}
+							label={<span>Show the recent tab list in a popup while navigating
+								with <Shortcut keys={["alt", "A"]}/> and <Shortcut keys={["alt", "S"]}/></span>}
+							value={settings[k.NavigateRecentsWithPopup.Key]}
+							onChange={onChange}
+						/>
+					</NewSetting>
+
 					<h2>Hide popup window</h2>
 
 					<RadioGroup
-						id={Key}
-						value={settings[Key]}
+						id={k.HidePopupBehavior.Key}
+						value={settings[k.HidePopupBehavior.Key]}
 						label={<span>When the alt-tab-style popup closes, hide it:</span>}
 						onChange={onChange}
 						style={{
@@ -97,22 +116,22 @@ define([
 					</RadioGroup>
 
 					<ProsCons option={currentOption}>
-						<div id={Offscreen}>
+						<div id={k.HidePopupBehavior.Offscreen}>
 							<div className="pro">Popup shows/hides instantly</div>
 							<div className="con">Popup is left near the top of the alt-tab list</div>
 							<div className="con">Doesn't work on macOS or when the UI isn't scaled to 100%</div>
 						</div>
-						<div id={Behind}>
+						<div id={k.HidePopupBehavior.Behind}>
 							<div className="pro">Popup shows/hides instantly</div>
 							<div className="con">Popup is left near the top of the alt-tab list</div>
 							<div className="con">Popup is visible if other windows are moved out of the way</div>
 						</div>
-						<div id={Tab}>
+						<div id={k.HidePopupBehavior.Tab}>
 							<div className="pro">Popup is removed from the alt-tab list</div>
 							<div className="con">Popup shows/hides a little more slowly</div>
 							<div className="con">An extra tab is added to the last window</div>
 						</div>
-						<div id={Minimize}>
+						<div id={k.HidePopupBehavior.Minimize}>
 							<div className="pro">Popup is at the bottom of the alt-tab list</div>
 							<div className="con">Popup shows/hides a little more slowly, due to window animations</div>
 						</div>
