@@ -31,6 +31,7 @@ define([
 		[k.UsePinyin.Key]: false,
 		[k.RestoreLastQuery.Key]: false,
 		[k.ShowBookmarkPaths.Key]: true,
+		[k.NavigateRecentsWithPopup.Key]: false,
 		[k.Shortcuts.Key]: {
 			mac: MacDefaults,
 			win: DefaultShortcuts

@@ -173,17 +173,16 @@ define("popup/app", [
 					// handlers that are only needed in that case
 				const {outerWidth, outerHeight} = window;
 
-					// prevent the window from resizing
 				window.addEventListener("resize", () => {
 					if (innerWidth == outerWidth) {
 							// sometimes, something forces the popup to redraw in
 							// a weird way, where the borders and window drop
 							// shadow are lost.  seems like the only solution is
-							// to close and reopen the window.  ignore the blur
-							// event triggered by closing the popup.
-						this.ignoreNextBlur = true;
-						this.sendMessage("reopenPopup", { focusSearch: this.openedForSearch }, false);
+							// to close and reopen the window.
+						this.reopenWindow();
+						log("=== borders collapsed");
 					} else {
+							// prevent the window from resizing
 						window.resizeTo(outerWidth, outerHeight);
 					}
 				});
@@ -195,10 +194,14 @@ define("popup/app", [
 					// and reset the sizing adjustments
 				matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`).addListener(event => {
 					if (!event.matches) {
-							// close the window when the resolution changes, not
-							// just hide it off-screen, so it then will get
-							// recreated with the right size offsets
-						popupWindow.close();
+						if (popupWindow.isVisible) {
+							this.reopenWindow();
+						} else {
+								// close the window when the resolution changes,
+								// not just hide it off-screen, so it then will
+								// get recreated with the right size offsets
+							popupWindow.close();
+						}
 					}
 				})
 			}
@@ -789,6 +792,14 @@ define("popup/app", [
 		},
 
 
+		reopenWindow: function()
+		{
+				// ignore the blur event triggered by closing the popup
+			this.ignoreNextBlur = true;
+			this.sendMessage("reopenPopup", { focusSearch: this.openedForSearch }, false);
+		},
+
+
 		showPopupWindow: function(
 			activeTab)
 		{
@@ -960,6 +971,8 @@ define("popup/app", [
 
 				case "tabActivated":
 					if (!this.navigatingRecents) {
+							// loadTabs() calls loadPromisedItems() with a forced
+							// reload, so it'll trigger a render with the new items
 						this.loadTabs();
 					}
 					break;

@@ -11,7 +11,7 @@ define([
 	trackers,
 	storage,
 	settings,
-	{Platform, ShowTabCount, HidePopupBehavior}
+	{Platform, ShowTabCount, HidePopupBehavior, NavigateRecentsWithPopup}
 ) {
 	const PlusPattern = /\+/g;
 
@@ -96,7 +96,8 @@ define([
 		{
 			settings.set(key, value)
 				.then(settings => {
-					if (key == ShowTabCount.Key || key == HidePopupBehavior.Key) {
+					if (key == ShowTabCount.Key || key == HidePopupBehavior.Key
+							|| key == NavigateRecentsWithPopup.Key) {
 						chrome.runtime.sendMessage({
 							message: "settingChanged",
 							key,

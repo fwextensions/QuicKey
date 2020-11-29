@@ -520,7 +520,7 @@ main {
 	margin-bottom: .25em;
 }
 
-.control-group .label kbd {
+.control-group .label kbd, label kbd {
 	line-height: 1.2;
 }
 
@@ -694,6 +694,53 @@ label b, .label b {
 	position: absolute;
 }
 
+.shortcut-display .shortcut {
+	font-size: 30px;
+	height: 1em;
+	display: block;
+}
+
+.shortcut-display kbd, .key {
+	height: inherit;
+	border: 0;
+	border-radius: 0.125em;
+	font-size: inherit;
+	text-align: center;
+	outline: 0;
+	position: relative;
+	vertical-align: top;
+	margin-right: .25em;
+	-webkit-appearance: none;
+	-webkit-tap-highlight-color: transparent;
+	user-select: none;
+}
+
+.shortcut-display kbd > span, .key > span {
+	display: inline-block;
+	position: absolute;
+	top: 0;
+	left: 0;
+	font-size: 0.5em;
+	line-height: 2;
+	width: 100%;
+}
+
+.shortcut-display .width1 {
+	width: 1.15em;
+}
+
+.shortcut-display .width2 {
+	width: 1.65em;
+}
+
+.shortcut-display .width3 {
+	width: 1.95em;
+}
+
+.shortcut-display .width4 {
+	width: 3em;
+}
+
 .clear-button {
 	width: 20px;
 	height: 20px;
@@ -755,47 +802,13 @@ label b, .label b {
    =========================================================================== */
 
 .shortcut {
-	font-size: 30px;
-	height: 1em;
-}
-
-.shortcut kbd, .key {
-	height: inherit;
-	border: 0;
-	border-radius: 0.125em;
-	font-size: inherit;
-	text-align: center;
-	outline: 0;
-	position: relative;
-	vertical-align: top;
-	margin-right: .25em;
-	-webkit-appearance: none;
-	-webkit-tap-highlight-color: transparent;
-	user-select: none;
-}
-
-.shortcut kbd > span, .key > span {
 	display: inline-block;
-	position: absolute;
-	top: 0;
-	left: 0;
-	font-size: 0.5em;
-	line-height: 2;
-	width: 100%;
 }
 
-.width1 {
-	width: 1.15em;
+.shortcut kbd {
+	margin-right: .25em;
 }
 
-.width2 {
-	width: 1.65em;
-}
-
-.width3 {
-	width: 1.95em;
-}
-
-.width4 {
-	width: 3em;
+.shortcut kbd:last-child {
+	margin-right: 0;
 }

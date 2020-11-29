@@ -96,6 +96,7 @@ define([
 					k.HomeEndBehavior
 				)(data);
 				data.lastQuery = "";
+				await addDefaultSetting(k.NavigateRecentsWithPopup.Key);
 			})
 		};
 			// calculate the version by incrementing the highest key in the
