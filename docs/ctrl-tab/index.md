@@ -9,10 +9,9 @@ comments: true
 
 Do you wish Chrome had the same <b><kbd>ctrl</kbd><kbd>tab</kbd></b> tab navigation as Firefox?  There are two key features Chrome is missing:
 
-- **Switch to the previously used tab**
+- <strong>Switch to the previously used tab</strong>
   - Press <b><kbd>ctrl</kbd><kbd>tab</kbd></b> and then release both keys
-
-- **Select an open tab from a menu using the keyboard**
+- <strong>Select an open tab from a menu using the keyboard</strong>
   - Press <b><kbd>ctrl</kbd><kbd>tab</kbd></b> but then release just <kbd>tab</kbd>
   - Press <kbd>tab</kbd> repeatedly to select older tabs in the menu
   - Release <kbd>ctrl</kbd> to switch to the selected tab
@@ -70,6 +69,8 @@ That's it!
 
 Now you can press <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to the previously used tab, and press it again to switch back.  Unlike [Option 2](#option-2) below, you can toggle between *only* the two most recent tabs, but the advantage is you can switch back and forth as quickly as you like. 
 
+<p class="edge">Note that if you're using Microsoft Edge and installed *QuicKey* from the Chrome Web Store, you'll need to replace the `mcjciddpjefdpndgllejgcekmajmehnd` string in the code above with `ldlghkoiihaelfnggonhjnfiabmaficg`, which is *QuicKey*'s extension ID in the Chrome Web Store.</p>
+
 
 ## <a name="option-2"></a>Option 2: Use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to any recently used tab
 
@@ -102,7 +103,9 @@ That's it!
 
 Now you can press <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to the previously used tab.  If you press it again within .75 seconds, while the icon is inverted <img src="../img/icon-38-inverted.png" style="height: 19px; vertical-align: text-bottom;">, you'll switch to the tab before that.  You can press <b><kbd>ctrl</kbd><kbd>shift</kbd><kbd>tab</kbd></b> to navigate in the other direction.
 
-(You should always be cautious about copying code from a website and running it in DevTools, but even if you don't know JavaScript, it's hopefully clear what the snippet above is doing.  It's calling a private `updateExtensionCommand()` function twice to set <b><kbd>ctrl</kbd><kbd>tab</kbd></b> and <b><kbd>ctrl</kbd><kbd>shift</kbd><kbd>tab</kbd></b> keyboard shortcuts.  The "ldlgh..." string is *QuicKey*'s extension ID, which you can see in its [Chrome webstore link](https://chrome.google.com/webstore/detail/quickey-%E2%80%93-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg), so this code won't affect any other extensions you have installed.)
+<p class="edge">Note that if you're using Microsoft Edge and installed *QuicKey* from the Chrome Web Store, you'll need to replace the `mcjciddpjefdpndgllejgcekmajmehnd` string in the code above with `ldlghkoiihaelfnggonhjnfiabmaficg`, which is *QuicKey*'s extension ID in the Chrome Web Store.</p>
+
+(You should always be cautious about copying code from a website and running it in DevTools, but even if you don't know JavaScript, it's hopefully clear what the snippet above is doing.  It's calling a private `updateExtensionCommand()` function twice to set <b><kbd>ctrl</kbd><kbd>tab</kbd></b> and <b><kbd>ctrl</kbd><kbd>shift</kbd><kbd>tab</kbd></b> keyboard shortcuts.  The "ldlgh..." string is *QuicKey*'s extension ID, which you can see in its [Chrome Web Store link](https://chrome.google.com/webstore/detail/quickey-%E2%80%93-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg), so this code won't affect any other extensions you may have installed.)
 
 
 ## <a name="option-3"></a>Option 3: Use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to a recent tab via a menu (Windows only)
@@ -110,6 +113,8 @@ Now you can press <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to the previous
 ![mru-menu](../img/ctrl-tab-mru.png)
 
 This option provides the closest experience to Firefox.  It lets you quickly press and release <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to the previous tab, or you can keep holding <kbd>ctrl</kbd> to select from a menu of recent tabs.
+
+If you've already installed *QuicKey*, make sure that the keyboard shortcut for the *Activate the extension* command is still set to the default, <b><kbd>alt</kbd><kbd>Q</kbd></b>.  Otherwise, the AutoHotkey script listed below won't respond correctly to <b><kbd>ctrl</kbd><kbd>tab</kbd></b>.
 
 1. [Install QuicKey](https://chrome.google.com/webstore/detail/quickey-%E2%80%93-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg).
 
@@ -131,6 +136,16 @@ The other default shortcuts continue to work, so you can still press <b><kbd>alt
 
 
 <script>
+    if (navigator.userAgent.includes("Edg/")) {
+    	for (const el of document.getElementsByTagName("code")) {
+    		el.textContent = el.textContent.replace(/ldlghkoiihaelfnggonhjnfiabmaficg/g, 
+    		    "mcjciddpjefdpndgllejgcekmajmehnd");
+    	}
+
+        document.body.classList.add("edge");
+    }
+    
+    
     function copyCode(
         index)
     {

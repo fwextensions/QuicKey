@@ -2,6 +2,7 @@ define([
 	"cp",
 	"shared",
 	"lib/objects-have-same-keys",
+	"lib/decode",
 	"./storage",
 	"./get-default-settings",
 	"./constants"
@@ -9,6 +10,7 @@ define([
 	cp,
 	shared,
 	objectsHaveSameKeys,
+	decode,
 	createStorage,
 	getDefaultSettings,
 	k
@@ -106,7 +108,7 @@ define([
 
 							// decode the URL, since Chinese characters in tab
 							// URLs seem to get encoded when returned by the API
-						if (hanPattern.test(title) || hanPattern.test(decodeURI(url))) {
+						if (hanPattern.test(title) || hanPattern.test(decode(url))) {
 							DefaultSettings[k.UsePinyin.Key] = true;
 
 							break;

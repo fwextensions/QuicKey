@@ -8,11 +8,22 @@ comments: true
 # Release history
 
 
+## 1.5.1 - 2020-12-24
+
+### Fixed
+
+* Malformed URLs in open tabs could cause *QuicKey* to not load properly on browser launch.
+
+* The [`quickey-ctrl-tab.ahk`](https://fwextensions.github.io/QuicKey/ctrl-tab/quickey-ctrl-tab.ahk) AutoHotkey script that enables <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to navigate the recents menu now supports Edge 79+.
+
+* The [page](https://fwextensions.github.io/QuicKey/ctrl-tab/) about enabling <b><kbd>ctrl</kbd><kbd>tab</kbd></b> support now shows the correct extension ID when loaded in Edge.
+
+
 ## 1.5.0 - 2020-04-29
 
 ### Added
 
-* [Pinyin](https://en.wikipedia.org/wiki/Pinyin) strings in the search query will now match Chinese characters in tab titles and URLs.  This option is enabled by default if Chrome's language is set to Chinese or if Chinese characters are found in any currently open tabs titles or URLs. 
+* Typing [Pinyin](https://en.wikipedia.org/wiki/Pinyin) in the search query will now match Chinese characters in tab titles and URLs.  This option is enabled by default if Chrome's language is set to Chinese or if Chinese characters are found in any currently open tabs titles or URLs. 
 
 ### Fixed
 

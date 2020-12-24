@@ -12,6 +12,14 @@ body {
 	line-height: 1.4em;
 }
 
+body p.edge {
+	display: none;
+}
+
+body.edge p.edge {
+	display: block;
+}
+
 h2 {
 	margin: 60px 0 20px;
 }
