@@ -69,7 +69,7 @@ That's it!
 
 Now you can press <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to the previously used tab, and press it again to switch back.  Unlike [Option 2](#option-2) below, you can toggle between *only* the two most recent tabs, but the advantage is you can switch back and forth as quickly as you like. 
 
-<p class="edge">Note that if you're using Microsoft Edge and installed *QuicKey* from the Chrome Web Store, you'll need to replace the `mcjciddpjefdpndgllejgcekmajmehnd` string in the code above with `ldlghkoiihaelfnggonhjnfiabmaficg`, which is *QuicKey*'s extension ID in the Chrome Web Store.</p>
+<p class="edge">Note that if you're using Microsoft Edge and installed <em>QuicKey</em> from the Chrome Web Store, you'll need to replace the <code>mcjciddpjefdpndgllejgcekmajmehnd</code> string in the code above with <code>ldlghkoiihaelfnggonhjnfiabmaficg</code>, which is <em>QuicKey</em>'s extension ID in that store.</p>
 
 
 ## <a name="option-2"></a>Option 2: Use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to any recently used tab
@@ -103,9 +103,9 @@ That's it!
 
 Now you can press <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to the previously used tab.  If you press it again within .75 seconds, while the icon is inverted <img src="../img/icon-38-inverted.png" style="height: 19px; vertical-align: text-bottom;">, you'll switch to the tab before that.  You can press <b><kbd>ctrl</kbd><kbd>shift</kbd><kbd>tab</kbd></b> to navigate in the other direction.
 
-<p class="edge">Note that if you're using Microsoft Edge and installed *QuicKey* from the Chrome Web Store, you'll need to replace the `mcjciddpjefdpndgllejgcekmajmehnd` string in the code above with `ldlghkoiihaelfnggonhjnfiabmaficg`, which is *QuicKey*'s extension ID in the Chrome Web Store.</p>
+<p class="edge">Note that if you're using Microsoft Edge and installed <em>QuicKey</em> from the Chrome Web Store, you'll need to replace the <code>mcjciddpjefdpndgllejgcekmajmehnd</code> string in the code above with <code>ldlghkoiihaelfnggonhjnfiabmaficg</code>, which is <em>QuicKey</em>'s extension ID in that store.</p>
 
-(You should always be cautious about copying code from a website and running it in DevTools, but even if you don't know JavaScript, it's hopefully clear what the snippet above is doing.  It's calling a private `updateExtensionCommand()` function twice to set <b><kbd>ctrl</kbd><kbd>tab</kbd></b> and <b><kbd>ctrl</kbd><kbd>shift</kbd><kbd>tab</kbd></b> keyboard shortcuts.  The "ldlgh..." string is *QuicKey*'s extension ID, which you can see in its [Chrome Web Store link](https://chrome.google.com/webstore/detail/quickey-%E2%80%93-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg), so this code won't affect any other extensions you may have installed.)
+(You should always be cautious about copying code from a website and running it in DevTools, but even if you don't know JavaScript, it's hopefully clear what the snippet above is doing.  It's calling a private `updateExtensionCommand()` function twice to set <b><kbd>ctrl</kbd><kbd>tab</kbd></b> and <b><kbd>ctrl</kbd><kbd>shift</kbd><kbd>tab</kbd></b> keyboard shortcuts.  The `"ldlgh..."` string is *QuicKey*'s extension ID, which you can see in its [Chrome Web Store link](https://chrome.google.com/webstore/detail/quickey-%E2%80%93-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg), so this code won't affect any other extensions you may have installed.)
 
 
 ## <a name="option-3"></a>Option 3: Use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to a recent tab via a menu (Windows only)
@@ -137,9 +137,15 @@ The other default shortcuts continue to work, so you can still press <b><kbd>alt
 
 <script>
     if (navigator.userAgent.includes("Edg/")) {
-    	for (const el of document.getElementsByTagName("code")) {
+    	for (const el of document.querySelectorAll("pre > code")) {
     		el.textContent = el.textContent.replace(/ldlghkoiihaelfnggonhjnfiabmaficg/g, 
     		    "mcjciddpjefdpndgllejgcekmajmehnd");
+    	}
+
+    	for (const el of document.querySelectorAll("p > a")) {
+            if (el.textContent == "Install QuicKey") {
+            	el.href = "https://microsoftedge.microsoft.com/addons/detail/quickey-%E2%80%93-the-quick-tab-s/mcjciddpjefdpndgllejgcekmajmehnd";
+            }
     	}
 
         document.body.classList.add("edge");

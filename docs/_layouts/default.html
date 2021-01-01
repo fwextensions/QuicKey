@@ -36,9 +36,9 @@
         <h1 style="font-style: italic;">{{ page.title | site.title | default: site.github.repository_name }}</h1>
         <p>{{ site.tagline | site.description | default: site.github.project_tagline }}</p>
 
-        <p class="install" style="margin: 3em 0;"><button onclick="installExtension(0)">Add to Chrome <span>It's free!</span></button></p>
+        <p class="install no-edge" style="margin: 3em 0;"><button onclick="installExtension(0)">Add to Chrome <span>It's free!</span></button></p>
 
-        <p><a href="https://chrome.google.com/webstore/detail/quickey-–-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg"><img src="/QuicKey/img/webstore.png" class="chrome-store" alt="QuicKey in the Chrome Webstore" /></a></p>
+        <p class="no-edge"><a href="https://chrome.google.com/webstore/detail/quickey-–-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg"><img src="/QuicKey/img/webstore.png" class="chrome-store" alt="QuicKey in the Chrome Webstore" /></a></p>
 
         {% if site.github.is_project_page %}
           <p class="view"><a href="{{ site.github.repository_url }}">View the project on GitHub <small>{{ github_name }}</small></a></p>
