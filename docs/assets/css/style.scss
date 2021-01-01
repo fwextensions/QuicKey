@@ -20,6 +20,10 @@ body.edge p.edge {
 	display: block;
 }
 
+body.edge p.no-edge {
+	display: none;
+}
+
 h2 {
 	margin: 60px 0 20px;
 }
