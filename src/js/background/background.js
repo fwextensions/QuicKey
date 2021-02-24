@@ -228,6 +228,12 @@ require([
 				// stack, even though a different tab was now active.
 			.then(addTab.execute)
 			.then(recentTabs.toggle)
+				// fire the debounced addTab() so the tab we just toggled to will
+				// be the most recent, in case the user quickly toggles again.
+				// otherwise, the debounced add would fire after we navigate,
+				// putting that tab on the top of the stack, even though a
+				// different tab was now active.
+			.then(addTab.execute)
 			.then(() => backgroundTracker.event("recents",
 				fromShortcut ? "toggle-shortcut" : "toggle"));
 	}
