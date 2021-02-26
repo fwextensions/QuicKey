@@ -41,6 +41,9 @@ define([
 		UsePinyin: {
 			Key: "usePinyin"
 		},
+		RestoreLastQuery: {
+			Key: "restoreLastQuery"
+		},
 		Shortcuts: {
 			Key: "shortcuts",
 			MRUSelect: "mruSelect",

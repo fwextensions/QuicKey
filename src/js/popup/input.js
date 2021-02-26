@@ -39,6 +39,16 @@ define([
 		},
 
 
+		componentDidUpdate: function()
+		{
+				// wait until after the component has updated so that there's
+				// text to be selected
+			if (this.props.selectAll && this.input) {
+				this.input.select();
+			}
+		},
+
+
 		focus: function()
 		{
 			if (this.input) {

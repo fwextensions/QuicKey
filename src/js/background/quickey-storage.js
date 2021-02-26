@@ -76,7 +76,13 @@ define([
 			}),
 			"6": update(addDefaultSetting(k.MarkTabsInOtherWindows.Key)),
 			"7": update(addDefaultSetting(k.ShowTabCount.Key)),
-			"8": update(addDefaultSetting(k.UsePinyin.Key))
+			"8": update(addDefaultSetting(k.UsePinyin.Key)),
+			"9": update(async data =>
+			{
+// TODO: verify this works
+				await addDefaultSetting(k.RestoreLastQuery.Key)(data);
+				data.lastQuery = "";
+			})
 		};
 			// calculate the version by incrementing the highest key in the
 			// Updaters hash, so that the version is automatically increased

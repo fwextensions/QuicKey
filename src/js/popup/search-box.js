@@ -48,8 +48,15 @@ define([
 
 		render: function()
 		{
-			const {props} = this;
-			const {mode, query} = props;
+			const {
+				query,
+				mode,
+				forceUpdate,
+				selectAll,
+				onChange,
+				onKeyDown,
+				onKeyUp
+			} = this.props;
 
 				// we want to show the placeholders only when the user's entered
 				// the history or bookmarks mode and the query length is 3, which
@@ -66,10 +73,11 @@ define([
 					spellCheck={false}
 					autoFocus={true}
 					value={query}
-					forceUpdate={props.forceUpdate}
-					onChange={props.onChange}
-					onKeyDown={props.onKeyDown}
-					onKeyUp={props.onKeyUp}
+					forceUpdate={forceUpdate}
+					selectAll={selectAll}
+					onChange={onChange}
+					onKeyDown={onKeyDown}
+					onKeyUp={onKeyUp}
 				/>
 				<SearchIcon />
 				{mode == "bookmarks" && query.length == 3 &&
