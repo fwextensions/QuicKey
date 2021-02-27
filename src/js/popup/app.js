@@ -96,7 +96,7 @@ define("popup/app", [
 						this.setState({ newSettingsAvailable: true });
 					}
 
-					if (data.lastQuery) {
+					if (data.settings[k.RestoreLastQuery.Key] && data.lastQuery) {
 							// we need to force the input to update to the stored
 							// text, and then force it to select all
 						this.forceUpdate = true;
@@ -164,9 +164,13 @@ define("popup/app", [
 			chrome.tabs.onRemoved.addListener(this.onTabRemoved);
 
 			window.addEventListener("unload", () => {
-				storage.set(() => ({
-					lastQuery: this.state.searchBoxText
-				}));
+					// if the restore last query option is off, clear any
+					// existing stored query
+				const lastQuery = this.settings[k.RestoreLastQuery.Key]
+					? this.state.searchBoxText
+					: "";
+
+				storage.set(() => ({ lastQuery }));
 			});
 		},
 

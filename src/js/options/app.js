@@ -220,6 +220,17 @@ define([
 						onChange={onChange}
 					/>
 				</NewSetting>
+				<NewSetting
+					addedVersion={10}
+					lastSeenOptionsVersion={lastSeenOptionsVersion}
+				>
+					<Checkbox
+						id={k.RestoreLastQuery.Key}
+						label="Restore the last search query when the menu is reopened"
+						value={settings[k.RestoreLastQuery.Key]}
+						onChange={onChange}
+					/>
+				</NewSetting>
 
 				<h2>Customizable keyboard shortcuts</h2>
 				{this.renderShortcutList(Shortcuts.customizable)}

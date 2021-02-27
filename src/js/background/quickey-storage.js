@@ -71,7 +71,7 @@ define([
 					// add includeClosedTabs option and lastUsedVersion in
 					// v6.  leave lastUsedVersion empty so the background
 					// code can tell this was an update from an older version.
-				await addDefaultSetting(k.IncludeClosedTabs.Key);
+				await addDefaultSetting(k.IncludeClosedTabs.Key)(data);
 				data.lastUsedVersion = "";
 			}),
 			"6": update(addDefaultSetting(k.MarkTabsInOtherWindows.Key)),
@@ -79,7 +79,6 @@ define([
 			"8": update(addDefaultSetting(k.UsePinyin.Key)),
 			"9": update(async data =>
 			{
-// TODO: verify this works
 				await addDefaultSetting(k.RestoreLastQuery.Key)(data);
 				data.lastQuery = "";
 			})
@@ -133,6 +132,7 @@ define([
 						// set this to the current storage version so that we
 						// don't show the red badge on a new install
 					lastSeenOptionsVersion: CurrentVersion,
+					lastQuery: "",
 					previousTabIndex: -1,
 					settings: DefaultSettings,
 					tabIDs: [],
