@@ -256,7 +256,7 @@ define("popup/app", [
 				if (!this.bookmarks.length) {
 						// we haven't fetched the bookmarks yet, so load them
 						// and then call getMatchingItems() after they're ready
-					this.loadPromisedItems(getBookmarks, "bookmarks");
+					this.loadPromisedItems(() => getBookmarks(this.settings[k.ShowBookmarkPaths.Key]), "bookmarks");
 				}
 			} else if (searchBoxText.indexOf(HistoryQuery) == 0) {
 				this.mode = "history";

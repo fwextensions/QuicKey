@@ -5,12 +5,13 @@ define([
 	addURLs,
 	cp
 ) {
-	const PathConnector = " / ";
+	const PathSeparator = " / ";
 
 
 	let bookmarks = [];
 	let urls = {};
 	let path = [];
+	let showPaths = false;
 
 
 	function processNodes(
@@ -24,15 +25,16 @@ define([
 				addURLs(node);
 				urls[url] = true;
 
-				if (path.length) {
-					node.title = path.join(PathConnector) + PathConnector + title;
+				if (showPaths && path.length) {
+					node.title = path.join(PathSeparator) + PathSeparator + title;
 				}
 
 				bookmarks.push(node);
 			} else if (children) {
 				let titlePushed = false;
 
-				if (parentId && parentId !== "0" && title) {
+					// don't show the names of top-level bookmark folders
+				if (showPaths && parentId && parentId !== "0" && title) {
 					path.push(node.title);
 					titlePushed = true;
 				}
@@ -47,11 +49,13 @@ define([
 	}
 
 
-	return function getBookmarks()
+	return function getBookmarks(
+		showBookmarkPaths)
 	{
 		bookmarks = [];
 		urls = {};
 		path = [];
+		showPaths = showBookmarkPaths;
 
 		return cp.bookmarks.getTree()
 			.then(bookmarkNodes => {

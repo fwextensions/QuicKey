@@ -24,6 +24,7 @@ define([
 		[k.ShowTabCount.Key]: false,
 		[k.UsePinyin.Key]: false,
 		[k.RestoreLastQuery.Key]: false,
+		[k.ShowBookmarkPaths.Key]: true,
 		[k.Shortcuts.Key]: {
 			mac: MacDefaults,
 			win: DefaultShortcuts
