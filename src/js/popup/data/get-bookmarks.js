@@ -50,7 +50,7 @@ define([
 
 
 	return function getBookmarks(
-		showBookmarkPaths)
+		showBookmarkPaths = false)
 	{
 		bookmarks = [];
 		urls = {};
