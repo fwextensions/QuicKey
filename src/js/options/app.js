@@ -231,6 +231,17 @@ define([
 						onChange={onChange}
 					/>
 				</NewSetting>
+				<NewSetting
+					addedVersion={10}
+					lastSeenOptionsVersion={lastSeenOptionsVersion}
+				>
+					<Checkbox
+						id={k.ShowBookmarkPaths.Key}
+						label="Show the folder path to each bookmark in its title"
+						value={settings[k.ShowBookmarkPaths.Key]}
+						onChange={onChange}
+					/>
+				</NewSetting>
 
 				<h2>Customizable keyboard shortcuts</h2>
 				{this.renderShortcutList(Shortcuts.customizable)}

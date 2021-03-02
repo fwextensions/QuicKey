@@ -79,7 +79,9 @@ define([
 			"8": update(addDefaultSetting(k.UsePinyin.Key)),
 			"9": update(async data =>
 			{
-				await addDefaultSetting(k.RestoreLastQuery.Key)(data);
+					// since addDefaultSetting() returns a function, we have to
+					// call it with the stored data passed in by update()
+				await addDefaultSetting(k.RestoreLastQuery.Key, k.ShowBookmarkPaths)(data);
 				data.lastQuery = "";
 			})
 		};

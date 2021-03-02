@@ -44,6 +44,9 @@ define([
 		RestoreLastQuery: {
 			Key: "restoreLastQuery"
 		},
+		ShowBookmarkPaths: {
+			Key: "showBookmarkPaths"
+		},
 		Shortcuts: {
 			Key: "shortcuts",
 			MRUSelect: "mruSelect",
