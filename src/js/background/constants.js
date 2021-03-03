@@ -29,6 +29,11 @@ define([
 			Clear: "clear",
 			Close: "close"
 		},
+		HomeEndBehavior: {
+			Key: "homeEndBehavior",
+			ResultsList: "resultsList",
+			SearchBox: "searchBox"
+		},
 		MarkTabsInOtherWindows: {
 			Key: "markTabsInOtherWindows"
 		},
