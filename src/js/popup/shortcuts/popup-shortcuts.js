@@ -10,11 +10,21 @@ define([
 		["ArrowDown", () => self.modifySelected(1)],
 		["PageUp", () => self.resultsList.scrollByPage("up")],
 		["PageDown", () => self.resultsList.scrollByPage("down")],
-		["Home", () => self.setSelectedIndex(0)],
-		["End", () => self.setSelectedIndex(self.state.matchingItems.length - 1)],
 		[["Enter", "shift+Enter"], event => openItem(event, false)],
 		[["mod+Enter", "mod+shift+Enter"], event => openItem(event, true)],
 		["Escape", event => self.clearQuery(event.target.value)],
+		[["Home", "End"], event => {
+			if (self.settings[k.HomeEndBehavior.Key] == k.HomeEndBehavior.ResultsList) {
+				if (event.key == "Home") {
+					self.setSelectedIndex(0)
+				} else {
+					self.setSelectedIndex(self.state.matchingItems.length - 1);
+				}
+			} else {
+					// return true to let the input field handle the keys
+				return true;
+			}
+		}],
 		[["Space", "shift+Space"],
 			event => {
 				if (self.mode != "command" && self.settings[k.SpaceBehavior.Key] !== k.SpaceBehavior.Space) {

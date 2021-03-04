@@ -19,6 +19,7 @@ define([
 	const DefaultSettings = {
 		[k.SpaceBehavior.Key]: k.SpaceBehavior.Select,
 		[k.EscBehavior.Key]: k.EscBehavior.Clear,
+		[k.HomeEndBehavior.Key]: k.HomeEndBehavior.ResultsList,
 		[k.MarkTabsInOtherWindows.Key]: true,
 		[k.IncludeClosedTabs.Key]: true,
 		[k.ShowTabCount.Key]: false,
