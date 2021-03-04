@@ -114,9 +114,11 @@ No mouse needed!
  • Press ENTER to switch to the selected tab
 
 
-★ Now with support for pinyin!
+★ New options in v1.6.0
 
-You can use pinyin to more easily search for Chinese characters in web page titles and URLs.
+ • Restore the last search query when the menu reopens
+ • Search for bookmarks by their folder names
+ • Control how the HOME and END keys behave
 
 
 ★ Use CTRL-TAB as the keyboard shortcut

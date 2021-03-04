@@ -462,8 +462,11 @@ main {
 
 .new-setting {
 	display: flex;
-	align-items: center;
-	margin-bottom: .5em;
+	align-items: baseline;
+}
+
+.new-setting > .control-group {
+	margin: 0;
 }
 
 .new-indicator {
@@ -477,10 +480,6 @@ main {
 @keyframes red-fade {
     0% { color: #f33; }
     100% { color: #d70000; }
-}
-
-.new-setting .control {
-	margin-bottom: 0;
 }
 
 

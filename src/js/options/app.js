@@ -131,6 +131,7 @@ define([
 		{
 			const {
 				settings,
+				showPinyinUpdateMessage,
 				lastSeenOptionsVersion,
 				onChange,
 				onResetShortcuts
@@ -138,9 +139,10 @@ define([
 
 			return <main className={k.IsEdge ? "edge" : "chrome"}>
 				{
-					new URLSearchParams(window.location.search).has("pinyin") &&
-						UpdateMessage
+					showPinyinUpdateMessage && UpdateMessage
 				}
+
+
 				<h1 className="quickey">QuicKey options
 					<div className="help-button"
 						title="Learn more about QuicKey's features"
@@ -251,21 +253,26 @@ define([
 					/>
 				</RadioGroup>
 
-				<RadioGroup
-					id={k.HomeEndBehavior.Key}
-					value={settings[k.HomeEndBehavior.Key]}
-					label={<span>Press <kbd>home</kbd> or <kbd>end</kbd> to:</span>}
-					onChange={onChange}
+				<NewSetting
+					addedVersion={10}
+					lastSeenOptionsVersion={lastSeenOptionsVersion}
 				>
-					<RadioButton
-						label="Jump to the top or bottom of the search results"
-						value={k.HomeEndBehavior.ResultsList}
-					/>
-					<RadioButton
-						label="Move the cursor to the beginning or end of the search box"
-						value={k.HomeEndBehavior.SearchBox}
-					/>
-				</RadioGroup>
+					<RadioGroup
+						id={k.HomeEndBehavior.Key}
+						value={settings[k.HomeEndBehavior.Key]}
+						label={<span>Press <kbd>home</kbd> or <kbd>end</kbd> to:</span>}
+						onChange={onChange}
+					>
+						<RadioButton
+							label="Jump to the top or bottom of the search results"
+							value={k.HomeEndBehavior.ResultsList}
+						/>
+						<RadioButton
+							label="Move the cursor to the beginning or end of the search box"
+							value={k.HomeEndBehavior.SearchBox}
+						/>
+					</RadioGroup>
+				</NewSetting>
 
 
 				<h2>Customizable keyboard shortcuts</h2>
