@@ -152,7 +152,7 @@ You can move tabs to the left or right of the current tab, making it easy to pul
   * Press <b><kbd>ctrl</kbd><kbd>[</kbd></b> to move the selected tab to the left of the current one.
   * Press <b><kbd>ctrl</kbd><kbd>]</kbd></b> to move it to the right.
 
-Include <kbd>shift</kbd> in the shortcut to also unsuspend the tab while moving it.  The <kbd>ctrl</kbd> key should be used on both Windows and macOS.  Note that you cannot move tabs between normal and incognito windows.
+The <kbd>ctrl</kbd> key should be used on both Windows and macOS.  Note that you cannot move tabs between normal and incognito windows.
 
 
 ## Distinguish tabs with identical titles
@@ -170,12 +170,11 @@ To find a bookmark, type <b><kbd>/</kbd><kbd>b</kbd><kbd>space</kbd></b> in the 
   * Press <b><kbd>ctrl</kbd><kbd>enter</kbd></b> (<b><kbd>cmd</kbd><kbd>enter</kbd></b> on macOS) to open it in a new tab in the current window.
   * Press <b><kbd>shift</kbd><kbd>enter</kbd></b> to open it in a new window.
 
-As soon as you type <b><kbd>/</kbd><kbd>b</kbd><kbd>space</kbd></b>, your bookmarks will be listed in alphabetical order, in case you want to browse through them.
+As soon as you type <b><kbd>/</kbd><kbd>b</kbd><kbd>space</kbd></b>, your bookmarks will be listed in alphabetical order, in case you want to browse through them.  Since bookmarks can be organized into folders, the folder path is shown before each bookmark's title.  The folder path can be hidden by unchecking *Show the folder path to each bookmark in its title* on the Options page.
 
 
 ## <a name="history"></a>Search the browser history
 
-To see the last 2000 pages of your browser history in order of recency, type <b><kbd>/</kbd><kbd>h</kbd><kbd>space</kbd></b> in the search box. Or type part of the page's name or URL to narrow the search.
 To find something in the last 2000 pages of your browser history, type <b><kbd>/</kbd><kbd>h</kbd><kbd>space</kbd></b> in the search box, and then part of the page's name or URL.
 
 ![Search history](img/search-history.png)
@@ -188,17 +187,6 @@ As soon as you type <b><kbd>/</kbd><kbd>h</kbd><kbd>space</kbd></b>, the pages f
 ## Delete bookmarks and history items
 
 To delete the selected bookmark or history item, press <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd</kbd><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS). Or hover over an item and click the <img src="img/clear.svg" style="height: 1em; vertical-align: middle;"> button on the right side of the menu. You'll be asked to confirm the deletion of bookmarks.
-
-
-## <a href="https://chrome.google.com/webstore/detail/the-great-suspender/klbibkeccnjlkjkiokjodocebajanakg?hl=en"><img src="img/tgs-icon.png" style="height: 24px;"></a> The Great Suspender integration
-
-If you use the handy extension [The Great Suspender](https://chrome.google.com/webstore/detail/the-great-suspender/klbibkeccnjlkjkiokjodocebajanakg?hl=en) (and you almost certainly do if you have hundreds of tabs open), then suspended tabs will look faded in the list:
-
-![Suspended tab](img/suspended-tab.png)
-
-The original URL is shown in the menu (not that long `chrome-extension://` one you see in the location bar). That means if you search for `chrome` or `extension`, you won't simply match all the suspended tabs, which is what happens in other tab search extensions.
-
-Press <b><kbd>shift</kbd><kbd>enter</kbd></b> to switch to a tab and unsuspend it in one go. Or shift-click it with the mouse.
 
 
 ## Incognito mode

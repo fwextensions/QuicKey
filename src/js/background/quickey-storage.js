@@ -41,12 +41,21 @@ define([
 
 
 		function addDefaultSetting(
-			...keys)
+			...settings)
 		{
 			return async data => {
 				const defaults = (await DefaultData).settings;
 
-				keys.forEach(key => data.settings[key] = defaults[key]);
+				settings.forEach(setting => {
+					const {Key} = setting;
+					const defaultValue = defaults[Key];
+
+					if (typeof defaultValue == "undefined") {
+						throw new Error(`addDefaultSetting(): no default value for "${setting}"`);
+					} else {
+						data.settings[Key] = defaultValue;
+					}
+				});
 			};
 		}
 
@@ -71,12 +80,23 @@ define([
 					// add includeClosedTabs option and lastUsedVersion in
 					// v6.  leave lastUsedVersion empty so the background
 					// code can tell this was an update from an older version.
-				await addDefaultSetting(k.IncludeClosedTabs.Key);
+				await addDefaultSetting(k.IncludeClosedTabs)(data);
 				data.lastUsedVersion = "";
 			}),
-			"6": update(addDefaultSetting(k.MarkTabsInOtherWindows.Key)),
-			"7": update(addDefaultSetting(k.ShowTabCount.Key)),
-			"8": update(addDefaultSetting(k.UsePinyin.Key))
+			"6": update(addDefaultSetting(k.MarkTabsInOtherWindows)),
+			"7": update(addDefaultSetting(k.ShowTabCount)),
+			"8": update(addDefaultSetting(k.UsePinyin)),
+			"9": update(async data =>
+			{
+					// since addDefaultSetting() returns a function, we have to
+					// call it with the stored data passed in by update()
+				await addDefaultSetting(
+					k.RestoreLastQuery,
+					k.ShowBookmarkPaths,
+					k.HomeEndBehavior
+				)(data);
+				data.lastQuery = "";
+			})
 		};
 			// calculate the version by incrementing the highest key in the
 			// Updaters hash, so that the version is automatically increased
@@ -127,6 +147,7 @@ define([
 						// set this to the current storage version so that we
 						// don't show the red badge on a new install
 					lastSeenOptionsVersion: CurrentVersion,
+					lastQuery: "",
 					previousTabIndex: -1,
 					settings: DefaultSettings,
 					tabIDs: [],

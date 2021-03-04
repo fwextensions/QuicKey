@@ -116,12 +116,6 @@ define([
 				disabled: true
 			},
 			{
-				label: <span>Switch to the selected tab and <b>unsuspend it</b></span>,
-				shortcut: "shift+enter",
-				tooltip: "Only applies to tabs suspended by The Great Suspender extension",
-				disabled: true
-			},
-			{
 				label: <span>Open the selected bookmark or history item in the <b>same tab</b></span>,
 				shortcut: "enter",
 				disabled: true

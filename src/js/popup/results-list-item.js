@@ -84,10 +84,10 @@ define([
 		onMouseMove: function(
 			event)
 		{
-			const {props} = this;
+			const {index, isSelected, selectedIndex, setSelectedIndex} = this.props;
 
-			if ((props.selectedIndex > 0 || this.mouseMoveCount > MinMouseMoveCount)
-					&& !props.isSelected) {
+			if ((selectedIndex > 0 || this.mouseMoveCount > MinMouseMoveCount)
+					&& !isSelected) {
 					// the mouse is moving over this item but it's not
 					// selected, which means this is the third mousemove
 					// event and we haven't gotten another mouseenter.  so
@@ -95,7 +95,11 @@ define([
 					// item beyond the first one is selected, which means this
 					// mousemove isn't happening right after the menu was rendered
 					// under the mouse, since the selection has already changed.
-				props.setSelectedIndex(props.index);
+					// pass true so the app treats a mouse selection like one
+					// made by the MRU key, so that the user can press the menu
+					// shortcut, highlight a tab with the mouse, and then release
+					// alt to select it.
+				setSelectedIndex(index, true);
 			} else {
 					// we want to swallow the first two mousemove events because
 					// the item that's rendered under the mouse when the popup
@@ -110,10 +114,10 @@ define([
 		onMouseEnter: function(
 			event)
 		{
-			const {props} = this;
+			const {index, selectedIndex, setSelectedIndex} = this.props;
 
-			if (props.selectedIndex > 0 || this.mouseMoveCount > MinMouseMoveCount) {
-				props.setSelectedIndex(props.index);
+			if (selectedIndex > 0 || this.mouseMoveCount > MinMouseMoveCount) {
+				setSelectedIndex(index, true);
 			}
 		},
 
