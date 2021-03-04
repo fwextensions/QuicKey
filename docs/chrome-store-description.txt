@@ -214,7 +214,7 @@ You can move tabs to the left or right of the current tab, making it easy to pul
  • Press CTRL-[ to move the selected tab to the left of the current one.
  • Press CTRL-] to move it to the right.
 
-Include SHIFT in the shortcut to also unsuspend the tab while moving it. The CTRL key should be used on both Windows and macOS. Note that you cannot move tabs between normal and incognito windows.
+The CTRL key should be used on both Windows and macOS. Note that you cannot move tabs between normal and incognito windows.
 
 
 ★ Distinguish tabs with identical titles
@@ -248,13 +248,6 @@ As soon as you type "/h ", the pages from your history will be listed in order o
 To delete the selected bookmark or history item, press CTRL-W (CMD-CTRL-W on macOS). Or hover over an item and click the X button on the right side of the menu. You'll be asked to confirm the deletion of bookmarks.
 
 
-★ The Great Suspender integration
-
-If you use the handy extension "The Great Suspender", then suspended tabs will look faded in the list, and the original URL is shown (not that long chrome-extension:// one you see in the location bar). That means if you search for "chrome" or "extension", you won't simply match all the suspended tabs, which is what happens in other tab search extensions.
-
-Press SHIFT-ENTER to switch to a tab and unsuspend it in one go. Or shift-click it with the mouse.
-
-
 ★ Incognito mode
 
 To switch to incognito tabs as well as normal ones, right-click the QuicKey icon and select Options from the menu. Scroll to the very bottom of the QuicKey options page and then click the "Change incognito settings" button. On the extensions page that opens, scroll down to the "Allow in incognito" option and click the toggle button next to it.
@@ -275,10 +268,10 @@ You can also copy the URL and title of the selected tab, bookmark or history ite
 
 When first installed, QuicKey asks for these permissions:
 
- ➤ "Read and change your browsing history on all signed-in devices"
+ ➤ "Read and change your browsing history on all your signed-in devices"
 
       QuicKey uses this permission to let you search the titles and URLs of
-      the open tabs, as well as pages from your history. The "all signed-in
+      the open tabs, as well as pages from your history. The "all your signed-in
       devices" part is there only so that recently closed tabs can be restored
       with their full history. The only time QuicKey changes your browsing
       history is when you choose to delete a history item.
