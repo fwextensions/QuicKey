@@ -8,6 +8,21 @@ comments: true
 # Release history
 
 
+## 1.6.0 - 2021-03-05
+
+### Added
+
+* Option to display the folder path to each bookmark in its title, so that you can search for bookmarks by folder names.
+
+* Option to restore the last search query when the menu is reopened.
+
+* Option to choose whether the <kbd>home</kbd> and <kbd>end</kbd> keys navigate the results list or move the cursor in the search box.
+
+### Fixed
+
+* After using the *Switch instantly* command to switch to the previous tab and then quickly clicking a different tab, using the command again to switch back would sometimes not select the expected tab.   
+
+
 ## 1.5.1 - 2020-12-24
 
 ### Fixed

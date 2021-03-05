@@ -44,9 +44,7 @@ With a little extra work, you can even make *QuicKey* respond to the Holy Grail 
 
 ## Installation
 
-<p class="install"><button onclick="installExtension(1)">Add to Chrome</button> or go to the <a href="https://chrome.google.com/webstore/detail/quickey-–-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg">Chrome Web Store</a> to install <em>QuicKey</em>.</p>
-
-<p class="install-fallback" style="display: none">Go to the <a href="https://chrome.google.com/webstore/detail/quickey-–-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg">Chrome Web Store</a> in Chrome to install <em>QuicKey</em>.</p>
+Install *QuicKey* from the <a href="https://chrome.google.com/webstore/detail/quickey-–-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg">Chrome Web Store</a>.
 
 Once the extension is installed, you can click the <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> button on the toolbar to open the search box.  But if you like this extension, you'll probably prefer using the default keyboard shortcut listed above.
 
@@ -208,7 +206,7 @@ Tabs in incognito mode display the incognito icon under the page's favicon, so y
 
 *QuicKey* will respond to changes in your computer's dark mode setting with darker colors that match your browser's user interface.
 
-![Dark mode](img/dark-mode.png)
+<img src="img/dark-mode.png" style="width: 522px;">
 
 
 ## Copy a URL or title

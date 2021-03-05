@@ -1,4 +1,4 @@
-<img src="docs/img/search-results-open.png" width="658" alt="QuicKey search results">
+<img src="docs/img/screenshot-1.png" width="640" alt="QuicKey search results">
 
 # *QuicKey*
 
@@ -68,7 +68,7 @@ Which shortcuts to use is up to you.  Double-pressing <b><kbd>alt</kbd><kbd>Q</k
 
 Selecting from the MRU menu by holding down the <kbd>alt</kbd> key provides the closest experience to a typical <b><kbd>alt</kbd><kbd>tab</kbd></b> menu, but you need to use <kbd>W</kbd> instead of <kbd>tab</kbd> to navigate while the menu is open (due to limitations in the Chrome platform).
 
-You can change any of these shortcuts by clicking the <img src="docs/imggear.svg" height="19"> icon in the menu or by right-clicking the *QuicKey* icon and selecting *Options*.  Then scroll down and click *Change browser shortcuts*. Look for the *Switch to the previous/next tab* shortcuts.
+You can change any of these shortcuts by clicking the <img src="docs/img/gear.svg" height="16"> icon in the menu or by right-clicking the *QuicKey* icon and selecting *Options*.  Then scroll down and click *Change browser shortcuts*. Look for the *Switch to the previous/next tab* shortcuts.
 
 If you enable the option to show the number of open tabs on the *QuicKey* icon, the badge containing that number will change color while you navigate to older tabs, rather than the icon inverting.
 
@@ -95,15 +95,15 @@ Recently used tabs get a slight boost in the search results ranking, so getting 
 
 ## Customize shortcuts and other options
 
-To customize how *QuicKey* behaves, click the <img src="docs/img/gear.svg" height="19"> icon in the menu, or right-click its toolbar icon <img src="docs/img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> and select *Options* from the menu:
+To customize how *QuicKey* behaves, click the <img src="docs/img/gear.svg" height="16"> icon in the menu, or right-click its toolbar icon <img src="docs/img/icon-38.png" height="19"> and select *Options* from the menu:
 
-<img src="docs/img/options-in-menu.png" style="width: 208px;">
+<img src="docs/img/options-in-menu.png" width="208">
 
 On the *QuicKey options* page, you can change the behavior of the <kbd>space</kbd> and <kbd>esc</kbd> keys, mark tabs in other windows with an icon, hide closed tabs from the search results, show the number of open tabs, and customize many of the keyboard shortcuts described here.
 
 If you change the keyboard shortcut for showing the *QuicKey* menu to something other than the default <b><kbd>alt</kbd><kbd>Q</kbd></b> or if you have a non-US keyboard, you'll probably want to also change the key that's used to navigate down the list of recently used tabs (which defaults to <kbd>W</kbd>).  For instance, if you change the menu shortcut to <b><kbd>alt</kbd><kbd>Z</kbd></b>, you might want to change the navigation key to <kbd>X</kbd>, which is right next door.  To change it, go to the *Options* page, click in the first keyboard shortcut picker, and press <kbd>X</kbd>.
 
-If new settings have been added to *QuicKey* since the last time you looked at the options page, the <img src="docs/img/gear.svg" height="19"> icon will display a red dot to let you know.
+If new settings have been added to *QuicKey* since the last time you looked at the options page, the <img src="docs/img/gear.svg" height="16"> icon will display a red dot to let you know.
 
 
 ## Close and reopen tabs
@@ -112,13 +112,13 @@ To close the selected tab, press <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd
 
 <img src="docs/img/close-button.png" width="624" alt="Close button">
 
-When you open *QuicKey*, the 25 most recently closed tabs are listed below the recent tabs and shown in a faded state with a <img src="docs/img/history.svg" height="19"> icon:
+When you open *QuicKey*, the 25 most recently closed tabs are listed below the recent tabs and shown in a faded state with a <img src="docs/img/history.svg" height="16"> icon:
 
 <img src="docs/img/closed-tab.png" width="624" alt="Closed tab">
 
 They are also returned when you type a query, though their rank in the list of results is lower than open tabs.  Click a closed tab to reopen it in its original location and with all of its browsing history intact.
 
-If you don't want any closed tabs to be shown, open the *QuicKey options* page and uncheck *Include recently closed tabs in the search results*.  You can also remove the selected closed tab from the browser's history by pressing <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd</kbd><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS) or by clicking its <img src="docs/img/clear.svg" height="19"> button on the right side of the menu. 
+If you don't want any closed tabs to be shown, open the *QuicKey options* page and uncheck *Include recently closed tabs in the search results*.  You can also remove the selected closed tab from the browser's history by pressing <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd</kbd><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS) or by clicking its <img src="docs/img/clear.svg" height="16"> button on the right side of the menu. 
 
 
 ## Move tabs
@@ -162,14 +162,14 @@ As soon as you type <b><kbd>/</kbd><kbd>h</kbd><kbd>space</kbd></b>, the pages f
 
 ## Delete bookmarks and history items
 
-To delete the selected bookmark or history item, press <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd</kbd><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS). Or hover over an item and click the <img src="docs/img/clear.svg" height="19"> button on the right side of the menu. You'll be asked to confirm the deletion of bookmarks.
+To delete the selected bookmark or history item, press <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd</kbd><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS). Or hover over an item and click the <img src="docs/img/clear.svg" height="16"> button on the right side of the menu. You'll be asked to confirm the deletion of bookmarks.
 
 
 ## Incognito mode
 
-To switch to incognito tabs as well as normal ones, click the <img src="docs/img/gear.svg" height="19"> icon in the menu, or right-click the *QuicKey* icon <img src="docs/img/icon-38.png" height="19"> and select *Options* from the menu:
+To switch to incognito tabs as well as normal ones, click the <img src="docs/img/gear.svg" height="16"> icon in the menu, or right-click the *QuicKey* icon <img src="docs/img/icon-38.png" height="19"> and select *Options* from the menu:
 
-<img src="docs/img/options-in-menu.png" style="width: 208px;">
+<img src="docs/img/options-in-menu.png" width="208">
 
 Scroll to the very bottom of the *QuicKey options* page and then click the *Change incognito settings* button.  On the extensions page that opens, scroll down to the *Allow in incognito* option and click the toggle button:
 
@@ -184,7 +184,7 @@ Tabs in incognito mode display the incognito icon under the page's favicon, so y
 
 *QuicKey* will respond to changes in your computer's dark mode setting with darker colors that match your browser's user interface.
 
-![Dark mode](img/dark-mode.png)
+<img src="docs/img/dark-mode.png" width="522">
 
 
 ## Copy a URL or title
