@@ -20,6 +20,13 @@
 	}
 
 
+	function getStack(
+		error)
+	{
+		return (error && error.stack && error.stack.replace(PathPattern, "")) || "";
+	}
+
+
 	function init()
 	{
 		if (typeof require !== "function" && retryCount < MaxRetries) {
@@ -44,23 +51,21 @@
 			{
 				try {
 					const timestamp = new Date().toLocaleString();
+					const {detail, reason = ((detail && detail.reason) || "")} = event;
+					const stack = getStack(event.error) || getStack(reason);
 
-					if (event.reason) {
-						console.log(`Caught unhandled promise rejection at ${timestamp}: ${event.reason}`);
-						tracker.exception(event.reason, true);
+					if (event.type == "unhandledrejection") {
+						const errorMessage = `Caught unhandled promise rejection at ${timestamp}:\n${stack}`;
+
+						console.error(errorMessage);
+						tracker.exception(errorMessage, true);
 					} else if (event.preventDefault) {
-							// error may be null in some cases, like when
-							// running a script in the console
-						const {error} = event;
-						const stack = (error && error.stack &&
-							error.stack.replace(PathPattern, "")) || "";
-
-						console.log(`Caught unhandled exception at ${timestamp}:\n${stack}`);
+						console.error(`Caught unhandled exception at ${timestamp}:\n${stack}`);
 						tracker.exception(error, true);
 						event.preventDefault();
 					}
 				} catch (e) {
-					console.log("Unhandled error in the error handler (oh, the irony!)", e);
+					console.error("Unhandled error in the error handler (oh, the irony!)", e);
 				}
 			}
 

@@ -75,8 +75,9 @@ define("popup/app", [
 		bookmarksPromise: null,
 		historyPromise: null,
 		forceUpdate: false,
+		selectAllSearchBoxText: false,
 		gotModifierUp: false,
-		gotMRUKey: true,
+		gotMRUKey: false,
 		mruModifier: "Alt",
 		resultsList: null,
 		settings: settings.getDefaults(),
@@ -93,6 +94,14 @@ define("popup/app", [
 							// new settings have been added since the last time
 							// the user opened the options page
 						this.setState({ newSettingsAvailable: true });
+					}
+
+					if (data.settings[k.RestoreLastQuery.Key] && data.lastQuery) {
+							// we need to force the input to update to the stored
+							// text, and then force it to select all
+						this.forceUpdate = true;
+						this.selectAllSearchBoxText = true;
+						this.setSearchBoxText(data.lastQuery);
 					}
 
 						// pass the data we got from storage to settings so it
@@ -153,13 +162,24 @@ define("popup/app", [
 				// also handles the edge case where the menu is open and a tab
 				// in another window is closed.
 			chrome.tabs.onRemoved.addListener(this.onTabRemoved);
+
+			window.addEventListener("unload", () => {
+					// if the restore last query option is off, clear any
+					// existing stored query
+				const lastQuery = this.settings[k.RestoreLastQuery.Key]
+					? this.state.searchBoxText
+					: "";
+
+				storage.set(() => ({ lastQuery }));
+			});
 		},
 
 
 		componentDidUpdate: function()
 		{
-				// we only want this flag to be true through one render cycle
+				// we only want these flags to be true through one render cycle
 			this.forceUpdate = false;
+			this.selectAllSearchBoxText = false;
 		},
 
 
@@ -224,6 +244,41 @@ define("popup/app", [
 		},
 
 
+		setSearchBoxText: function(
+			searchBoxText)
+		{
+			let query = searchBoxText;
+
+			if (searchBoxText.indexOf(BookmarksQuery) == 0) {
+				this.mode = "bookmarks";
+				query = searchBoxText.slice(BookmarksQuery.length);
+
+				if (!this.bookmarks.length) {
+						// we haven't fetched the bookmarks yet, so load them
+						// and then call getMatchingItems() after they're ready
+					this.loadPromisedItems(() => getBookmarks(this.settings[k.ShowBookmarkPaths.Key]), "bookmarks");
+				}
+			} else if (searchBoxText.indexOf(HistoryQuery) == 0) {
+				this.mode = "history";
+				query = searchBoxText.slice(HistoryQuery.length);
+
+				if (!this.history.length) {
+					this.loadPromisedItems(getHistory, "history");
+				}
+			} else if (CommandQueryPattern.test(searchBoxText)) {
+					// we don't know if the user's going to type b or h, so
+					// don't match any items
+				this.mode = "command";
+				query = "";
+			} else {
+				this.mode = "tabs";
+			}
+
+			this.setState({ searchBoxText });
+			this.setQuery(query);
+		},
+
+
 		setQuery: function(
 			query)
 		{
@@ -267,7 +322,7 @@ define("popup/app", [
 					// to set forceUpdate so the input updates.
 				this.forceUpdate = true;
 				this.resultsList.scrollToRow(0);
-				this.onQueryChange({ target: { value: searchBoxText }});
+				this.setSearchBoxText(searchBoxText);
 			}
 		},
 
@@ -593,36 +648,7 @@ define("popup/app", [
 		onQueryChange: function(
 			event)
 		{
-			const searchBoxText = event.target.value;
-			let query = searchBoxText;
-
-			if (searchBoxText.indexOf(BookmarksQuery) == 0) {
-				this.mode = "bookmarks";
-				query = searchBoxText.slice(BookmarksQuery.length);
-
-				if (!this.bookmarks.length) {
-						// we haven't fetched the bookmarks yet, so load them
-						// and then call getMatchingItems() after they're ready
-					this.loadPromisedItems(getBookmarks, "bookmarks");
-				}
-			} else if (searchBoxText.indexOf(HistoryQuery) == 0) {
-				this.mode = "history";
-				query = searchBoxText.slice(HistoryQuery.length);
-
-				if (!this.history.length) {
-					this.loadPromisedItems(getHistory, "history");
-				}
-			} else if (CommandQueryPattern.test(searchBoxText)) {
-					// we don't know if the user's going to type b or h, so
-					// don't match any items
-				this.mode = "command";
-				query = "";
-			} else {
-				this.mode = "tabs";
-			}
-
-			this.setState({ searchBoxText });
-			this.setQuery(query);
+			this.setSearchBoxText(event.target.value);
 		},
 
 
@@ -676,6 +702,7 @@ define("popup/app", [
 				<SearchBox
 					mode={this.mode}
 					forceUpdate={this.forceUpdate}
+					selectAll={this.selectAllSearchBoxText}
 					query={searchBoxText}
 					onChange={this.onQueryChange}
 					onKeyDown={this.onKeyDown}

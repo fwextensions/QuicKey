@@ -131,6 +131,7 @@ define([
 		{
 			const {
 				settings,
+				showPinyinUpdateMessage,
 				lastSeenOptionsVersion,
 				onChange,
 				onResetShortcuts
@@ -138,9 +139,10 @@ define([
 
 			return <main className={k.IsEdge ? "edge" : "chrome"}>
 				{
-					new URLSearchParams(window.location.search).has("pinyin") &&
-						UpdateMessage
+					showPinyinUpdateMessage && UpdateMessage
 				}
+
+
 				<h1 className="quickey">QuicKey options
 					<div className="help-button"
 						title="Learn more about QuicKey's features"
@@ -149,7 +151,76 @@ define([
 				</h1>
 
 
-				<h2>General</h2>
+				<h2>Search results</h2>
+
+				<Checkbox
+					id={k.IncludeClosedTabs.Key}
+					label={<span>Include recently closed tabs in the search results (marked with <HistoryIcon />)</span>}
+					value={settings[k.IncludeClosedTabs.Key]}
+					onChange={onChange}
+				>
+					<div className="subtitle">
+						Selecting a closed tab will reopen it with its full history.
+					</div>
+				</Checkbox>
+				<Checkbox
+					id={k.MarkTabsInOtherWindows.Key}
+					label={<span>Mark tabs that are not in the current window with <WindowIcon /></span>}
+					value={settings[k.MarkTabsInOtherWindows.Key]}
+					onChange={onChange}
+				/>
+				<NewSetting
+					addedVersion={10}
+					lastSeenOptionsVersion={lastSeenOptionsVersion}
+				>
+					<Checkbox
+						id={k.ShowBookmarkPaths.Key}
+						label="Show the folder path to each bookmark in its title"
+						value={settings[k.ShowBookmarkPaths.Key]}
+						onChange={onChange}
+					/>
+				</NewSetting>
+				<NewSetting
+					addedVersion={10}
+					lastSeenOptionsVersion={lastSeenOptionsVersion}
+				>
+					<Checkbox
+						id={k.RestoreLastQuery.Key}
+						label="Restore the last search query when the menu is reopened"
+						value={settings[k.RestoreLastQuery.Key]}
+						onChange={onChange}
+					/>
+				</NewSetting>
+				<NewSetting
+					addedVersion={9}
+					lastSeenOptionsVersion={lastSeenOptionsVersion}
+				>
+					<Checkbox
+						id={k.UsePinyin.Key}
+						label="Use pinyin to match Chinese characters in titles and URLs"
+						value={settings[k.UsePinyin.Key]}
+						onChange={onChange}
+					/>
+				</NewSetting>
+
+
+				<h2>Toolbar icon</h2>
+
+				<NewSetting
+					addedVersion={8}
+					lastSeenOptionsVersion={lastSeenOptionsVersion}
+				>
+					<Checkbox
+						id={k.ShowTabCount.Key}
+						label="Show the number of open tabs in a badge on the QuicKey icon"
+						value={settings[k.ShowTabCount.Key]}
+						onChange={onChange}
+					/>
+				</NewSetting>
+
+
+				<h2>Search box keyboard shortcuts</h2>
+
 				<RadioGroup
 					id={k.SpaceBehavior.Key}
 					value={settings[k.SpaceBehavior.Key]}
@@ -182,52 +253,38 @@ define([
 					/>
 				</RadioGroup>
 
-				<Checkbox
-					id={k.IncludeClosedTabs.Key}
-					label={<span>Include recently closed tabs in the search results (marked with <HistoryIcon />)</span>}
-					value={settings[k.IncludeClosedTabs.Key]}
-					onChange={onChange}
-				>
-					<div className="subtitle">
-						Selecting a closed tab will reopen it with its full history.
-					</div>
-				</Checkbox>
-				<Checkbox
-					id={k.MarkTabsInOtherWindows.Key}
-					label={<span>Mark tabs that are not in the current window with <WindowIcon /></span>}
-					value={settings[k.MarkTabsInOtherWindows.Key]}
-					onChange={onChange}
-				/>
 				<NewSetting
-					addedVersion={8}
+					addedVersion={10}
 					lastSeenOptionsVersion={lastSeenOptionsVersion}
 				>
-					<Checkbox
-						id={k.ShowTabCount.Key}
-						label="Show the number of open tabs on the QuicKey icon"
-						value={settings[k.ShowTabCount.Key]}
+					<RadioGroup
+						id={k.HomeEndBehavior.Key}
+						value={settings[k.HomeEndBehavior.Key]}
+						label={<span>Press <kbd>home</kbd> or <kbd>end</kbd> to:</span>}
 						onChange={onChange}
-					/>
-				</NewSetting>
-				<NewSetting
-					addedVersion={9}
-					lastSeenOptionsVersion={lastSeenOptionsVersion}
-				>
-					<Checkbox
-						id={k.UsePinyin.Key}
-						label="Use pinyin to match Chinese characters in titles and URLs"
-						value={settings[k.UsePinyin.Key]}
-						onChange={onChange}
-					/>
+					>
+						<RadioButton
+							label="Jump to the top or bottom of the search results"
+							value={k.HomeEndBehavior.ResultsList}
+						/>
+						<RadioButton
+							label="Move the cursor to the beginning or end of the search box"
+							value={k.HomeEndBehavior.SearchBox}
+						/>
+					</RadioGroup>
 				</NewSetting>
 
+
 				<h2>Customizable keyboard shortcuts</h2>
+
 				{this.renderShortcutList(Shortcuts.customizable)}
 				<button className="key"
 					onClick={onResetShortcuts}
 				>Reset shortcuts</button>
 
+
 				<h2>Browser keyboard shortcuts</h2>
+
 				<div className="chrome-shortcuts"
 					title="Click to open the browser's keyboard shortcuts page"
 					onClick={this.handleChangeShortcutsClick}
@@ -243,9 +300,12 @@ define([
 				>Use ctrl-tab as a shortcut</button>
 
 				<h2>Other keyboard shortcuts</h2>
+
 				{this.renderShortcutList(Shortcuts.fixed)}
 
+
 				<h2>{IncognitoNameUC} windows</h2>
+
 				<p>By default, QuicKey can't switch to tabs in {IncognitoNameLC} windows.
 					To enable this functionality, click the button below, then
 					scroll down to the <i>Allow in {IncognitoNameLC}</i> setting
@@ -262,7 +322,9 @@ define([
 					onClick={this.handleChangeIncognitoClick}
 				>Change {IncognitoNameLC} setting</button>
 
+
 				<h2>Feedback and support</h2>
+
 				<p>If you have a question, found a bug, or thought of a new
 					feature you'd like to see, please visit the support page and
 					leave a comment.

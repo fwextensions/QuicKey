@@ -25,6 +25,7 @@ define([
 		{
 			return {
 				settings: null,
+				showPinyinUpdateMessage: false,
 					// default this to Infinity so that no NEW badges are shown
 					// until we get the real value from storage
 				lastSeenOptionsVersion: Infinity
@@ -34,20 +35,31 @@ define([
 
 		componentDidMount: function()
 		{
+			const params = new URLSearchParams(location.search);
+			const showPinyinUpdateMessage = params.has("pinyin");
+			const paramLastSeenOptionsVersion = parseInt(params.get("lastSeenOptionsVersion"));
+
 				// asynchronously get settings now and whenever the window is
 				// focused, in case the Chrome shortcuts were changed in the
 				// Extensions shortcuts page
 			this.updateSettings();
 			window.addEventListener("focus", this.updateSettings);
 
-				// get the lastSeenOptionsVersion from storage and save it to
-				// our state so it's used in render.  then update the value in
-				// storage to the current version, so that the red badge in the
-				// popup is cleared and we won't show NEW badges the next time
-				// the options page is opened.
+				// get the lastSeenOptionsVersion from storage, or from a URL
+				// param for testing purposes.  a flag to show a message about
+				// pinyin support may also be passed in when updating from 1.4.0.
 			storage.set(({lastSeenOptionsVersion}) => {
-				this.setState({ lastSeenOptionsVersion });
+				this.setState({
+					showPinyinUpdateMessage,
+					lastSeenOptionsVersion: Number.isInteger(paramLastSeenOptionsVersion)
+						? paramLastSeenOptionsVersion
+						: lastSeenOptionsVersion
+				});
 
+					// update the lastSeenOptionsVersion value in storage to the
+					// current extension version, so that the red badge in the
+					// popup is cleared and we won't show NEW badges the next
+					// time the options page is opened
 				return { lastSeenOptionsVersion: storage.version };
 			});
 			this.tracker.pageview();
@@ -109,7 +121,11 @@ define([
 
 		render: function()
 		{
-			const {settings, lastSeenOptionsVersion} = this.state;
+			const {
+				settings,
+				showPinyinUpdateMessage,
+				lastSeenOptionsVersion
+			} = this.state;
 
 				// for the first render, don't return any UI so that it doesn't
 				// show default values that then change when the current
@@ -118,6 +134,7 @@ define([
 				{settings &&
 					<OptionsApp
 						settings={settings}
+						showPinyinUpdateMessage={showPinyinUpdateMessage}
 						lastSeenOptionsVersion={lastSeenOptionsVersion}
 						tracker={this.tracker}
 						onChange={this.handleChange}

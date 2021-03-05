@@ -19,10 +19,13 @@ define([
 	const DefaultSettings = {
 		[k.SpaceBehavior.Key]: k.SpaceBehavior.Select,
 		[k.EscBehavior.Key]: k.EscBehavior.Clear,
+		[k.HomeEndBehavior.Key]: k.HomeEndBehavior.ResultsList,
 		[k.MarkTabsInOtherWindows.Key]: true,
 		[k.IncludeClosedTabs.Key]: true,
 		[k.ShowTabCount.Key]: false,
 		[k.UsePinyin.Key]: false,
+		[k.RestoreLastQuery.Key]: false,
+		[k.ShowBookmarkPaths.Key]: true,
 		[k.Shortcuts.Key]: {
 			mac: MacDefaults,
 			win: DefaultShortcuts

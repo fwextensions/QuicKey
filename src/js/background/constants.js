@@ -29,6 +29,11 @@ define([
 			Clear: "clear",
 			Close: "close"
 		},
+		HomeEndBehavior: {
+			Key: "homeEndBehavior",
+			ResultsList: "resultsList",
+			SearchBox: "searchBox"
+		},
 		MarkTabsInOtherWindows: {
 			Key: "markTabsInOtherWindows"
 		},
@@ -40,6 +45,12 @@ define([
 		},
 		UsePinyin: {
 			Key: "usePinyin"
+		},
+		RestoreLastQuery: {
+			Key: "restoreLastQuery"
+		},
+		ShowBookmarkPaths: {
+			Key: "showBookmarkPaths"
 		},
 		Shortcuts: {
 			Key: "shortcuts",
