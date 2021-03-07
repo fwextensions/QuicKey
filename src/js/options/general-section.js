@@ -40,6 +40,28 @@ define([
 					onChange={onChange}
 				/>
 				<NewSetting
+					addedVersion={10}
+					lastSeenOptionsVersion={lastSeenOptionsVersion}
+				>
+					<Checkbox
+						id={k.ShowBookmarkPaths.Key}
+						label="Show the folder path to each bookmark in its title"
+						value={settings[k.ShowBookmarkPaths.Key]}
+						onChange={onChange}
+					/>
+				</NewSetting>
+				<NewSetting
+					addedVersion={10}
+					lastSeenOptionsVersion={lastSeenOptionsVersion}
+				>
+					<Checkbox
+						id={k.RestoreLastQuery.Key}
+						label="Restore the last search query when the menu is reopened"
+						value={settings[k.RestoreLastQuery.Key]}
+						onChange={onChange}
+					/>
+				</NewSetting>
+				<NewSetting
 					addedVersion={9}
 					lastSeenOptionsVersion={lastSeenOptionsVersion}
 				>
@@ -51,6 +73,7 @@ define([
 					/>
 				</NewSetting>
 
+
 				<h2>Toolbar icon</h2>
 
 				<NewSetting
@@ -59,7 +82,7 @@ define([
 				>
 					<Checkbox
 						id={k.ShowTabCount.Key}
-						label="Show the number of open tabs on the QuicKey toolbar icon"
+						label="Show the number of open tabs in a badge on the QuicKey toolbar icon"
 						value={settings[k.ShowTabCount.Key]}
 						onChange={onChange}
 					/>

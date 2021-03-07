@@ -48,10 +48,6 @@ define([
 			ResultsList: "resultsList",
 			SearchBox: "searchBox"
 		},
-		PopupType: {
-			Key: "popupType",
-			Window: "window",
-			Tab: "tab"
 		HidePopupBehavior: {
 			Key: "hidePopupBehavior",
 			Offscreen: "offscreen",

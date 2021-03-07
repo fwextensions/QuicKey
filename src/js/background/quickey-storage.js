@@ -97,6 +97,15 @@ define([
 				)(data);
 				data.lastQuery = "";
 				await addDefaultSetting(k.NavigateRecentsWithPopup.Key);
+			}),
+			"10": update(async data =>
+			{
+				await addDefaultSetting(
+					k.HidePopupBehavior,
+					k.NavigateRecentsWithPopup
+				)(data);
+				data.popupAdjustmentWidth = 0;
+				data.popupAdjustmentHeight = 0;
 			})
 		};
 			// calculate the version by incrementing the highest key in the

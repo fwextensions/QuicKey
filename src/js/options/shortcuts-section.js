@@ -2,6 +2,7 @@ define([
 	"react",
 	"jsx!./controls",
 	"jsx!./sections",
+	"jsx!./new-setting",
 	"jsx!./keyboard-shortcuts",
 	"jsx!./shortcut-picker",
 	"background/constants"
@@ -9,6 +10,7 @@ define([
 	React,
 	{RadioButton, RadioGroup},
 	{Section},
+	NewSetting,
 	Shortcuts,
 	ShortcutPicker,
 	k
@@ -74,7 +76,13 @@ define([
 
 		render: function()
 		{
-			const {id, settings, onChange, onResetShortcuts} = this.props;
+			const {
+				id,
+				settings,
+				lastSeenOptionsVersion,
+				onChange,
+				onResetShortcuts
+			} = this.props;
 
 			return (
 				<Section id={id}>
@@ -112,12 +120,35 @@ define([
 						/>
 					</RadioGroup>
 
+					<NewSetting
+						addedVersion={10}
+						lastSeenOptionsVersion={lastSeenOptionsVersion}
+					>
+						<RadioGroup
+							id={k.HomeEndBehavior.Key}
+							value={settings[k.HomeEndBehavior.Key]}
+							label={<span>Press <kbd>home</kbd> or <kbd>end</kbd> to:</span>}
+							onChange={onChange}
+						>
+							<RadioButton
+								label="Jump to the top or bottom of the search results"
+								value={k.HomeEndBehavior.ResultsList}
+							/>
+							<RadioButton
+								label="Move the cursor to the beginning or end of the search box"
+								value={k.HomeEndBehavior.SearchBox}
+							/>
+						</RadioGroup>
+					</NewSetting>
+
+
 					<h2>Customizable shortcuts</h2>
 
 					{this.renderShortcutList(Shortcuts.customizable)}
 					<button className="key"
 						onClick={onResetShortcuts}
 					>Reset shortcuts</button>
+
 
 					<h2>Browser shortcuts</h2>
 
@@ -134,6 +165,7 @@ define([
 						title={`Learn how to make ${k.IsEdge ? "Edge" : "Chrome"} use ctrl-tab as a shortcut`}
 						onClick={this.handleCtrlTabClick}
 					>Use ctrl-tab as a shortcut</button>
+
 
 					<h2>Other shortcuts</h2>
 

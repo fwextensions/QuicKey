@@ -82,7 +82,6 @@ define("popup/app", [
 		historyPromise: null,
 		forceUpdate: false,
 		selectAllSearchBoxText: false,
-		closeWindowCalled: false,
 		openedForSearch: false,
 		ignoreNextBlur: false,
 		navigatingRecents: false,
@@ -206,16 +205,6 @@ define("popup/app", [
 				})
 			}
 
-			this.props.port.onMessage.addListener(this.onMessage);
-
-				// annoyingly, there seems to be a bug in Chrome where the
-				// closed tab is still around when the callback passed to
-				// chrome.tabs.remove() is called.  so we need to add an
-				// onRemoved handler to listen for the actual removal.  this
-				// also handles the edge case where the menu is open and a tab
-				// in another window is closed.
-			chrome.tabs.onRemoved.addListener(this.onTabRemoved);
-
 			window.addEventListener("unload", () => {
 					// if the restore last query option is off, clear any
 					// existing stored query
@@ -225,6 +214,16 @@ define("popup/app", [
 
 				storage.set(() => ({ lastQuery }));
 			});
+
+			this.props.port.onMessage.addListener(this.onMessage);
+
+				// annoyingly, there seems to be a bug in Chrome where the
+				// closed tab is still around when the callback passed to
+				// chrome.tabs.remove() is called.  so we need to add an
+				// onRemoved handler to listen for the actual removal.  this
+				// also handles the edge case where the menu is open and a tab
+				// in another window is closed.
+			chrome.tabs.onRemoved.addListener(this.onTabRemoved);
 		},
 
 
