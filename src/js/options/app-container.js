@@ -27,6 +27,7 @@ define([
 			return {
 				settings: null,
 				showPinyinUpdateMessage: false,
+				defaultSection: "general",
 					// default this to Infinity so that no NEW badges are shown
 					// until we get the real value from storage
 				lastSeenOptionsVersion: Infinity
@@ -38,6 +39,7 @@ define([
 		{
 			const params = new URLSearchParams(location.search);
 			const showPinyinUpdateMessage = params.has("pinyin");
+			const defaultSection = params.get("section") || this.state.defaultSection;
 			const paramLastSeenOptionsVersion = parseInt(params.get("lastSeenOptionsVersion"));
 
 				// asynchronously get settings now and whenever the window is
@@ -52,6 +54,7 @@ define([
 			storage.set(({lastSeenOptionsVersion}) => {
 				this.setState({
 					showPinyinUpdateMessage,
+					defaultSection,
 					lastSeenOptionsVersion: Number.isInteger(paramLastSeenOptionsVersion)
 						? paramLastSeenOptionsVersion
 						: lastSeenOptionsVersion
@@ -130,6 +133,7 @@ define([
 			const {
 				settings,
 				showPinyinUpdateMessage,
+				defaultSection,
 				lastSeenOptionsVersion
 			} = this.state;
 
@@ -141,6 +145,7 @@ define([
 					<OptionsApp
 						settings={settings}
 						showPinyinUpdateMessage={showPinyinUpdateMessage}
+						defaultSection={defaultSection}
 						lastSeenOptionsVersion={lastSeenOptionsVersion}
 						tracker={this.tracker}
 						onChange={this.handleChange}

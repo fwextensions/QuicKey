@@ -30,7 +30,7 @@ define([
 		getInitialState: function()
 		{
 			return {
-				selectedSection: new URLSearchParams(location.search).get("section") || "general"
+				selectedSection: this.props.defaultSection
 			};
 		},
 
@@ -79,10 +79,7 @@ define([
 			return <main className={k.IsEdge ? "edge" : "chrome"}>
 				{
 					showPinyinUpdateMessage && UpdateMessage
-					new URLSearchParams(location.search).has("pinyin") &&
-						UpdateMessage
 				}
-
 
 				<h1 className="quickey">QuicKey options
 					<div className="help-button"

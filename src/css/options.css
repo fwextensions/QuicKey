@@ -533,12 +533,12 @@ main {
 }
 
 .control-group {
-	margin: 1em 0 2em 0;
+	padding: 0 0 2em 0;
 }
 
 .control-group .label {
-	line-height: 1.5;
-	margin-bottom: .25em;
+	line-height: 1.4;
+	margin: .25em 0;
 }
 
 .control-group .label kbd, label kbd {
@@ -566,10 +566,11 @@ main {
 .new-setting {
 	display: flex;
 	align-items: self-start;
+	position: relative;
 }
 
 .new-setting > .control-group {
-	margin: 0;
+	padding: 0;
 }
 
 .new-indicator {
@@ -579,6 +580,9 @@ main {
 	line-height: 2.1em;
 	text-indent: -3.5em;
 	animation: red-fade 3s infinite ease-out;
+	left: -3.5em;
+	top: .75em;
+	position: absolute;
 }
 
 @keyframes red-fade {
