@@ -87,34 +87,37 @@ define([
 					<h2>Show popup window while navigating recent tabs</h2>
 
 					<NewSetting
-						addedVersion={10}
+						addedVersion={11}
 						lastSeenOptionsVersion={lastSeenOptionsVersion}
 					>
 						<Checkbox
 							id={k.NavigateRecentsWithPopup.Key}
-							label={<span>Show the recent tab list in a popup while navigating
-								with <Shortcut keys={["alt", "A"]}/> and <Shortcut keys={["alt", "S"]}/></span>}
+							label={<span>Show the recent tab list in a popup when
+								using <Shortcut keys={["alt", "A"]}/> and <Shortcut keys={["alt", "S"]}/></span>}
 							value={settings[k.NavigateRecentsWithPopup.Key]}
 							onChange={onChange}
 						/>
 					</NewSetting>
 
+
 					<h2>Hide popup window</h2>
 
-					<RadioGroup
-						id={k.HidePopupBehavior.Key}
-						value={settings[k.HidePopupBehavior.Key]}
-						label={<span>When the alt-tab-style popup closes, hide it:</span>}
-						onChange={onChange}
-						style={{
-							width: "20em",
-							margin: "0 0 5em 0",
-							float: "left"
-						}}
+					<NewSetting
+						addedVersion={11}
+						lastSeenOptionsVersion={lastSeenOptionsVersion}
 					>
-						{hideOptions}
-					</RadioGroup>
-
+						<RadioGroup
+							id={k.HidePopupBehavior.Key}
+							value={settings[k.HidePopupBehavior.Key]}
+							label={<span>When the alt-tab-style popup closes, hide it:</span>}
+							onChange={onChange}
+							style={{
+								width: "20em",
+								margin: "0 0 5em 0"
+							}}
+						>
+							{hideOptions}
+						</RadioGroup>
 					<ProsCons option={currentOption}>
 						<div id={k.HidePopupBehavior.Offscreen}>
 							<div className="pro">Popup shows/hides instantly</div>
@@ -136,6 +139,8 @@ define([
 							<div className="con">Popup shows/hides a little more slowly, due to window animations</div>
 						</div>
 					</ProsCons>
+					</NewSetting>
+
 				</Section>
 			);
 		}

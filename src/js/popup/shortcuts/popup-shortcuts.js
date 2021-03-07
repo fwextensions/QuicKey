@@ -15,8 +15,6 @@ define([
 			// stop ctrl/cmd-F from closing the popup and opening the find menu
 		["mod+F", () => {}],
 		["Escape", event => self.clearQuery(event.target.value)],
-			// stop ctrl/cmd-F from opening the find menu
-		["mod+F", () => {}],
 		[["Home", "End"], event => {
 			if (self.settings[k.HomeEndBehavior.Key] == k.HomeEndBehavior.ResultsList) {
 				if (event.key == "Home") {
