@@ -10,15 +10,28 @@ define([
 	{Checkbox},
 	{Section},
 	NewSetting,
-	{HistoryIcon, WindowIcon},
+	{HistoryIcon, WindowIcon, IncognitoIcon, InPrivateIcon},
 	k
 ) => {
+	const {IncognitoNameUC, IncognitoNameLC} = k;
+	const IncognitoAction = k.IsEdge ? "click the checkbox" : "toggle it on";
+	const IncognitoIndicator = k.IsEdge ? <InPrivateIcon /> : <IncognitoIcon />;
+
+
 	return function GeneralSection({
 		id,
 		settings,
 		lastSeenOptionsVersion,
+		tracker,
 		onChange})
 	{
+		function handleChangeIncognitoClick()
+		{
+			chrome.tabs.create({ url: `chrome://extensions/?id=${chrome.runtime.id}` });
+			tracker.event("extension", "options-incognito");
+		}
+
+
 		return (
 			<Section id={id}>
 				<h2>Search results</h2>
@@ -87,6 +100,25 @@ define([
 						onChange={onChange}
 					/>
 				</NewSetting>
+
+
+				<h2>{IncognitoNameUC} windows</h2>
+
+				<p>By default, QuicKey can't switch to tabs in {IncognitoNameLC} windows.
+					To enable this functionality, click the button below, then
+					scroll down to the <i>Allow in {IncognitoNameLC}</i> setting
+					and {IncognitoAction}.  {IncognitoNameUC} tabs are marked
+					with {IncognitoIndicator}.
+				</p>
+				<img className="incognito-screenshot"
+					src={`/img/${IncognitoNameLC.toLocaleLowerCase()}-option.png`}
+					alt={`${IncognitoNameUC} option`}
+					title={`Change ${IncognitoNameLC} setting`}
+					onClick={handleChangeIncognitoClick}
+				/>
+				<button className="key"
+					onClick={handleChangeIncognitoClick}
+				>Change {IncognitoNameLC} setting</button>
 			</Section>
 		);
 	};

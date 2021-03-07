@@ -4,7 +4,6 @@ define([
 	"jsx!./general-section",
 	"jsx!./popup-section",
 	"jsx!./shortcuts-section",
-	"jsx!common/icons",
 	"background/constants"
 ], function(
 	React,
@@ -12,12 +11,8 @@ define([
 	GeneralSection,
 	PopupSection,
 	ShortcutsSection,
-	{IncognitoIcon, InPrivateIcon},
 	k
 ) {
-	const {IncognitoNameUC, IncognitoNameLC} = k;
-	const IncognitoAction = k.IsEdge ? "click the checkbox" : "toggle it on";
-	const IncognitoIndicator = k.IsEdge ? <InPrivateIcon /> : <IncognitoIcon />;
 	const UpdateMessage = <div className="update-message"
 		title="Now you can use pinyin to search for Chinese characters in web page titles and URLs. You can always reopen this page by clicking the gear icon in the QuicKey menu."
 	>
@@ -46,13 +41,6 @@ define([
 		{
 			chrome.tabs.create({ url: "https://fwextensions.github.io/QuicKey/" });
 			this.props.tracker.event("extension", "options-help");
-		},
-
-
-		handleChangeIncognitoClick: function()
-		{
-			chrome.tabs.create({ url: `chrome://extensions/?id=${chrome.runtime.id}` });
-			this.props.tracker.event("extension", "options-incognito");
 		},
 
 
@@ -96,7 +84,6 @@ define([
 						<SectionLabel id="general" label="General" />
 						<SectionLabel id="popup" label="Popup window" />
 						<SectionLabel id="shortcuts" label="Keyboard shortcuts" />
-						<SectionLabel id="incognito" label={`${IncognitoNameUC} windows`} />
 						<SectionLabel id="about" label="About" />
 					</SectionList>
 
@@ -105,6 +92,7 @@ define([
 							id="general"
 							settings={settings}
 							lastSeenOptionsVersion={lastSeenOptionsVersion}
+							tracker={tracker}
 							onChange={onChange}
 						/>
 
@@ -123,26 +111,6 @@ define([
 							onChange={onChange}
 							onResetShortcuts={onResetShortcuts}
 						/>
-
-						<Section id="incognito">
-							<h2>{IncognitoNameUC} windows</h2>
-
-							<p>By default, QuicKey can't switch to tabs in {IncognitoNameLC} windows.
-								To enable this functionality, click the button below, then
-								scroll down to the <i>Allow in {IncognitoNameLC}</i> setting
-								and {IncognitoAction}.  {IncognitoNameUC} tabs are marked
-								with {IncognitoIndicator}.
-							</p>
-							<img className="incognito-screenshot"
-								src={`/img/${IncognitoNameLC.toLocaleLowerCase()}-option.png`}
-								alt={`${IncognitoNameUC} option`}
-								title={`Change ${IncognitoNameLC} setting`}
-								onClick={this.handleChangeIncognitoClick}
-							/>
-							<button className="key"
-								onClick={this.handleChangeIncognitoClick}
-							>Change {IncognitoNameLC} setting</button>
-						</Section>
 
 						<Section id="about">
 							<h2>About</h2>
