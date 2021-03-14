@@ -96,7 +96,6 @@ define([
 					k.HomeEndBehavior
 				)(data);
 				data.lastQuery = "";
-				await addDefaultSetting(k.NavigateRecentsWithPopup.Key);
 			}),
 			"10": update(async data =>
 			{
