@@ -59,7 +59,10 @@ define([
 			MoveTabLeft: "moveTabLeft",
 			MoveTabRight: "moveTabRight",
 			CopyURL: "copyURL",
-			CopyTitleURL: "copyTitleURL"
+			CopyTitleURL: "copyTitleURL",
+			SelectPreviousItem: "selectPreviousItem",
+			SelectNextItem: "selectNextItem",
+			EscapeBehavior: "escapeBehavior",
 		}
 	}));
 });
