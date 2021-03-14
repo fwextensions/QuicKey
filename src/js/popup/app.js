@@ -774,9 +774,13 @@ define("popup/app", [
 
 				// set these so that when the modifier key is released (it had
 				// to have been pressed for showWindow() to be called), it
-				// activates the selected item
+				// activates the selected item, but only if the popup isn't
+				// being opened with search focused.  in that case, we don't
+				// want the modifier up event to do anything, even if the
+				// previous query is restored, and therefore the first item in
+				// the list is selected.
 			this.gotModifierUp = false;
-			this.gotMRUKey = true;
+			this.gotMRUKey = !focusSearch;
 
 				// get the latest settings, in case they've changed, so that
 				// they'll be available in loadTabs()
@@ -808,7 +812,6 @@ define("popup/app", [
 			} else {
  				this.forceUpdate = true;
 				this.resultsList.scrollToRow(0);
-				this.onQueryChange({ target: { value: "" }});
 				this.visible = false;
 				this.navigatingRecents = false;
 
@@ -820,6 +823,15 @@ define("popup/app", [
 				this.bookmarksPromise = null;
 				this.history = [];
 				this.historyPromise = null;
+
+				if (this.settings[k.RestoreLastQuery.Key]) {
+						// force the search box to select whatever text is in it
+						// when it renders after the popup is shown again, so
+						// that the user can just type to replace it
+					this.selectAllSearchBoxText = true;
+				} else {
+					this.setSearchBoxText("");
+				}
 
 					// if we're being closed by esc, not by losing focus or by
 					// focusing another tab, then in addition to moving off
