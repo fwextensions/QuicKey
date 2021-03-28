@@ -11,7 +11,7 @@
   "scripts": {
     "build:popup": "node build/scripts/build-popup.js",
     "build:pinyin": "webpack",
-    "build": "npm run build:popup && npm run build:pinyin"
+    "build": "grunt build"
   },
   "devDependencies": {
     "@babel/core": "^7.4.3",

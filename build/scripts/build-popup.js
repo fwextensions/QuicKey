@@ -22,9 +22,12 @@ if (!match) {
 	return "error";
 }
 
-	// create a fake navigator global, which init and shortcut-manager can check
+	// create a fake navigator global, which init, shortcut-manager and constants
+	// can check
 navigator = {
-	platform: "windows"
+	platform: "windows",
+	languages: ["en-US"],
+	userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36"
 };
 
 	// we have to wrap the bare object in parens to eval it
