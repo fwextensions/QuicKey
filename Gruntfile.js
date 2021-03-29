@@ -199,14 +199,7 @@ module.exports = function(grunt) {
 			}
 		},
 
-		babel: {
-			options: {
-				shouldPrintComment: (val) => /@license|@preserve|\/\*!/.test(val),
-				comments: false,
-				minified: true,
-				compact: true,
-				sourceMaps: false
-			},
+		terser: {
 			rjs: {
 				files: {
 					"build/out/js/common/error-handler.js": "src/js/lib/error-handler.js",
@@ -362,7 +355,7 @@ module.exports = function(grunt) {
 			`cleanupManifest:${target}:${env}`,
 			"buildPopup",
 			"requirejs",
-			"babel",
+			"terser",
 			"sync:build",
 			"clean:rjs"
 		]);
