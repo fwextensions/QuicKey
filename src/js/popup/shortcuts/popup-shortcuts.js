@@ -6,12 +6,14 @@ define([
 	k
 ) {
 	const Bindings = [
-		["ArrowUp", () => self.modifySelected(-1)],
-		["ArrowDown", () => self.modifySelected(1)],
+		[["ArrowUp", "Ctrl+P", "Ctrl+K"], () => self.modifySelected(-1)],
+		[["ArrowDown", "Ctrl+N", "Ctrl+J"], () => self.modifySelected(1)],
 		["PageUp", () => self.resultsList.scrollByPage("up")],
 		["PageDown", () => self.resultsList.scrollByPage("down")],
 		[["Enter", "shift+Enter"], event => openItem(event, false)],
 		[["mod+Enter", "mod+shift+Enter"], event => openItem(event, true)],
+			// stop ctrl/cmd-F from closing the popup and opening the find menu
+		["mod+F", () => {}],
 		["Escape", event => self.clearQuery(event.target.value)],
 		[["Home", "End"], event => {
 			if (self.settings[k.HomeEndBehavior.Key] == k.HomeEndBehavior.ResultsList) {
@@ -78,18 +80,6 @@ define([
 	}
 
 
-	function mruSelectUp()
-	{
-		self.modifySelected(-1, true);
-	}
-
-
-	function mruSelectDown()
-	{
-		self.modifySelected(1, true);
-	}
-
-
 	function joinKeys(
 		modifiers,
 		baseKey)
@@ -122,15 +112,18 @@ define([
 			});
 
 				// add handlers for navigating up and down with the MRU key,
-				// plus the modifiers used to open the popup
+				// plus the modifiers used to open the popup.  pass true to let
+				// the app know the MRU key was used, so that when the modifier
+				// up event happens, the selected tab will be switched to
+				// (unlike the plain up/down arrow keys bound above).
 			Manager.bind([
 				joinKeys(popupModifiers, "ArrowDown"),
 				joinKeys(popupModifiers, mruSelectKey)
-			], mruSelectDown);
+			], () => self.modifySelected(1, true));
 			Manager.bind([
 				joinKeys(popupModifiers, "ArrowUp"),
 				joinKeys(popupModifiers.concat("shift"), mruSelectKey)
-			], mruSelectUp);
+			], () => self.modifySelected(-1, true));
 		},
 
 

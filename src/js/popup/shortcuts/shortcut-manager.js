@@ -72,8 +72,11 @@ define(function() {
 					// if it's the same as the current platform
 				if (!info.platform || Platforms[info.platform]) {
 					const keyIndex = info.keyCode || info.key;
+					const bindings = this.bindings[keyIndex] || (this.bindings[keyIndex] = []);
 
-					(this.bindings[keyIndex] || (this.bindings[keyIndex] = [])).push({
+						// add the binding to the front so that the most recently
+						// added bindings override earlier ones
+					bindings.unshift({
 						key: info.key,
 						modifiers: info.modifiers,
 						callback: callback
