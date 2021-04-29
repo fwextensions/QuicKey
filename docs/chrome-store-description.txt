@@ -202,7 +202,7 @@ If new settings have been added to QuicKey since the last time you looked at the
 
 ★ Close and reopen tabs
 
-To close the selected tab, press CTRL-W (CMD-CTRL-W on macOS). Or hover over a tab and click the X button on the right side of the menu.
+To close the selected tab, press CTRL-W (CMD-CTRL-W on macOS, CTRL-ALT-W on Linux). Or hover over a tab and click the X button on the right side of the menu.
 
 When you open QuicKey, the 25 most recently closed tabs are listed below the recent tabs and shown in a faded state with a clock icon. They are also returned when you type a query, though their rank in the list of results is lower than open tabs. Click a closed tab to reopen it in its original location and with all of its browsing history intact.
 

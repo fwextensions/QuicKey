@@ -130,7 +130,7 @@ If new settings have been added to *QuicKey* since the last time you looked at t
 
 ## Close and reopen tabs
 
-To close the selected tab, press <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd</kbd><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS).  Or hover over a tab and click the close button on the right side of the menu:
+To close the selected tab, press <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd</kbd><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS, <b><kbd>ctrl</kbd><kbd>alt</kbd><kbd>W</kbd></b> on Linux).  Or hover over a tab and click the close button on the right side of the menu:
 
 ![Close button](img/close-button.png)
 
