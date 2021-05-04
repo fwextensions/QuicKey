@@ -3,15 +3,20 @@ define([
 ], function(
 	shared
 ) {
-	const IsMac = /Mac/i.test(navigator.platform);
-	const IsEdge = /Edg\//i.test(navigator.userAgent);
+		// use navigator values instead of chrome.runtime.getPlatformInfo() so
+		// we don't have to await the response everywhere constants are used
+	const {userAgent, platform, languages} = navigator;
+	const IsMac = /Mac/i.test(platform);
+	const IsLinux = /Linux/i.test(platform);
+	const IsEdge = /Edg\//i.test(userAgent);
 
 	const languagePattern = /^(?<lang>[-a-z]+)-(?<locale>[a-z]+)$/i;
-	const primaryLanguage = navigator.languages[0];
+	const primaryLanguage = languages[0];
 	const languageMatch = primaryLanguage.match(languagePattern);
 
 	return shared("k", () => ({
 		IsMac,
+		IsLinux,
 		Platform: IsMac ? "mac" : "win",
 		Language: languageMatch && languageMatch.groups.lang || primaryLanguage,
 			// this will get overridden in background.js if we're in dev mode

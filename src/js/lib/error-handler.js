@@ -53,15 +53,15 @@
 					const timestamp = new Date().toLocaleString();
 					const {detail, reason = ((detail && detail.reason) || "")} = event;
 					const stack = getStack(event.error) || getStack(reason);
+					const type = event.type == "unhandledrejection"
+						? "promise rejection"
+						: "exception";
+					const errorMessage = `Caught unhandled ${type} at ${timestamp}:\n${stack}`;
 
-					if (event.type == "unhandledrejection") {
-						const errorMessage = `Caught unhandled promise rejection at ${timestamp}:\n${stack}`;
+					console.error(errorMessage);
+					tracker.exception(errorMessage, true);
 
-						console.error(errorMessage);
-						tracker.exception(errorMessage, true);
-					} else if (event.preventDefault) {
-						console.error(`Caught unhandled exception at ${timestamp}:\n${stack}`);
-						tracker.exception(error, true);
+					if (event.preventDefault) {
 						event.preventDefault();
 					}
 				} catch (e) {

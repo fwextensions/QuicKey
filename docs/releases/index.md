@@ -8,6 +8,17 @@ comments: true
 # Release history
 
 
+## 1.6.1 - 2021-05-04
+
+### Added
+
+* <b><kbd>ctrl</kbd><kbd>N</kbd></b>/<b><kbd>ctrl</kbd><kbd>P</kbd></b> and <b><kbd>ctrl</kbd><kbd>J</kbd></b>/<b><kbd>ctrl</kbd><kbd>K</kbd></b> keyboard shortcuts for moving down/up the search results list.
+
+### Fixed
+
+* The default shortcut for closing a tab on Linux and ChromeOS is now <b><kbd>ctrl</kbd><kbd>alt</kbd><kbd>W</kbd></b>, since the browser doesn't let *QuicKey* intercept <b><kbd>ctrl</kbd><kbd>W</kbd></b> on those OSes.
+
+
 ## 1.6.0 - 2021-03-05
 
 ### Added

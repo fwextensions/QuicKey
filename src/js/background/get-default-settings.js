@@ -5,7 +5,9 @@ define([
 ) {
 	const DefaultShortcuts = {
 		[k.Shortcuts.MRUSelect]: "w",
-		[k.Shortcuts.CloseTab]: "ctrl+w",
+			// on Linux, the extension menu can't seem to capture ctrl-W, like
+			// macOS, so default to a different shortcut
+		[k.Shortcuts.CloseTab]: k.IsLinux ? "ctrl+alt+w" : "ctrl+w",
 		[k.Shortcuts.MoveTabLeft]: "ctrl+[",
 		[k.Shortcuts.MoveTabRight]: "ctrl+]",
 		[k.Shortcuts.CopyURL]: "mod+c",

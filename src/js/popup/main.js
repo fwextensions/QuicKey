@@ -9,8 +9,8 @@ require([
 	App,
 	trackers
 ) {
-	const query = gKeyCache.join("");
-	const shortcuts = gShortcutCache;
+	const initialQuery = gKeyCache.join("");
+	const initialShortcuts = gShortcutCache;
 	const platform = /Mac/i.test(navigator.platform) ? "mac" : "win";
 	const now = performance.now();
 	const background = chrome.extension.getBackgroundPage();
@@ -52,10 +52,10 @@ require([
 	{
 		ReactDOM.render(
 			React.createElement(App, {
-				initialQuery: query,
-				initialShortcuts: shortcuts,
-				platform: platform,
-				tracker: tracker,
+				initialQuery,
+				initialShortcuts,
+				platform,
+				tracker,
 				port: gPort
 			}),
 			document.getElementById("root")

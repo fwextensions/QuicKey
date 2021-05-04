@@ -2,7 +2,6 @@ const ReactDOMServer = require("react-dom/server");
 const React = require("react");
 const requirejs = require("requirejs");
 const fs = require("fs");
-const _ = require("lodash");
 
 
 const ConfigPattern = /({[\s\S]+})/m;
@@ -13,7 +12,6 @@ const configFile = fs.readFileSync("./src/js/require-config.js", "utf8");
 const currentPopupHTML = fs.readFileSync("./src/popup.html", "utf8");
 const currentReactMarkup = currentPopupHTML.match(RootPattern)[1];
 const match = configFile.match(ConfigPattern);
-let config;
 
 
 if (!match) {
@@ -22,17 +20,20 @@ if (!match) {
 	return "error";
 }
 
-	// create a fake navigator global, which init and shortcut-manager can check
+	// create a fake navigator global, which init, shortcut-manager and constants
+	// can check
 navigator = {
-	platform: "windows"
+	platform: "windows",
+	languages: ["en-US"],
+	userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36"
 };
 
 	// we have to wrap the bare object in parens to eval it
-config = eval("(" + match[1] + ")");
+const config = eval("(" + match[1] + ")");
 
 	// switch some of the libraries to mocked versions so that we can require
 	// the App component outside of a browser
-config.paths = _.assign(config.paths, {
+config.paths = Object.assign(config.paths, {
 	cp: "../../build/mock/cp",
 		// the mock tracker needs to create a window global and then require
 		// the original tracker module

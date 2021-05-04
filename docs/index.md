@@ -102,8 +102,8 @@ Unlike other tab switchers, *QuicKey* uses a [Quicksilver](https://qsapp.com/)-s
 Use keyboard shortcuts to navigate the list of matching tabs:
 
   * <kbd>enter</kbd>&nbsp;: switch to the selected tab
-  * <kbd>↓</kbd> or <kbd>space</kbd>&nbsp;: move down the list
-  * <kbd>↑</kbd> or <b><kbd>shift</kbd><kbd>space</kbd></b>&nbsp;: move up the list
+  * <kbd>↓</kbd>, <kbd>space</kbd>, <b><kbd>ctrl</kbd><kbd>N</kbd></b> or <b><kbd>ctrl</kbd><kbd>J</kbd></b>&nbsp;: move down the list
+  * <kbd>↑</kbd>, <b><kbd>shift</kbd><kbd>space</kbd></b>, <b><kbd>ctrl</kbd><kbd>P</kbd></b> or <b><kbd>ctrl</kbd><kbd>K</kbd></b>&nbsp;: move up the list
   * <kbd>pg dn</kbd>&nbsp;: page down the list
   * <kbd>pg up</kbd>&nbsp;: page up the list
   * <kbd>end</kbd>&nbsp;: go to the bottom of the list
@@ -130,7 +130,7 @@ If new settings have been added to *QuicKey* since the last time you looked at t
 
 ## Close and reopen tabs
 
-To close the selected tab, press <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd</kbd><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS).  Or hover over a tab and click the close button on the right side of the menu:
+To close the selected tab, press <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd</kbd><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS, <b><kbd>ctrl</kbd><kbd>alt</kbd><kbd>W</kbd></b> on Linux).  Or hover over a tab and click the close button on the right side of the menu:
 
 ![Close button](img/close-button.png)
 

@@ -95,9 +95,11 @@ Add keyboard shortcuts to switch tabs with a Quicksilver-style search or a most 
  • Press ENTER to switch to the selected tab
 
 
-★ Now with support for pinyin!
+★ New options in v1.6.0
 
-You can use pinyin to more easily search for Chinese characters in web page titles and URLs.
+ • Restore the last search query when the menu reopens
+ • Search for bookmarks by their folder names
+ • Control how the HOME and END keys behave
 
 
 ★ Use CTRL-TAB as the keyboard shortcut
@@ -157,8 +159,8 @@ Unlike other tab switchers, QuicKey uses a Quicksilver-style search algorithm to
 Use keyboard shortcuts to navigate the list:
 
  • ENTER: switch to the selected tab
- • ↓ or SPACE: move down the list
- • ↑ or SHIFT-SPACE: move up the list
+ • ↓, SPACE or CTRL-N/J: move down the list
+ • ↑, SHIFT-SPACE or CTRL-P/K: move up the list
  • PG DN: page down the list
  • PG UP: page up the list
  • END: go to the bottom of the list
