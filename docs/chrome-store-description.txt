@@ -178,8 +178,8 @@ Unlike other tab switchers, QuicKey uses a Quicksilver-style search algorithm to
 Use keyboard shortcuts to navigate the list:
 
  • ENTER: switch to the selected tab
- • ↓ or SPACE: move down the list
- • ↑ or SHIFT-SPACE: move up the list
+ • ↓, SPACE or CTRL-N/J: move down the list
+ • ↑, SHIFT-SPACE or CTRL-P/K: move up the list
  • PG DN: page down the list
  • PG UP: page up the list
  • END: go to the bottom of the list

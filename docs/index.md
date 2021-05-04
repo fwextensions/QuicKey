@@ -102,8 +102,8 @@ Unlike other tab switchers, *QuicKey* uses a [Quicksilver](https://qsapp.com/)-s
 Use keyboard shortcuts to navigate the list of matching tabs:
 
   * <kbd>enter</kbd>&nbsp;: switch to the selected tab
-  * <kbd>↓</kbd> or <kbd>space</kbd>&nbsp;: move down the list
-  * <kbd>↑</kbd> or <b><kbd>shift</kbd><kbd>space</kbd></b>&nbsp;: move up the list
+  * <kbd>↓</kbd>, <kbd>space</kbd>, <b><kbd>ctrl</kbd><kbd>N</kbd></b> or <b><kbd>ctrl</kbd><kbd>J</kbd></b>&nbsp;: move down the list
+  * <kbd>↑</kbd>, <b><kbd>shift</kbd><kbd>space</kbd></b>, <b><kbd>ctrl</kbd><kbd>P</kbd></b> or <b><kbd>ctrl</kbd><kbd>K</kbd></b>&nbsp;: move up the list
   * <kbd>pg dn</kbd>&nbsp;: page down the list
   * <kbd>pg up</kbd>&nbsp;: page up the list
   * <kbd>end</kbd>&nbsp;: go to the bottom of the list
