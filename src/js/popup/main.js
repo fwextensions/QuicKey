@@ -55,6 +55,8 @@ require([
 				initialShortcuts,
 				platform,
 				tracker,
+				isPopup: params.has("type"),
+				focusSearch: params.get("focusSearch") == "true",
 				port: gPort
 			}),
 			document.getElementById("root")

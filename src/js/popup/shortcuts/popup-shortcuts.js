@@ -98,7 +98,9 @@ define([
 		shortcuts,
 		shortcutID)
 	{
-		return (shortcuts.find(({id}) => id == shortcutID).shortcut || "");
+		const {shortcut = ""} = shortcuts.find(({id}) => id == shortcutID) || {};
+
+		return shortcut;
 	}
 
 
