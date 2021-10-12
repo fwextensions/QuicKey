@@ -218,11 +218,20 @@ define("popup/app", [
 						// needed if space moves the selection
 					settings[k.SpaceBehavior.Key] == k.SpaceBehavior.Space,
 					settings[k.UsePinyin.Key]))
-				.then(tabs => {
+				.then(tabs => Promise.all([
+					tabs,
+					cp.tabs.query({
+						active: true,
+						currentWindow: true
+					})
+				]))
+				.then(([tabs, [activeTab]]) => {
+					const currentWindowID = activeTab && activeTab.windowId;
+
 						// filter out just recent and closed tabs that we have a
 						// last visit time for
 					this.recents = tabs
-						.filter(({lastVisit}) => lastVisit)
+						.filter(({lastVisit, windowId}) => lastVisit && windowId === currentWindowID)
 						.sort((a, b) => {
 								// sort open tabs before closed ones, and newer
 								// before old
