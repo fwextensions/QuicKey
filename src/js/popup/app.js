@@ -227,11 +227,18 @@ define("popup/app", [
 				]))
 				.then(([tabs, [activeTab]]) => {
 					const currentWindowID = activeTab && activeTab.windowId;
+						// this promise chain starts with settingsPromise, so by
+						// the time we're, that's already resolved and has set
+						// this.settings.  an ugly side effect, but easier than
+						// passing the settings along down the chain.
+					const recentsFilter = this.settings[k.CurrentWindowLimitRecents.Key]
+						? ({lastVisit, windowId}) => lastVisit && windowId === currentWindowID
+						: ({lastVisit, windowId}) => lastVisit;
 
 						// filter out just recent and closed tabs that we have a
 						// last visit time for
 					this.recents = tabs
-						.filter(({lastVisit, windowId}) => lastVisit && windowId === currentWindowID)
+						.filter(recentsFilter)
 						.sort((a, b) => {
 								// sort open tabs before closed ones, and newer
 								// before old

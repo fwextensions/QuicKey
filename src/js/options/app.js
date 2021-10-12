@@ -163,12 +163,6 @@ define([
 						Selecting a closed tab will reopen it with its full history.
 					</div>
 				</Checkbox>
-				<Checkbox
-					id={k.MarkTabsInOtherWindows.Key}
-					label={<span>Mark tabs that are not in the current window with <WindowIcon /></span>}
-					value={settings[k.MarkTabsInOtherWindows.Key]}
-					onChange={onChange}
-				/>
 				<NewSetting
 					addedVersion={10}
 					lastSeenOptionsVersion={lastSeenOptionsVersion}
@@ -199,6 +193,27 @@ define([
 						id={k.UsePinyin.Key}
 						label="Use pinyin to match Chinese characters in titles and URLs"
 						value={settings[k.UsePinyin.Key]}
+						onChange={onChange}
+					/>
+				</NewSetting>
+
+
+				<h2>Multiple browser windows</h2>
+
+				<Checkbox
+					id={k.MarkTabsInOtherWindows.Key}
+					label={<span>Mark tabs in other windows with <WindowIcon /></span>}
+					value={settings[k.MarkTabsInOtherWindows.Key]}
+					onChange={onChange}
+				/>
+				<NewSetting
+					addedVersion={11}
+					lastSeenOptionsVersion={lastSeenOptionsVersion}
+				>
+					<Checkbox
+						id={k.CurrentWindowLimitRecents.Key}
+						label="Limit recent tabs to the current window"
+						value={settings[k.CurrentWindowLimitRecents.Key]}
 						onChange={onChange}
 					/>
 				</NewSetting>
