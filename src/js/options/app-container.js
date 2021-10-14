@@ -11,7 +11,7 @@ define([
 	trackers,
 	storage,
 	settings,
-	{Platform, ShowTabCount, CurrentWindowLimitRecents}
+	{Platform, ShowTabCount, CurrentWindowLimitRecents, CurrentWindowLimitSearch}
 ) {
 	const PlusPattern = /\+/g;
 
@@ -96,7 +96,9 @@ define([
 		{
 			settings.set(key, value)
 				.then(settings => {
-					if (key == ShowTabCount.Key || key == CurrentWindowLimitRecents.Key) {
+					if (key == ShowTabCount.Key
+							|| key == CurrentWindowLimitRecents.Key
+							|| key == CurrentWindowLimitSearch.Key) {
 						chrome.runtime.sendMessage({ [key]: value });
 					}
 

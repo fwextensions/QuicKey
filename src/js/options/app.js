@@ -200,12 +200,6 @@ define([
 
 				<h2>Multiple browser windows</h2>
 
-				<Checkbox
-					id={k.MarkTabsInOtherWindows.Key}
-					label={<span>Mark tabs in other windows with <WindowIcon /></span>}
-					value={settings[k.MarkTabsInOtherWindows.Key]}
-					onChange={onChange}
-				/>
 				<NewSetting
 					addedVersion={11}
 					lastSeenOptionsVersion={lastSeenOptionsVersion}
@@ -217,6 +211,23 @@ define([
 						onChange={onChange}
 					/>
 				</NewSetting>
+				<NewSetting
+					addedVersion={11}
+					lastSeenOptionsVersion={lastSeenOptionsVersion}
+				>
+					<Checkbox
+						id={k.CurrentWindowLimitSearch.Key}
+						label="Limit search results to the current window"
+						value={settings[k.CurrentWindowLimitSearch.Key]}
+						onChange={onChange}
+					/>
+				</NewSetting>
+				<Checkbox
+					id={k.MarkTabsInOtherWindows.Key}
+					label={<span>Mark tabs in other windows with <WindowIcon /></span>}
+					value={settings[k.MarkTabsInOtherWindows.Key]}
+					onChange={onChange}
+				/>
 
 
 				<h2>Toolbar icon</h2>

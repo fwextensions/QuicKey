@@ -235,8 +235,9 @@ define("popup/app", [
 						? ({lastVisit, windowId}) => lastVisit && windowId === currentWindowID
 						: ({lastVisit, windowId}) => lastVisit;
 
-						// filter out just recent and closed tabs that we have a
-						// last visit time for
+						// include only recent and closed tabs that have a last
+						// visit time.  this may also filter out tabs that aren't
+						// in the current window, depending on that setting.
 					this.recents = tabs
 						.filter(recentsFilter)
 						.sort((a, b) => {
@@ -255,7 +256,11 @@ define("popup/app", [
 						this.recents = NoRecentTabsMessage;
 					}
 
-					return tabs;
+					if (this.settings[k.CurrentWindowLimitSearch.Key]) {
+						return tabs.filter(({windowId}) => windowId === currentWindowID);
+					} else {
+						return tabs;
+					}
 				}), "tabs", true);	// pass true to force a reload
 		},
 
