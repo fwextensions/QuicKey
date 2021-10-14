@@ -373,7 +373,7 @@ DEBUG && console.log("=== updateAll");
 
 	function navigate(
 		direction,
-		withinCurrentWindow)
+		limitToCurrentWindow)
 	{
 		const now = Date.now();
 		const newData = {
@@ -427,7 +427,7 @@ DEBUG && console.log("=== updateAll");
 
 			if (previousTabID) {
 DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabIndex, tabIDs.slice(-5), titleOrURL(tabsByID[previousTabID]));
-				if (withinCurrentWindow) {
+				if (limitToCurrentWindow) {
 					const currentTab = tabsByID[tabIDs[maxIndex]];
 					const previousTab = tabsByID[previousTabID];
 
@@ -493,14 +493,15 @@ DEBUG && console.error(error);
 	}
 
 
-	function toggle()
+	function toggle(
+		limitToCurrentWindow)
 	{
 			// set previousTabIndex to -1 in case the user had been navigating
 			// back into the stack and then pressed the toggle shortcut within
 			// 750ms.  if previousTabIndex was still set, we'd toggle to the
 			// wrong tab.
 		return storage.set(() => ({ lastShortcutTime: 0, previousTabIndex: -1 }), "toggle")
-			.then(() => navigate(-1));
+			.then(() => navigate(-1, limitToCurrentWindow));
 	}
 
 
