@@ -226,6 +226,8 @@ define([
 					id={k.MarkTabsInOtherWindows.Key}
 					label={<span>Mark tabs in other browser windows with <WindowIcon /></span>}
 					value={settings[k.MarkTabsInOtherWindows.Key]}
+					disabled={settings[k.CurrentWindowLimitRecents.Key] && settings[k.CurrentWindowLimitSearch.Key]}
+					tooltipDisabled="When recent tabs and search results are limited to the current window, no tabs from other windows will be visible"
 					onChange={onChange}
 				/>
 

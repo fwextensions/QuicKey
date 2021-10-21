@@ -96,6 +96,10 @@
 		--background: #ccc;
 	}
 
+	.control input:disabled ~ span {
+		--opacity: .4;
+	}
+
 	.control .subtitle {
 		--color: #aaa;
 	}
@@ -426,6 +430,10 @@ main {
 
 .control input[type="radio"]:disabled ~ .indicator:after {
 	background: var(--background, #7b7b7b);
+}
+
+.control input:disabled ~ span {
+	opacity: var(--opacity, .6);
 }
 
 .control .subtitle {
