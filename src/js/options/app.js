@@ -206,7 +206,7 @@ define([
 				>
 					<Checkbox
 						id={k.CurrentWindowLimitRecents.Key}
-						label="Limit recent tabs to the current window"
+						label="Limit recent tabs to the current browser window"
 						value={settings[k.CurrentWindowLimitRecents.Key]}
 						onChange={onChange}
 					/>
@@ -217,14 +217,14 @@ define([
 				>
 					<Checkbox
 						id={k.CurrentWindowLimitSearch.Key}
-						label="Limit search results to the current window"
+						label="Limit search results to the current browser window"
 						value={settings[k.CurrentWindowLimitSearch.Key]}
 						onChange={onChange}
 					/>
 				</NewSetting>
 				<Checkbox
 					id={k.MarkTabsInOtherWindows.Key}
-					label={<span>Mark tabs in other windows with <WindowIcon /></span>}
+					label={<span>Mark tabs in other browser windows with <WindowIcon /></span>}
 					value={settings[k.MarkTabsInOtherWindows.Key]}
 					onChange={onChange}
 				/>

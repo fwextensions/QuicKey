@@ -257,7 +257,14 @@ define("popup/app", [
 					}
 
 					if (this.settings[k.CurrentWindowLimitSearch.Key]) {
-						return tabs.filter(({windowId}) => windowId === currentWindowID);
+							// before filtering the tabs list to the current
+							// window, we have to run an empty search on all the
+							// tabs so their score, scores, etc. keys get set.
+							// otherwise, the recent tabs might not get those
+							// keys, since that set may be disjoint from the set
+							// of tabs in the current window.
+						return scoreItems(tabs, "", this.settings[k.UsePinyin.Key])
+							.filter(({windowId}) => windowId === currentWindowID);
 					} else {
 						return tabs;
 					}
