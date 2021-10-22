@@ -257,14 +257,15 @@ define("popup/app", [
 					}
 
 					if (this.settings[k.CurrentWindowLimitSearch.Key]) {
-							// before filtering the tabs list to the current
-							// window, we have to run an empty search on all the
-							// tabs so their score, scores, etc. keys get set.
-							// otherwise, the recent tabs might not get those
-							// keys, since that set may be disjoint from the set
-							// of tabs in the current window.
-						return scoreItems(tabs, "", this.settings[k.UsePinyin.Key])
-							.filter(({windowId}) => windowId === currentWindowID);
+							// limit the tabs list to those in the current
+							// window.  since the limit search option is linked
+							// to limit recents, we know the recents are a subset
+							// of the filtered searchable list, so when
+							// loadPromisedItems() calls scoreItems() after this
+							// promise chain is done, the recent tabs are
+							// guaranteed to receive all the scoring keys, like
+							// score, scores, etc.
+						return tabs.filter(({windowId}) => windowId === currentWindowID);
 					} else {
 						return tabs;
 					}
