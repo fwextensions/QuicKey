@@ -209,18 +209,16 @@ define([
 						label="Limit recent tabs to the current browser window"
 						value={settings[k.CurrentWindowLimitRecents.Key]}
 						onChange={onChange}
-					/>
-				</NewSetting>
-				<NewSetting
-					addedVersion={11}
-					lastSeenOptionsVersion={lastSeenOptionsVersion}
-				>
-					<Checkbox
-						id={k.CurrentWindowLimitSearch.Key}
-						label="Limit search results to the current browser window"
-						value={settings[k.CurrentWindowLimitSearch.Key]}
-						onChange={onChange}
-					/>
+					>
+						<Checkbox
+							id={k.CurrentWindowLimitSearch.Key}
+							label="Also limit search results to the current browser window"
+							value={settings[k.CurrentWindowLimitSearch.Key]}
+							disabled={!settings[k.CurrentWindowLimitRecents.Key]}
+							tooltipDisabled={"Select \"Limit recent tabs\" to enable this option"}
+							onChange={onChange}
+						/>
+					</Checkbox>
 				</NewSetting>
 				<Checkbox
 					id={k.MarkTabsInOtherWindows.Key}
