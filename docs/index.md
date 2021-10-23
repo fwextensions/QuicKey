@@ -139,7 +139,7 @@ When new settings have been added to *QuicKey*, the <img src="img/gear.svg" styl
 
 ## Limit navigation to the current browser window
 
-If you have multiple browser windows open, you may want to navigate among only the recent tabs from the current window. To enable this behavior, open the *Options* page and select *Limit recent tabs to the current browser window*. Pressing the shortcuts for *Switch instantly between the two most recent tabs* or *Switch to the previous tab* will then switch only between recent tabs in the current window.
+If you have multiple browser windows open, you may want to navigate among only the recent tabs that are in the current window. To enable this behavior, open the *Options* page and select *Limit recent tabs to the current browser window*. Pressing the shortcuts for *Switch instantly between the two most recent tabs* or *Switch to the previous tab* will then switch only between recent tabs in the current window.
 
 You can also limit searching for tabs to the current browser window.
 
