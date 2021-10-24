@@ -37,9 +37,11 @@ comments: true
 To toggle between the two most recently used tabs, quickly press the keyboard shortcut twice.  Or pick a tab from the most recently used (MRU) list as [shown below](#mru).
 
 
-## Use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> as a QuicKey shortcut
+## Use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch between recent tabs
 
-With a little extra work, you can even make *QuicKey* respond to the Holy Grail of keyboard shortcuts: <b><kbd>ctrl</kbd><kbd>tab</kbd></b>.  [Learn how](ctrl-tab).
+With a little extra work, you can even make *QuicKey* respond to the Holy Grail of keyboard shortcuts: <b><kbd>ctrl</kbd><kbd>tab</kbd></b>.  
+
+[Learn how](ctrl-tab).
 
 
 ## Installation
@@ -121,11 +123,25 @@ To customize how *QuicKey* behaves, click the <img src="img/gear.svg" style="hei
 
 <img src="img/options-in-menu.png" style="width: 208px;">
 
-On the *QuicKey options* page, you can change the behavior of the <kbd>space</kbd> and <kbd>esc</kbd> keys, mark tabs in other windows with an icon, hide closed tabs from the search results, show the number of open tabs, and customize many of the keyboard shortcuts described here.
+There you can:
 
-If you change the keyboard shortcut for showing the *QuicKey* menu to something other than the default <b><kbd>alt</kbd><kbd>Q</kbd></b> or if you have a non-US keyboard, you'll probably want to also change the key that's used to navigate down the list of recently used tabs (which defaults to <kbd>W</kbd>).  For instance, if you change the menu shortcut to <b><kbd>alt</kbd><kbd>Z</kbd></b>, you might want to change the navigation key to <kbd>X</kbd>, which is right next door.  To change it, go to the *Options* page, click in the first keyboard shortcut picker, and press <kbd>X</kbd>.
+  * Customize keyboard shortcuts
+  * Hide closed tabs from the search results
+  * Limit navigating recent tabs or searching to the current browser window
+  * Mark tabs in other browser windows with an icon
+  * Show the number of open tabs
+  * Use pinyin to search for Chinese characters
 
-If new settings have been added to *QuicKey* since the last time you looked at the options page, the <img src="img/gear.svg" style="height: 1em"> icon will display a red dot to let you know.
+If you change the keyboard shortcut for showing the *QuicKey* menu to something other than the default <b><kbd>alt</kbd><kbd>Q</kbd></b> or if you have a non-US keyboard, you'll probably want to also change the key that's used to navigate down the list of recently used tabs (which defaults to <kbd>W</kbd>).  For instance, if you change the menu shortcut to <b><kbd>alt</kbd><kbd>Z</kbd></b>, you might want to change the navigation key to <kbd>X</kbd>, which is right next door.  To change it, go to the *Options* page, click the *Select the next tab* keyboard shortcut picker, and press <kbd>X</kbd>.
+
+When new settings have been added to *QuicKey*, the <img src="img/gear.svg" style="height: 1em"> icon will display a red dot to let you know.
+
+
+## Limit navigation to the current browser window
+
+If you have multiple browser windows open, you may want to navigate among only the recent tabs that are in the current window. To enable this behavior, open the *Options* page and select *Limit recent tabs to the current browser window*. Pressing the shortcuts for *Switch instantly between the two most recent tabs* or *Switch to the previous tab* will then switch only between recent tabs in the current window.
+
+You can also limit searching for tabs to the current browser window.
 
 
 ## Close and reopen tabs

@@ -28,6 +28,8 @@ define([
 		[k.UsePinyin.Key]: false,
 		[k.RestoreLastQuery.Key]: false,
 		[k.ShowBookmarkPaths.Key]: true,
+		[k.CurrentWindowLimitRecents.Key]: false,
+		[k.CurrentWindowLimitSearch.Key]: false,
 		[k.Shortcuts.Key]: {
 			mac: MacDefaults,
 			win: DefaultShortcuts

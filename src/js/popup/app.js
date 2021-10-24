@@ -218,11 +218,28 @@ define("popup/app", [
 						// needed if space moves the selection
 					settings[k.SpaceBehavior.Key] == k.SpaceBehavior.Space,
 					settings[k.UsePinyin.Key]))
-				.then(tabs => {
-						// filter out just recent and closed tabs that we have a
-						// last visit time for
+				.then(tabs => Promise.all([
+					tabs,
+					cp.tabs.query({
+						active: true,
+						currentWindow: true
+					})
+				]))
+				.then(([tabs, [activeTab]]) => {
+					const currentWindowID = activeTab && activeTab.windowId;
+						// this promise chain starts with settingsPromise, so by
+						// the time we're, that's already resolved and has set
+						// this.settings.  an ugly side effect, but easier than
+						// passing the settings along down the chain.
+					const recentsFilter = this.settings[k.CurrentWindowLimitRecents.Key]
+						? ({lastVisit, windowId}) => lastVisit && windowId === currentWindowID
+						: ({lastVisit, windowId}) => lastVisit;
+
+						// include only recent and closed tabs that have a last
+						// visit time.  this may also filter out tabs that aren't
+						// in the current window, depending on that setting.
 					this.recents = tabs
-						.filter(({lastVisit}) => lastVisit)
+						.filter(recentsFilter)
 						.sort((a, b) => {
 								// sort open tabs before closed ones, and newer
 								// before old
@@ -239,7 +256,19 @@ define("popup/app", [
 						this.recents = NoRecentTabsMessage;
 					}
 
-					return tabs;
+					if (this.settings[k.CurrentWindowLimitSearch.Key]) {
+							// limit the tabs list to those in the current
+							// window.  since the limit search option is linked
+							// to limit recents, we know the recents are a subset
+							// of the filtered searchable list, so when
+							// loadPromisedItems() calls scoreItems() after this
+							// promise chain is done, the recent tabs are
+							// guaranteed to receive all the scoring keys, like
+							// score, scores, etc.
+						return tabs.filter(({windowId}) => windowId === currentWindowID);
+					} else {
+						return tabs;
+					}
 				}), "tabs", true);	// pass true to force a reload
 		},
 

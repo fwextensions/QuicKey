@@ -57,6 +57,12 @@ define([
 		ShowBookmarkPaths: {
 			Key: "showBookmarkPaths"
 		},
+		CurrentWindowLimitRecents: {
+			Key: "currentWindowLimitRecents"
+		},
+		CurrentWindowLimitSearch: {
+			Key: "currentWindowLimitSearch"
+		},
 		Shortcuts: {
 			Key: "shortcuts",
 			MRUSelect: "mruSelect",

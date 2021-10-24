@@ -96,6 +96,13 @@ define([
 					k.HomeEndBehavior
 				)(data);
 				data.lastQuery = "";
+			}),
+			"10": update(async data =>
+			{
+				await addDefaultSetting(
+					k.CurrentWindowLimitRecents,
+					k.CurrentWindowLimitSearch
+				)(data);
 			})
 		};
 			// calculate the version by incrementing the highest key in the
