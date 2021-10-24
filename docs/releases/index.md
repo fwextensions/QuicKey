@@ -8,6 +8,14 @@ comments: true
 # Release history
 
 
+## 1.7.0 - 2021-10-24
+
+### Added
+
+* Option to limit recent tab navigation to the current browser window.
+* Option to limit tab search results to the current browser window.
+
+
 ## 1.6.1 - 2021-05-04
 
 ### Added

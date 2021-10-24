@@ -96,6 +96,10 @@
 		--background: #ccc;
 	}
 
+	.control input:disabled ~ span {
+		--opacity: .4;
+	}
+
 	.control .subtitle {
 		--color: #aaa;
 	}
@@ -353,6 +357,10 @@ main {
 	display: inline-block;
 }
 
+.control label > .control {
+	margin: .5em 0 0 0;
+}
+
 	/* don't use display: none so the control can still get focus */
 .control input {
 	position: absolute;
@@ -389,7 +397,7 @@ main {
 
 .control input:disabled ~ .indicator {
 	background: var(--background, #e6e6e6);
-	opacity: 0.6;
+	opacity: 0.4;
 	pointer-events: none;
 }
 
@@ -408,7 +416,7 @@ main {
 }
 
 .control input[type="checkbox"]:disabled ~ .indicator:after {
-	border-color: var(--border-color, #666);
+	border: none;
 }
 
 .control input[type="radio"] ~ .indicator {
@@ -426,6 +434,10 @@ main {
 
 .control input[type="radio"]:disabled ~ .indicator:after {
 	background: var(--background, #7b7b7b);
+}
+
+.control input:disabled ~ span {
+	opacity: var(--opacity, .6);
 }
 
 .control .subtitle {
@@ -462,7 +474,7 @@ main {
 
 .new-setting {
 	display: flex;
-	align-items: baseline;
+	align-items: self-start;
 }
 
 .new-setting > .control-group {
@@ -473,6 +485,7 @@ main {
 	color: #d70000;
 	font-weight: bold;
 	font-size: .7em;
+	line-height: 2.1em;
 	text-indent: -3.5em;
 	animation: red-fade 3s infinite ease-out;
 }

@@ -15,7 +15,13 @@
 
 
 			return <div className="control">
-				<label>
+				<label
+					title={
+						props.disabled
+							? props.tooltipDisabled
+							: props.tooltip
+					}
+				>
 					<input type="checkbox"
 						checked={props.value}
 						disabled={props.disabled}
@@ -34,7 +40,13 @@
 			props)
 		{
 			return <li className="control">
-				<label>
+				<label
+					title={
+						props.disabled
+							? props.tooltipDisabled
+							: props.tooltip
+					}
+				>
 					<input type="radio"
 						checked={props.checked}
 						disabled={props.disabled}

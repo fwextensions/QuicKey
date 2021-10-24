@@ -372,13 +372,33 @@ DEBUG && console.log("=== updateAll");
 
 
 	function navigate(
-		direction)
+		direction,
+		limitToCurrentWindow)
 	{
 		const now = Date.now();
 		const newData = {
 			lastShortcutTime: now,
 			previousTabIndex: -1
 		};
+
+
+		function calcNavigationIndex(
+			direction,
+			index,
+			count)
+		{
+			let newIndex;
+
+			if (direction == -1) {
+					// when going backwards, wrap around if necessary
+				newIndex = (index - 1 + count) % count;
+			} else {
+					// don't let the user go past the most recently used tab
+				newIndex = Math.min(index + 1, count - 1);
+			}
+
+			return newIndex;
+		}
 
 
 		function switchTabs(
@@ -389,14 +409,10 @@ DEBUG && console.log("=== updateAll");
 			const maxIndex = tabIDCount - 1;
 			let previousTabIndex;
 
-			if (now - data.lastShortcutTime < MaxSwitchDelay && data.previousTabIndex > -1) {
-				if (direction == -1) {
-						// when going backwards, wrap around if necessary
-					previousTabIndex = (data.previousTabIndex - 1 + tabIDCount) % tabIDCount;
-				} else {
-						// don't let the user go past the most recently used tab
-					previousTabIndex = Math.min(data.previousTabIndex + 1, maxIndex);
-				}
+			if (now - data.lastShortcutTime < MaxSwitchDelay
+					&& data.previousTabIndex > -1) {
+				previousTabIndex = calcNavigationIndex(direction,
+					data.previousTabIndex, tabIDCount);
 			} else if (direction == -1) {
 					// if the user is not actively navigating, we want to ignore
 					// alt-S keypresses so the icon doesn't invert for no reason,
@@ -411,6 +427,26 @@ DEBUG && console.log("=== updateAll");
 
 			if (previousTabID) {
 DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabIndex, tabIDs.slice(-5), titleOrURL(tabsByID[previousTabID]));
+				if (limitToCurrentWindow) {
+					const currentTab = tabsByID[tabIDs[maxIndex]];
+					const previousTab = tabsByID[previousTabID];
+
+					if (previousTab && currentTab
+							&& previousTab.windowId !== currentTab.windowId) {
+						data.previousTabIndex = calcNavigationIndex(direction,
+							data.previousTabIndex, tabIDCount);
+
+							// we need to set lastShortcutTime to now so that
+							// when we recur, we'll hit the first if branch and
+							// move farther back into the stack.  otherwise,
+							// previousTabIndex would keep getting set to the
+							// penultimate tab in tabIDs.
+						data.lastShortcutTime = now;
+
+						return switchTabs(data);
+					}
+				}
+
 				newData.previousTabIndex = previousTabIndex;
 
 					// we don't start the promise chain with windows.update
@@ -457,14 +493,15 @@ DEBUG && console.error(error);
 	}
 
 
-	function toggle()
+	function toggle(
+		limitToCurrentWindow)
 	{
 			// set previousTabIndex to -1 in case the user had been navigating
 			// back into the stack and then pressed the toggle shortcut within
 			// 750ms.  if previousTabIndex was still set, we'd toggle to the
 			// wrong tab.
 		return storage.set(() => ({ lastShortcutTime: 0, previousTabIndex: -1 }), "toggle")
-			.then(() => navigate(-1));
+			.then(() => navigate(-1, limitToCurrentWindow));
 	}
 
 

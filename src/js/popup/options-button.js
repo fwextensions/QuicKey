@@ -9,10 +9,9 @@ define([
 		newSettingsAvailable,
 		onClick
 	}) {
-		const qkOptions = "QuicKey options";
 		const tooltip = newSettingsAvailable
-			? `New ${qkOptions} are available`
-			: qkOptions;
+			? "New options are available"
+			: "Options";
 
 		return (
 			<div className="options-button"

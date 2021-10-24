@@ -114,14 +114,13 @@ No mouse needed!
  • Press ENTER to switch to the selected tab
 
 
-★ New options in v1.6.0
+★ New options in v1.7.0
 
- • Restore the last search query when the menu reopens
- • Search for bookmarks by their folder names
- • Control how the HOME and END keys behave
+ • Limit recent tab navigation to the current browser window
+ • Limit tab search results to the current browser window
 
 
-★ Use CTRL-TAB as the keyboard shortcut
+★ Use CTRL-TAB to switch between recent tabs
 
 With a little extra work, you can make QuicKey respond to the Holy Grail of keyboard shortcuts: CTRL-TAB.
 
@@ -193,11 +192,25 @@ Recently used tabs get a slight boost in the search results ranking, so getting 
 
 ★ Customize shortcuts and other options
 
-To customize how QuicKey behaves, click the gear icon in the menu, or right-click its icon on the toolbar and select Options. On the QuicKey options page, you can change the behavior of the SPACE and ESC keys, hide closed tabs from the search results, mark tabs in other windows with an icon, show the number of open tabs, use pinyin to search for Chinese characters, and customize many of the keyboard shortcuts described here.
+To customize how QuicKey behaves, click the gear icon in the menu, or right-click its icon on the toolbar and select Options. There you can:
 
-If you change the keyboard shortcut for showing the QuicKey menu to something other than the default ALT-Q or if you have a non-US keyboard, you'll probably want to also change the key that's used to navigate down the list of recently used tabs (which defaults to W). For instance, if you change the menu shortcut to ALT-Z, you might want to change the navigation key to X, which is right next door. To change it, go to the Options page, click in the first keyboard shortcut picker, and press X.
+ • Customize keyboard shortcuts
+ • Hide closed tabs from the search results
+ • Limit navigating recent tabs or searching to the current browser window
+ • Mark tabs in other browser windows with an icon
+ • Show the number of open tabs
+ • Use pinyin to search for Chinese characters
 
-If new settings have been added to QuicKey since the last time you looked at the options page, the gear icon will display a red dot to let you know.
+If you change the keyboard shortcut for showing the QuicKey menu to something other than the default ALT-Q or if you have a non-US keyboard, you'll probably want to also change the key that's used to navigate down the list of recently used tabs (which defaults to W). For instance, if you change the menu shortcut to ALT-Z, you might want to change the navigation key to X, which is right next door. To change it, go to the Options page, click the "Select the next tab" keyboard shortcut picker, and press X.
+
+When new settings have been added to QuicKey, the gear icon will display a red dot to let you know.
+
+
+★ Limit navigation to the current browser window
+
+If you have multiple browser windows open, you may want to navigate among only the recent tabs that are in the current window. To enable this behavior, open the Options page and select "Limit recent tabs to the current browser window". Pressing the shortcuts for "Switch instantly between the two most recent tabs" or "Switch to the previous tab" will then switch only between recent tabs in the current window.
+
+You can also limit searching for tabs to the current browser window.
 
 
 ★ Close and reopen tabs
@@ -221,7 +234,7 @@ The CTRL key should be used on both Windows and macOS. Note that you cannot move
 
 ★ Distinguish tabs with identical titles
 
-A tab that has the same title as other open tabs will display a number to indicate its left-to-right position among those other tabs.  For instance, if you open tabs for two different Google Drive accounts, they'll both be titled "My Drive - Google Drive".  But the one on the left will show a "1" next to its title in the menu and the one on the right will show a "2".  This makes it easier for you to select the tab you want when you know how they're organized in your window.
+A tab that has the same title as other open tabs will display a number to indicate its left-to-right position among those other tabs. For instance, if you open tabs for two different Google Drive accounts, they'll both be titled "My Drive - Google Drive". But the one on the left will show a "1" next to its title in the menu and the one on the right will show a "2". This makes it easier for you to select the tab you want when you know how they're organized in your window.
 
 
 ★ Search bookmarks
@@ -233,7 +246,7 @@ To find a bookmark, type "/b" and a space in the search box, then part of the bo
    the current window.
  • Press SHIFT-ENTER to open it in a new window.
 
-As soon as you type "/b ", your bookmarks will be listed in alphabetical order, in case you want to browse through them.  Since bookmarks can be organized into folders, the folder path is shown before each bookmark's title.  The folder path can be hidden by unchecking "Show the folder path to each bookmark in its title" on the Options page.
+As soon as you type "/b ", your bookmarks will be listed in alphabetical order, in case you want to browse through them. Since bookmarks can be organized into folders, the folder path is shown before each bookmark's title. The folder path can be hidden by unchecking "Show the folder path to each bookmark in its title" on the Options page.
 
 
 ★ Search the browser history
@@ -273,16 +286,16 @@ When first installed, QuicKey asks for these permissions:
  ➤ "Read and change your browsing history on all your signed-in devices"
 
       QuicKey uses this permission to let you search the titles and URLs of
-      the open tabs, as well as pages from your history. The "all your signed-in
-      devices" part is there only so that recently closed tabs can be restored
-      with their full history. The only time QuicKey changes your browsing
-      history is when you choose to delete a history item.
+      the open tabs, as well as pages from your history. The "all your
+      signed-in devices" part is there only so that recently closed tabs can be
+      restored with their full history. The only time QuicKey changes your
+      browsing history is when you choose to delete a history item.
 
  ➤ "Read and change your bookmarks"
 
       QuicKey uses this permission to let you search the titles and URLs of
-      your bookmarked pages. The only time it changes your bookmarks is when
-      you choose to delete one.
+      your bookmarked pages. The only time it changes your bookmarks is
+      when you choose to delete one.
 
 QuicKey can't access or manipulate the content of any pages you visit and doesn't transmit any information other than some anonymized diagnostic data.
 

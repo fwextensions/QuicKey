@@ -141,6 +141,7 @@ require([
 	let lastTogglePromise = Promise.resolve();
 	let isNormalIcon = true;
 	let showTabCount = true;
+	let currentWindowLimitRecents = false;
 	let shortcutTimer;
 	let lastWindowID;
 	let lastUsedVersion;
@@ -194,13 +195,13 @@ require([
 		switch (command) {
 			case "1-previous-tab":
 				tabChangedFromCommand = true;
-				recentTabs.navigate(-1);
+				recentTabs.navigate(-1, currentWindowLimitRecents);
 				backgroundTracker.event("recents", "previous", label);
 				break;
 
 			case "2-next-tab":
 				tabChangedFromCommand = true;
-				recentTabs.navigate(1);
+				recentTabs.navigate(1, currentWindowLimitRecents);
 				backgroundTracker.event("recents", "next", label);
 				break;
 
@@ -227,7 +228,7 @@ require([
 				// fire after we navigate, putting that tab on the top of the
 				// stack, even though a different tab was now active.
 			.then(addTab.execute)
-			.then(recentTabs.toggle)
+			.then(() => recentTabs.toggle(currentWindowLimitRecents))
 				// fire the debounced addTab() so the tab we just toggled to will
 				// be the most recent, in case the user quickly toggles again.
 				// otherwise, the debounced add would fire after we navigate,
@@ -464,6 +465,8 @@ require([
 				// the background page was loaded, then add the badge
 			setNormalIcon()
 				.then(() => updateTabCount());
+		} else if (k.CurrentWindowLimitRecents.Key in message) {
+			currentWindowLimitRecents = message[k.CurrentWindowLimitRecents.Key];
 		}
 	});
 
@@ -498,7 +501,10 @@ DEBUG && console.log(e);
 		// update the icon, in case we're in dark mode when the extension loads,
 		// and update the badge text depending on the setting of showTabCount
 	settings.get()
-		.then(settings => showTabCount = settings[k.ShowTabCount.Key])
+		.then(settings => {
+			showTabCount = settings[k.ShowTabCount.Key];
+			currentWindowLimitRecents = settings[k.CurrentWindowLimitRecents.Key];
+		})
 		.then(() => setNormalIcon())
 		.then(() => cp.tabs.query({}))
 		.then(({length}) => updateTabCount(length));

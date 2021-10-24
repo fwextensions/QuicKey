@@ -1,5 +1,4 @@
 define([
-	"bluebird",
 	"./quickey-storage",
 	"./get-default-settings",
 	"./get-chrome-shortcuts",
@@ -7,7 +6,6 @@ define([
 	"options/are-shortcuts-identical",
 	"./constants"
 ], function(
-	Promise,
 	storage,
 	getDefaultSettings,
 	getChromeShortcuts,
