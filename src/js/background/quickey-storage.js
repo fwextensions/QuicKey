@@ -103,9 +103,8 @@ define([
 					k.CurrentWindowLimitRecents,
 					k.CurrentWindowLimitSearch
 				)(data);
-				await addDefaultSetting(k.NavigateRecentsWithPopup.Key);
 			}),
-			"10": update(async data =>
+			"11": update(async data =>
 			{
 				await addDefaultSetting(
 					k.HidePopupBehavior,
@@ -176,10 +175,6 @@ define([
 
 
 		return createStorage({
-				// calculate the version by incrementing the highest key in the
-				// Updaters hash, so that the version is automatically increased
-				// when an updater is added.  use a proper numeric sort so that
-				// once we go over 9, the order is correct.
 			version: CurrentVersion,
 			updaters: Updaters,
 

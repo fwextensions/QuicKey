@@ -425,7 +425,7 @@ main {
    =========================================================================== */
 
 .control {
-	padding: .25em 0;
+	margin-bottom: .5em;
 }
 
 .control label {
@@ -475,13 +475,8 @@ main {
 
 .control input:disabled ~ .indicator {
 	background: var(--background, #e6e6e6);
-	opacity: 0.4;
 	opacity: 0.3;
 	pointer-events: none;
-}
-
-.control input:disabled ~ span {
-	opacity: 0.3;
 }
 
 .control input:checked ~ .indicator:after {
@@ -520,7 +515,7 @@ main {
 }
 
 .control input:disabled ~ span {
-	opacity: var(--opacity, .6);
+	opacity: var(--opacity, .5);
 }
 
 .control .subtitle {
@@ -533,15 +528,15 @@ main {
 }
 
 .control-group {
-	padding: 0 0 2em 0;
+	margin: 1em 0 2em 0;
 }
 
 .control-group .label {
-	line-height: 1.4;
-	margin: .25em 0;
+	line-height: 1.5;
+	margin-bottom: .25em;
 }
 
-.control-group .label kbd, label kbd {
+.control-group .label kbd {
 	line-height: 1.2;
 }
 
@@ -551,6 +546,7 @@ main {
 
 .radio-list .control {
 	padding: .25em;
+	margin-bottom: 0;
 }
 
 .chrome-shortcuts {
@@ -566,11 +562,10 @@ main {
 .new-setting {
 	display: flex;
 	align-items: self-start;
-	position: relative;
 }
 
 .new-setting > .control-group {
-	padding: 0;
+	margin: 0;
 }
 
 .new-indicator {
@@ -580,23 +575,11 @@ main {
 	line-height: 2.1em;
 	text-indent: -3.5em;
 	animation: red-fade 3s infinite ease-out;
-	left: -3.5em;
-	top: .75em;
-	position: absolute;
 }
 
 @keyframes red-fade {
 	0% { color: #f33; }
 	100% { color: #d70000; }
-}
-
-
-#hidePopupBehavior .label {
-	height: 1.5em;
-}
-
-#hidePopupBehavior .control {
-	height: 2em;
 }
 
 .control.hide-popup label {

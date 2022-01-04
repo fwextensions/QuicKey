@@ -11,8 +11,8 @@ define([
 	trackers,
 	storage,
 	settings,
-	{Platform, ShowTabCount, CurrentWindowLimitRecents, CurrentWindowLimitSearch, HidePopupBehavior}
-	{Platform, ShowTabCount, HidePopupBehavior, NavigateRecentsWithPopup}
+	{Platform, ShowTabCount, CurrentWindowLimitRecents, CurrentWindowLimitSearch,
+		HidePopupBehavior, NavigateRecentsWithPopup}
 ) {
 	const PlusPattern = /\+/g;
 

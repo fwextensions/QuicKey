@@ -210,17 +210,11 @@ require([
 				break;
 
 			case PreviousTabCommand:
-//				tabChangedFromCommand = true;
-//				recentTabs.navigate(-1, currentWindowLimitRecents);
-//				backgroundTracker.event("recents", "previous", label);
-				navigateRecents(-1);
+				navigateRecents(-1, currentWindowLimitRecents);
 				break;
 
 			case NextTabCommand:
-//				tabChangedFromCommand = true;
-//				recentTabs.navigate(1, currentWindowLimitRecents);
-//				backgroundTracker.event("recents", "next", label);
-				navigateRecents(1);
+				navigateRecents(1, currentWindowLimitRecents);
 				break;
 
 			case ToggleTabsCommand:
@@ -274,7 +268,8 @@ require([
 
 
 	async function navigateRecents(
-		direction)
+		direction,
+		limitToCurrentWindow)
 	{
 			// track whether the user is navigating farther back in the stack
 		const label = toolbarIcon.isNormal ? "single" : "repeated";
