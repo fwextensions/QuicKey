@@ -8,6 +8,8 @@
 		label,
 		value,
 		disabled,
+		tooltip,
+		tooltipDisabled,
 		className,
 		onChange,
 		children,
@@ -26,9 +28,9 @@
 			<div className={classes} {...props}>
 				<label
 					title={
-						props.disabled
-							? props.tooltipDisabled
-							: props.tooltip
+						disabled
+							? tooltipDisabled
+							: tooltip
 					}
 				>
 					<input type="checkbox"
@@ -52,6 +54,8 @@
 		value,
 		checked,
 		disabled,
+		tooltip,
+		tooltipDisabled,
 		className,
 		onChange,
 		children,
@@ -63,9 +67,9 @@
 			<li className={classes} {...props}>
 				<label
 					title={
-						props.disabled
-							? props.tooltipDisabled
-							: props.tooltip
+						disabled
+							? tooltipDisabled
+							: tooltip
 					}
 				>
 					<input type="radio"

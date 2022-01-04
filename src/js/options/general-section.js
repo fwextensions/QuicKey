@@ -46,12 +46,6 @@ define([
 						Selecting a closed tab will reopen it with its full history.
 					</div>
 				</Checkbox>
-				<Checkbox
-					id={k.MarkTabsInOtherWindows.Key}
-					label={<span>Mark tabs that are not in the current window with <WindowIcon /></span>}
-					value={settings[k.MarkTabsInOtherWindows.Key]}
-					onChange={onChange}
-				/>
 				<NewSetting
 					addedVersion={10}
 					lastSeenOptionsVersion={lastSeenOptionsVersion}
@@ -85,6 +79,51 @@ define([
 						onChange={onChange}
 					/>
 				</NewSetting>
+
+
+				<h2>Multiple browser windows</h2>
+
+				<NewSetting
+					addedVersion={11}
+					lastSeenOptionsVersion={lastSeenOptionsVersion}
+				>
+					<Checkbox
+						id={k.CurrentWindowLimitRecents.Key}
+						label="Limit recent tabs to the current browser window"
+						value={settings[k.CurrentWindowLimitRecents.Key]}
+						onChange={(value, key) => {
+								// uncheck the search option if we're unchecked
+							if (!value && settings[k.CurrentWindowLimitSearch.Key]) {
+								onChange(false, k.CurrentWindowLimitSearch.Key);
+							}
+
+							onChange(value, key);
+						}}
+					>
+						<Checkbox
+							id={k.CurrentWindowLimitSearch.Key}
+							label="Also limit search results to the current browser window"
+							value={settings[k.CurrentWindowLimitSearch.Key]}
+							onChange={(value, key) => {
+									// make sure the recents option is checked if
+									// we get checked
+								if (value && !settings[k.CurrentWindowLimitRecents.Key]) {
+									onChange(true, k.CurrentWindowLimitRecents.Key);
+								}
+
+								onChange(value, key);
+							}}
+						/>
+					</Checkbox>
+				</NewSetting>
+				<Checkbox
+					id={k.MarkTabsInOtherWindows.Key}
+					label={<span>Mark tabs in other browser windows with <WindowIcon /></span>}
+					value={settings[k.MarkTabsInOtherWindows.Key]}
+					disabled={settings[k.CurrentWindowLimitRecents.Key] && settings[k.CurrentWindowLimitSearch.Key]}
+					tooltipDisabled="When recent tabs and search results are limited to the current window, no tabs from other windows will be visible"
+					onChange={onChange}
+				/>
 
 
 				<h2>Toolbar icon</h2>

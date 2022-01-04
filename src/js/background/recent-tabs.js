@@ -505,13 +505,7 @@ DEBUG && console.error(error);
 	function toggle(
 		limitToCurrentWindow)
 	{
-			// set previousTabIndex to -1 in case the user had been navigating
-			// back into the stack and then pressed the toggle shortcut within
-			// 750ms.  if previousTabIndex was still set, we'd toggle to the
-			// wrong tab.
-//		return storage.set(() => ({ lastShortcutTime: 0, previousTabIndex: -1 }), "toggle")
-//			.then(() => navigate(-1, limitToCurrentWindow));
-		return navigate("toggle");
+		return navigate("toggle", limitToCurrentWindow);
 	}
 
 

@@ -87,7 +87,7 @@ define([
 					<h2>Show popup window while navigating recent tabs</h2>
 
 					<NewSetting
-						addedVersion={11}
+						addedVersion={12}
 						lastSeenOptionsVersion={lastSeenOptionsVersion}
 					>
 						<Checkbox
@@ -103,7 +103,7 @@ define([
 					<h2>Hide popup window</h2>
 
 					<NewSetting
-						addedVersion={11}
+						addedVersion={12}
 						lastSeenOptionsVersion={lastSeenOptionsVersion}
 					>
 						<RadioGroup
