@@ -22,6 +22,23 @@ MinUpDownTicks            := 200
 OpenedTickCount           := 0
 SawCtrlTab                := 0
 
+ExcludeTitles             := ["(Visual Studio Code|VSCodium)( - Insiders)?$"] ; VSCode / VSCodium
+
+ExcludeTitle := ExcludeTitles[1]
+For Idx, Title in ExcludeTitles {
+	If (Idx > 1) {
+		ExcludeTitle .= "|" . Title
+	}
+}
+
+
+IsChromiumBasedBrowser()
+{
+	global ExcludeTitle
+
+	return WinActive("ahk_class Chrome_WidgetWin_1",, ExcludeTitle)
+}
+
 
 HasPopupWindowSize()
 {
@@ -39,7 +56,7 @@ IsPopupActive()
 }
 
 
-#IfWinActive ahk_class Chrome_WidgetWin_1
+#If IsChromiumBasedBrowser()
 
 ; Ctrl+Tab
 ^Tab::
@@ -131,10 +148,10 @@ IsPopupActive()
 	return
 }
 
-#IfWinActive
+#If
 
 
-#If WinActive ahk_class Chrome_WidgetWin_1 and IsPopupActive()
+#If IsChromiumBasedBrowser() and IsPopupActive()
 
 ; Ctrl+Right, Ctrl+Shift+Right, Ctrl+Shift+Down
 ^Right::
