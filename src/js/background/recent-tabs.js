@@ -32,6 +32,13 @@ define([
 	}
 
 
+	function getRecentStackString(
+		tabIDs)
+	{
+		return `[${tabIDs.slice(-5).join(",")}]`;
+	}
+
+
 	function removeItem(
 		array,
 		item)
@@ -204,7 +211,7 @@ DEBUG && console.log("updateFromFreshTabs result", result);
 				tabIDs.push(id);
 			}
 
-DEBUG && console.log("add", `${tab.id}|${tab.windowId}`, tabIDs.slice(-5), titleOrURL(tab));
+DEBUG && console.log("add", `${tab.id}|${tab.windowId}`, getRecentStackString(tabIDs), titleOrURL(tab));
 
 				// remove any older tabs that are over the max limit
 			tabIDs.splice(0, Math.max(tabIDs.length - MaxTabsLength, 0)).forEach(id => {
@@ -227,8 +234,8 @@ DEBUG && console.log("add", `${tab.id}|${tab.windowId}`, tabIDs.slice(-5), title
 			const index = tabIDs.indexOf(tabID);
 
 			if (index > -1) {
-DEBUG && console.log("tab closed", tabID, titleOrURL(tabsByID[tabID]));
 				tabIDs.splice(index, 1);
+DEBUG && console.log("tab closed", tabID, getRecentStackString(tabIDs), titleOrURL(tabsByID[tabID]));
 			}
 
 				// the user might have focused the tab, then focused 50+ more
@@ -257,7 +264,7 @@ DEBUG && console.log("tab closed", tabID, titleOrURL(tabsByID[tabID]));
 			}
 
 			if (index > -1) {
-DEBUG && console.log("tab replaced", oldID, titleOrURL(oldTab));
+DEBUG && console.log("tab replaced", oldID, "index", index, getRecentStackString(tabIDs), titleOrURL(oldTab));
 				tabIDs[index] = newID;
 				tabsByID[newID] = oldTab;
 				tabsByID[newID].id = newID;
@@ -435,7 +442,7 @@ DEBUG && console.log("=== updateAll");
 			const previousTabID = tabIDs[previousTabIndex];
 
 			if (previousTabID) {
-DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabIndex, tabIDs.slice(-5), titleOrURL(tabsByID[previousTabID]));
+DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabIndex, getRecentStackString(tabIDs), titleOrURL(tabsByID[previousTabID]));
 				if (limitToCurrentWindow) {
 					const currentTab = tabsByID[tabIDs[maxIndex]];
 					const previousTab = tabsByID[previousTabID];
