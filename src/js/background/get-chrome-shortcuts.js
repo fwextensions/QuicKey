@@ -43,6 +43,7 @@ define([
 //		"\u2318": "Cmd",
 	};
 	const ShortcutSeparator = "+";
+	const ShortcutSeparatorPattern = /\s*\+\s*/;
 	const MacShortcutPattern = /([\u2303\u21E7\u2325\u2318]+)(.+)/;
 		// Unicode chars in a regex also show up broken
 //	const MacShortcutPattern = /([⌃⇧⌥⌘]+)(.+)/;
@@ -82,7 +83,7 @@ define([
 						shortcutKeys = [""];
 					}
 				} else {
-					shortcutKeys = shortcutText.split(ShortcutSeparator);
+					shortcutKeys = shortcutText.split(ShortcutSeparatorPattern);
 				}
 
 					// make the modifier strings lowercase, remove spaces from

@@ -8,6 +8,14 @@ comments: true
 # Release history
 
 
+## 1.7.1 - 2022-03-07
+
+### Fixed
+
+* Fix keyboard shortcut handling in Cent and any other Chromium browsers that use a plus surrounded by spaces in shortcut strings.
+* Fix the `quickey-ctrl-tab.ahk` AutoHotkey script to not interfere with Chromium-based apps like VS Code. 
+
+
 ## 1.7.0 - 2021-10-24
 
 ### Added

@@ -15,28 +15,28 @@ SetKeyDelay, -1, -1     ; No delay at all will occur after each keystroke sent b
 SetWinDelay, 0          ; Changed to 0 upon recommendation of documentation
 
 
-BrowserName              := "Google Chrome|Edge"
+BrowserName               := "Google Chrome|Edge"
 DeveloperToolsWindowTitle := "Developer Tools"
 TicksToToggleTab          := 450
 MinUpDownTicks            := 200
 OpenedTickCount           := 0
 SawCtrlTab                := 0
+ExcludedTitles            := ["(Visual Studio Code|VSCodium)( - Insiders)?$"] ; Add patterns to this array to exclude other apps
+ExcludedTitlePattern      := ExcludedTitles[1]
 
-ExcludeTitles             := ["(Visual Studio Code|VSCodium)( - Insiders)?$"] ; VSCode / VSCodium
-
-ExcludeTitle := ExcludeTitles[1]
-For Idx, Title in ExcludeTitles {
+; Build a string that OR's all the excluded title patterns
+For Idx, Title in ExcludedTitles {
 	If (Idx > 1) {
-		ExcludeTitle .= "|" . Title
+		ExcludedTitlePattern .= "|" . Title
 	}
 }
 
 
-IsChromiumBasedBrowser()
+IsChromiumBrowser()
 {
-	global ExcludeTitle
+	global ExcludedTitlePattern
 
-	return WinActive("ahk_class Chrome_WidgetWin_1",, ExcludeTitle)
+	return WinActive("ahk_class Chrome_WidgetWin_1",, ExcludedTitlePattern)
 }
 
 
@@ -44,6 +44,7 @@ HasPopupWindowSize()
 {
 	Width := 0
 	WinGetPos, , , Width, , A
+
 	return Width between 500 and 505
 }
 
@@ -52,17 +53,16 @@ IsPopupActive()
 {
 	global BrowserName, DeveloperToolsWindowTitle
 
-	return WinActive("ahk_class Chrome_WidgetWin_1") and !WinActive(BrowserName) and !WinActive(DeveloperToolsWindowTitle) and HasPopupWindowSize()
+	return IsChromiumBrowser() and !WinActive(BrowserName) and !WinActive(DeveloperToolsWindowTitle) and HasPopupWindowSize()
 }
 
 
-#If IsChromiumBasedBrowser()
+#If IsChromiumBrowser()
 
 ; Ctrl+Tab
 ^Tab::
 {
-	if WinActive(BrowserName)
-	{
+	if WinActive(BrowserName) {
 		SawCtrlTab := 1
 
 		Send !{q}
@@ -72,8 +72,7 @@ IsPopupActive()
 			; check for the popup window every 100ms
 			Sleep 100
 
-			if !SawCtrlTab
-			{
+			if !SawCtrlTab {
 				; if this is no longer 1, it means ctrl up was heard while we
 				; were sleeping, so exit
 				Exit
@@ -102,8 +101,7 @@ IsPopupActive()
 ; Ctrl+Shift+Tab
 ^+Tab::
 {
-	if WinActive(BrowserName)
-	{
+	if WinActive(BrowserName) {
 		Send !{q}
 		OpenedTickCount := A_TickCount
 	} else {
@@ -117,32 +115,22 @@ IsPopupActive()
 ; Ctrl keyup
 ~Ctrl Up::
 {
-	if (SawCtrlTab = 1)
-	{
-		SawCtrlTab := 0
+	if (A_TickCount - OpenedTickCount < TicksToToggleTab) {
+		TicksToSleep := OpenedTickCount + MinUpDownTicks - A_TickCount
 
-		if (A_TickCount - OpenedTickCount < TicksToToggleTab)
-		{
-			TicksToSleep := OpenedTickCount + MinUpDownTicks - A_TickCount
-
-			if (TicksToSleep > 0)
-			{
-				; if the QuicKey popup is closed within 450ms, it switches to the previous tab.
-				; but if it's closed too quickly, it might not detect that it was opened, so
-				; make sure there's at least 200ms between opening and closing it.
-				Sleep TicksToSleep
-			}
-
-			; close the popup
-			Send !{q}
-
-			return
+		if (TicksToSleep > 0) {
+			; if the QuicKey popup is closed within 450ms, it switches to the previous tab.
+			; but if it's closed too quickly, it might not detect that it was opened, so
+			; make sure there's at least 200ms between opening and closing it.
+			Sleep TicksToSleep
 		}
 
-		if IsPopupActive()
-		{
-			Send {Enter}
-		}
+		; close the popup
+		Send !{q}
+
+		return
+	} else if IsPopupActive() {
+		Send {Enter}
 	}
 
 	return
@@ -151,7 +139,7 @@ IsPopupActive()
 #If
 
 
-#If IsChromiumBasedBrowser() and IsPopupActive()
+#If IsPopupActive()
 
 ; Ctrl+Right, Ctrl+Shift+Right, Ctrl+Shift+Down
 ^Right::
