@@ -24,7 +24,7 @@ define([
 ) {
 	const MaxTitleLength = 70;
 	const MaxURLLength = 75;
-	const MinMouseMoveCount = 1;
+	const MinRenderDelay = 40;
 	const SuspendedFaviconOpacity = .5;
 	const FaviconURL = "chrome://favicon/";
 	const CloseButtonTooltips = {
@@ -37,16 +37,7 @@ define([
 
 
 	const ResultsListItem = React.createClass({
-		mouseMoveCount: 0,
-
-
-		componentWillReceiveProps: function(
-			nextProps)
-		{
-			if (nextProps.item !== this.props.item || !nextProps.visible) {
-				this.mouseMoveCount = 0;
-			}
-		},
+		lastRenderTime: 0,
 
 
 		onClick: function(
@@ -92,39 +83,22 @@ define([
 		onMouseMove: function(
 			event)
 		{
-			const {index, isSelected, selectedIndex, setSelectedIndex} = this.props;
+			const {index, isSelected, setSelectedIndex} = this.props;
 
-			if ((selectedIndex > 0 || this.mouseMoveCount > MinMouseMoveCount)
-					&& !isSelected) {
-					// the mouse is moving over this item but it's not
-					// selected, which means this is the third mousemove
-					// event and we haven't gotten another mouseenter.  so
-					// force this item to be selected.  also select it when an
-					// item beyond the first one is selected, which means this
-					// mousemove isn't happening right after the menu was rendered
-					// under the mouse, since the selection has already changed.
-					// pass true so the app treats a mouse selection like one
-					// made by the MRU key, so that the user can press the menu
-					// shortcut, highlight a tab with the mouse, and then release
-					// alt to select it.
-				setSelectedIndex(index, true);
-			} else {
-					// we want to swallow the first two mousemove events because
-					// the item that's rendered under the mouse when the popup
-					// first opens gets at least one mousemove.  on a high-DPI
-					// screen, it sometimes gets a second one, which was causing
-					// the menu item to be accidentally selected.
-				this.mouseMoveCount++;
-			}
-		},
-
-
-		onMouseEnter: function(
-			event)
-		{
-			const {index, selectedIndex, setSelectedIndex} = this.props;
-
-			if (selectedIndex > 0 || this.mouseMoveCount > MinMouseMoveCount) {
+			if (!isSelected &&
+					(Date.now() - this.lastRenderTime > MinRenderDelay)) {
+					// we only want to listen to mouse moves if we're not already
+					// selected and the event didn't come immediately after a
+					// render.  if the event immediately follows a render, it
+					// probably means the item was rendered underneath the mouse,
+					// and not that the user is moving the mouse to select this
+					// item.  this avoids selecting an item when the popup is
+					// opened under the mouse or the user is scrolling via the
+					// keyboard and the mouse is over the list.  pass true so
+					// the app treats a mouse selection like one made by the MRU
+					// key, so that the user can press the menu shortcut,
+					// highlight a tab with the mouse, and then release alt to
+					// select it.
 				setSelectedIndex(index, true);
 			}
 		},
@@ -204,12 +178,13 @@ define([
 				badgeTooltip = "This tab was closed recently";
 			}
 
+			this.lastRenderTime = Date.now();
+
 			return <div className={className}
 				style={style}
 				title={tooltip}
 				onClick={this.onClick}
 				onMouseMove={this.onMouseMove}
-				onMouseEnter={this.onMouseEnter}
 			>
 				<div className="favicon"
 					style={faviconStyle}
