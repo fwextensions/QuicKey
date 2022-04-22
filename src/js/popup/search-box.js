@@ -76,7 +76,7 @@ define([
 				// position isn't lost if the user moves it from the end and
 				// starts typing.  that change is forced when the app gets an
 				// esc and clears the text.
-			return <div className="search-box" >
+			return <div className="search-box">
 				<Input type="search"
 					ref={this.handleRef}
 					tabIndex="0"

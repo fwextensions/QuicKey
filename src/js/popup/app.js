@@ -701,9 +701,7 @@ define("popup/app", [
 		{
 			const index = this.state.selected + delta;
 
-			this.setSelectedIndex(index, mruKey);
-
-			return index;
+			return this.setSelectedIndex(index, mruKey);
 		},
 
 
@@ -724,7 +722,10 @@ define("popup/app", [
 				index = (index + length) % length;
 			}
 
-			this.setState({ selected: index });
+				// return the new selected state in a promise, so the caller can
+				// await the state change and re-render
+			return new Promise(resolve => this.setState({ selected: index },
+				() => resolve(this.state.selected)));
 		},
 
 
@@ -1003,19 +1004,32 @@ define("popup/app", [
 		{
 			switch (message) {
 				case "modifySelected":
-					if (payload.openPopup) {
+					const {openPopup, direction} = payload;
+
+					if (openPopup) {
 						this.navigatingRecents = true;
 
 						if (!this.visible) {
+								// show the window first, since that resets the
+								// selected state to -1
 							await this.showWindow({ focusSearch: false, activeTab: null });
+
+								// set selected based on the direction so that
+								// when modifySelected() is called below, the
+								// direction delta will end up selecting the
+								// correct item: 0 for switch to next, 1 for
+								// switch to previous.  item 0 will be the
+								// current tab if we're opening the popup for
+								// the first time during a navigation flow.
+							await this.setSelectedIndex(direction == 1 ? 0 : 1, true);
 						}
 
-						const index = this.modifySelected(payload.direction, true);
+						const index = await this.modifySelected(direction, true);
 
 						await this.focusTab(this.state.matchingItems[index]);
 						await this.showPopupWindow(null, "right-center");
 					} else {
-						this.modifySelected(payload.direction, true);
+						this.modifySelected(direction, true);
 					}
 					break;
 
