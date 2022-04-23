@@ -101,28 +101,7 @@ define("popup/app", [
 		{
 			const query = this.props.initialQuery;
 
-			this.settingsPromise = storage.get()
-				.then(data => {
-					if (data.lastSeenOptionsVersion < storage.version) {
-							// new settings have been added since the last time
-							// the user opened the options page
-						this.setState({ newSettingsAvailable: true });
-					}
-
-					if (data.settings[k.RestoreLastQuery.Key] && data.lastQuery) {
-							// we need to force the input to update to the stored
-							// text, and then force it to select all
-						this.forceUpdate = true;
-						this.selectAllSearchBoxText = true;
-						this.setSearchBoxText(data.lastQuery);
-					}
-
-						// pass the data we got from storage to settings so it
-						// doesn't have to get its own copy of it
-					return settings.get(data);
-				})
-				.then(this.updateSettings);
-
+			this.settingsPromise = this.updateSettings();
 			this.openedForSearch = this.props.focusSearch;
 
 			if (this.props.isPopup) {
@@ -743,18 +722,35 @@ define("popup/app", [
 		},
 
 
-		updateSettings: function(
-			settings)
+		updateSettings: async function()
 		{
-			this.settings = settings;
-			this.mruModifier = settings.chrome.popup.modifierEventName;
-			shortcuts.update(settings);
+			const data = await storage.get();
 
-			return settings;
+			this.setState({
+				newSettingsAvailable: data.lastSeenOptionsVersion < storage.version
+			});
+
+			if (data.settings[k.RestoreLastQuery.Key] && data.lastQuery) {
+					// we need to force the input to update to the stored
+					// text, and then force it to select all
+				this.forceUpdate = true;
+				this.selectAllSearchBoxText = true;
+				this.setSearchBoxText(data.lastQuery);
+			} else {
+				this.setSearchBoxText("");
+			}
+
+				// pass the data we got from storage to settings so it
+				// doesn't have to get its own copy of it
+			this.settings = await settings.get(data);
+			this.mruModifier = this.settings.chrome.popup.modifierEventName;
+			shortcuts.update(this.settings);
+
+			return this.settings;
 		},
 
 
-		showWindow: function({
+		showWindow: async function({
 			focusSearch,
 			activeTab})
 		{
@@ -785,8 +781,7 @@ define("popup/app", [
 
 				// get the latest settings, in case they've changed, so that
 				// they'll be available in loadTabs()
-			this.settingsPromise = settings.get()
-				.then(this.updateSettings);
+			this.settingsPromise = await this.updateSettings();
 
 				// the tab list should already be correct in most cases, but
 				// load them again just to make sure
@@ -826,12 +821,14 @@ define("popup/app", [
 				this.historyPromise = null;
 
 				if (this.settings[k.RestoreLastQuery.Key]) {
-						// force the search box to select whatever text is in it
-						// when it renders after the popup is shown again, so
-						// that the user can just type to replace it
-					this.selectAllSearchBoxText = true;
+						// save the current query so updateSettings() will
+						// restore it when the popup is reopened
+					storage.set(() => ({ lastQuery: this.state.searchBoxText }));
 				} else {
+						// the restore last query option is off, so clear any
+						// existing stored query
 					this.setSearchBoxText("");
+					storage.set(() => ({ lastQuery: "" }));
 				}
 
 					// if we're being closed by esc, not by losing focus or by
