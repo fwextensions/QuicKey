@@ -1,15 +1,24 @@
 define([
 	"react",
-	"jsx!./key"
+	"jsx!./key",
+	"./shortcut-utils"
 ], function(
 	React,
-	Key
+	Key,
+	{getKeysFromShortcut}
 ) {
-	return function Shortcut(
-		props)
+	return function Shortcut({
+		keys,
+		style})
 	{
-		return <div className="shortcut" style={props.style}>
-			{props.keys.map(key => key && <Key code={key} />)}
+		const keyStrings = Array.isArray(keys)
+			? keys
+			: getKeysFromShortcut(keys).keys;
+
+		return <div className="shortcut"
+			style={style}
+		>
+			{keyStrings.map(key => key && <Key code={key} />)}
 		</div>
 	};
 });
