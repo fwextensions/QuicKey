@@ -3,14 +3,14 @@ define([
 	"./get-default-settings",
 	"./get-chrome-shortcuts",
 	"options/key-constants",
-	"options/are-shortcuts-identical",
+	"options/shortcut-utils",
 	"./constants"
 ], function(
 	storage,
 	getDefaultSettings,
 	getChromeShortcuts,
 	KeyConstants,
-	areShortcutsIdentical,
+	{areShortcutsIdentical},
 	{IsMac, Platform}
 ) {
 	const DefaultPopupModifier = IsMac ? "ctrl" : "alt";

@@ -34,6 +34,10 @@
 		--background: #eee;
 	}
 
+	p {
+		--color: #bfbfbf;
+	}
+
 	.section-label {
 		--color: #ccc;
 	}
@@ -293,6 +297,11 @@ a {
 
 a:hover {
 	opacity: .8;
+}
+
+p {
+	color: var(--color, #666);
+	margin-bottom: 1.5em;
 }
 
 main {
@@ -555,7 +564,7 @@ main {
 
 .incognito-screenshot {
 	width: 100%;
-	margin: 0;
+	margin: 0 0 .5em 0;
 	cursor: pointer;
 }
 

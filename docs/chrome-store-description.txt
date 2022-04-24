@@ -114,6 +114,18 @@ No mouse needed!
  • Press ENTER to switch to the selected tab
 
 
+★ New options in v1.7.x
+★ New options in v2.0
+
+new keyboard shortcuts to open the tab list in a popup window
+this lets you use the same shortcut to open the window, move the selection, and release to select a tab, much like alt-tab
+no time limit for switchinng from one previous tab to the next.  just keep pressing alt (or the modifier key you pick) and then release it when you've reached the desired tab
+
+ • Support pinyin when searching for bookmarks and history items
+ • Limit recent tab navigation to the current browser window
+ • Limit tab search results to the current browser window
+
+
 ★ Use CTRL-TAB to switch between recent tabs
 
 With a little extra work, you can make QuicKey respond to the Holy Grail of keyboard shortcuts: CTRL-TAB.

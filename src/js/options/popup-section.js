@@ -45,6 +45,20 @@ define([
 		},
 
 
+		renderShortcut: function(
+			shortcutID,
+			fallbackString)
+		{
+			const shortcutString = this.props.settings.chrome.shortcuts
+				.find(({id}) => id == shortcutID)
+				.shortcut;
+
+			return shortcutString
+				? <Shortcut keys={shortcutString}/>
+				: <em>Switch to {fallbackString} tab shortcut</em>;
+		},
+
+
 		renderOption: function([
 			id,
 			label,
@@ -81,6 +95,8 @@ define([
 				[k.HidePopupBehavior.Tab, "In a tab"],
 				[k.HidePopupBehavior.Minimize, "In a minimized window"]
 			].map(this.renderOption);
+			const previousShortcut = this.renderShortcut(k.CommandIDs.PreviousTabCommand, "previous");
+			const nextShortcut = this.renderShortcut(k.CommandIDs.NextTabCommand, "next");
 
 			return (
 				<Section id={id}>
@@ -92,8 +108,12 @@ define([
 					>
 						<Checkbox
 							id={k.NavigateRecentsWithPopup.Key}
-							label={<span>Show the recent tab list in a popup when
-								using <Shortcut keys={["alt", "A"]}/> and <Shortcut keys={["alt", "S"]}/></span>}
+							label={
+								<span>
+									Show the recent tab list in a popup when
+									using {previousShortcut} and {nextShortcut}
+								</span>
+							}
 							value={settings[k.NavigateRecentsWithPopup.Key]}
 							onChange={onChange}
 						/>
@@ -101,6 +121,13 @@ define([
 
 
 					<h2>Hide popup window</h2>
+
+					<p>
+						Since the browser doesn't provide a way to instantly hide
+						or show a popup window, QuicKey offers different
+						solutions for this, each with its own pros and cons.  You
+						can select the one that feels best to you.
+					</p>
 
 					<NewSetting
 						addedVersion={12}
@@ -118,29 +145,28 @@ define([
 						>
 							{hideOptions}
 						</RadioGroup>
-					<ProsCons option={currentOption}>
-						<div id={k.HidePopupBehavior.Offscreen}>
-							<div className="pro">Popup shows/hides instantly</div>
-							<div className="con">Popup is left near the top of the alt-tab list</div>
-							<div className="con">Doesn't work on macOS or when the UI isn't scaled to 100%</div>
-						</div>
-						<div id={k.HidePopupBehavior.Behind}>
-							<div className="pro">Popup shows/hides instantly</div>
-							<div className="con">Popup is left near the top of the alt-tab list</div>
-							<div className="con">Popup is visible if other windows are moved out of the way</div>
-						</div>
-						<div id={k.HidePopupBehavior.Tab}>
-							<div className="pro">Popup is removed from the alt-tab list</div>
-							<div className="con">Popup shows/hides a little more slowly</div>
-							<div className="con">An extra tab is added to the last window</div>
-						</div>
-						<div id={k.HidePopupBehavior.Minimize}>
-							<div className="pro">Popup is at the bottom of the alt-tab list</div>
-							<div className="con">Popup shows/hides a little more slowly, due to window animations</div>
-						</div>
-					</ProsCons>
+						<ProsCons option={currentOption}>
+							<div id={k.HidePopupBehavior.Offscreen}>
+								<div className="pro">Popup shows/hides instantly</div>
+								<div className="con">Popup is left near the top of the alt-tab list</div>
+								<div className="con">Doesn't work on macOS or when the UI isn't scaled to 100%</div>
+							</div>
+							<div id={k.HidePopupBehavior.Behind}>
+								<div className="pro">Popup shows/hides instantly</div>
+								<div className="con">Popup is left near the top of the alt-tab list</div>
+								<div className="con">Popup is visible if other windows are moved out of the way</div>
+							</div>
+							<div id={k.HidePopupBehavior.Tab}>
+								<div className="pro">Popup is removed from the alt-tab list</div>
+								<div className="con">Popup shows/hides a little more slowly</div>
+								<div className="con">An extra tab is added to the last window</div>
+							</div>
+							<div id={k.HidePopupBehavior.Minimize}>
+								<div className="pro">Popup is at the bottom of the alt-tab list</div>
+								<div className="con">Popup shows/hides a little more slowly, due to window animations</div>
+							</div>
+						</ProsCons>
 					</NewSetting>
-
 				</Section>
 			);
 		}
