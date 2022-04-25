@@ -9,15 +9,13 @@ define([
 ) {
 	return function Shortcut({
 		keys,
-		style})
+		...props})
 	{
 		const keyStrings = Array.isArray(keys)
 			? keys
 			: getKeysFromShortcut(keys).keys;
 
-		return <div className="shortcut"
-			style={style}
-		>
+		return <div className="shortcut" {...props}>
 			{keyStrings.map(key => key && <Key code={key} />)}
 		</div>
 	};

@@ -290,10 +290,6 @@ require([
 						// list is up-to-date before we start navigating
 					await addTab.execute();
 					await openPopupWindow();
-				} else if (!popupWindow.isVisible) {
-						// make the activeTab empty, so that the current tab
-						// won't be filtered out in the recents list
-					activeTab = {};
 				}
 
 				navigatingRecents = true;
@@ -521,8 +517,8 @@ require([
 					// instead of closing the popup and then calling
 					// openPopupWindow() to reopen it, we just call create(),
 					// which always closes the window first, and pass the current
-					// activeTab, since the query openPopupWindow() does seems
-					// to not find a last focused window, so we end up with an
+					// activeTab, since the query openPopupWindow() seems to
+					// not find a last focused window, so we end up with an
 					// undefined activeTab
 				await popupWindow.create(currentActiveTab, payload.focusSearch);
 
