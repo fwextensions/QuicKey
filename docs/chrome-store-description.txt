@@ -120,6 +120,9 @@ No mouse needed!
 new keyboard shortcuts to open the tab list in a popup window
 this lets you use the same shortcut to open the window, move the selection, and release to select a tab, much like alt-tab
 no time limit for switchinng from one previous tab to the next.  just keep pressing alt (or the modifier key you pick) and then release it when you've reached the desired tab
+when using switch to previous/next tab shortcuts, option to show popup while navigating, so you can see each tab without any time limit.  release alt when you've found the right tab
+can use alt-A to switch back and forth between the two most recent tabs without any waiting in between
+
 
  • Support pinyin when searching for bookmarks and history items
  • Limit recent tab navigation to the current browser window

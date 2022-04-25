@@ -47,15 +47,16 @@ define([
 
 		renderShortcut: function(
 			shortcutID,
-			fallbackString)
+			direction)
 		{
 			const shortcutString = this.props.settings.chrome.shortcuts
 				.find(({id}) => id == shortcutID)
 				.shortcut;
+			const shortcutName = `Switch to ${direction} tab shortcut`;
 
 			return shortcutString
-				? <Shortcut keys={shortcutString}/>
-				: <em>Switch to {fallbackString} tab shortcut</em>;
+				? <Shortcut keys={shortcutString} title={shortcutName} />
+				: <em>{shortcutName}</em>;
 		},
 
 
@@ -123,10 +124,10 @@ define([
 					<h2>Hide popup window</h2>
 
 					<p>
-						Since the browser doesn't provide a way to instantly hide
-						or show a popup window, QuicKey offers different
-						solutions for this, each with its own pros and cons.  You
-						can select the one that feels best to you.
+						QuicKey offers different ways to hide the popup
+						window, since the browser doesn't provide a simple
+						solution for this.  Each approach has its own pros and cons, so
+						you can select the one that feels best to you.
 					</p>
 
 					<NewSetting
