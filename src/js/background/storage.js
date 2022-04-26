@@ -90,6 +90,10 @@ define([
 DEBUG && console.error(`Storage error: ${failure}`, storage);
 				trackers.background.event("storage", failure);
 
+					// store a global reference to the bad data object so we can
+					// examine it and recover data in devtools
+				window.FAILED_STORAGE = storage;
+
 					// we couldn't find a way to update the existing storage to
 					// the new version or the update resulted in invalid data,
 					// so just reset it to the default
