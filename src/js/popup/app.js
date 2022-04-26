@@ -61,6 +61,21 @@ define("popup/app", [
 	const DeleteBookmarkConfirmation = "Are you sure you want to permanently delete this bookmark?";
 
 
+	function sortRecents(
+		a,
+		b)
+	{
+			// sort open tabs before closed ones, and newer before old
+		if ((a.sessionId && b.sessionId) || (!a.sessionId && !b.sessionId)) {
+			return b.lastVisit - a.lastVisit;
+		} else if (a.sessionId) {
+			return 1;
+		} else {
+			return -1;
+		}
+	}
+
+
 	function sortHistoryItems(
 		a,
 		b)
@@ -242,73 +257,60 @@ define("popup/app", [
 
 		loadTabs: function()
 		{
-			return this.loadPromisedItems(() => Promise.all([
-					this.settingsPromise,
-					this.getActiveTab()
-				])
-				.then(([settings, activeTab]) => initTabs(
+			const loader = async () => {
+				const settings = await this.settingsPromise;
+				const activeTab = await this.getActiveTab();
+				const tabs = await initTabs(
 						// don't include recently closed tabs when navigating
 						// recents, since you can't navigate to them
-					recentTabs.getAll(!this.navigatingRecents && settings[k.IncludeClosedTabs.Key]),
+					recentTabs.getAll(!this.navigatingRecents &&
+						settings[k.IncludeClosedTabs.Key]),
 					activeTab,
 					settings[k.MarkTabsInOtherWindows.Key],
 						// pass in the space key behavior so initTabs() knows
 						// whether to normalize all whitespace, which is not
 						// needed if space moves the selection
 					settings[k.SpaceBehavior.Key] == k.SpaceBehavior.Space,
-					settings[k.UsePinyin.Key]))
-				.then(tabs => Promise.all([
-					tabs,
-					cp.tabs.query({
-						active: true,
-						currentWindow: true
-					})
-				]))
-				.then(([tabs, [activeTab]]) => {
-					const currentWindowID = activeTab && activeTab.windowId;
-						// this promise chain starts with settingsPromise, so by
-						// the time we're, that's already resolved and has set
-						// this.settings.  an ugly side effect, but easier than
-						// passing the settings along down the chain.
-					const recentsFilter = this.settings[k.CurrentWindowLimitRecents.Key]
-						? ({lastVisit, windowId}) => lastVisit && windowId === currentWindowID
-						: ({lastVisit, windowId}) => lastVisit;
+					settings[k.UsePinyin.Key]
+				);
+				const currentWindowID = activeTab && activeTab.windowId;
+					// this promise chain starts with settingsPromise, so by
+					// the time we're, that's already resolved and has set
+					// this.settings.  an ugly side effect, but easier than
+					// passing the settings along down the chain.
+				const recentsFilter = this.settings[k.CurrentWindowLimitRecents.Key]
+					? ({lastVisit, windowId}) => lastVisit && windowId === currentWindowID
+					: ({lastVisit, windowId}) => lastVisit;
 
-						// include only recent and closed tabs that have a last
-						// visit time.  this may also filter out tabs that aren't
-						// in the current window, depending on that setting.
-					this.recents = tabs
-						.filter(recentsFilter)
-						.sort((a, b) => {
-								// sort open tabs before closed ones, and newer
-								// before old
-							if ((a.sessionId && b.sessionId) || (!a.sessionId && !b.sessionId)) {
-								return b.lastVisit - a.lastVisit;
-							} else if (a.sessionId) {
-								return 1;
-							} else {
-								return -1;
-							}
-						});
+					// include only recent and closed tabs that have a last
+					// visit time.  this may also filter out tabs that aren't
+					// in the current window, depending on that setting.
+				this.recents = tabs
+					.filter(recentsFilter)
+					.sort(sortRecents)
 
-					if (!this.recents.length) {
-						this.recents = NoRecentTabsMessage;
-					}
+				if (!this.recents.length) {
+					this.recents = NoRecentTabsMessage;
+				}
 
-					if (this.settings[k.CurrentWindowLimitSearch.Key]) {
-							// limit the tabs list to those in the current
-							// window.  since the limit search option is linked
-							// to limit recents, we know the recents are a subset
-							// of the filtered searchable list, so when
-							// loadPromisedItems() calls scoreItems() after this
-							// promise chain is done, the recent tabs are
-							// guaranteed to receive all the scoring keys, like
-							// score, scores, etc.
-						return tabs.filter(({windowId}) => windowId === currentWindowID);
-					} else {
-						return tabs;
-					}
-				}), "tabs", true);	// pass true to force a reload
+				if (this.settings[k.CurrentWindowLimitSearch.Key]) {
+						// limit the tabs list to those in the current
+						// window.  since the limit search option is linked
+						// to limit recents, we know the recents are a subset
+						// of the filtered searchable list, so when
+						// loadPromisedItems() calls scoreItems() after this
+						// promise chain is done, the recent tabs are
+						// guaranteed to receive all the scoring keys, like
+						// score, scores, etc.
+					return tabs.filter(
+						({windowId}) => windowId === currentWindowID);
+				} else {
+					return tabs;
+				}
+			};
+
+				// pass true to always force a reload
+			return this.loadPromisedItems(loader, "tabs", true);
 		},
 
 

@@ -302,7 +302,7 @@ require([
 					// the user is going backwards or is going forwards before
 					// the cooldown ends
 				toolbarIcon.invertFor(k.MinTabDwellTime);
-				recentTabs.navigate(direction);
+				recentTabs.navigate(direction, limitToCurrentWindow);
 			}
 
 				// this will record an event if the user hits alt-S when they're
@@ -339,7 +339,7 @@ require([
 
 				navigatingRecents = false;
 			})
-			.then(recentTabs.toggle)
+			.then(() => recentTabs.toggle(currentWindowLimitRecents))
 				// fire the debounced addTab() so the tab we just toggled to will
 				// be the most recent, in case the user quickly toggles again.
 				// otherwise, the debounced add would fire after we navigate,
