@@ -1,11 +1,13 @@
 define([
 	"cp",
 	"lib/decode",
-	"./add-urls"
+	"./add-urls",
+	"./add-pinyin"
 ], function(
 	cp,
 	decode,
-	addURLs
+	addURLs,
+	{addPinyin}
 ) {
 	const RequestedItemCount = 2000;
 	const LoopItemCount = 1000;
@@ -15,7 +17,8 @@ define([
 	const loop = fn => fn().then(val => (val === true && loop(fn)) || val);
 
 
-	return function getHistory()
+	return function getHistory(
+		usePinyin)
 	{
 		const ids = {};
 		const urls = {};
@@ -56,6 +59,10 @@ define([
 										// and if that doesn't work, default to
 										// the full URL as a title.
 									item.title = decode((match && (match[2] || match[1])) || url);
+								}
+
+								if (usePinyin) {
+									addPinyin(item);
 								}
 
 								lastItem = urls[url] = item;

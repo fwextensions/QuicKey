@@ -11,6 +11,7 @@ define("popup/app", [
 	"./data/get-bookmarks",
 	"./data/get-history",
 	"./data/add-urls",
+	"./data/add-pinyin",
 	"./shortcuts/popup-shortcuts",
 	"lib/handle-ref",
 	"lib/copy-to-clipboard",
@@ -32,6 +33,7 @@ define("popup/app", [
 	getBookmarks,
 	getHistory,
 	addURLs,
+	{loadPinyin},
 	shortcuts,
 	handleRef,
 	copyTextToClipboard,
@@ -108,10 +110,17 @@ define("popup/app", [
 						// doesn't have to get its own copy of it
 					return settings.get(data);
 				})
-				.then(settings => {
+				.then(async settings => {
 					this.settings = settings;
 					this.mruModifier = settings.chrome.popup.modifierEventName;
 					shortcuts.update(settings);
+
+					if (settings.usePinyin) {
+							// searching by pinyin is enabled, so load the lib
+							// now, so it's available by the time we init all
+							// the tabs and add the pinyin translations
+						await loadPinyin();
+					}
 
 					return settings;
 				});
@@ -276,6 +285,8 @@ define("popup/app", [
 		setSearchBoxText: function(
 			searchBoxText)
 		{
+			const showBookmarkPaths = this.settings[k.ShowBookmarkPaths.Key];
+			const usePinyin = this.settings[k.UsePinyin.Key];
 			let query = searchBoxText;
 
 			if (searchBoxText.indexOf(BookmarksQuery) == 0) {
@@ -285,14 +296,20 @@ define("popup/app", [
 				if (!this.bookmarks.length) {
 						// we haven't fetched the bookmarks yet, so load them
 						// and then call getMatchingItems() after they're ready
-					this.loadPromisedItems(() => getBookmarks(this.settings[k.ShowBookmarkPaths.Key]), "bookmarks");
+					this.loadPromisedItems(
+						() => getBookmarks(showBookmarkPaths, usePinyin),
+						"bookmarks"
+					);
 				}
 			} else if (searchBoxText.indexOf(HistoryQuery) == 0) {
 				this.mode = "history";
 				query = searchBoxText.slice(HistoryQuery.length);
 
 				if (!this.history.length) {
-					this.loadPromisedItems(getHistory, "history");
+					this.loadPromisedItems(
+						() => getHistory(usePinyin),
+						"history"
+					);
 				}
 			} else if (CommandQueryPattern.test(searchBoxText)) {
 					// we don't know if the user's going to type b or h, so

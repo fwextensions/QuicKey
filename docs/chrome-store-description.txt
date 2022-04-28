@@ -114,8 +114,9 @@ No mouse needed!
  • Press ENTER to switch to the selected tab
 
 
-★ New options in v1.7.0
+★ New options in v1.7.x
 
+ • Support pinyin when searching for bookmarks and history items
  • Limit recent tab navigation to the current browser window
  • Limit tab search results to the current browser window
 
