@@ -8,6 +8,13 @@ comments: true
 # Release history
 
 
+## 1.7.2 - 2022-04-28
+
+### Added
+
+* Added support for using pinyin when searching for bookmarks and history items, along with tabs.
+
+
 ## 1.7.1 - 2022-03-07
 
 ### Fixed
