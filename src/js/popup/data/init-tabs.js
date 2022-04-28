@@ -2,13 +2,13 @@ define([
 	"bluebird",
 	"cp",
 	"lib/decode",
-	"lib/load-script",
+	"./add-pinyin",
 	"lodash"
 ], function(
 	Promise,
 	cp,
 	decode,
-	loadScript,
+	{addPinyin},
 	_
 ) {
 	const TitlePattern = /ttl=([^&]+)/;
@@ -51,25 +51,6 @@ define([
 		usePinyin)
 	{
 		let tabsByTitle = {};
-		let addPinyinStrings = false;
-
-		if (usePinyin) {
-			try {
-					// dynamically load the pinyin module into a global var, so
-					// that it's only processed if we actually need to use it.
-					// importing it as a global is ugly, but seems to be the
-					// simplest solution, since a built RequireJS project can't
-					// seem to do lazy-loading without including the full
-					// RequireJS library, which adds extra bloat.
-				await loadScript("/js/lib/pinyin.js");
-
-					// set a flag so we know pinyin() is available and we don't
-					// have to check typeof pinyin on every tab in the loop below
-				addPinyinStrings = typeof pinyin == "function";
-			} catch (e) {
-				console.error(e);
-			}
-		}
 
 
 		function indexDuplicateTitles(
@@ -149,19 +130,8 @@ define([
 						tab.title = tab.title.replace(WhitespacePattern, " ");
 					}
 
-					if (addPinyinStrings) {
-						const pinyinTitle = pinyin(tab.title);
-						const pinyinDisplayURL = pinyin(tab.displayURL);
-
-							// if there's no difference, just store an empty
-							// string that scoreArray() will use to short-circuit
-							// the scoring and return 0
-						tab.pinyinTitle = (pinyinTitle !== tab.title)
-							? pinyinTitle
-							: "";
-						tab.pinyinDisplayURL = (pinyinDisplayURL !== tab.displayURL)
-							? pinyinDisplayURL
-							: "";
+					if (usePinyin) {
+						addPinyin(tab);
 					}
 
 					indexDuplicateTitles(tab);

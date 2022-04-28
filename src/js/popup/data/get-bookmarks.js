@@ -1,8 +1,10 @@
 define([
 	"./add-urls",
+	"./add-pinyin",
 	"cp"
 ], function(
 	addURLs,
+	{addPinyin},
 	cp
 ) {
 	const PathSeparator = " / ";
@@ -12,6 +14,7 @@ define([
 	let urls = {};
 	let path = [];
 	let showPaths = false;
+	let addPinyinStrings = false;
 
 
 	function processNodes(
@@ -27,6 +30,10 @@ define([
 
 				if (showPaths && path.length) {
 					node.title = path.join(PathSeparator) + PathSeparator + title;
+				}
+
+				if (addPinyinStrings) {
+					addPinyin(node);
 				}
 
 				bookmarks.push(node);
@@ -50,12 +57,14 @@ define([
 
 
 	return function getBookmarks(
-		showBookmarkPaths = false)
+		showBookmarkPaths,
+		usePinyin)
 	{
 		bookmarks = [];
 		urls = {};
 		path = [];
 		showPaths = showBookmarkPaths;
+		addPinyinStrings = usePinyin;
 
 		return cp.bookmarks.getTree()
 			.then(bookmarkNodes => {
