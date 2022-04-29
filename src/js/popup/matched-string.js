@@ -2,14 +2,16 @@ define([
 		// we need react here even if we're not explicitly referencing it so
 		// that the converted JSX can use it
 	"react",
+	"fast-memoize",
 	"lodash"
 ], function(
 	React,
+	memoize,
 	_
 ) {
 		// memoize this, since it could get called multiple times by render() with
 		// the same values, such as when the selection changes but the query doesn't
-	const wrapMatches = _.memoize((
+	const wrapMatches = memoize((
 			query,
 			string,
 			hitMask) =>
@@ -33,11 +35,7 @@ define([
 			remainder && substrings.push(<span>{remainder}</span>);
 
 			return React.Children.toArray(substrings);
-		},
-			// by default, memoize uses just the first arg as a key, but that's
-			// the same for all the strings.  so combine all the params to
-			// generate a unique key.
-		(...args) => args.join("|")
+		}
 	);
 
 
