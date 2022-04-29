@@ -10,7 +10,8 @@ require.config({
 		lodash: "lib/lodont",
 		cp: "lib/cp",
 		shared: "lib/shared",
-		bluebird: "lib/bluebird.core.min"
+		bluebird: "lib/bluebird.core.min",
+		"fast-memoize": "lib/fast-memoize"
 	},
 	map: {
 		"react-virtualized": {

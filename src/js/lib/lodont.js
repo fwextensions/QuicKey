@@ -1,9 +1,4 @@
-define([
-	"lib/lodash"
-], (
-	_
-) => {
-//define(() => {
+define(() => {
 	function pull(
 		array,
 		value)
@@ -13,7 +8,6 @@ define([
 		while((fromIndex = array.indexOf(value, fromIndex)) > -1) {
 			array.splice(fromIndex, 1);
 		}
-log(value, array);
 
 		return array;
 	}
@@ -24,7 +18,6 @@ log(value, array);
 		predicateArg)
 	{
 		let predicate;
-log(predicateArg);
 
 		if (typeof predicateArg === "function") {
 			predicate = predicateArg;
@@ -81,7 +74,6 @@ log(predicateArg);
 		remove,
 		dropRightWhile,
 		last,
-		toPairs,
-		memoize: (...args) => _.memoize(...args)
+		toPairs
 	};
 });
