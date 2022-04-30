@@ -25,6 +25,7 @@ define([
 	const MaxTitleLength = 70;
 	const MaxURLLength = 75;
 	const MinRenderDelay = 40;
+	const MinMouseMoveCount = 2;
 	const SuspendedFaviconOpacity = .5;
 	const FaviconURL = "chrome://favicon/";
 	const CloseButtonTooltips = {
@@ -38,6 +39,7 @@ define([
 
 	const ResultsListItem = React.createClass({
 		lastRenderTime: 0,
+		mouseMoveCount: 0,
 
 
 		onClick: function(
@@ -86,7 +88,8 @@ define([
 			const {index, isSelected, setSelectedIndex} = this.props;
 
 			if (!isSelected &&
-					(Date.now() - this.lastRenderTime > MinRenderDelay)) {
+					(Date.now() - this.lastRenderTime > MinRenderDelay) &&
+					this.mouseMoveCount > MinMouseMoveCount) {
 					// we only want to listen to mouse moves if we're not already
 					// selected and the event didn't come immediately after a
 					// render.  if the event immediately follows a render, it
@@ -94,12 +97,17 @@ define([
 					// and not that the user is moving the mouse to select this
 					// item.  this avoids selecting an item when the popup is
 					// opened under the mouse or the user is scrolling via the
-					// keyboard and the mouse is over the list.  pass true so
-					// the app treats a mouse selection like one made by the MRU
-					// key, so that the user can press the menu shortcut,
-					// highlight a tab with the mouse, and then release alt to
-					// select it.
+					// keyboard and the mouse is over the list.  unfortunately,
+					// we *also* have to track the number of mouse moves, as it
+					// seems like 1 - 2 can get generated on the item under the
+					// mouse on a high DPI screen within the MinRenderDelay time.
+					// pass true so the app treats a mouse selection like one
+					// made by the MRU key, so that the user can press the menu
+					// shortcut, highlight a tab with the mouse, and then
+					// release alt to select it.
 				setSelectedIndex(index, true);
+			} else {
+				this.mouseMoveCount++;
 			}
 		},
 
@@ -179,6 +187,7 @@ define([
 			}
 
 			this.lastRenderTime = Date.now();
+			this.mouseMoveCount = 0;
 
 			return <div className={className}
 				style={style}
