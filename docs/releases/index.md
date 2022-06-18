@@ -8,6 +8,14 @@ comments: true
 # Release history
 
 
+## 1.7.4 - 2022-06-18
+
+### Fixed
+
+* In Microsoft Edge, don't show a tab count in the badge tooltip, since Edge now automatically appends the badge number.
+* Suppress the harmless but annoying devtools console errors that were triggered by [a bug in Chromium v102](https://chromium-review.googlesource.com/c/v8/v8/+/3660253).
+
+
 ## 1.7.3 - 2022-06-18
 
 ### Fixed

@@ -16,6 +16,11 @@
 
 		if (event.preventDefault) {
 			event.preventDefault();
+
+				// add a flag so we know that preventDefault() was called while
+				// we were queuing errors, and not by the console errors that
+				// Chromium v102 triggers
+			event.queued = true;
 		}
 	}
 
@@ -49,6 +54,15 @@
 			function handleError(
 				event)
 			{
+				if (event.defaultPrevented && !event.queued) {
+						// the devtools console in Chromium v102 triggers
+						// unhandled errors while you type, with defaultPrevented
+						// set to true.  so ignore those errors, but only if
+						// they weren't queued while we were starting up, which
+						// mean they're legitimate.
+					return;
+				}
+
 				try {
 					const timestamp = new Date().toLocaleString();
 					const {detail, reason = ((detail && detail.reason) || "")} = event;
@@ -68,7 +82,6 @@
 					console.error("Unhandled error in the error handler (oh, the irony!)", e);
 				}
 			}
-
 
 				// fire exception stats for any queued errors
 			errors.forEach(handleError);
