@@ -519,7 +519,9 @@ define("popup/app", [
 				this.props.tracker.event(category, event,
 					queryLength ? queryLength : this.state.selected);
 
-				await this.sendMessage("focusTab", { tab, options });
+				return this.sendMessage("focusTab", { tab, options });
+			} else {
+				return null;
 			}
 		},
 
@@ -711,7 +713,7 @@ define("popup/app", [
 
 
 		getActiveTab: function(
-			blurred)
+			blurred = false)
 		{
 			if (!this.props.isPopup || !this.visible || blurred) {
 				return cp.tabs.query({ active: true, currentWindow: true })
