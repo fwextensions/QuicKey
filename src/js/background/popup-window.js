@@ -252,6 +252,8 @@ define([
 			try {
 				await cp.windows.update(windowID, options);
 			} catch (e) {
+DEBUG && console.error("Failed to hide popup", e);
+
 					// we couldn't move the window for some reason, so close it
 				await close();
 			}
