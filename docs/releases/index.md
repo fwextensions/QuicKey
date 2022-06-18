@@ -8,6 +8,15 @@ comments: true
 # Release history
 
 
+## 1.7.3 - 2022-06-18
+
+### Fixed
+
+* Darkened the background of the toolbar icon badge so the foreground text would still appear white in Chrome 102+. 
+* Updated the website so HTML tags in the markdown would still appear in the latest version of GitHub Pages.
+* Replaced lodash with custom functions and fast-memoize.
+
+
 ## 1.7.2 - 2022-04-28
 
 ### Added

@@ -1,9 +1,13 @@
 theme: jekyll-theme-minimal
 
-gems:
+plugins:
   - jekyll-seo-tag
 
 markdown: CommonMarkGhPages
+
+commonmark:
+  options:
+    - "UNSAFE"
 
 url: https://fwextensions.github.io/QuicKey
 

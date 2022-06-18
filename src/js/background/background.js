@@ -7,7 +7,7 @@ const MinTabDwellTime = 750;
 const RestartDelay = 10 * 1000;
 const BadgeColors = {
 	light: {
-		normal: "#a0a0a0",
+		normal: "#777",
 		inverted: "#3367d6"
 	},
 	dark: {
