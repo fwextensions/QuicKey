@@ -335,7 +335,10 @@ require([
 		const text = showTabCount
 			? String(tabCount)
 			: "";
-		const title = showTabCount
+			// Edge appends the badge count with a comma after the badge title,
+			// which looks awkward: "829 open tabs, 829".  so don't customize
+			// the title in Edge.
+		const title = showTabCount && !k.IsEdge
 			? `${name} - ${tabCount} open tab${tabCount == 1 ? "" : "s"}`
 			: name;
 
