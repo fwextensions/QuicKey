@@ -1,13 +1,15 @@
 define([
 	"cp",
-	"background/page-trackers"
+	"background/page-trackers",
+	"background/constants"
 ], (
 	cp,
-	{background: backgroundTracker}
+	{background: backgroundTracker},
+	{IsEdge}
 ) => {
 	const BadgeColors = {
 		light: {
-			normal: "#a0a0a0",
+			normal: "#777",
 			inverted: "#3367d6"
 		},
 		dark: {
@@ -118,7 +120,13 @@ define([
 
 		if (isTabCountVisible) {
 			text = String(tabCount);
-			title = `${ExtensionName} - ${tabCount} open tab${tabCount == 1 ? "" : "s"}`;
+
+				// Edge appends the badge count with a comma after the badge title,
+				// which looks awkward: "829 open tabs, 829".  so don't customize
+				// the title in Edge.
+			if (!IsEdge) {
+				title = `${ExtensionName} - ${tabCount} open tab${tabCount == 1 ? "" : "s"}`;
+			}
 		}
 
 		try {
