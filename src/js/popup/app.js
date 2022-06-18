@@ -750,6 +750,13 @@ define("popup/app", [
 			this.mruModifier = this.settings.chrome.popup.modifierEventName;
 			shortcuts.update(this.settings);
 
+			if (this.settings.usePinyin) {
+					// searching by pinyin is enabled, so load the lib now, so
+					// that it's available by the time we init all the tabs and
+					// add the pinyin translations
+				await loadPinyin();
+			}
+
 			return this.settings;
 		},
 
