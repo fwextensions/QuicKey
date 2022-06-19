@@ -90,8 +90,6 @@ define([
 			const {id, settings, lastSeenOptionsVersion, onChange} = this.props;
 			const {currentOption} = this.state;
 			const hideOptions = [
-					// disable this option on macOS, since it doesn't work
-				[k.HidePopupBehavior.Offscreen, "Off-screen", k.IsMac],
 				[k.HidePopupBehavior.Behind, "Behind the active window"],
 				[k.HidePopupBehavior.Tab, "In a tab"],
 				[k.HidePopupBehavior.Minimize, "In a minimized window"]
@@ -147,11 +145,6 @@ define([
 							{hideOptions}
 						</RadioGroup>
 						<ProsCons option={currentOption}>
-							<div id={k.HidePopupBehavior.Offscreen}>
-								<div className="pro">Popup shows/hides instantly</div>
-								<div className="con">Popup is left near the top of the alt-tab list</div>
-								<div className="con">Doesn't work on macOS or when the UI isn't scaled to 100%</div>
-							</div>
 							<div id={k.HidePopupBehavior.Behind}>
 								<div className="pro">Popup shows/hides instantly</div>
 								<div className="con">Popup is left near the top of the alt-tab list</div>
@@ -164,7 +157,7 @@ define([
 							</div>
 							<div id={k.HidePopupBehavior.Minimize}>
 								<div className="pro">Popup is at the bottom of the alt-tab list</div>
-								<div className="con">Popup shows/hides a little more slowly, due to window animations</div>
+								<div className="con">Popup shows/hides the slowest, due to window animations</div>
 							</div>
 						</ProsCons>
 					</NewSetting>

@@ -24,9 +24,7 @@ define([
 			// on FF, pressing esc always closes the menu and can't be prevented
 		[k.EscBehavior.Key]: k.IsFirefox ? k.EscBehavior.Close : k.EscBehavior.Clear,
 		[k.HomeEndBehavior.Key]: k.HomeEndBehavior.ResultsList,
-		[k.HidePopupBehavior.Key]: k.IsMac
-			? k.HidePopupBehavior.Behind
-			: k.HidePopupBehavior.Offscreen,
+		[k.HidePopupBehavior.Key]: k.HidePopupBehavior.Behind,
 		[k.MarkTabsInOtherWindows.Key]: true,
 		[k.IncludeClosedTabs.Key]: true,
 		[k.ShowTabCount.Key]: false,
