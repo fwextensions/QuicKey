@@ -50,7 +50,6 @@ define([
 		},
 		HidePopupBehavior: {
 			Key: "hidePopupBehavior",
-			Offscreen: "offscreen",
 			Behind: "behind",
 			Tab: "tab",
 			Minimize: "minimize"

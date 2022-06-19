@@ -631,20 +631,16 @@ main {
 	float: left;
 }
 
-.proscons div#offscreen {
+.proscons div#behind {
 	margin-top: .5em;
 }
 
-.proscons div#behind {
+.proscons div#tab {
 	margin-top: 2.5em;
 }
 
-.proscons div#tab {
-	margin-top: 4.5em;
-}
-
 .proscons div#minimize {
-	margin-top: 6.5em;
+	margin-top: 4.5em;
 }
 
 

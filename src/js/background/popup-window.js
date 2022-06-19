@@ -7,12 +7,10 @@ define([
 	cp,
 	shared,
 	storage,
-	{IsMac, PopupURL}
+	{IsMac, PopupURL, HidePopupBehavior: {Behind, Tab, Minimize}}
 ) => {
 	const PopupInnerWidth = 500;
 	const PopupInnerHeight = 488;
-	const OffscreenX = 13000;
-	const OffscreenY = 13000;
 	const PopupPadding = 50;
 
 
@@ -20,7 +18,7 @@ define([
 	let popupAdjustmentHeight = 0;
 	let isVisible = false;
 	let type = "window";
-	let hideBehavior = "offscreen";
+	let hideBehavior = Behind;
 	let windowID;
 	let tabID;
 	let lastActiveTab;
@@ -222,17 +220,13 @@ define([
 		unfocus,
 		targetTabOrWindow)
 	{
-		let options = {
-			left: OffscreenX,
-			top: OffscreenY
-		};
+		const options = {};
 
 		if (unfocus) {
 			options.focused = false;
 		}
 
-		if (targetTabOrWindow &&
-			(hideBehavior == "behind" || (hideBehavior == "offscreen" && devicePixelRatio !== 1))) {
+		if (targetTabOrWindow && (hideBehavior == Behind)) {
 				// hide the popup behind the focused window
 			const {left, top} = calcPosition(
 				targetTabOrWindow.windowId
@@ -242,8 +236,8 @@ define([
 
 			options.left = left;
 			options.top = top;
-		} else if (hideBehavior == "minimize") {
-			options = { state: "minimized" };
+		} else if (hideBehavior == Minimize) {
+			options.state = "minimized";
 		}
 
 		isVisible = false;
@@ -328,7 +322,7 @@ DEBUG && console.error("Failed to hide popup", e);
 		set hideBehavior(value) {
 			if (hideBehavior !== value) {
 				hideBehavior = value;
-				type = hideBehavior == "tab" ? "tab" : "window";
+				type = hideBehavior == Tab ? "tab" : "window";
 
 					// do this after updating hideBehavior, since we're not
 					// awaiting the call
