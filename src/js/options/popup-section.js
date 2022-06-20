@@ -138,7 +138,7 @@ define([
 							label={<span>When the alt-tab-style popup closes, hide it:</span>}
 							onChange={onChange}
 							style={{
-								width: "20em",
+								width: "21em",
 								margin: "0 0 5em 0"
 							}}
 						>
