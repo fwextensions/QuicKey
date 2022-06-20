@@ -993,15 +993,19 @@ define("popup/app", [
 		{
 			const url = chrome.extension.getURL("options.html");
 			const [tab] = await cp.tabs.query({ url });
+			let optionsTab;
 
 			this.searchBox.focus();
 
 			if (tab) {
-				await this.sendMessage("focusTab", { tab });
+				optionsTab = await this.sendMessage("focusTab", { tab });
 			} else {
-				await this.sendMessage("createTab", { url });
+				optionsTab = await this.sendMessage("createTab", { url });
 			}
 
+				// force the popup to close, since focusing or opening the
+				// options tab doesn't seem to blur the popup, leaving it open
+			this.closeWindow(false, optionsTab);
 			this.props.tracker.event("extension", "open-options");
 		},
 

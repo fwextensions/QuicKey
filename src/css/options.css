@@ -346,7 +346,7 @@ main {
 
 .sections-container {
 	display: grid;
-	grid-template-columns: 25% 69%;
+	grid-template-columns: 26% 68%;
 	grid-column-gap: 6%;
 }
 
