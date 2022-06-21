@@ -13,6 +13,10 @@ define([
 	Shortcut,
 	k
 ) => {
+	const SwitchWindowShortcut = k.IsMac ? "cmd-`" : "alt-tab";
+	const SwitchAppShortcut = k.IsMac ? "cmd-tab" : "alt-tab";
+
+
 	const ProsCons = ({
 		option,
 		children}) =>
@@ -135,7 +139,7 @@ define([
 						<RadioGroup
 							id={k.HidePopupBehavior.Key}
 							value={settings[k.HidePopupBehavior.Key]}
-							label={<span>When the alt-tab-style popup closes, hide it:</span>}
+							label={<span>When the {SwitchAppShortcut}-style popup closes, hide it:</span>}
 							onChange={onChange}
 							style={{
 								width: "21em",
@@ -147,16 +151,16 @@ define([
 						<ProsCons option={currentOption}>
 							<div id={k.HidePopupBehavior.Behind}>
 								<div className="pro">Popup shows/hides instantly</div>
-								<div className="con">Popup is left near the top of the alt-tab list</div>
+								<div className="con">Popup is left near the top of the {SwitchWindowShortcut} list</div>
 								<div className="con">Popup is visible if other windows are moved out of the way</div>
 							</div>
 							<div id={k.HidePopupBehavior.Tab}>
-								<div className="pro">Popup is removed from the alt-tab list</div>
+								<div className="pro">Popup is removed from the {SwitchWindowShortcut} list</div>
 								<div className="con">Popup shows/hides a little more slowly</div>
 								<div className="con">An extra tab is added to the last window</div>
 							</div>
 							<div id={k.HidePopupBehavior.Minimize}>
-								<div className="pro">Popup is at the bottom of the alt-tab list</div>
+								<div className="pro">Popup is at the bottom of the {SwitchWindowShortcut} list</div>
 								<div className="con">Popup shows/hides the slowest, due to window animations</div>
 							</div>
 						</ProsCons>
