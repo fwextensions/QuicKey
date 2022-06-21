@@ -46,11 +46,7 @@ define([
 
 	return async function initTabs(
 		tabsPromise,
-			// there should normally be an active tab, unless we've refreshed
-			// the open popup via devtools, which seemed to return a normal
-			// active tab in Chrome pre-65.  default to an empty object so the
-			// .id access below won't throw an exception.
-		activeTab = {},
+		activeTab,
 		markTabsInOtherWindows,
 		normalizeWhitespace,
 		usePinyin)
@@ -62,7 +58,7 @@ define([
 			tab)
 		{
 				// don't include closed tabs, because there's no sense in which
-				// they have a left to right index
+				// they have a left to right order
 			if (typeof tab.sessionId == "undefined") {
 				const {title, displayURL} = tab;
 					// the domain has already been stripped out of displayURL and
@@ -89,7 +85,7 @@ define([
 
 		return tabsPromise
 			.then(tabs => {
-				const currentWindowID = activeTab.windowId;
+				const currentWindowID = activeTab && activeTab.windowId;
 				const markTabs = markTabsInOtherWindows && Number.isInteger(currentWindowID);
 
 				tabs.forEach(tab => {
@@ -130,12 +126,14 @@ define([
 					indexDuplicateTitles(tab);
 				});
 
-					// remove the active tab from the array so it doesn't show
-					// up in the results, making it clearer if you have duplicate
-					// tabs open.  but do this after processing all the tabs, so
-					// that if the current tab has the same title as another one,
-					// the indexes displayed for the other tabs will be correct.
-				_.remove(tabs, { id: activeTab.id });
+				if (activeTab) {
+						// remove the active tab from the array so it doesn't show
+						// up in the results, making it clearer if you have duplicate
+						// tabs open.  but do this after processing all the tabs, so
+						// that if the current tab has the same title as another one,
+						// the indexes displayed for the other tabs will be correct.
+					_.remove(tabs, { id: activeTab.id });
+				}
 
 					// make sure this index of tabs gets GC'd
 				tabsByTitle = null;
