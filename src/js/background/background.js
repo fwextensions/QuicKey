@@ -250,10 +250,12 @@ require([
 				// the popup window isn't open, so create a new one, with the
 				// search box either focused or not
 			popupWindow.create(activeTab, focusSearch);
-		} else if (activeTab.windowId !== popupWindow.id) {
-				// the popup window isn't focused, so tell it to show itself
-				// centered on the current browser window, and whether to
-				// select the first item
+		} else if (!activeTab || activeTab.windowId !== popupWindow.id) {
+				// the popup window is open but not focused, so tell it to show
+				// itself centered on the current browser window, and whether to
+				// select the first item.  if there's no activeTab (such as when
+				// the shortcut is pressed and a devtools window is in the
+				// foreground), the popup will appear aligned to the screen.
 			sendPopupMessage("showWindow", { focusSearch, activeTab });
 		} else {
 				// it's open and focused, so use the shortcut to move the
