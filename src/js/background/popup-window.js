@@ -7,7 +7,7 @@ define([
 	cp,
 	shared,
 	storage,
-	{IsMac, PopupURL, HidePopupBehavior: {Behind, Tab, Minimize}}
+	{PopupURL, HidePopupBehavior: {Behind, Tab, Minimize}}
 ) => {
 	const PopupInnerWidth = 500;
 	const PopupInnerHeight = 488;
@@ -17,6 +17,7 @@ define([
 	let popupAdjustmentWidth = 0;
 	let popupAdjustmentHeight = 0;
 	let isVisible = false;
+	let isHiddenInTab = false;
 	let type = "window";
 	let hideBehavior = Behind;
 	let windowID;
@@ -100,8 +101,11 @@ define([
 
 			// get the full URL with the extension ID in it so that we can
 			// delete it from the history below, which requires an exact match
+// TODO: this type param seems to be unnecessary.  though maybe useful to show the menu in a different state?
 		const url = `${PopupURL}?${new URLSearchParams({ type, focusSearch })}`;
-		const targetWindow = await cp.windows.get(activeTab.windowId);
+			// we won't have an activeTab if the user is opening the popup with
+			// a devtools window in the foreground
+		const targetWindow = activeTab && await cp.windows.get(activeTab.windowId);
 		let {left, top, width, height} = calcPosition(targetWindow, alignment);
 		let window;
 
@@ -117,6 +121,7 @@ define([
 				height
 			});
 			windowID = window.id;
+			tabID = window.tabs[0].id;
 		} else {
 				// first add the tab to the last unfocused window, then move
 				// that tab to a new popup window
@@ -128,6 +133,8 @@ define([
 				index: lastWindow.tabs.length + 1
 			});
 
+				// the new tab starts out in a hidden state, by definition
+			isHiddenInTab = true;
 			tabID = tab.id;
 			window = await show(activeTab);
 		}
@@ -174,12 +181,12 @@ define([
 	{
 		const targetWindow = activeTab && await cp.windows.get(activeTab.windowId);
 		let {left, top, width, height} = calcPosition(targetWindow, alignment);
-		let result = Promise.resolve();
+		let result;
 
 			// if we're already visible and show() is being called again, that
 			// means the user is navigating recent tabs while keeping the popup
 			// open, so focus the existing window even if it's in tab mode
-		if (isVisible || (type == "window" && windowID)) {
+		if (isVisible || !isHiddenInTab) {
 				// to get a minimized window to change position, we seem to have
 				// to make an additional update() call with the position, but
 				// only if the window is currently not visible.  otherwise, it
@@ -190,9 +197,10 @@ define([
 			}
 
 			result = cp.windows.update(windowID, { focused: true, left, top });
-		} else if (type == "tab" && tabID) {
+		} else {
 				// create a popup window with the tab that's hiding in another
-				// window, instead of passing in a URL
+				// window, instead of passing in a URL.  that will move the
+				// existing tab into the new popup.
 			const window = await cp.windows.create({
 				type: "popup",
 				tabId: tabID,
@@ -211,8 +219,35 @@ define([
 
 		lastActiveTab = activeTab;
 		isVisible = true;
+		isHiddenInTab = false;
 
 		return result.catch(console.error);
+	}
+
+
+	async function hideInTab()
+	{
+		const lastWindow = await getLastWindow();
+
+		if (lastWindow) {
+			try {
+				await cp.tabs.move(tabID, {
+					windowId: lastWindow.id,
+					index: -1
+				});
+				isHiddenInTab = true;
+			} catch (e) {
+				// ignore this error, as it's most likely due to the user
+				// switching to the hidden tab and then away, causing it to
+				// lose focus, which then calls hide(), but the popup window
+				// in which the tab was previously shown is already closed
+			}
+		} else {
+				// there's no window in which to stash the tab, so just
+				// close it
+			await close();
+			isHiddenInTab = false;
+		}
 	}
 
 
@@ -220,64 +255,45 @@ define([
 		unfocus,
 		targetTabOrWindow)
 	{
-		const options = {};
-
-		if (unfocus) {
-			options.focused = false;
-		}
-
-		if (targetTabOrWindow && (hideBehavior == Behind)) {
-				// hide the popup behind the focused window
-			const {left, top} = calcPosition(
-				targetTabOrWindow.windowId
-					? await cp.windows.get(targetTabOrWindow.windowId)
-					: targetTabOrWindow
-			);
-
-			options.left = left;
-			options.top = top;
-		} else if (hideBehavior == Minimize) {
-			options.state = "minimized";
-		}
-
 		isVisible = false;
 
-		if (type == "window" && windowID) {
+		if (hideBehavior == Tab) {
+			await hideInTab();
+		} else {
+			const options = {};
+
+			if (unfocus) {
+				options.focused = false;
+			}
+
+			if (hideBehavior == Behind) {
+				if (targetTabOrWindow) {
+						// hide the popup behind the focused window
+					const {left, top} = calcPosition(
+						targetTabOrWindow.windowId
+							? await cp.windows.get(targetTabOrWindow.windowId)
+							: targetTabOrWindow
+					);
+
+					options.left = left;
+					options.top = top;
+				} else {
+						// we didn't get a target to hide behind, probably because
+						// a devtools window got focused.  so temporarily fall back
+						// to hiding in a tab, so that the popup goes away.  then
+						// bail early.
+					return await hideInTab();
+				}
+			} else if (hideBehavior == Minimize) {
+				options.state = "minimized";
+			}
+
 			try {
 				await cp.windows.update(windowID, options);
 			} catch (e) {
 DEBUG && console.error("Failed to hide popup", e);
 
 					// we couldn't move the window for some reason, so close it
-				await close();
-			}
-		} else if (type == "tab" && tabID) {
-			const lastWindow = await getLastWindow();
-
-			if (lastWindow) {
-				try {
-					if (!IsMac) {
-							// move the popup behind the target window before
-							// moving the tab to a window, so you don't see the
-							// popup get painted black as it's closing in Win10.
-							// on macOS, this doesn't happen, and the process of
-							// centering the popup on the window is visible.
-						await cp.windows.update(windowID, options);
-					}
-
-					await cp.tabs.move(tabID, {
-						windowId: lastWindow.id,
-						index: -1
-					});
-				} catch (e) {
-					// ignore this error, as it's most likely due to the user
-					// switching to the hidden tab and then away, causing it to
-					// lose focus, which then calls hide(), but the popup window
-					// in which the tab was previously shown is already closed
-				}
-			} else {
-					// there's no window in which to stash the tab, so just
-					// close it
 				await close();
 			}
 		}
@@ -333,11 +349,7 @@ DEBUG && console.error("Failed to hide popup", e);
 			return windowID;
 		},
 		get isOpen() {
-			const query = type == "window"
-				? { windowId: windowID }
-				: { tabId: tabID };
-
-			return chrome.extension.getViews(query).length > 0;
+			return chrome.extension.getViews({ tabId: tabID }).length > 0;
 		},
 		get isVisible() {
 			return isVisible;
