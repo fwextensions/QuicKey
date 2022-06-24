@@ -18,7 +18,6 @@ define([
 	let popupAdjustmentHeight = 0;
 	let isVisible = false;
 	let isHiddenInTab = false;
-	let type = "window";
 	let hideBehavior = Behind;
 	let windowID;
 	let tabID;
@@ -101,15 +100,14 @@ define([
 
 			// get the full URL with the extension ID in it so that we can
 			// delete it from the history below, which requires an exact match
-// TODO: this type param seems to be unnecessary.  though maybe useful to show the menu in a different state?
-		const url = `${PopupURL}?${new URLSearchParams({ type, focusSearch })}`;
+		const url = `${PopupURL}?${new URLSearchParams({ focusSearch })}`;
 			// we won't have an activeTab if the user is opening the popup with
 			// a devtools window in the foreground
 		const targetWindow = activeTab && await cp.windows.get(activeTab.windowId);
 		let {left, top, width, height} = calcPosition(targetWindow, alignment);
 		let window;
 
-		if (type == "window") {
+		if (hideBehavior !== Tab) {
 			window = await cp.windows.create({
 				url,
 				type: "popup",
@@ -123,8 +121,7 @@ define([
 			windowID = window.id;
 			tabID = window.tabs[0].id;
 		} else {
-				// first add the tab to the last unfocused window, then move
-				// that tab to a new popup window
+				// first create a tab in the last unfocused window
 			const lastWindow = await getLastWindow();
 			const tab = await cp.tabs.create({
 				url,
@@ -136,6 +133,9 @@ define([
 				// the new tab starts out in a hidden state, by definition
 			isHiddenInTab = true;
 			tabID = tab.id;
+
+				// calling show() will create a new popup window and move the
+				// QuicKey tab to it
 			window = await show(activeTab);
 		}
 
@@ -338,7 +338,6 @@ DEBUG && console.error("Failed to hide popup", e);
 		set hideBehavior(value) {
 			if (hideBehavior !== value) {
 				hideBehavior = value;
-				type = hideBehavior == Tab ? "tab" : "window";
 
 					// do this after updating hideBehavior, since we're not
 					// awaiting the call
