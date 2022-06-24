@@ -55,7 +55,7 @@ require([
 				initialShortcuts,
 				platform,
 				tracker,
-				isPopup: params.has("type"),
+				isPopup: params.has("focusSearch"),
 				focusSearch: params.get("focusSearch") == "true",
 				port: gPort
 			}),
