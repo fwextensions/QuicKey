@@ -41,6 +41,17 @@ define([
 	}
 
 
+	async function getWindow(
+		tabOrWindow)
+	{
+		if (tabOrWindow?.windowId) {
+			return await cp.windows.get(tabOrWindow.windowId);
+		} else {
+			return tabOrWindow;
+		}
+	}
+
+
 	function getScreen()
 	{
 		return {
@@ -257,39 +268,38 @@ define([
 	{
 		isVisible = false;
 
-		if (hideBehavior == Tab) {
+		if (hideBehavior == Tab || (hideBehavior == Behind && !targetTabOrWindow)) {
+				// if we didn't get a target to hide behind, probably because
+				// a devtools window got focused, then temporarily fall back to
+				// hiding in a tab, so that the popup is no longer visible
 			await hideInTab();
 		} else {
 			const options = {};
+			const targetWindow = await getWindow(targetTabOrWindow);
 
 			if (unfocus) {
 				options.focused = false;
 			}
 
 			if (hideBehavior == Behind) {
-				if (targetTabOrWindow) {
-						// hide the popup behind the focused window
-					const {left, top} = calcPosition(
-						targetTabOrWindow.windowId
-							? await cp.windows.get(targetTabOrWindow.windowId)
-							: targetTabOrWindow
-					);
+					// hide the popup behind the focused window
+				const {left, top} = calcPosition(targetWindow);
 
-					options.left = left;
-					options.top = top;
-				} else {
-						// we didn't get a target to hide behind, probably because
-						// a devtools window got focused.  so temporarily fall back
-						// to hiding in a tab, so that the popup goes away.  then
-						// bail early.
-					return await hideInTab();
-				}
+				options.left = left;
+				options.top = top;
 			} else if (hideBehavior == Minimize) {
 				options.state = "minimized";
 			}
 
 			try {
 				await cp.windows.update(windowID, options);
+
+				if (unfocus && !targetWindow.focused) {
+						// we just unfocused the popup, but the targetWindow
+						// didn't become focused, probably because we're on
+						// macOS, so force it into focus
+					await cp.windows.update(targetWindow.id, { focused: true });
+				}
 			} catch (e) {
 DEBUG && console.error("Failed to hide popup", e);
 
