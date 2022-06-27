@@ -715,7 +715,7 @@ define("popup/app", [
 		getActiveTab: function(
 			blurred = false)
 		{
-			if (!this.props.isPopup || !this.visible || blurred) {
+			if (!this.props.isPopup || blurred) {
 				return cp.tabs.query({ active: true, currentWindow: true })
 					.then(([activeTab]) => activeTab);
 			} else {
@@ -1004,8 +1004,11 @@ define("popup/app", [
 			}
 
 				// force the popup to close, since focusing or opening the
-				// options tab doesn't seem to blur the popup, leaving it open
-			this.closeWindow(false, optionsTab);
+				// options tab doesn't seem to blur the popup, leaving it open.
+				// pass true on Mac to make sure the popup hides behind
+				// something, since creating a new options tab doesn't seem to
+				// blur the popup.
+			this.closeWindow(k.IsMac, optionsTab);
 			this.props.tracker.event("extension", "open-options");
 		},
 
