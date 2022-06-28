@@ -119,6 +119,11 @@ define("popup/app", [
 			this.settingsPromise = this.updateSettings();
 			this.openedForSearch = this.props.focusSearch;
 
+				// in showWindow() we set gotMRUKey based on whether the window
+				// is being opened for search as well, but showWindow() isn't
+				// called in the flow when the window is opened the first time
+			this.gotMRUKey = !this.openedForSearch;
+
 			if (this.props.isPopup) {
 				this.getActiveTab(true)
 					.then(({id}) => this.popupTabID = id);
