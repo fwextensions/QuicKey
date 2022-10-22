@@ -123,9 +123,10 @@ define([
 
 				// Edge appends the badge count with a comma after the badge title,
 				// which looks awkward: "829 open tabs, 829".  so don't customize
-				// the title in Edge.
+				// the title in Edge.  format the count with a comma if the user
+				// has 1,000+ (!) tabs open.
 			if (!IsEdge) {
-				title = `${ExtensionName} - ${tabCount} open tab${tabCount == 1 ? "" : "s"}`;
+				title = `${ExtensionName} - ${tabCount.toLocaleString()} open tab${tabCount == 1 ? "" : "s"}`;
 			}
 		}
 
