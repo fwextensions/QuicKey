@@ -264,7 +264,12 @@ define("popup/app", [
 		{
 			const loader = async () => {
 				const settings = await this.settingsPromise;
-				const activeTab = await this.getActiveTab();
+					// when we're navigating recents, we want to include the
+					// current tab in the list in the popup window, so pass null
+					// so initTabs() doesn't filter it out
+				const activeTab = this.navigatingRecents
+					? null
+					: await this.getActiveTab();
 				const tabs = await initTabs(
 						// don't include recently closed tabs when navigating
 						// recents, since you can't navigate to them
