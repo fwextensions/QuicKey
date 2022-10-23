@@ -84,6 +84,7 @@ define("popup/app", [
 		resultsList: null,
 		settings: settings.getDefaults(),
 		settingsPromise: null,
+		className: "",
 
 
 		getInitialState: function()
@@ -139,6 +140,13 @@ define("popup/app", [
 
 		componentWillMount: function()
 		{
+				// we're saving the initial value of this prop instead of
+				// getting it every time in render, which is normally bad, but
+				// the platform will never change during the life of the app
+			this.className = [
+				this.props.platform,
+				k.IsFirefox ? "firefox" : ""
+			].join(" ");
 			this.loadTabs()
 				.then(tabs => {
 						// by the time we get here, the settings promise will
@@ -744,7 +752,7 @@ define("popup/app", [
 				newSettingsAvailable
 			} = this.state;
 
-			return <div className={this.props.platform}>
+			return <div className={this.className}>
 				<SearchBox
 					mode={this.mode}
 					forceUpdate={this.forceUpdate}

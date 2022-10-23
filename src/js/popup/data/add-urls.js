@@ -6,6 +6,7 @@ define([
 		// assume any extension URL that begins with suspended.html is from TGS
 	const SuspendedURLPattern = /^chrome-extension:\/\/[^/]+\/suspended\.html#(?:.*&)?uri=(.+)$/;
 	const ProtocolPattern = /^((chrome-extension:\/\/[^/]+\/suspended\.html#(?:.*&)?uri=)?(https?|file|chrome):\/\/(www\.)?)|(chrome-extension:\/\/[^/]+\/)/;
+	const FirefoxToolPattern = /\/mozapps\//;
 	const TGSIconPath = "chrome-extension://klbibkeccnjlkjkiokjodocebajanakg/img/";
 	const FaviconURLPrefix = "chrome://favicon/";
 
@@ -53,6 +54,12 @@ define([
 			// closed tabs will have recentBoost already set.  this is mostly to
 			// add a default value for bookmarks and history.
 		item.recentBoost = isNaN(item.recentBoost) ? 1 : item.recentBoost;
+
+		if (FirefoxToolPattern.test(item.faviconURL)) {
+				// FF generates console errors when we try to render a favicon
+				// from some of its internal pages
+			item.faviconURL = "";
+		}
 
 		return item;
 	}

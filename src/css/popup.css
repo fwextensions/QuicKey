@@ -84,9 +84,11 @@
 
 html, body {
 	width: 500px;
-	height: 35px;
 	margin: 0;
 	padding: 0;
+		/* prevent the flash of a scrollbar that briefly appears when the popup
+		   is opened on Firefox */
+	scrollbar-width: none;
 }
 
 body {
@@ -159,13 +161,27 @@ img {
 	position: absolute;
 }
 
-.search-box input::-webkit-input-placeholder, .command-placeholder {
+.search-box input::-webkit-input-placeholder,
+.search-box input::placeholder,
+.command-placeholder {
 	font-weight: normal;
 	font-style: italic;
 	color: var(--color, rgb(117, 117, 117));
 }
 
-.search-box input::-webkit-search-cancel-button {
+.search-box .cancel-button {
+	display: none;
+}
+
+.firefox .search-box .cancel-button {
+	display: block;
+	top: 5px;
+	right: 27px;
+	position: absolute;
+}
+
+.search-box input::-webkit-search-cancel-button,
+.firefox .search-box .cancel-button {
 	-webkit-appearance: none;
 	height: 22px;
 	width: 22px;
@@ -182,6 +198,18 @@ img {
 }
 
 .search-box input::-webkit-search-cancel-button:hover:active {
+	background-color: var(--background, #bbb);
+}
+
+	/* maddeningly, FF will ignore the entire rule set when it contains both a
+	   prefixed pseudo element it doesn't support AND a pseudo class.  so we have
+	   to repeat these rules for hover when we don't have to repeat them for the
+	   basic styling above. */
+.firefox .search-box .cancel-button:hover {
+	background-color: var(--background, #dcdcdc);
+}
+
+.firefox .search-box .cancel-button:hover:active {
 	background-color: var(--background, #bbb);
 }
 
@@ -461,4 +489,9 @@ img {
 
 ::-webkit-scrollbar-corner {
 	background: transparent;
+}
+
+.firefox .results-list {
+	scrollbar-width: thin;
+	scrollbar-color: var(--background, rgba(0, 0, 0, 0.15)) none;
 }
