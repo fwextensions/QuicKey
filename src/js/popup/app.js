@@ -581,8 +581,7 @@ define("popup/app", [
 				active: true,
 				currentWindow: true
 			})
-				.bind(this)
-				.then(function(activeTabs) {
+				.then(activeTabs => {
 					const activeTab = activeTabs[0];
 						// if the active tab is at 0, and we want to move
 						// another tab to the left of it, force that index
@@ -618,7 +617,12 @@ define("popup/app", [
 						index: index
 					})
 				})
-				.then(function(movedTab) {
+				.then(movedTab => {
+					if (Array.isArray(movedTab)) {
+							// annoyingly, this is returned as an array in FF
+						movedTab = movedTab[0];
+					}
+
 						// use the movedTab from this callback, since
 						// the tab reference we had to it from before is
 						// likely stale.  we also have to call addURLs()
@@ -630,6 +634,10 @@ define("popup/app", [
 					this.focusTab(movedTab, unsuspend);
 					this.props.tracker.event(this.state.query.length ? "tabs" : "recents",
 						"move-" + (direction ? "right" : "left"));
+
+						// focusing the tab doesn't close the menu in FF, so
+						// close it explicitly just in case
+					this.closeWindow();
 				});
 		},
 
