@@ -455,9 +455,7 @@ define("popup/app", [
 					this.props.tracker.event(this.mode, "open");
 				}
 
-					// we seem to have to close the window in a timeout so that
-					// the hover state of the button gets cleared
-				setTimeout(function() { window.close(); }, 0);
+				this.closeWindow();
 			}
 		},
 
@@ -678,6 +676,14 @@ define("popup/app", [
 		},
 
 
+		closeWindow: function()
+		{
+				// we seem to have to close the window in a timeout so that
+				// the hover state of the button gets cleared
+			setTimeout(window.close, 0);
+		},
+
+
 		handleListRef: handleRef("resultsList"),
 
 
@@ -739,6 +745,10 @@ define("popup/app", [
 				url: chrome.extension.getURL("options.html")
 			});
 			this.props.tracker.event("extension", "open-options");
+
+				// opening the options tab doesn't automatically close the menu
+				// on Firefox
+			this.closeWindow();
 		},
 
 
