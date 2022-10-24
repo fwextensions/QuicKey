@@ -445,6 +445,10 @@ main {
 	font-size: .9em;
 }
 
+.control .subtitle kbd {
+	line-height: 1.1;
+}
+
 .control-group {
 	margin: 1em 0 2em 0;
 }
