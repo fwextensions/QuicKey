@@ -155,7 +155,7 @@ define([
 				sessionId ? "closed" : ""
 			].join(" ");
 			const faviconStyle = {
-				backgroundImage: "url(" + faviconURL + ")"
+				backgroundImage: `url(${faviconURL})`
 			};
 			let tooltip = [
 				title.length > MaxTitleLength ? title : "",

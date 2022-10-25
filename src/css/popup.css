@@ -25,22 +25,35 @@
 		--border-color: #555;
 	}
 
-	.search-box input::-webkit-input-placeholder, .command-placeholder {
+	.search-box input::-webkit-input-placeholder,
+	.search-box input::placeholder,
+	.command-placeholder {
 		--color: rgb(139, 139, 139);
 	}
 
-	.search-box input::-webkit-search-cancel-button {
+	.search-box input::-webkit-search-cancel-button,
+	.firefox .search-box .cancel-button {
 		background-image: url(/img/clear-dark.svg) !important;
 	}
 
-	.search-box input::-webkit-search-cancel-button:hover,
+	.search-box input::-webkit-search-cancel-button:hover {
+		--background: #535457;
+	}
+
+	.search-box input::-webkit-search-cancel-button:hover:active {
+		--background: #5d5e61;
+	}
+
+		/* group together the selectors that Firefox will parse, while leaving the
+		   pseudo-element+pseudo-class selector that FF ignores by itself above */
 	.options-button:hover,
+	.firefox .search-box .cancel-button:hover,
 	.results-list-item.selected:hover .close-button:hover {
 		--background: #535457;
 	}
 
-	.search-box input::-webkit-search-cancel-button:hover:active,
 	.options-button:hover:active,
+	.firefox .search-box .cancel-button:hover:active,
 	.results-list-item.selected:hover .close-button:hover:active {
 		--background: #5d5e61;
 	}
@@ -62,7 +75,7 @@
 		--background: #666;
 	}
 
-	::-webkit-scrollbar-thumb {
+	::-webkit-scrollbar-thumb, .firefox .results-list {
 		--background: rgba(255, 255, 255, .1);
 	}
 
