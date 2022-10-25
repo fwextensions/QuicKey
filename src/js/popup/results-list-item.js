@@ -12,14 +12,13 @@ define([
 	{
 		HistoryIcon,
 		IncognitoIcon,
-		InPrivateIcon,
 		WindowIcon,
 		ClearIcon
 	},
 	cp,
 	copyTextToClipboard,
 	{ModKeyBoolean},
-	{IsDev, IsEdge, IncognitoNameLC},
+	{IsDev, IncognitoNameLC},
 	React,
 	_
 ) {
@@ -186,7 +185,7 @@ define([
 			}
 
 			if (incognito) {
-				badge = IsEdge ? <InPrivateIcon /> : <IncognitoIcon />;
+				badge = <IncognitoIcon />;
 				badgeTooltip = IncognitoTooltip;
 			} else if (otherWindow) {
 				badge = <WindowIcon />;

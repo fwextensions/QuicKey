@@ -13,15 +13,25 @@ define([
 	{IncognitoIcon, InPrivateIcon, HistoryIcon, WindowIcon},
 	k
 ) {
-	const {IncognitoNameUC, IncognitoNameLC} = k;
+	const {IncognitoNameUC, IncognitoNameLC, IncognitoPermission} = k;
 	const IncognitoAction = k.IsEdge ? "click the checkbox" : "toggle it on";
-	const IncognitoIndicator = k.IsEdge ? <InPrivateIcon /> : <IncognitoIcon />;
+	const IncognitoInstructions = k.IsFirefox
+		? <span>right-click the QuicKey toolbar icon, select <i>Manage
+			Extension</i>, and then click <i>Allow</i> next to the <i>Run in
+			Private Windows</i> option</span>
+		: <span>click the button below, then scroll down to
+			the <i>{IncognitoPermission}</i> setting and {IncognitoAction}</span>;
 	const UpdateMessage = <div className="update-message"
 		title="Now you can use pinyin to search for Chinese characters in web page titles and URLs. You can always reopen this page by clicking the gear icon in the QuicKey menu."
 	>
 		<h3>现在，您可以使用拼音在网页标题和URL中搜索中文字符。</h3>
 		<h4>您始终可以通过单击QuicKey菜单中的齿轮图标来重新打开此页面。</h4>
 	</div>;
+	const BrowserClassName = k.IsFirefox
+		? "firefox"
+		: k.IsEdge
+			? "edge"
+			: "chrome";
 
 
 	function NewSetting({
@@ -71,8 +81,11 @@ define([
 
 		handleChangeIncognitoClick: function()
 		{
-			this.openExtensionsTab("?id=" + chrome.runtime.id);
-			this.props.tracker.event("extension", "options-incognito");
+				// FF doesn't support opening the settings tab directly
+			if (!k.IsFirefox) {
+				this.openExtensionsTab("?id=" + chrome.runtime.id);
+				this.props.tracker.event("extension", "options-incognito");
+			}
 		},
 
 
@@ -137,7 +150,7 @@ define([
 				onResetShortcuts
 			} = this.props;
 
-			return <main className={k.IsEdge ? "edge" : "chrome"}>
+			return <main className={BrowserClassName}>
 				{
 					showPinyinUpdateMessage && UpdateMessage
 				}
@@ -354,10 +367,8 @@ define([
 				<h2>{IncognitoNameUC} windows</h2>
 
 				<p>By default, QuicKey can't switch to tabs in {IncognitoNameLC} windows.
-					To enable this functionality, click the button below, then
-					scroll down to the <i>Allow in {IncognitoNameLC}</i> setting
-					and {IncognitoAction}.  {IncognitoNameUC} tabs are marked
-					with {IncognitoIndicator}.
+					To enable this functionality, {IncognitoInstructions}.  {IncognitoNameUC} tabs
+					are marked with <IncognitoIcon />.
 				</p>
 				<img className="incognito-screenshot"
 					src={`/img/${IncognitoNameLC.toLocaleLowerCase()}-option.png`}
@@ -365,10 +376,11 @@ define([
 					title={`Change ${IncognitoNameLC} setting`}
 					onClick={this.handleChangeIncognitoClick}
 				/>
-				<button className="key"
-					onClick={this.handleChangeIncognitoClick}
-				>Change {IncognitoNameLC} setting</button>
-
+				{!k.IsFirefox &&
+					<button className="key"
+						onClick={this.handleChangeIncognitoClick}
+					>Change {IncognitoNameLC} setting</button>
+				}
 
 				<h2>Feedback and support</h2>
 

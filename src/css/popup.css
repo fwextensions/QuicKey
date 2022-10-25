@@ -12,7 +12,7 @@
 		--fill: #aaa;
 	}
 
-	.history.icon, .window.icon, .incognito.icon {
+	.history.icon, .window.icon, .incognito.icon, .ff-private.icon {
 		--fill: #777;
 	}
 
@@ -127,7 +127,7 @@ img {
 	fill: var(--fill, #888);
 }
 
-.history.icon, .window.icon, .incognito.icon {
+.history.icon, .window.icon, .incognito.icon, .ff-private.icon {
 	fill: var(--fill, #bbb);
 }
 

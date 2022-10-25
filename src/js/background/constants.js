@@ -11,6 +11,18 @@ define([
 	const IsEdge = /Edg\//i.test(userAgent);
 	const IsFirefox = /Firefox\//i.test(userAgent);
 
+	const IncognitoNameUC = IsFirefox
+		? "Private"
+		: IsEdge
+			? "InPrivate"
+			: "Incognito";
+	const IncognitoNameLC = IsEdge
+		? "InPrivate"
+		: IncognitoNameUC.toLowerCase();
+	const IncognitoPermission = IsFirefox
+		? "Run in Private Windows"
+		: `Allow in ${IncognitoNameLC}`;
+
 	const languagePattern = /^(?<lang>[-a-z]+)-(?<locale>[a-z]+)$/i;
 	const primaryLanguage = languages[0];
 	const languageMatch = primaryLanguage.match(languagePattern);
@@ -24,8 +36,9 @@ define([
 		IsDev: false,
 		IsEdge,
 		IsFirefox,
-		IncognitoNameUC: IsEdge ? "InPrivate" : "Incognito",
-		IncognitoNameLC: IsEdge ? "InPrivate" : "incognito",
+		IncognitoNameUC,
+		IncognitoNameLC,
+		IncognitoPermission,
 		SpaceBehavior: {
 			Key: "spaceBehavior",
 			Select: "select",
