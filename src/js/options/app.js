@@ -364,23 +364,24 @@ define([
 				{this.renderShortcutList(Shortcuts.fixed)}
 
 
-				<h2>{IncognitoNameUC} windows</h2>
+				{!k.IsFirefox && <div>
+					<h2>{IncognitoNameUC} windows</h2>
 
-				<p>By default, QuicKey can't switch to tabs in {IncognitoNameLC} windows.
-					To enable this functionality, {IncognitoInstructions}.  {IncognitoNameUC} tabs
-					are marked with <IncognitoIcon />.
-				</p>
-				<img className="incognito-screenshot"
-					src={`/img/${IncognitoNameLC.toLocaleLowerCase()}-option.png`}
-					alt={`${IncognitoNameUC} option`}
-					title={`Change ${IncognitoNameLC} setting`}
-					onClick={this.handleChangeIncognitoClick}
-				/>
-				{!k.IsFirefox &&
+					<p>By default, QuicKey can't switch to tabs in {IncognitoNameLC} windows.
+						To enable this functionality, {IncognitoInstructions}.  {IncognitoNameUC} tabs
+						are marked with <IncognitoIcon />.
+					</p>
+					<img className="incognito-screenshot"
+						src={`/img/${IncognitoNameLC.toLocaleLowerCase()}-option.png`}
+						alt={`${IncognitoNameUC} option`}
+						title={`Change ${IncognitoNameLC} setting`}
+						onClick={this.handleChangeIncognitoClick}
+					/>
 					<button className="key"
 						onClick={this.handleChangeIncognitoClick}
 					>Change {IncognitoNameLC} setting</button>
-				}
+				</div>}
+
 
 				<h2>Feedback and support</h2>
 

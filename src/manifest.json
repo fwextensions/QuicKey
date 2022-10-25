@@ -36,6 +36,7 @@
 		"open_in_tab": true,
 		"page": "options.html"
 	},
+	"incognito": "not_allowed",
 	"commands": {
 		"_execute_browser_action": {
 			"suggested_key": {

@@ -148,6 +148,12 @@ require([
 	let usePinyin;
 
 
+	if (k.IsFirefox) {
+			// make the count background slightly darker in FF so the text is
+			// rendered in white instead of black
+		BadgeColors.light.normal = "#666";
+	}
+
 	const addTab = debounce(({tabId}) => cp.tabs.get(tabId)
 		.then(recentTabs.add)
 		.catch(error => {
