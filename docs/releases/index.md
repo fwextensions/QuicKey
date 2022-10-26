@@ -8,6 +8,13 @@ comments: true
 # Release history
 
 
+## 1.8.0 - 2022-10-26
+
+### Added
+
+* Added support for Firefox and added it to the [Mozilla add-ons store](https://addons.mozilla.org/en-US/firefox/addon/quickey-the-quick-tab-switcher/).  No changes for other browsers.
+
+
 ## 1.7.4 - 2022-06-18
 
 ### Fixed
