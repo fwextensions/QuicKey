@@ -111,6 +111,8 @@ Tabs in InPrivate mode display the InPrivate icon under the page's favicon, so y
 ➤
 ↑ ↓
 
+https://addons.mozilla.org/en-US/firefox/addon/quickey-the-quick-tab-switcher/
+
 
 # Description
 
