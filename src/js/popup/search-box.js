@@ -2,12 +2,14 @@ define([
 	"jsx!./input",
 	"jsx!common/icons",
 	"lib/handle-ref",
-	"react"
+	"react",
+	"background/constants"
 ], function(
 	Input,
 	{SearchIcon},
 	handleRef,
-	React
+	React,
+	{IsFirefox}
 ) {
 	function Placeholder({
 		mode,
@@ -44,6 +46,15 @@ define([
 
 
 		handleRef: handleRef("searchBox"),
+
+
+		handleCancelButtonClick: function()
+		{
+				// unlike the cancel button in Chrome, clicking the one in FF
+				// steals the focus, so set it back in the input
+			this.focus();
+			this.props.onChange({ target: { value: "" } });
+		},
 
 
 		render: function()
@@ -86,6 +97,13 @@ define([
 					<Placeholder mode={mode} shortcut="/h" text="Search for a title or URL from the browser history" />}
 				{mode == "command" &&
 					<Placeholder mode={mode} shortcut="/b" text="Type b for bookmark search or h for history, then a space" />}
+				{(IsFirefox && query.length > 0) &&
+					<div
+						className="cancel-button"
+						title="Clear search"
+						onClick={this.handleCancelButtonClick}
+					/>
+				}
 			</div>
 		}
 	});

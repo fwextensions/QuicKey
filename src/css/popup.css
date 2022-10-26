@@ -12,7 +12,7 @@
 		--fill: #aaa;
 	}
 
-	.history.icon, .window.icon, .incognito.icon {
+	.history.icon, .window.icon, .incognito.icon, .ff-private.icon {
 		--fill: #777;
 	}
 
@@ -25,22 +25,35 @@
 		--border-color: #555;
 	}
 
-	.search-box input::-webkit-input-placeholder, .command-placeholder {
+	.search-box input::-webkit-input-placeholder,
+	.search-box input::placeholder,
+	.command-placeholder {
 		--color: rgb(139, 139, 139);
 	}
 
-	.search-box input::-webkit-search-cancel-button {
+	.search-box input::-webkit-search-cancel-button,
+	.firefox .search-box .cancel-button {
 		background-image: url(/img/clear-dark.svg) !important;
 	}
 
-	.search-box input::-webkit-search-cancel-button:hover,
+	.search-box input::-webkit-search-cancel-button:hover {
+		--background: #535457;
+	}
+
+	.search-box input::-webkit-search-cancel-button:hover:active {
+		--background: #5d5e61;
+	}
+
+		/* group together the selectors that Firefox will parse, while leaving the
+		   pseudo-element+pseudo-class selector that FF ignores by itself above */
 	.options-button:hover,
+	.firefox .search-box .cancel-button:hover,
 	.results-list-item.selected:hover .close-button:hover {
 		--background: #535457;
 	}
 
-	.search-box input::-webkit-search-cancel-button:hover:active,
 	.options-button:hover:active,
+	.firefox .search-box .cancel-button:hover:active,
 	.results-list-item.selected:hover .close-button:hover:active {
 		--background: #5d5e61;
 	}
@@ -62,7 +75,7 @@
 		--background: #666;
 	}
 
-	::-webkit-scrollbar-thumb {
+	::-webkit-scrollbar-thumb, .firefox .results-list {
 		--background: rgba(255, 255, 255, .1);
 	}
 
@@ -84,9 +97,11 @@
 
 html, body {
 	width: 500px;
-	height: 35px;
 	margin: 0;
 	padding: 0;
+		/* prevent the flash of a scrollbar that briefly appears when the popup
+		   is opened on Firefox */
+	scrollbar-width: none;
 }
 
 body {
@@ -112,7 +127,7 @@ img {
 	fill: var(--fill, #888);
 }
 
-.history.icon, .window.icon, .incognito.icon {
+.history.icon, .window.icon, .incognito.icon, .ff-private.icon {
 	fill: var(--fill, #bbb);
 }
 
@@ -159,13 +174,27 @@ img {
 	position: absolute;
 }
 
-.search-box input::-webkit-input-placeholder, .command-placeholder {
+.search-box input::-webkit-input-placeholder,
+.search-box input::placeholder,
+.command-placeholder {
 	font-weight: normal;
 	font-style: italic;
 	color: var(--color, rgb(117, 117, 117));
 }
 
-.search-box input::-webkit-search-cancel-button {
+.search-box .cancel-button {
+	display: none;
+}
+
+.firefox .search-box .cancel-button {
+	display: block;
+	top: 5px;
+	right: 27px;
+	position: absolute;
+}
+
+.search-box input::-webkit-search-cancel-button,
+.firefox .search-box .cancel-button {
 	-webkit-appearance: none;
 	height: 22px;
 	width: 22px;
@@ -182,6 +211,18 @@ img {
 }
 
 .search-box input::-webkit-search-cancel-button:hover:active {
+	background-color: var(--background, #bbb);
+}
+
+	/* maddeningly, FF will ignore the entire rule set when it contains both a
+	   prefixed pseudo element it doesn't support AND a pseudo class.  so we have
+	   to repeat these rules for hover when we don't have to repeat them for the
+	   basic styling above. */
+.firefox .search-box .cancel-button:hover {
+	background-color: var(--background, #dcdcdc);
+}
+
+.firefox .search-box .cancel-button:hover:active {
 	background-color: var(--background, #bbb);
 }
 
@@ -461,4 +502,9 @@ img {
 
 ::-webkit-scrollbar-corner {
 	background: transparent;
+}
+
+.firefox .results-list {
+	scrollbar-width: thin;
+	scrollbar-color: var(--background, rgba(0, 0, 0, 0.15)) none;
 }

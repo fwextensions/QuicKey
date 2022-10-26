@@ -7,6 +7,9 @@ define(function() {
 		const activeElement = document.activeElement;
 		let result;
 
+			// prevent the textarea from causing the height to change when it's
+			// added, which is visible in FF
+		copyFrom.style.cssText = "position: absolute; top: -100px;";
 		copyFrom.textContent = text;
 		body.appendChild(copyFrom);
 		copyFrom.focus();

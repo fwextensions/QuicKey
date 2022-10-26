@@ -1,14 +1,19 @@
 define([
 	"react",
 	"react-virtualized",
-	"lib/handle-ref"
+	"lib/handle-ref",
+	"background/constants"
 ], function(
 	React,
 	ReactVirtualized,
-	handleRef
+	handleRef,
+	{IsFirefox}
 ) {
-	const RowHeight = 45,
-		Width = 490;
+	const RowHeight = 45;
+		// in FF, the scrollbar appears inside the right edge of the scrolling
+		// area, instead on the outside.  so make the virtual list go right to
+		// the edge of the popup, so the scrollbar doesn't cover the content.
+	const Width = IsFirefox ? 495 : 490;
 
 
 	var ResultsList = React.createClass({

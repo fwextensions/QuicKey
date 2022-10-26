@@ -84,6 +84,7 @@ define("popup/app", [
 		resultsList: null,
 		settings: settings.getDefaults(),
 		settingsPromise: null,
+		className: "",
 
 
 		getInitialState: function()
@@ -139,6 +140,13 @@ define("popup/app", [
 
 		componentWillMount: function()
 		{
+				// we're saving the initial value of this prop instead of
+				// getting it every time in render, which is normally bad, but
+				// the platform will never change during the life of the app
+			this.className = [
+				this.props.platform,
+				k.IsFirefox ? "firefox" : ""
+			].join(" ");
 			this.loadTabs()
 				.then(tabs => {
 						// by the time we get here, the settings promise will
@@ -447,9 +455,7 @@ define("popup/app", [
 					this.props.tracker.event(this.mode, "open");
 				}
 
-					// we seem to have to close the window in a timeout so that
-					// the hover state of the button gets cleared
-				setTimeout(function() { window.close(); }, 0);
+				this.closeWindow();
 			}
 		},
 
@@ -575,8 +581,7 @@ define("popup/app", [
 				active: true,
 				currentWindow: true
 			})
-				.bind(this)
-				.then(function(activeTabs) {
+				.then(activeTabs => {
 					const activeTab = activeTabs[0];
 						// if the active tab is at 0, and we want to move
 						// another tab to the left of it, force that index
@@ -612,7 +617,12 @@ define("popup/app", [
 						index: index
 					})
 				})
-				.then(function(movedTab) {
+				.then(movedTab => {
+					if (Array.isArray(movedTab)) {
+							// annoyingly, this is returned as an array in FF
+						movedTab = movedTab[0];
+					}
+
 						// use the movedTab from this callback, since
 						// the tab reference we had to it from before is
 						// likely stale.  we also have to call addURLs()
@@ -624,6 +634,10 @@ define("popup/app", [
 					this.focusTab(movedTab, unsuspend);
 					this.props.tracker.event(this.state.query.length ? "tabs" : "recents",
 						"move-" + (direction ? "right" : "left"));
+
+						// focusing the tab doesn't close the menu in FF, so
+						// close it explicitly just in case
+					this.closeWindow();
 				});
 		},
 
@@ -667,6 +681,14 @@ define("popup/app", [
 			}
 
 			this.setState({ selected: index });
+		},
+
+
+		closeWindow: function()
+		{
+				// we seem to have to close the window in a timeout so that
+				// the hover state of the button gets cleared
+			setTimeout(window.close, 0);
 		},
 
 
@@ -731,6 +753,10 @@ define("popup/app", [
 				url: chrome.extension.getURL("options.html")
 			});
 			this.props.tracker.event("extension", "open-options");
+
+				// opening the options tab doesn't automatically close the menu
+				// on Firefox
+			this.closeWindow();
 		},
 
 
@@ -744,7 +770,7 @@ define("popup/app", [
 				newSettingsAvailable
 			} = this.state;
 
-			return <div className={this.props.platform}>
+			return <div className={this.className}>
 				<SearchBox
 					mode={this.mode}
 					forceUpdate={this.forceUpdate}

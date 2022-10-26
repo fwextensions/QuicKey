@@ -6,8 +6,9 @@ define([
 	const DefaultShortcuts = {
 		[k.Shortcuts.MRUSelect]: "w",
 			// on Linux, the extension menu can't seem to capture ctrl-W, like
-			// macOS, so default to a different shortcut
-		[k.Shortcuts.CloseTab]: k.IsLinux ? "ctrl+alt+w" : "ctrl+w",
+			// macOS, so default to a different shortcut.  same with Firefox on
+			// any platform.
+		[k.Shortcuts.CloseTab]: (k.IsLinux || k.IsFirefox) ? "ctrl+alt+w" : "ctrl+w",
 		[k.Shortcuts.MoveTabLeft]: "ctrl+[",
 		[k.Shortcuts.MoveTabRight]: "ctrl+]",
 		[k.Shortcuts.CopyURL]: "mod+c",
@@ -20,7 +21,8 @@ define([
 		{ [k.Shortcuts.CloseTab]: "cmd+ctrl+w" });
 	const DefaultSettings = {
 		[k.SpaceBehavior.Key]: k.SpaceBehavior.Select,
-		[k.EscBehavior.Key]: k.EscBehavior.Clear,
+			// on FF, pressing esc always closes the menu and can't be prevented
+		[k.EscBehavior.Key]: k.IsFirefox ? k.EscBehavior.Close : k.EscBehavior.Clear,
 		[k.HomeEndBehavior.Key]: k.HomeEndBehavior.ResultsList,
 		[k.MarkTabsInOtherWindows.Key]: true,
 		[k.IncludeClosedTabs.Key]: true,

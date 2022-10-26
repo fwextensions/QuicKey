@@ -9,6 +9,19 @@ define([
 	const IsMac = /Mac/i.test(platform);
 	const IsLinux = /Linux/i.test(platform);
 	const IsEdge = /Edg\//i.test(userAgent);
+	const IsFirefox = /Firefox\//i.test(userAgent);
+
+	const IncognitoNameUC = IsFirefox
+		? "Private"
+		: IsEdge
+			? "InPrivate"
+			: "Incognito";
+	const IncognitoNameLC = IsEdge
+		? "InPrivate"
+		: IncognitoNameUC.toLowerCase();
+	const IncognitoPermission = IsFirefox
+		? "Run in Private Windows"
+		: `Allow in ${IncognitoNameLC}`;
 
 	const languagePattern = /^(?<lang>[-a-z]+)-(?<locale>[a-z]+)$/i;
 	const primaryLanguage = languages[0];
@@ -22,8 +35,10 @@ define([
 			// this will get overridden in background.js if we're in dev mode
 		IsDev: false,
 		IsEdge,
-		IncognitoNameUC: IsEdge ? "InPrivate" : "Incognito",
-		IncognitoNameLC: IsEdge ? "InPrivate" : "incognito",
+		IsFirefox,
+		IncognitoNameUC,
+		IncognitoNameLC,
+		IncognitoPermission,
 		SpaceBehavior: {
 			Key: "spaceBehavior",
 			Select: "select",
