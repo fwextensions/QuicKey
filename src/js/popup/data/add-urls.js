@@ -1,12 +1,16 @@
 define([
-	"lib/decode"
+	"lib/decode",
+	"background/constants"
 ], function(
-	decode
+	decode,
+	{IsFirefox}
 ) {
 		// assume any extension URL that begins with suspended.html is from TGS
 	const SuspendedURLPattern = /^chrome-extension:\/\/[^/]+\/suspended\.html#(?:.*&)?uri=(.+)$/;
 	const ProtocolPattern = /^((chrome-extension:\/\/[^/]+\/suspended\.html#(?:.*&)?uri=)?(https?|file|chrome):\/\/(www\.)?)|(chrome-extension:\/\/[^/]+\/)/;
+	const FirefoxToolPattern = /\/mozapps\//;
 	const TGSIconPath = "chrome-extension://klbibkeccnjlkjkiokjodocebajanakg/img/";
+	const DefaultFaviconPath = "img/default-favicon.svg";
 	const FaviconURLPrefix = "chrome://favicon/";
 
 
@@ -21,7 +25,9 @@ define([
 				// force the item to use the unsuspended version of its URL
 			item.url = unsuspendURL;
 			item.originalURL = url;
-			item.faviconURL = FaviconURLPrefix + (unsuspendURL);
+			item.faviconURL = (IsFirefox && !favIconUrl)
+				? DefaultFaviconPath
+				: FaviconURLPrefix + (unsuspendURL);
 		} else {
 			if (url != unsuspendURL) {
 					// add a URL without the Great Suspender preamble that we
@@ -40,8 +46,13 @@ define([
 				// data URIs in item.favIconUrl.  except, sometimes it seems to
 				// put its own icon in there if the background page wasn't
 				// available, so default to the chrome:// URL in that case.
-			item.faviconURL = (favIconUrl && favIconUrl.indexOf(TGSIconPath) != 0) ?
-				favIconUrl : FaviconURLPrefix + (item.unsuspendURL || url);
+				// in FF, use a fallback icon, as bookmarks and history items
+				// don't show favicons, annoyingly.
+			item.faviconURL = (IsFirefox && !favIconUrl)
+				? DefaultFaviconPath
+				: (favIconUrl && favIconUrl.indexOf(TGSIconPath) != 0)
+					? favIconUrl
+					: FaviconURLPrefix + (item.unsuspendURL || url);
 		}
 
 			// add a clean displayURL to each tab that we can score against and
@@ -53,6 +64,12 @@ define([
 			// closed tabs will have recentBoost already set.  this is mostly to
 			// add a default value for bookmarks and history.
 		item.recentBoost = isNaN(item.recentBoost) ? 1 : item.recentBoost;
+
+		if (FirefoxToolPattern.test(item.faviconURL)) {
+				// FF generates console errors when we try to render a favicon
+				// from some of its internal pages
+			item.faviconURL = DefaultFaviconPath;
+		}
 
 		return item;
 	}

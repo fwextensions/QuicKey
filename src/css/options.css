@@ -141,6 +141,10 @@
 	.edge .incognito-screenshot {
 		content: url("/img/inprivate-option-dark.png");
 	}
+
+	.firefox .incognito-screenshot {
+		content: url("/img/private-option-dark.png");
+	}
 }
 
 
@@ -298,7 +302,7 @@ main {
 	fill: var(--fill, #999);
 }
 
-.incognito.icon {
+.incognito.icon, .ff-private.icon {
 	fill: var(--fill, #a9a9a9);
 }
 
@@ -307,7 +311,7 @@ main {
 	opacity: .6;
 }
 
-.history.icon, .window.icon, .incognito.icon, .inprivate.icon {
+.history.icon, .window.icon, .incognito.icon, .inprivate.icon, .ff-private.icon {
 	height: 1.2em;
 	vertical-align: bottom;
 }
@@ -443,6 +447,10 @@ main {
 .control .subtitle {
 	color: var(--color, #666);
 	font-size: .9em;
+}
+
+.control .subtitle kbd {
+	line-height: 1.1;
 }
 
 .control-group {

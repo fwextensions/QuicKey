@@ -12,14 +12,13 @@ define([
 	{
 		HistoryIcon,
 		IncognitoIcon,
-		InPrivateIcon,
 		WindowIcon,
 		ClearIcon
 	},
 	cp,
 	copyTextToClipboard,
 	{ModKeyBoolean},
-	{IsDev, IsEdge, IncognitoNameLC},
+	{IsDev, IncognitoNameLC},
 	React,
 	_
 ) {
@@ -155,7 +154,7 @@ define([
 				sessionId ? "closed" : ""
 			].join(" ");
 			const faviconStyle = {
-				backgroundImage: "url(" + faviconURL + ")"
+				backgroundImage: `url(${faviconURL})`
 			};
 			let tooltip = [
 				title.length > MaxTitleLength ? title : "",
@@ -186,7 +185,7 @@ define([
 			}
 
 			if (incognito) {
-				badge = IsEdge ? <InPrivateIcon /> : <IncognitoIcon />;
+				badge = <IncognitoIcon />;
 				badgeTooltip = IncognitoTooltip;
 			} else if (otherWindow) {
 				badge = <WindowIcon />;
