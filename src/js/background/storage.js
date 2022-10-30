@@ -1,14 +1,6 @@
-define([
-	"bluebird",
-	"cp",
-	"./mutex",
-	"./page-trackers"
-], function(
-	Promise,
-	cp,
-	Mutex,
-	trackers
-) {
+import cp from "cp";
+import Mutex from "./mutex";
+import trackers from "./page-trackers";
 	function emptyDefaultData()
 	{
 		return Promise.resolve({});
@@ -28,7 +20,7 @@ define([
 	}
 
 
-	return function createStorage({
+	export default function createStorage({
 		version = 1,
 		getDefaultData = emptyDefaultData,
 		validateUpdate = alwaysValidate,
@@ -106,7 +98,7 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 			data)
 		{
 			return cp.storage.local.set({ version, data })
-				.return(data);
+				.then(() => data);
 		}
 
 
@@ -114,7 +106,7 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 			data)
 		{
 			return cp.storage.local.set({ data })
-				.return(data);
+				.then(() => data);
 		}
 
 
@@ -189,4 +181,4 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 			reset
 		};
 	}
-});
+

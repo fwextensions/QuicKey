@@ -1,16 +1,8 @@
-define([
-	"react",
-	"jsx!./shortcut",
-	"jsx!common/icons",
-	"./key-constants",
-	"lib/handle-ref"
-], function(
-	React,
-	Shortcut,
-	{AlertIcon, ClearIcon},
-	{KeyOrder, ModifierAliases, ShortcutSeparator, FunctionKeyPattern},
-	handleRef
-) {
+import React from "react";
+import Shortcut from "./shortcut";
+import {AlertIcon, ClearIcon} from "@/common/icons";
+import {KeyOrder, ModifierAliases, ShortcutSeparator, FunctionKeyPattern} from "./key-constants";
+import handleRef from "@/lib/handle-ref";
 	const ShiftedKeyAliases = {
 		106: "*",	// numpad
 		107: "+",	// numpad
@@ -354,5 +346,5 @@ define([
 	});
 
 
-	return ShortcutPicker;
-});
+	export default ShortcutPicker;
+

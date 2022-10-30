@@ -1,7 +1,7 @@
-define(() => {
+
 	const loaded = {};
 
-	return function loadScript(
+	export default function loadScript(
 		url)
 	{
 		if (loaded[url]) {
@@ -24,4 +24,4 @@ define(() => {
 			});
 		}
 	}
-});
+

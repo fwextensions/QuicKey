@@ -1,10 +1,5 @@
-define([
-	"./shortcut-manager",
-	"background/constants"
-], function(
-	ShortcutManager,
-	k
-) {
+import ShortcutManager from "./shortcut-manager";
+import * as k from "@/background/constants";
 	const MenuBindings = [
 		[["ArrowUp", "Ctrl+P", "Ctrl+K"], () => self.modifySelected(-1)],
 		[["ArrowDown", "Ctrl+N", "Ctrl+J"], () => self.modifySelected(1)],
@@ -116,7 +111,7 @@ define([
 	}
 
 
-	return {
+	export default {
 		update: function(
 			settings)
 		{
@@ -187,4 +182,4 @@ define([
 			}
 		}
 	};
-});
+

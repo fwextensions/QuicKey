@@ -57,11 +57,11 @@ DEBUG && console.log("==== last onActivated");
 			// since gStartingUp will be set to false when the popup opens,
 			// which will also update all the tabs
 		if (gStartingUp) {
-			require([
-				"background/recent-tabs"
-			], function(
-				recentTabs
-			) {
+//			require([
+//				"background/recent-tabs"
+//			], function(
+//				recentTabs
+//			) {
 					// the stored recent tab data will be out of date, since the tabs
 					// will get new IDs when the app reloads each one
 				return recentTabs.updateAll()
@@ -70,7 +70,7 @@ DEBUG && console.log("===== updateAll done");
 
 						gStartingUp = false;
 					});
-			});
+//			});
 		}
 	}, TabActivatedOnStartupDelay);
 
@@ -81,25 +81,14 @@ DEBUG && console.log("== onStartup");
 });
 
 
-require([
-	"cp",
-	"background/popup-window",
-	"background/toolbar-icon",
-	"background/recent-tabs",
-	"background/page-trackers",
-	"background/quickey-storage",
-	"background/settings",
-	"background/constants"
-], function(
-	cp,
-	popupWindow,
-	toolbarIcon,
-	recentTabs,
-	trackers,
-	storage,
-	settings,
-	k
-) {
+import cp from "cp";
+import popupWindow from "@/background/popup-window";
+import toolbarIcon from "@/background/toolbar-icon";
+import recentTabs from "@/background/recent-tabs";
+import trackers from "@/background/page-trackers";
+import storage from "@/background/quickey-storage";
+import settings from "@/background/settings";
+import * as k from "@/background/constants";
 		// if the popup is opened and closed within this time, switch to the
 		// previous tab
 	const MaxPopupLifetime = 450;
@@ -609,23 +598,7 @@ DEBUG && console.log(e);
 			lastUsedVersion: chrome.runtime.getManifest().version
 		};
 	})
-		.then(() => cp.management.getSelf())
-		.then(info => {
-			const installType = (info.installType == "development") ? "D" : "P";
-			const dimensions = {
-				"dimension1": info.version,
-				"dimension2": installType
-			};
-
-			if (installType == "D") {
-					// changing a constant at runtime is gross, but here we are
-				k.IsDev = true;
-			}
-
-			backgroundTracker.set(dimensions);
-			trackers.popup.set(dimensions);
-			trackers.options.set(dimensions);
-
+		.then(() => {
 			backgroundTracker.pageview();
 			backgroundTracker.timing("loading", "background", performance.now());
 DEBUG && console.log("=== startup done", performance.now());
@@ -650,4 +623,5 @@ DEBUG && console.log("=== startup done", performance.now());
 			}
 		})
 		.catch(error => backgroundTracker.exception(error));
-});
+
+

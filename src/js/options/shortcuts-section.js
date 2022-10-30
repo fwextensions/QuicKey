@@ -1,20 +1,10 @@
-define([
-	"react",
-	"jsx!./controls",
-	"jsx!./sections",
-	"jsx!./new-setting",
-	"jsx!./keyboard-shortcuts",
-	"jsx!./shortcut-picker",
-	"background/constants"
-], (
-	React,
-	{RadioButton, RadioGroup},
-	{Section},
-	NewSetting,
-	Shortcuts,
-	ShortcutPicker,
-	k
-) => {
+import React from "react";
+import {RadioButton, RadioGroup} from "./controls";
+import {Section} from "./sections";
+import NewSetting from "./new-setting";
+import Shortcuts from "./keyboard-shortcuts";
+import ShortcutPicker from "./shortcut-picker";
+import * as k from "@/background/constants";
 	const ShortcutSection = React.createClass({
 		handleChangeShortcutsClick: function()
 		{
@@ -184,5 +174,5 @@ define([
 	});
 
 
-	return ShortcutSection;
-});
+	export default ShortcutSection;
+

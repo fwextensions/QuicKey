@@ -1,4 +1,4 @@
-define(function() {
+
 	const IsMac = /Mac/i.test(navigator.platform);
 	const Platforms = {
 		mac: IsMac,
@@ -209,5 +209,5 @@ define(function() {
 	});
 
 
-	return ShortcutManager;
-});
+	export default ShortcutManager;
+

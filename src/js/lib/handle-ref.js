@@ -1,5 +1,5 @@
-define(function() {
-	return function handleRef(
+
+	export default function handleRef(
 			refName)
 		{
 			return function(
@@ -8,4 +8,4 @@ define(function() {
 				this[refName] = ref;
 			};
 		};
-});
+

@@ -1,21 +1,11 @@
-define([
-	"cp",
-	"shared",
-	"lib/objects-have-same-keys",
-	"lib/decode",
-	"./storage",
-	"./get-default-settings",
-	"./constants"
-], function(
-	cp,
-	shared,
-	objectsHaveSameKeys,
-	decode,
-	createStorage,
-	getDefaultSettings,
-	k
-) {
-	return shared("quickeyStorage", () => {
+import cp from "cp";
+import shared from "@/lib/shared";
+import objectsHaveSameKeys from "@/lib/objects-have-same-keys";
+import decode from "@/lib/decode";
+import createStorage from "./storage";
+import getDefaultSettings from "./get-default-settings";
+import * as k from "./constants";
+	export default shared("quickeyStorage", () => {
 		function increment(
 			value)
 		{
@@ -217,4 +207,4 @@ define([
 			}
 		});
 	});
-});
+

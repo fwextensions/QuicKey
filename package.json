@@ -9,33 +9,33 @@
   "homepage": "https://fwextensions.github.io/QuicKey/",
   "bugs": "https://github.com/fwextensions/QuicKey/issues",
   "scripts": {
-    "build:popup": "node build/scripts/build-popup.js",
     "build:pinyin": "webpack",
-    "build": "grunt build"
-  },
-  "devDependencies": {
-    "chrome-webstore-upload": "^0.5.0",
-    "deepmerge": "^4.2.2",
-    "grunt": "^1.5.3",
-    "grunt-cli": "^1.4.3",
-    "grunt-confirm": "^1.0.8",
-    "grunt-contrib-clean": "^2.0.1",
-    "grunt-contrib-compress": "^2.0.0",
-    "grunt-contrib-copy": "^1.0.0",
-    "grunt-contrib-requirejs": "^1.0.0",
-    "grunt-exec": "^3.0.0",
-    "grunt-shell": "^3.0.1",
-    "grunt-sync": "^0.8.2",
-    "grunt-terser": "^2.0.0",
-    "load-grunt-tasks": "^5.1.0",
-    "react": "^15.7.0",
-    "react-dom": "^15.7.0",
-    "requirejs": "^2.3.6",
-    "webpack": "^4.46.0",
-    "webpack-cli": "^3.3.12"
+    "build:popup": "webpack --env production --env buildPopup",
+    "build:prod": "webpack --env production",
+    "build": "webpack",
+    "dev": "webpack --watch"
   },
   "dependencies": {
     "fast-memoize": "^2.5.2",
-    "pinyin": "^2.11.2"
+    "pinyin": "^2.11.2",
+    "react": "^15.7.0",
+    "react-dom": "^15.7.0",
+    "react-virtualized": "^9.22.3"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.19.6",
+    "@babel/preset-env": "^7.19.4",
+    "@babel/preset-react": "^7.18.6",
+    "babel-loader": "^9.0.0",
+    "clean-webpack-plugin": "^4.0.0",
+    "copy-webpack-plugin": "^11.0.0",
+    "generate-json-webpack-plugin": "^2.0.0",
+    "html-webpack-plugin": "^5.5.0",
+    "static-site-generator-webpack-plugin": "^3.4.2",
+    "webpack": "^5.74.0",
+    "webpack-bundle-analyzer": "^4.7.0",
+    "webpack-cli": "^4.10.0",
+    "webpack-config-utils": "^2.3.1",
+    "zip-webpack-plugin": "^4.0.1"
   }
 }

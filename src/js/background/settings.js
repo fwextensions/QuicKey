@@ -1,18 +1,9 @@
-define([
-	"./quickey-storage",
-	"./get-default-settings",
-	"./get-chrome-shortcuts",
-	"options/key-constants",
-	"options/shortcut-utils",
-	"./constants"
-], function(
-	storage,
-	getDefaultSettings,
-	getChromeShortcuts,
-	KeyConstants,
-	{areShortcutsIdentical},
-	{IsMac, Platform}
-) {
+import storage from "./quickey-storage";
+import getDefaultSettings from "./get-default-settings";
+import getChromeShortcuts from "./get-chrome-shortcuts";
+import {ModifierEventNames} from "@/options/key-constants";
+import {areShortcutsIdentical} from "@/options/shortcut-utils";
+import {IsMac, Platform} from "./constants";
 	const DefaultPopupModifier = IsMac ? "ctrl" : "alt";
 
 
@@ -59,7 +50,7 @@ define([
 					popup: {
 						key: popupKeys.pop(),
 						modifiers: popupModifiers,
-						modifierEventName: KeyConstants.ModifierEventNames[popupModifiers[0]]
+						modifierEventName: ModifierEventNames[popupModifiers[0]]
 					},
 					shortcuts: chromeShortcuts
 				};
@@ -69,7 +60,7 @@ define([
 	}
 
 
-	return {
+	export default {
 		get: function(
 			data)
 		{
@@ -92,7 +83,7 @@ define([
 				popup: {
 					key: "",
 					modifiers: popupModifiers,
-					modifierEventName: KeyConstants.ModifierEventNames[popupModifiers[0]]
+					modifierEventName: ModifierEventNames[popupModifiers[0]]
 				},
 				shortcuts: []
 			};
@@ -146,4 +137,4 @@ define([
 				.then(addChromeShortcuts);
 		}
 	};
-});
+

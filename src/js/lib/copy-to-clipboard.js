@@ -1,5 +1,5 @@
-define(function() {
-	return function copyTextToClipboard(
+
+	export default function copyTextToClipboard(
 		text)
 	{
 		const copyFrom = document.createElement("textarea");
@@ -27,4 +27,4 @@ define(function() {
 			activeElement.focus();
 		}
 	}
-});
+

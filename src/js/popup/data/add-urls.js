@@ -1,10 +1,5 @@
-define([
-	"lib/decode",
-	"background/constants"
-], function(
-	decode,
-	{IsFirefox}
-) {
+import decode from "@/lib/decode";
+import {IsFirefox} from "@/background/constants";
 		// assume any extension URL that begins with suspended.html is from TGS
 	const SuspendedURLPattern = /^chrome-extension:\/\/[^/]+\/suspended\.html#(?:.*&)?uri=(.+)$/;
 	const ProtocolPattern = /^((chrome-extension:\/\/[^/]+\/suspended\.html#(?:.*&)?uri=)?(https?|file|chrome):\/\/(www\.)?)|(chrome-extension:\/\/[^/]+\/)/;
@@ -14,7 +9,7 @@ define([
 	const FaviconURLPrefix = "chrome://favicon/";
 
 
-	return function addURLs(
+	export default function addURLs(
 		item,
 		unsuspend)
 	{
@@ -73,4 +68,4 @@ define([
 
 		return item;
 	}
-});
+

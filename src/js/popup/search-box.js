@@ -1,16 +1,8 @@
-define([
-	"jsx!./input",
-	"jsx!common/icons",
-	"lib/handle-ref",
-	"react",
-	"background/constants"
-], function(
-	Input,
-	{SearchIcon},
-	handleRef,
-	React,
-	{IsFirefox}
-) {
+import Input from "./input";
+import {SearchIcon} from "@/common/icons";
+import handleRef from "@/lib/handle-ref";
+import React from "react";
+import {IsFirefox} from "@/background/constants";
 	function Placeholder({
 		mode,
 		shortcut,
@@ -109,5 +101,5 @@ define([
 	});
 
 
-	return SearchBox;
-});
+	export default SearchBox;
+

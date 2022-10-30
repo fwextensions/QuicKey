@@ -1,12 +1,6 @@
-define([
-	"react",
-	"./key-constants",
-	"background/constants"
-], function(
-	React,
-	{FunctionKeyPattern},
-	k
-) {
+import React from "react";
+import {FunctionKeyPattern} from "./key-constants";
+import * as k from "@/background/constants";
 	const MacModifiers = <span>⌘, ⌃ or ⌥</span>;
 	const WinModifiers = <span><b>ctrl</b> or <b>alt</b></span>;
 	const IncludeModifierMessage = <span>Include at least {k.IsMac ? MacModifiers : WinModifiers}</span>;
@@ -45,7 +39,7 @@ define([
 	}
 
 
-	return {
+	export default {
 		customizable: [
 			{
 				id: k.Shortcuts.MRUSelect,
@@ -132,4 +126,4 @@ define([
 			},
 		]
 	};
-});
+

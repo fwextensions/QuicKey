@@ -1,9 +1,5 @@
-define([
-	"react"
-], function(
-	React
-) {
-	return function MessageItem(
+import React from "react";
+	export default function MessageItem(
 		props)
 	{
 		const item = props.item;
@@ -19,4 +15,4 @@ define([
 			</div>
 		</div>
 	}
-});
+

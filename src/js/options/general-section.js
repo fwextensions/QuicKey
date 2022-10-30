@@ -1,18 +1,9 @@
-define([
-	"react",
-	"jsx!./controls",
-	"jsx!./sections",
-	"jsx!./new-setting",
-	"jsx!common/icons",
-	"background/constants"
-], (
-	React,
-	{Checkbox},
-	{Section},
-	NewSetting,
-	{HistoryIcon, WindowIcon, IncognitoIcon, InPrivateIcon},
-	k
-) => {
+import React from "react";
+import {Checkbox} from "./controls";
+import {Section} from "./sections";
+import NewSetting from "./new-setting";
+import {HistoryIcon, WindowIcon, IncognitoIcon, InPrivateIcon} from "@/common/icons";
+import * as k from "@/background/constants";
 	const {IncognitoNameUC, IncognitoNameLC, IncognitoPermission} = k;
 	const IncognitoAction = k.IsEdge ? "click the checkbox" : "toggle it on";
 	const IncognitoInstructions = k.IsFirefox
@@ -23,7 +14,7 @@ define([
 			the <i>{IncognitoPermission}</i> setting and {IncognitoAction}</span>;
 
 
-	return function GeneralSection({
+	export default function GeneralSection({
 		id,
 		settings,
 		lastSeenOptionsVersion,
@@ -169,4 +160,4 @@ define([
 			</Section>
 		);
 	};
-});
+

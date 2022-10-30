@@ -1,5 +1,5 @@
-define(function() {
-	return function(
+
+	export default function(
 		score,
 		searchKeyInfo)
 	{
@@ -67,4 +67,4 @@ define(function() {
 			return items;
 		}
 	}
-});
+

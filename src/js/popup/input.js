@@ -1,8 +1,4 @@
-define([
-	"react"
-], function(
-	React
-) {
+import React from "react";
 	// this class was based on this GitHub comment: https://github.com/facebook/react/issues/955#issuecomment-281802381
 
 
@@ -97,8 +93,10 @@ define([
 
 		render: function()
 		{
+			const {selectAll, forceUpdate, ...inputProps} = this.props;
+
 			return <input
-				{...this.props}
+				{...inputProps}
 				ref={this.handleRef}
 				value={this.state.currentValue}
 				onChange={this.handleChange}
@@ -109,5 +107,5 @@ define([
 	});
 
 
-	return Input;
-});
+	export default Input;
+

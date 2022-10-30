@@ -1,13 +1,7 @@
-define([
-	"react",
-	"jsx!./key",
-	"./shortcut-utils"
-], function(
-	React,
-	Key,
-	{getKeysFromShortcut}
-) {
-	return function Shortcut({
+import React from "react";
+import Key from "./key";
+import {getKeysFromShortcut} from "./shortcut-utils";
+	export default function Shortcut({
 		keys,
 		...props})
 	{
@@ -19,4 +13,4 @@ define([
 			{keyStrings.map(key => key && <Key code={key} />)}
 		</div>
 	};
-});
+

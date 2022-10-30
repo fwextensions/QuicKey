@@ -1,5 +1,5 @@
-define(function() {
-	return function decode(
+
+	export default function decode(
 		string)
 	{
 		let result = string;
@@ -19,4 +19,4 @@ define(function() {
 
 		return result;
 	}
-});
+

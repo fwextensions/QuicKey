@@ -1,16 +1,6 @@
-define([
-	"bluebird",
-	"cp",
-	"lib/decode",
-	"./add-pinyin",
-	"lodash"
-], function(
-	Promise,
-	cp,
-	decode,
-	{addPinyin},
-	_
-) {
+import decode from "@/lib/decode";
+import {addPinyin} from "./add-pinyin";
+import _ from "lodash";
 	const TitlePattern = /ttl=([^&]+)/;
 	const BadTGSTitlePattern = /^chrome-extension:\/\/[^/]+\/suspended\.html#ttl=([^&]+)/;
 	const WhitespacePattern = /[\u00A0\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000]/g;
@@ -44,7 +34,7 @@ define([
 	}
 
 
-	return async function initTabs(
+	export default async function initTabs(
 		tabsPromise,
 		activeTab,
 		markTabsInOtherWindows,
@@ -141,4 +131,4 @@ define([
 				return tabs;
 			});
 	}
-});
+

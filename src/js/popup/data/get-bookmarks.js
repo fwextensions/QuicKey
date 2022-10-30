@@ -1,12 +1,6 @@
-define([
-	"./add-urls",
-	"./add-pinyin",
-	"cp"
-], function(
-	addURLs,
-	{addPinyin},
-	cp
-) {
+import addURLs from "./add-urls";
+import {addPinyin} from "./add-pinyin";
+import cp from "cp";
 	const PathSeparator = " / ";
 
 
@@ -56,7 +50,7 @@ define([
 	}
 
 
-	return function getBookmarks(
+	export default function getBookmarks(
 		showBookmarkPaths,
 		usePinyin)
 	{
@@ -74,4 +68,4 @@ define([
 				return bookmarks;
 			});
 	}
-});
+

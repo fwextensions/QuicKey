@@ -1,14 +1,7 @@
-define([
-	"react",
-	"react-virtualized",
-	"lib/handle-ref",
-	"background/constants"
-], function(
-	React,
-	ReactVirtualized,
-	handleRef,
-	{IsFirefox}
-) {
+import React from "react";
+import {List} from "react-virtualized";
+import handleRef from "@/lib/handle-ref";
+import {IsFirefox} from "@/background/constants";
 	const RowHeight = 45;
 		// in FF, the scrollbar appears inside the right edge of the scrolling
 		// area, instead on the outside.  so make the virtual list go right to
@@ -97,7 +90,7 @@ define([
 			return <div className="results-list-container"
 				style={style}
 			>
-				<ReactVirtualized.List
+				<List
 					ref={this.handleListRef}
 					className="results-list"
 					tabIndex={-1}
@@ -115,5 +108,5 @@ define([
 	});
 
 
-	return ResultsList;
-});
+	export default ResultsList;
+

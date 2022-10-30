@@ -1,19 +1,14 @@
-define([
-	"shared",
-	"./tracker",
-	"./constants"
-], function(
-	shared,
-	Tracker,
-	{IsEdge}
-) {
+import cp from "cp";
+import shared from "@/lib/shared";
+import Tracker from "./tracker";
+import {IsEdge} from "./constants";
 	const TrackerID = `UA-108153491-${IsEdge ? "4" : "3"}`;
 
 
-	return shared("trackers", function() {
+	export default shared("trackers", () => {
 			// create a separate tracker for the background, popup and options
 			// pages, so the events get tracked with the right URL
-		return {
+		const trackers = {
 			background: new Tracker({
 				id: TrackerID,
 				name: "background",
@@ -43,7 +38,21 @@ define([
 					transport: "beacon"
 				},
 				sendPageview: false
+			}),
+			ready: cp.management.getSelf().then(info => {
+				const dimensions = {
+					"dimension1": info.version,
+					"dimension2": info.installType == "development" ? "D" : "P"
+				};
+
+					// just loop over the trackers, not this promise handler
+				Object.values(trackers).slice(0, 3)
+					.forEach(tracker => tracker.set(dimensions));
+
+				return trackers;
 			})
 		};
+
+		return trackers;
 	});
-});
+

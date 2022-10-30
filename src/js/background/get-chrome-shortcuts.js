@@ -2,11 +2,7 @@
 // characters still get mangled in Chrome store versions
 /* @preserve ⌃⇧⌥⌘ */
 
-define([
-	"cp"
-], function(
-	cp
-) {
+import cp from "cp";
 	const KeyAliases = {
 		"Left Arrow": "ArrowLeft",
 		"Right Arrow": "ArrowRight",
@@ -60,7 +56,7 @@ define([
 	KeyAliases["\u2325"] = "Opt";
 	KeyAliases["\u2318"] = "Cmd";
 
-	return function getShortcuts()
+	export default function getShortcuts()
 	{
 		return cp.commands.getAll()
 			.then(commands => commands.map(chromeShortcut => {
@@ -104,4 +100,4 @@ define([
 			})
 		)
 	}
-});
+
