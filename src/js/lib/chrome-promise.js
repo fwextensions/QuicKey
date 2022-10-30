@@ -6,32 +6,15 @@
  * Released under the MIT license
  */
 
-(function(root, factory) {
-  if (typeof define === 'function' && define.amd) {
-    // AMD. Register as an anonymous module.
-    define([], factory.bind(null, typeof exports === 'object' ? this : root));
-  } else if (typeof exports === 'object') {
-    // Node. Does not work with strict CommonJS, but
-    // only CommonJS-like environments that support module.exports,
-    // like Node.
-    module.exports = factory(this);
-  } else {
-    // Browser globals (root is window)
-    root.ChromePromise = factory(root);
-  }
-}(this, function(root) {
-  'use strict';
-  var slice = Array.prototype.slice,
-      hasOwnProperty = Object.prototype.hasOwnProperty;
-
-  return ChromePromise;
+var slice = Array.prototype.slice,
+  hasOwnProperty = Object.prototype.hasOwnProperty;
 
   ////////////////
 
-  function ChromePromise(options) {
+export function ChromePromise(options) {
     options = options || {};
-    var chrome = options.chrome || root.chrome;
-    var Promise = options.Promise || root.Promise;
+    var chrome = options.chrome || window.chrome;
+    var Promise = options.Promise || window.Promise;
     var runtime = chrome.runtime;
 
     fillProperties(chrome, this);
@@ -90,4 +73,3 @@
       }
     }
   }
-}));

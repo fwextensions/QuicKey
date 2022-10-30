@@ -1,4 +1,4 @@
-define(function() {
+
 	const WhitespacePattern = "-/\\:()<>%._=&[] \t\n\r",
 		UpperCasePattern = (function() {
 				var charCodeA = "A".charCodeAt(0),
@@ -251,5 +251,5 @@ define(function() {
 	}
 
 
-	return quickScore;
-});
+	export default quickScore;
+

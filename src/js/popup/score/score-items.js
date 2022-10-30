@@ -1,12 +1,6 @@
-define([
-	"./quick-score",
-	"./simple-score",
-	"./array-score"
-], function(
-	quickScore,
-	simpleScore,
-	arrayScore
-) {
+import quickScore from "./quick-score";
+import simpleScore from "./simple-score";
+import arrayScore from "./array-score";
 		// use title and displayURL as the two keys to score by default
 	const DefaultKeys = [
 		{
@@ -42,7 +36,7 @@ define([
 	const MaxQueryLength = 25;
 
 
-	return function scoreItems(
+	export default function scoreItems(
 		items,
 		query,
 		usePinyin)
@@ -57,4 +51,4 @@ define([
 			return SimpleScoreArray(items, query);
 		}
 	};
-});
+

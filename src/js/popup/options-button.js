@@ -1,11 +1,6 @@
-define([
-	"react",
-	"jsx!common/icons",
-], function(
-	React,
-	{OptionsIcon}
-) {
-	return function OptionsButton({
+import React from "react";
+import {OptionsIcon} from "@/common/icons";
+	export default function OptionsButton({
 		newSettingsAvailable,
 		onClick
 	}) {
@@ -23,4 +18,4 @@ define([
 			</div>
 		);
 	};
-});
+

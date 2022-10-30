@@ -1,27 +1,15 @@
-define([
-	"jsx!./matched-string",
-	"jsx!common/icons",
-	"cp",
-	"lib/copy-to-clipboard",
-	"options/key-constants",
-	"background/constants",
-	"react",
-	"lodash"
-], function(
-	MatchedString,
-	{
+import MatchedString from "./matched-string";
+import {
 		HistoryIcon,
 		IncognitoIcon,
 		WindowIcon,
 		ClearIcon
-	},
-	cp,
-	copyTextToClipboard,
-	{ModKeyBoolean},
-	{IsDev, IncognitoNameLC},
-	React,
-	_
-) {
+	} from "@/common/icons";
+import copyTextToClipboard from "@/lib/copy-to-clipboard";
+import {ModKeyBoolean} from "@/options/key-constants";
+import {IsDev, IncognitoNameLC} from "@/background/constants";
+import React from "react";
+import _ from "lodash";
 	const MaxTitleLength = 70;
 	const MaxURLLength = 75;
 	const MinRenderDelay = 40;
@@ -235,5 +223,4 @@ define([
 	});
 
 
-	return ResultsListItem;
-});
+	export default ResultsListItem;

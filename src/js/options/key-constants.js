@@ -1,10 +1,6 @@
-define([
-	"background/constants"
-], function(
-	{IsMac}
-) {
-	return {
-		KeyOrder: {
+import {IsMac} from "@/background/constants";
+//	export default {
+export const KeyOrder = {
 			ctrl: 0,
 			control: 0,
 			mod: IsMac ? 3 : 0,
@@ -15,22 +11,22 @@ define([
 			shift: 2,
 			cmd: 3,
 			char: 4
-		},
-		ModifierAliases: {
+		};
+export const ModifierAliases = {
 			alt: IsMac ? "opt" : "alt",
 			mod: IsMac ? "cmd" : "ctrl",
 			control: "ctrl",
 				// ignore the Windows key on Windows
 			meta: IsMac ? "cmd" : ""
-		},
-		ModifierEventNames: {
+		};
+export const ModifierEventNames = {
 			alt: "Alt",
 			opt: "Alt",
 			ctrl: "Control",
 			cmd: "Meta"
-		},
-		ModKeyBoolean: IsMac ? "metaKey" : "ctrlKey",
-		ShortcutSeparator: "+",
-		FunctionKeyPattern: /^F\d{1,2}$/i
-	};
-});
+		};
+export const ModKeyBoolean = IsMac ? "metaKey" : "ctrlKey";
+export const ShortcutSeparator = "+";
+export const FunctionKeyPattern = /^F\d{1,2}$/i
+//	};
+

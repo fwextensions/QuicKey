@@ -1,4 +1,4 @@
-define(function() {
+
 	const PathPattern = /chrome-extension:\/\/[^\n]+\//g;
 	const MaxStackLength = 2000;
 	const GALoadTimeout = 30 * 1000;
@@ -184,5 +184,5 @@ define(function() {
 	});
 
 
-	return Tracker;
-});
+	export default Tracker;
+

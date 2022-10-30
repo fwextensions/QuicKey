@@ -1,50 +1,25 @@
-define("popup/app", [
-	"react",
-	"jsx!./search-box",
-	"jsx!./results-list",
-	"jsx!./results-list-item",
-	"jsx!./message-item",
-	"jsx!./options-button",
-	"cp",
-	"./score/score-items",
-	"./data/init-tabs",
-	"./data/get-bookmarks",
-	"./data/get-history",
-	"./data/add-urls",
-	"./data/add-pinyin",
-	"./shortcuts/popup-shortcuts",
-	"lib/handle-ref",
-	"lib/copy-to-clipboard",
-	"background/popup-window",
-	"background/recent-tabs",
-	"background/quickey-storage",
-	"background/settings",
-	"background/constants",
-	"lodash"
-], function(
-	React,
-	SearchBox,
-	ResultsList,
-	ResultsListItem,
-	MessageItem,
-	OptionsButton,
-	cp,
-	scoreItems,
-	initTabs,
-	getBookmarks,
-	getHistory,
-	addURLs,
-	{loadPinyin},
-	shortcuts,
-	handleRef,
-	copyTextToClipboard,
-	popupWindow,
-	recentTabs,
-	storage,
-	settings,
-	k,
-	_
-) {
+import React from "react";
+import SearchBox from "./search-box";
+import ResultsList from "./results-list";
+import ResultsListItem from "./results-list-item";
+import MessageItem from "./message-item";
+import OptionsButton from "./options-button";
+import cp from "cp";
+import scoreItems from "./score/score-items";
+import initTabs from "./data/init-tabs";
+import getBookmarks from "./data/get-bookmarks";
+import getHistory from "./data/get-history";
+import addURLs from "./data/add-urls";
+import {loadPinyin} from "./data/add-pinyin";
+import shortcuts from "./shortcuts/popup-shortcuts";
+import handleRef from "@/lib/handle-ref";
+import copyTextToClipboard from "@/lib/copy-to-clipboard";
+import popupWindow from "@/background/popup-window";
+import recentTabs from "@/background/recent-tabs";
+import storage from "@/background/quickey-storage";
+import settings from "@/background/settings";
+import * as k from "@/background/constants";
+import _ from "lodash";
 	const MinScore = .04;
 	const NearlyZeroScore = .02;
 	const MaxItems = 10;
@@ -147,10 +122,8 @@ define("popup/app", [
 				// we're saving the initial value of this prop instead of
 				// getting it every time in render, which is normally bad, but
 				// the platform will never change during the life of the app
-			this.className = [
-				this.props.platform,
-				k.IsFirefox ? "firefox" : ""
-			].join(" ");
+			this.className = this.props.platform + (k.IsFirefox ? " firefox" : "");
+
 			this.loadTabs()
 				.then(tabs => {
 						// by the time we get here, the settings promise will
@@ -1160,5 +1133,4 @@ define("popup/app", [
 	});
 
 
-	return App;
-});
+	export default App;

@@ -2,53 +2,61 @@
 // characters still get mangled in Chrome store versions
 /* @preserve ⌃⇧⌥⌘ */
 
-define([
-	"cp"
-], function(
-	cp
-) {
-	const fromCodePoints = (entries) => entries
-		.map(([codePoint, alias]) => [String.fromCodePoint(codePoint), alias]);
-
-	const KeyAliases = Object.assign(
-		{
-			"Left Arrow": "ArrowLeft",
-			"Right Arrow": "ArrowRight",
-			"Up Arrow": "ArrowUp",
-			"Down Arrow": "ArrowDown",
-			"Page Up": "PageUp",
-			"Page Down": "PageDown",
-			"Ins": "Insert",
-			"Del": "Delete",
-			"Comma": ",",
-			"Period": ".",
-			"Media Previous Track": "MediaTrackPrevious",
-			"Media Next Track": "MediaTrackNext",
-			"Media Play/Pause": "MediaPlayPause",
-			"Media Stop": "MediaStop",
-		},
-			// Unicode chars used as keys show up as broken chars in Chrome
-			// after r.js and babel combine the files.  so build the lookup table
-			// at runtime from the code point values, to avoid depending on a
-			// string like "\u2190", which also gets mangled.
-		Object.fromEntries(fromCodePoints([
-			[0x2190, "ArrowLeft"],  // ←
-			[0x2192, "ArrowRight"], // →
-			[0x2191, "ArrowUp"],    // ↑
-			[0x2193, "ArrowDown"],  // ↓
-			[0x2303, "Ctrl"],       // ⌃
-			[0x21E7, "Shift"],      // ⇧
-			[0x2325, "Opt"],        // ⌥
-			[0x2318, "Cmd"]         // ⌘
-		]))
-	);
+import cp from "cp";
+	const KeyAliases = {
+		"Left Arrow": "ArrowLeft",
+		"Right Arrow": "ArrowRight",
+		"Up Arrow": "ArrowUp",
+		"Down Arrow": "ArrowDown",
+		"Page Up": "PageUp",
+		"Page Down": "PageDown",
+		"Ins": "Insert",
+		"Del": "Delete",
+		"Comma": ",",
+		"Period": ".",
+		"Media Previous Track": "MediaTrackPrevious",
+		"Media Next Track": "MediaTrackNext",
+		"Media Play/Pause": "MediaPlayPause",
+		"Media Stop": "MediaStop",
+			// Unicode chars used as keys show up as broken chars in Chrome after
+			// r.js combines the files, possibly only after adding bluebird.min.js
+//		"←": "ArrowLeft",
+//		"→": "ArrowRight",
+//		"↑": "ArrowUp",
+//		"↓": "ArrowDown",
+//		"⌃": "Ctrl",
+//		"⇧": "Shift",
+//		"⌥": "Opt",
+//		"⌘": "Cmd",
+			// babel converts these back to single chars during the build
+//		["\u2303"]: "Ctrl",
+//		["\u21E7"]: "Shift",
+//		["\u2325"]: "Opt",
+//		["\u2318"]: "Cmd",
+//		"\u2303": "Ctrl",
+//		"\u21E7": "Shift",
+//		"\u2325": "Opt",
+//		"\u2318": "Cmd",
+	};
 	const ShortcutSeparator = "+";
 	const ShortcutSeparatorPattern = /\s*\+\s*/;
+	const MacShortcutPattern = /([\u2303\u21E7\u2325\u2318]+)(.+)/;
 		// Unicode chars in a regex also show up broken
 //	const MacShortcutPattern = /([⌃⇧⌥⌘]+)(.+)/;
-	const MacShortcutPattern = /([\u2303\u21E7\u2325\u2318]+)(.+)/;
 
-	return function getShortcuts()
+		// the only way to prevent babel from converting the \u strings to
+		// literal chars seems to be to set the keys this way after the object's
+		// been created
+	KeyAliases["\u2190"] = "ArrowLeft";
+	KeyAliases["\u2192"] = "ArrowRight";
+	KeyAliases["\u2191"] = "ArrowUp";
+	KeyAliases["\u2193"] = "ArrowDown";
+	KeyAliases["\u2303"] = "Ctrl";
+	KeyAliases["\u21E7"] = "Shift";
+	KeyAliases["\u2325"] = "Opt";
+	KeyAliases["\u2318"] = "Cmd";
+
+	export default function getShortcuts()
 	{
 		return cp.commands.getAll()
 			.then(commands => commands.map(chromeShortcut => {
@@ -92,4 +100,4 @@ define([
 			})
 		)
 	}
-});
+

@@ -1,20 +1,11 @@
-define([
-	"bluebird",
-	"cp",
-	"shared",
-	"popup/data/add-urls",
-	"./quickey-storage",
-	"./page-trackers",
-	"./constants"
-], function(
-	Promise,
-	cp,
-	shared,
-	addURLs,
-	storage,
-	pageTrackers,
-	{MinTabDwellTime}
-) {
+import cp from "cp";
+import shared from "@/lib/shared";
+import addURLs from "@/popup/data/add-urls";
+import storage from "./quickey-storage";
+import pageTrackers from "./page-trackers";
+import {MinTabDwellTime} from "./constants";
+
+
 	const MaxTabsLength = 50;
 	const TabKeys = ["id", "url", "windowId"];
 	const PopupURL = `chrome-extension://${chrome.runtime.id}/popup.html`;
@@ -286,7 +277,7 @@ DEBUG && console.log("tab replaced", oldID, "index", index, getRecentStackString
 				cp.tabs.query({}),
 				includeClosedTabs ? cp.sessions.getRecentlyClosed() : []
 			])
-				.spread((freshTabs, closedTabs) => {
+				.then(([freshTabs, closedTabs]) => {
 					const {tabIDs, lastUpdateTime, lastStartupTime} = data;
 					const tabsByURL = {};
 					let {tabsByID} = data;
@@ -496,7 +487,7 @@ DEBUG && console.error(error);
 
 						return switchTabs(data);
 					})
-					.return(newData);
+					.then(() => newData);
 			} else {
 				return newData;
 			}
@@ -541,7 +532,7 @@ DEBUG && console.error(error);
 	}
 
 
-	return shared("recentTabs", {
+	export default shared("recentTabs", {
 		add,
 		remove,
 		replace,
@@ -551,4 +542,4 @@ DEBUG && console.error(error);
 		toggle,
 		print
 	});
-});
+

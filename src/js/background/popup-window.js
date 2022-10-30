@@ -1,14 +1,9 @@
-define([
-	"cp",
-	"shared",
-	"background/quickey-storage",
-	"background/constants"
-], (
-	cp,
-	shared,
-	storage,
-	{PopupURL, HidePopupBehavior: {Behind, Tab, Minimize}}
-) => {
+import cp from "cp";
+import shared from "@/lib/shared";
+import storage from "@/background/quickey-storage";
+import {PopupURL, HidePopupBehavior} from "@/background/constants";
+
+const {Behind, Tab, Minimize} = HidePopupBehavior;
 	const PopupInnerWidth = 500;
 	const PopupInnerHeight = 488;
 	const PopupPadding = 50;
@@ -336,7 +331,7 @@ DEBUG && console.error("Failed to hide popup", e);
 	}
 
 
-	return shared("popupWindow", () => ({
+	export default shared("popupWindow", () => ({
 		create,
 		show,
 		hide,
@@ -367,4 +362,4 @@ DEBUG && console.error("Failed to hide popup", e);
 			return lastActiveTab;
 		}
 	}));
-});
+

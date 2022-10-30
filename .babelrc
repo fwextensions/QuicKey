@@ -1,10 +1,6 @@
 {
-	"generatorOpts": {
-		"jsescOption": {
-			"minimal": true
-		}
-	},
 	"presets": [
+		"@babel/preset-react",
 		[
 			"@babel/preset-env",
 			{
@@ -15,12 +11,6 @@
 				"corejs": 3,
 				"useBuiltIns": "entry",
 				"modules": false
-			}
-		],
-		[
-			"minify",
-			{
-				"builtIns": false
 			}
 		]
 	]

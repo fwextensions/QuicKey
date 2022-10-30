@@ -1,102 +1,89 @@
-define([
-	"shared"
-], function(
-	shared
-) {
+import cp from "@/lib/cp";
+
 		// use navigator values instead of chrome.runtime.getPlatformInfo() so
 		// we don't have to await the response everywhere constants are used
 	const {userAgent, platform, languages} = navigator;
-	const IsMac = /Mac/i.test(platform);
-	const IsLinux = /Linux/i.test(platform);
-	const IsEdge = /Edg\//i.test(userAgent);
-	const IsFirefox = /Firefox\//i.test(userAgent);
-
-	const IncognitoNameUC = IsFirefox
-		? "Private"
-		: IsEdge
-			? "InPrivate"
-			: "Incognito";
-	const IncognitoNameLC = IsEdge
-		? "InPrivate"
-		: IncognitoNameUC.toLowerCase();
-	const IncognitoPermission = IsFirefox
-		? "Run in Private Windows"
-		: `Allow in ${IncognitoNameLC}`;
-
 	const languagePattern = /^(?<lang>[-a-z]+)-(?<locale>[a-z]+)$/i;
 	const primaryLanguage = languages[0];
 	const languageMatch = primaryLanguage.match(languagePattern);
 
-	return shared("k", () => ({
-		IsMac,
-		IsLinux,
-		Platform: IsMac ? "mac" : "win",
-		Language: languageMatch && languageMatch.groups.lang || primaryLanguage,
-			// this will get overridden in background.js if we're in dev mode
-		IsDev: false,
-		IsEdge,
-		IsFirefox,
-		IncognitoNameUC,
-		IncognitoNameLC,
-		IncognitoPermission,
-		MinTabDwellTime: 1250,
-		PopupURL: chrome.runtime.getURL("popup.html"),
-		CommandIDs: {
+export const IsMac = /Mac/i.test(platform);
+export const IsLinux = /Linux/i.test(platform);
+export const IsEdge = /Edg\//i.test(userAgent);
+export const IsFirefox = /Firefox\//i.test(userAgent);
+export const Platform = IsMac ? "mac" : "win";
+export const Language = languageMatch && languageMatch.groups.lang || primaryLanguage;
+			// this will get changed below if we're in dev mode
+export let IsDev = false;
+export const IncognitoNameUC = IsFirefox
+	? "Private"
+	: IsEdge
+		? "InPrivate"
+		: "Incognito";
+export const IncognitoNameLC = IsEdge
+	? "InPrivate"
+	: IncognitoNameUC.toLowerCase();
+export const IncognitoPermission = IsFirefox
+	? "Run in Private Windows"
+	: `Allow in ${IncognitoNameLC}`;
+export const MinTabDwellTime = 1250;
+export const PopupURL = chrome.runtime.getURL("popup.html");
+export const CommandIDs = {
 			OpenPopupCommand: "010-open-popup-window",
 			FocusPopupCommand: "020-focus-search",
 			PreviousTabCommand: "1-previous-tab",
 			NextTabCommand: "2-next-tab",
 			ToggleTabsCommand: "30-toggle-recent-tabs"
-		},
-		SpaceBehavior: {
+		};
+export const SpaceBehavior = {
 			Key: "spaceBehavior",
 			Select: "select",
 			Space: "space"
-		},
-		EscBehavior: {
+		};
+export const EscBehavior = {
 			Key: "escBehavior",
 			Clear: "clear",
 			Close: "close"
-		},
-		HomeEndBehavior: {
+		};
+export const HomeEndBehavior = {
 			Key: "homeEndBehavior",
 			ResultsList: "resultsList",
 			SearchBox: "searchBox"
-		},
-		HidePopupBehavior: {
+		};
+export const HidePopupBehavior = {
 			Key: "hidePopupBehavior",
 			Behind: "behind",
 			Tab: "tab",
 			Minimize: "minimize"
-		},
-		MarkTabsInOtherWindows: {
+		};
+export const MarkTabsInOtherWindows = {
 			Key: "markTabsInOtherWindows"
-		},
-		IncludeClosedTabs: {
+		};
+export const IncludeClosedTabs = {
 			Key: "includeClosedTabs"
-		},
-		ShowTabCount: {
+		};
+export const ShowTabCount = {
 			Key: "showTabCount"
-		},
-		UsePinyin: {
+		};
+export const UsePinyin = {
 			Key: "usePinyin"
-		},
-		RestoreLastQuery: {
+		};
+export const RestoreLastQuery = {
 			Key: "restoreLastQuery"
-		},
-		ShowBookmarkPaths: {
+		};
+export const ShowBookmarkPaths = {
 			Key: "showBookmarkPaths"
-		},
-		CurrentWindowLimitRecents: {
+		};
+export const CurrentWindowLimitRecents = {
 			Key: "currentWindowLimitRecents"
-		},
-		CurrentWindowLimitSearch: {
+		};
+export const CurrentWindowLimitSearch = {
 			Key: "currentWindowLimitSearch"
-		},
-		NavigateRecentsWithPopup: {
+		};
+export const NavigateRecentsWithPopup = {
 			Key: "navigateRecentsWithPopup"
-		},
-		Shortcuts: {
+		};
+export const Shortcuts = {
 			Key: "shortcuts",
 			MRUSelect: "mruSelect",
 			CloseTab: "closeTab",
@@ -104,6 +91,6 @@ define([
 			MoveTabRight: "moveTabRight",
 			CopyURL: "copyURL",
 			CopyTitleURL: "copyTitleURL"
-		}
-	}));
-});
+		};
+
+cp.management.getSelf().then(({ installType }) => IsDev = installType === "development");

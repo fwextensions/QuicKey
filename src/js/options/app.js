@@ -1,18 +1,9 @@
-define([
-	"react",
-	"jsx!./sections",
-	"jsx!./general-section",
-	"jsx!./popup-section",
-	"jsx!./shortcuts-section",
-	"background/constants"
-], function(
-	React,
-	{Sections, Section, SectionList, SectionLabel},
-	GeneralSection,
-	PopupSection,
-	ShortcutsSection,
-	k
-) {
+import React from "react";
+import {Sections, Section, SectionList, SectionLabel} from "./sections";
+import GeneralSection from "./general-section";
+import PopupSection from "./popup-section";
+import ShortcutsSection from "./shortcuts-section";
+import * as k from "@/background/constants";
 	const UpdateMessage = <div className="update-message"
 		title="Now you can use pinyin to search for Chinese characters in web page titles and URLs. You can always reopen this page by clicking the gear icon in the QuicKey menu."
 	>
@@ -158,5 +149,5 @@ define([
 	});
 
 
-	return OptionsApp;
-});
+	export default OptionsApp;
+

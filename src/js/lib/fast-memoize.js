@@ -1,4 +1,4 @@
-define((require, exports, module) => {
+
 
 //
 // Main
@@ -145,4 +145,4 @@ module.exports.strategies = {
   monadic: strategyMonadic
 }
 
-});
+

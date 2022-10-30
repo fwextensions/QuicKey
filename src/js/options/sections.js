@@ -1,8 +1,4 @@
-define([
-	"react"
-], function(
-	React
-) {
+import React from "react";
 	function SectionLabel({
 		id,
 		label,
@@ -64,10 +60,10 @@ define([
 	}
 
 
-	return {
+	export {
 		Sections,
 		Section,
 		SectionList,
 		SectionLabel
 	};
-});
+

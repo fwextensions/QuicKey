@@ -1,5 +1,5 @@
-define(function() {
-	return function(
+
+	export default function(
 		key,
 		init)
 	{
@@ -8,4 +8,4 @@ define(function() {
 
 		return shared[key] || (shared[key] = (typeof init == "function" ? init() : init));
 	};
-});
+

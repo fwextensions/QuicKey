@@ -1,8 +1,4 @@
-define([
-	"./constants"
-], function(
-	k
-) {
+import * as k from "./constants";
 	const DefaultShortcuts = {
 		[k.Shortcuts.MRUSelect]: "w",
 			// on Linux, the extension menu can't seem to capture ctrl-W, like
@@ -41,8 +37,8 @@ define([
 	};
 
 
-	return function getDefaultSettings()
+	export default function getDefaultSettings()
 	{
 		return JSON.parse(JSON.stringify(DefaultSettings));
 	};
-});
+

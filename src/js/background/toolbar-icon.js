@@ -1,12 +1,9 @@
-define([
-	"cp",
-	"background/page-trackers",
-	"background/constants"
-], (
-	cp,
-	{background: backgroundTracker},
-	{IsEdge, IsFirefox}
-) => {
+import cp from "cp";
+import trackers from "@/background/page-trackers";
+import {IsEdge, IsFirefox} from "@/background/constants";
+
+const backgroundTracker = trackers.background;
+
 	const BadgeColors = {
 		light: {
 				// make the count background slightly darker in FF so the text is
@@ -141,7 +138,7 @@ define([
 	}
 
 
-	return {
+	export default {
 		invertFor,
 		showTabCount,
 		updateTabCount,
@@ -149,4 +146,4 @@ define([
 			return isNormalIcon;
 		}
 	};
-});
+

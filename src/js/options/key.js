@@ -1,8 +1,4 @@
-define([
-	"react"
-], function(
-	React
-) {
+import React from "react";
 	const IsMac = /Mac/i.test(navigator.platform);
 	const WindowsArrows = [
 		["ArrowLeft", "◀"],
@@ -92,5 +88,5 @@ define([
 		return <kbd className={className}><span>{label}</span></kbd>;
 	}
 
-	return Key;
-});
+	export default Key;
+

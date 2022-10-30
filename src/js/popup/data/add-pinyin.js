@@ -1,8 +1,4 @@
-define([
-	"lib/load-script"
-], function(
-	loadScript
-) {
+import loadScript from "@/lib/load-script";
 	let pinyinLoaded = false;
 	let pinyinError;
 
@@ -54,8 +50,8 @@ define([
 	}
 
 
-	return {
+	export {
 		loadPinyin,
 		addPinyin
 	};
-});
+

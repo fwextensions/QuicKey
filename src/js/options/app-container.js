@@ -1,19 +1,10 @@
-define([
-	"react",
-	"jsx!./app",
-	"background/page-trackers",
-	"background/quickey-storage",
-	"background/settings",
-	"background/constants"
-], function(
-	React,
-	OptionsApp,
-	trackers,
-	storage,
-	settings,
-	{Platform, ShowTabCount, CurrentWindowLimitRecents, CurrentWindowLimitSearch,
-		HidePopupBehavior, NavigateRecentsWithPopup}
-) {
+import React from "react";
+import OptionsApp from "./app";
+import trackers from "@/background/page-trackers";
+import storage from "@/background/quickey-storage";
+import settings from "@/background/settings";
+import {Platform, ShowTabCount, CurrentWindowLimitRecents, CurrentWindowLimitSearch,
+		HidePopupBehavior, NavigateRecentsWithPopup} from "@/background/constants";
 	const PlusPattern = /\+/g;
 
 
@@ -157,5 +148,5 @@ define([
 	});
 
 
-	return OptionsAppContainer;
-});
+	export default OptionsAppContainer;
+

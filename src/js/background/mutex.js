@@ -1,4 +1,4 @@
-define(function() {
+
 	function Mutex(
 		promiseConstructor)
 	{
@@ -49,5 +49,5 @@ define(function() {
 	});
 
 
-	return Mutex;
-});
+	export default Mutex;
+

@@ -1,4 +1,4 @@
-define(() => {
+
 	function pull(
 		array,
 		value)
@@ -69,11 +69,11 @@ define(() => {
 	}
 
 
-	return {
+	export default {
 		pull,
 		remove,
 		dropRightWhile,
 		last,
 		toPairs
 	};
-});
+

@@ -1,9 +1,5 @@
-define([
-	"react"
-], function(
-	React
-) {
-	return ({
+import React from "react";
+	export default ({
 		addedVersion,
 		lastSeenOptionsVersion,
 		children}) =>
@@ -15,4 +11,4 @@ define([
 			{children}
 		</div>
 	);
-});
+

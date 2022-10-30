@@ -1,14 +1,7 @@
-require([
-	"react",
-	"react-dom",
-	"jsx!popup/app",
-	"background/page-trackers"
-], function(
-	React,
-	ReactDOM,
-	App,
-	trackers
-) {
+import React from "react";
+import ReactDOM from "react-dom";
+import App from "./app";
+import trackers from "@/background/page-trackers";
 	const initialQuery = gKeyCache.join("");
 	const initialShortcuts = gShortcutCache;
 	const platform = /Mac/i.test(navigator.platform) ? "mac" : "win";
@@ -24,7 +17,7 @@ require([
 		gPort.postMessage("closedByEsc");
 		window.close();
 
-		return;
+//		return;
 	}
 
 	DEBUG && console.log("=== popup startup time", now - gInitTime, now);
@@ -73,4 +66,4 @@ require([
 	} else {
 		renderApp();
 	}
-});
+

@@ -1,8 +1,4 @@
- define([
-	"react"
-], function(
-	React
-) {
+ import React from "react";
 	function Checkbox({
 		id,
 		label,
@@ -157,10 +153,11 @@
 	};
 
 
-	return {
+	export {
+//	export default {
 		Checkbox,
 		RadioButton,
 		Group,
 		RadioGroup
 	}
-});
+

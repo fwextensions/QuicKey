@@ -1,4 +1,4 @@
-define(function() {
+
 	function simpleScore(
 		string,
 		query,
@@ -21,5 +21,5 @@ define(function() {
 	}
 
 
-	return simpleScore;
-});
+	export default simpleScore;
+

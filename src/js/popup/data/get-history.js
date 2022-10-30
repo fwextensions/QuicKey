@@ -1,14 +1,7 @@
-define([
-	"cp",
-	"lib/decode",
-	"./add-urls",
-	"./add-pinyin"
-], function(
-	cp,
-	decode,
-	addURLs,
-	{addPinyin}
-) {
+import cp from "cp";
+import decode from "@/lib/decode";
+import addURLs from "./add-urls";
+import {addPinyin} from "./add-pinyin";
 	const RequestedItemCount = 2000;
 	const LoopItemCount = 1000;
 	const FilenamePattern = /([^/]*)\/([^/]+)?$/;
@@ -17,7 +10,7 @@ define([
 	const loop = fn => fn().then(val => (val === true && loop(fn)) || val);
 
 
-	return function getHistory(
+	export default function getHistory(
 		usePinyin)
 	{
 		const ids = {};
@@ -82,4 +75,4 @@ define([
 				});
 		});
 	}
-});
+

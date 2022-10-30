@@ -1,18 +1,9 @@
-define([
-	"react",
-	"jsx!./controls",
-	"jsx!./sections",
-	"jsx!./new-setting",
-	"jsx!./shortcut",
-	"background/constants"
-], (
-	React,
-	{Checkbox, RadioButton, RadioGroup},
-	{Section},
-	NewSetting,
-	Shortcut,
-	k
-) => {
+import React from "react";
+import {Checkbox, RadioButton, RadioGroup} from "./controls";
+import {Section} from "./sections";
+import NewSetting from "./new-setting";
+import Shortcut from "./shortcut";
+import * as k from "@/background/constants";
 	const SwitchWindowShortcut = k.IsMac ? "cmd-`" : "alt-tab";
 	const SwitchAppShortcut = k.IsMac ? "cmd-tab" : "alt-tab";
 
@@ -171,5 +162,5 @@ define([
 	});
 
 
-	return PopupSection;
-});
+	export default PopupSection;
+

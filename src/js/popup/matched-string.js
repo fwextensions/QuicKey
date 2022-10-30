@@ -1,14 +1,6 @@
-define([
-		// we need react here even if we're not explicitly referencing it so
-		// that the converted JSX can use it
-	"react",
-	"fast-memoize",
-	"lodash"
-], function(
-	React,
-	memoize,
-	_
-) {
+import React from "react";
+import memoize from "fast-memoize";
+import _ from "lodash";
 		// memoize this, since it could get called multiple times by render() with
 		// the same values, such as when the selection changes but the query doesn't
 	const wrapMatches = memoize((
@@ -39,7 +31,7 @@ define([
 	);
 
 
-	return function MatchedString(
+	export default function MatchedString(
 		props)
 	{
 		return <span
@@ -48,4 +40,4 @@ define([
 			{wrapMatches(props.query, props.text, props.hitMask)}
 		</span>
 	}
-});
+
