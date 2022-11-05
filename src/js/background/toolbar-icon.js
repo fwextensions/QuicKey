@@ -5,11 +5,13 @@ define([
 ], (
 	cp,
 	{background: backgroundTracker},
-	{IsEdge}
+	{IsEdge, IsFirefox}
 ) => {
 	const BadgeColors = {
 		light: {
-			normal: "#777",
+				// make the count background slightly darker in FF so the text is
+				// rendered in white instead of black on dark grey
+			normal: IsFirefox ? "#666" : "#777",
 			inverted: "#3367d6"
 		},
 		dark: {

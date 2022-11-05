@@ -113,11 +113,19 @@ define([
 						<RadioButton
 							label="Clear the search query, or close the menu if the query is empty"
 							value={k.EscBehavior.Clear}
+							disabled={k.IsFirefox}
 						/>
 						<RadioButton
 							label="Close the menu immediately"
 							value={k.EscBehavior.Close}
-						/>
+							disabled={k.IsFirefox}
+						>
+							{k.IsFirefox &&
+								<div className="subtitle">
+									Firefox always closes the menu when <kbd>esc</kbd> is pressed.
+								</div>
+							}
+						</RadioButton>
 					</RadioGroup>
 
 					<NewSetting
