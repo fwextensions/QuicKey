@@ -13,9 +13,14 @@ define([
 	{HistoryIcon, WindowIcon, IncognitoIcon, InPrivateIcon},
 	k
 ) => {
-	const {IncognitoNameUC, IncognitoNameLC} = k;
+	const {IncognitoNameUC, IncognitoNameLC, IncognitoPermission} = k;
 	const IncognitoAction = k.IsEdge ? "click the checkbox" : "toggle it on";
-	const IncognitoIndicator = k.IsEdge ? <InPrivateIcon /> : <IncognitoIcon />;
+	const IncognitoInstructions = k.IsFirefox
+		? <span>right-click the QuicKey toolbar icon, select <i>Manage
+			Extension</i>, and then click <i>Allow</i> next to the <i>Run in
+			Private Windows</i> option</span>
+		: <span>click the button below, then scroll down to
+			the <i>{IncognitoPermission}</i> setting and {IncognitoAction}</span>;
 
 
 	return function GeneralSection({
@@ -27,8 +32,11 @@ define([
 	{
 		function handleChangeIncognitoClick()
 		{
-			chrome.tabs.create({ url: `chrome://extensions/?id=${chrome.runtime.id}` });
-			tracker.event("extension", "options-incognito");
+				// FF doesn't support opening the settings tab directly
+			if (!k.IsFirefox) {
+				chrome.tabs.create({ url: `chrome://extensions/?id=${chrome.runtime.id}` });
+				tracker.event("extension", "options-incognito");
+			}
 		}
 
 
@@ -141,23 +149,23 @@ define([
 				</NewSetting>
 
 
-				<h2>{IncognitoNameUC} windows</h2>
+				{!k.IsFirefox && <div>
+					<h2>{IncognitoNameUC} windows</h2>
 
-				<p>By default, QuicKey can't switch to tabs in {IncognitoNameLC} windows.
-					To enable this functionality, click the button below, then
-					scroll down to the <i>Allow in {IncognitoNameLC}</i> setting
-					and {IncognitoAction}.  {IncognitoNameUC} tabs are marked
-					with {IncognitoIndicator}.
-				</p>
-				<img className="incognito-screenshot"
-					src={`/img/${IncognitoNameLC.toLocaleLowerCase()}-option.png`}
-					alt={`${IncognitoNameUC} option`}
-					title={`Change ${IncognitoNameLC} setting`}
-					onClick={handleChangeIncognitoClick}
-				/>
-				<button className="key"
-					onClick={handleChangeIncognitoClick}
-				>Change {IncognitoNameLC} setting</button>
+					<p>By default, QuicKey can't switch to tabs in {IncognitoNameLC} windows.
+						To enable this functionality, {IncognitoInstructions}.  {IncognitoNameUC} tabs
+						are marked with <IncognitoIcon />.
+					</p>
+					<img className="incognito-screenshot"
+						src={`/img/${IncognitoNameLC.toLocaleLowerCase()}-option.png`}
+						alt={`${IncognitoNameUC} option`}
+						title={`Change ${IncognitoNameLC} setting`}
+						onClick={handleChangeIncognitoClick}
+					/>
+					<button className="key"
+						onClick={handleChangeIncognitoClick}
+					>Change {IncognitoNameLC} setting</button>
+				</div>}
 			</Section>
 		);
 	};

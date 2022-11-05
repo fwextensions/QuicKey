@@ -109,6 +109,7 @@ define("popup/app", [
 		searchBox: null,
 		settings: settings.getDefaults(),
 		settingsPromise: null,
+		className: "",
 		popupTabID: -1,
 
 
@@ -143,6 +144,13 @@ define("popup/app", [
 
 		componentWillMount: function()
 		{
+				// we're saving the initial value of this prop instead of
+				// getting it every time in render, which is normally bad, but
+				// the platform will never change during the life of the app
+			this.className = [
+				this.props.platform,
+				k.IsFirefox ? "firefox" : ""
+			].join(" ");
 			this.loadTabs()
 				.then(tabs => {
 						// by the time we get here, the settings promise will
@@ -655,6 +663,11 @@ define("popup/app", [
 					});
 				})
 				.then(movedTab => {
+					if (Array.isArray(movedTab)) {
+							// annoyingly, this is returned as an array in FF
+						movedTab = movedTab[0];
+					}
+
 //					const {selected} = this.state;
 
 						// use the movedTab from this callback, since
@@ -667,6 +680,10 @@ define("popup/app", [
 					this.focusTab(movedTab, unsuspend);
 					this.props.tracker.event(this.state.query.length ? "tabs" : "recents",
 						"move-" + (direction ? "right" : "left"));
+
+						// focusing the tab doesn't close the menu in FF, so
+						// close it explicitly just in case
+					this.closeWindow();
 
 // TODO: this is only needed if we don't focus the tab after moving it
 //					return this.loadTabs()
@@ -1109,7 +1126,7 @@ define("popup/app", [
 				newSettingsAvailable
 			} = this.state;
 
-			return <div className={this.props.platform}>
+			return <div className={this.className}>
 				<SearchBox
 					autoFocus
 					ref={this.handleSearchBoxRef}

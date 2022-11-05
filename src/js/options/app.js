@@ -19,6 +19,11 @@ define([
 		<h3>现在，您可以使用拼音在网页标题和URL中搜索中文字符。</h3>
 		<h4>您始终可以通过单击QuicKey菜单中的齿轮图标来重新打开此页面。</h4>
 	</div>;
+	const BrowserClassName = k.IsFirefox
+		? "firefox"
+		: k.IsEdge
+			? "edge"
+			: "chrome";
 
 
 	const OptionsApp = React.createClass({
@@ -64,7 +69,7 @@ define([
 			} = this.props;
 			const {version} = chrome.runtime.getManifest();
 
-			return <main className={k.IsEdge ? "edge" : "chrome"}>
+			return <main className={BrowserClassName}>
 				{
 					showPinyinUpdateMessage && UpdateMessage
 				}
