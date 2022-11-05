@@ -145,6 +145,8 @@ require([
 
 	const addTab = debounce(
 		tabId => cp.tabs.get(tabId)
+				// update activeTab to be the one we're pushing onto recents
+			.then(tab => activeTab = tab)
 			.then(recentTabs.add)
 			.catch(error => {
 					// ignore the "No tab with id:" errors, which will happen
@@ -184,12 +186,12 @@ require([
 						// if the newly activated tab is the same as the most
 						// recent one in tabIDs, that means it was just
 						// reactivated after the popup was hidden, so we don't
-						// need to tell the popup to re-render
+						// need to tell the popup to re-render in that case
 					if (tabId !== tabIDs.slice(-1)[0]) {
-//console.log("=== sending tabActivated");
+//console.log("--- sending tabActivated", tabId, "old", tabIDs.slice(-1)[0]);
 						sendPopupMessage("tabActivated");
 					} else {
-//console.log("=== NOT sending tabActivated");
+//console.log("--- NOT sending tabActivated");
 					}
 				});
 			}
