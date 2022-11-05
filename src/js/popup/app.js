@@ -264,18 +264,18 @@ define("popup/app", [
 		{
 			const loader = async () => {
 				const settings = await this.settingsPromise;
-					// when we're navigating recents, we want to include the
-					// current tab in the list in the popup window, so pass null
-					// so initTabs() doesn't filter it out
-				const activeTab = this.navigatingRecents
-					? null
-					: await this.getActiveTab();
+					// even if we're navigating recents and pass null below, we
+					// still need the activeTab to get the currentWindowID
+				const activeTab = await this.getActiveTab();
 				const tabs = await initTabs(
 						// don't include recently closed tabs when navigating
 						// recents, since you can't navigate to them
 					recentTabs.getAll(!this.navigatingRecents &&
 						settings[k.IncludeClosedTabs.Key]),
-					activeTab,
+						// when we're navigating recents, we want to include the
+						// current tab in the list in the popup window, so pass
+						// null so initTabs() doesn't filter it out
+					this.navigatingRecents ? null : activeTab,
 					settings[k.MarkTabsInOtherWindows.Key],
 						// pass in the space key behavior so initTabs() knows
 						// whether to normalize all whitespace, which is not
