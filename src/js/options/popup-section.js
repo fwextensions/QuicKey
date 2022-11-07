@@ -68,6 +68,7 @@ import * as k from "@/background/constants";
 
 			return (
 				<RadioButton
+					key={id}
 					id={id}
 					className={className}
 					value={id}
@@ -134,7 +135,7 @@ import * as k from "@/background/constants";
 							onChange={onChange}
 							style={{
 								width: "21em",
-								margin: "0 0 5em 0"
+								margin: "0 0 6em 0"
 							}}
 						>
 							{hideOptions}
@@ -143,7 +144,7 @@ import * as k from "@/background/constants";
 							<div id={k.HidePopupBehavior.Behind}>
 								<div className="pro">Popup shows/hides instantly</div>
 								<div className="con">Popup is left near the top of the {SwitchWindowShortcut} list</div>
-								<div className="con">Popup is visible if other windows are moved out of the way</div>
+								<div className="con">Popup will be visible if other windows are moved out of the way</div>
 							</div>
 							<div id={k.HidePopupBehavior.Tab}>
 								<div className="pro">Popup is removed from the {SwitchWindowShortcut} list</div>
