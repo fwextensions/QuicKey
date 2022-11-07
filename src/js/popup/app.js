@@ -95,12 +95,15 @@ import _ from "lodash";
 			this.settingsPromise = this.updateSettings();
 			this.openedForSearch = this.props.focusSearch;
 
-				// in showWindow() we set gotMRUKey based on whether the window
-				// is being opened for search as well, but showWindow() isn't
-				// called in the flow when the window is opened the first time
-			this.gotMRUKey = !this.openedForSearch;
-
 			if (this.props.isPopup) {
+					// in showWindow() we set gotMRUKey based on whether the popup
+					// is being opened for search as well, but showWindow() isn't
+					// called in the flow when the popup is opened the first time.
+					// we only set this in the popup case, so if the user is
+					// opening the menu with the last search restored, releasing
+					// the MRU key from the shortcut won't automatically switch
+					// to the first result.
+				this.gotMRUKey = !this.openedForSearch;
 				this.getActiveTab(true)
 					.then(({id}) => this.popupTabID = id);
 			}
@@ -734,7 +737,10 @@ import _ from "lodash";
 				newSettingsAvailable: data.lastSeenOptionsVersion < storage.version
 			});
 
-			if (data.settings[k.RestoreLastQuery.Key] && data.lastQuery) {
+				// don't restore the query if the user is navigating recents
+				// with the popup open
+			if (!this.navigatingRecents && data.settings[k.RestoreLastQuery.Key]
+					&& data.lastQuery) {
 					// we need to force the input to update to the stored
 					// text, and then force it to select all
 				this.forceUpdate = true;
@@ -817,6 +823,22 @@ import _ from "lodash";
 					// the hover state of the browser action button gets cleared
 				setTimeout(window.close, 0);
 			} else {
+				if (this.settings[k.RestoreLastQuery.Key]) {
+						// save the current query so updateSettings() will
+						// restore it when the popup is reopened, but not if the
+						// user is navigating recents, so that the empty search
+						// box doesn't overwrite the saved query.  we have to
+						// check this before setting it to false below.
+					if (!this.navigatingRecents) {
+						storage.set(() => ({ lastQuery: this.state.searchBoxText }));
+					}
+				} else {
+						// the restore last query option is off, so clear any
+						// existing stored query
+					this.setSearchBoxText("");
+					storage.set(() => ({ lastQuery: "" }));
+				}
+
  				this.forceUpdate = true;
 				this.resultsList.scrollToRow(0);
 				this.visible = false;
@@ -830,17 +852,6 @@ import _ from "lodash";
 				this.bookmarksPromise = null;
 				this.history = [];
 				this.historyPromise = null;
-
-				if (this.settings[k.RestoreLastQuery.Key]) {
-						// save the current query so updateSettings() will
-						// restore it when the popup is reopened
-					storage.set(() => ({ lastQuery: this.state.searchBoxText }));
-				} else {
-						// the restore last query option is off, so clear any
-						// existing stored query
-					this.setSearchBoxText("");
-					storage.set(() => ({ lastQuery: "" }));
-				}
 
 					// if we're being closed by esc, not by losing focus or by
 					// focusing another tab, then in addition to moving off
@@ -966,12 +977,12 @@ import _ from "lodash";
 							// so tell the background to change its state so that
 							// when the popup closes, the current tab's activation
 							// will be detected
-						this.navigatingRecents = false;
 						this.sendMessage("stopNavigatingRecents", undefined, false);
 
 							// pass true for closedByEsc so that the background
 							// doesn't interpret a quick open and close as a
-							// toggle recents action
+							// toggle recents action.  closeWindow also sets
+							// navigatingRecents to false.
 						await this.closeWindow(true, selectedItem);
 
 							// tell the background to add the newly focused tab
