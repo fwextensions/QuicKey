@@ -6,15 +6,16 @@
  * Released under the MIT license
  */
 
-var slice = Array.prototype.slice,
-  hasOwnProperty = Object.prototype.hasOwnProperty;
+const slice = Array.prototype.slice;
+const hasOwnProperty = Object.prototype.hasOwnProperty;
+const root = typeof globalThis === "object" ? globalThis : window;
 
   ////////////////
 
 export function ChromePromise(options) {
     options = options || {};
-    var chrome = options.chrome || window.chrome;
-    var Promise = options.Promise || window.Promise;
+    var chrome = options.chrome || root.chrome;
+    var Promise = options.Promise || root.Promise;
     var runtime = chrome.runtime;
 
     fillProperties(chrome, this);
