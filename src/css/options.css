@@ -246,10 +246,6 @@ h2 {
 	border-bottom: 1px solid var(--border-color, #ddd);
 }
 
-h2:first-of-type {
-	margin-top: 0;
-}
-
 ul {
 	list-style-type: none;
 	margin: 0;
@@ -370,6 +366,10 @@ main {
 .section-label.selected {
 	font-weight: bold;
 	color: inherit;
+}
+
+.section > h2:first-of-type {
+	margin-top: 0;
 }
 
 
