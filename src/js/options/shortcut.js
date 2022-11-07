@@ -9,8 +9,9 @@ import {getKeysFromShortcut} from "./shortcut-utils";
 			? keys
 			: getKeysFromShortcut(keys).keys;
 
+			// key key key...
 		return <div className="shortcut" {...props}>
-			{keyStrings.map(key => key && <Key code={key} />)}
+			{keyStrings.map(key => key && <Key key={key} code={key} />)}
 		</div>
 	};
 

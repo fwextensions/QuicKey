@@ -21,7 +21,8 @@ import * as k from "@/background/constants";
 
 
 		renderShortcutSetting: function(
-			shortcut)
+			shortcut,
+			i)
 		{
 			const {settings} = this.props;
 			let label = shortcut.label;
@@ -37,8 +38,10 @@ import * as k from "@/background/constants";
 				validator = shortcut.createValidator(modifier, key);
 			}
 
+				// default to an index-based key for fixed shortcuts
 			return <li className="shortcut-setting"
-					title={shortcut.tooltip}
+				key={shortcut.id || `shortcut-${i}`}
+				title={shortcut.tooltip}
 			>
 				<div className="label">{label}</div>
 				<ShortcutPicker id={shortcut.id}

@@ -114,6 +114,7 @@
 	{
 		const radioButtons = children.map(function(child) {
 			return React.cloneElement(child, {
+				key: child.props.value,
 				name: id,
 				checked: child.props.value == value,
 				onChange: handleChange
@@ -154,7 +155,6 @@
 
 
 	export {
-//	export default {
 		Checkbox,
 		RadioButton,
 		Group,
