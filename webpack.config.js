@@ -133,19 +133,20 @@ module.exports = (env, argv) => {
 				"../temp/ssg": "./build/scripts/build-popup.js",
 			},
 			plugins: [
-				ifBuildPopup(
-					new SSGPlugin({
-						entry: "../temp/ssg.js",
-						paths: ["../temp/popup.html"],
-							// pass the fs module to the render function, since it can't
-							// seem to import that module on its own
-						locals: { fs },
-						globals,
-					}),
-				),
+				new SSGPlugin({
+					entry: "../temp/ssg.js",
+					paths: ["../temp/popup.html"],
+						// pass the fs module to the render function, since it can't
+						// seem to import that module on its own
+					locals: { fs },
+					globals,
+				}),
 			],
 			output: {
 				...output,
+					// don't include the js/ path in the filename since the ssg
+					// entry above includes a path
+				filename: "[name].js",
 				libraryTarget: "umd"
 			}
 		})
