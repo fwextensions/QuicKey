@@ -1,11 +1,9 @@
+export default function(
+	key,
+	init)
+{
+	const background = chrome.extension.getBackgroundPage();
+	const shared = background.shared || (background.shared = {});
 
-	export default function(
-		key,
-		init)
-	{
-		const background = chrome.extension.getBackgroundPage();
-		const shared = background.shared || (background.shared = {});
-
-		return shared[key] || (shared[key] = (typeof init == "function" ? init() : init));
-	};
-
+	return shared[key] || (shared[key] = (typeof init == "function" ? init() : init));
+};
