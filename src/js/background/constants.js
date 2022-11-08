@@ -1,11 +1,13 @@
 import cp from "@/lib/cp";
 
-		// use navigator values instead of chrome.runtime.getPlatformInfo() so
-		// we don't have to await the response everywhere constants are used
-	const {userAgent, platform, languages} = navigator;
-	const languagePattern = /^(?<lang>[-a-z]+)-(?<locale>[a-z]+)$/i;
-	const primaryLanguage = languages[0];
-	const languageMatch = primaryLanguage.match(languagePattern);
+
+	// use navigator values instead of chrome.runtime.getPlatformInfo() so
+	// we don't have to await the response everywhere constants are used
+const {userAgent, platform, languages} = navigator;
+const languagePattern = /^(?<lang>[-a-z]+)-(?<locale>[a-z]+)$/i;
+const primaryLanguage = languages[0];
+const languageMatch = primaryLanguage.match(languagePattern);
+
 
 export const IsMac = /Mac/i.test(platform);
 export const IsLinux = /Linux/i.test(platform);
@@ -29,68 +31,68 @@ export const IncognitoPermission = IsFirefox
 export const MinTabDwellTime = 1250;
 export const PopupURL = chrome.runtime.getURL("popup.html");
 export const CommandIDs = {
-			OpenPopupCommand: "010-open-popup-window",
-			FocusPopupCommand: "020-focus-search",
-			PreviousTabCommand: "1-previous-tab",
-			NextTabCommand: "2-next-tab",
-			ToggleTabsCommand: "30-toggle-recent-tabs"
-		};
+	OpenPopupCommand: "010-open-popup-window",
+	FocusPopupCommand: "020-focus-search",
+	PreviousTabCommand: "1-previous-tab",
+	NextTabCommand: "2-next-tab",
+	ToggleTabsCommand: "30-toggle-recent-tabs"
+};
 export const SpaceBehavior = {
-			Key: "spaceBehavior",
-			Select: "select",
-			Space: "space"
-		};
+	Key: "spaceBehavior",
+	Select: "select",
+	Space: "space"
+};
 export const EscBehavior = {
-			Key: "escBehavior",
-			Clear: "clear",
-			Close: "close"
-		};
+	Key: "escBehavior",
+	Clear: "clear",
+	Close: "close"
+};
 export const HomeEndBehavior = {
-			Key: "homeEndBehavior",
-			ResultsList: "resultsList",
-			SearchBox: "searchBox"
-		};
+	Key: "homeEndBehavior",
+	ResultsList: "resultsList",
+	SearchBox: "searchBox"
+};
 export const HidePopupBehavior = {
-			Key: "hidePopupBehavior",
-			Behind: "behind",
-			Tab: "tab",
-			Minimize: "minimize"
-		};
+	Key: "hidePopupBehavior",
+	Behind: "behind",
+	Tab: "tab",
+	Minimize: "minimize"
+};
 export const MarkTabsInOtherWindows = {
-			Key: "markTabsInOtherWindows"
-		};
+	Key: "markTabsInOtherWindows"
+};
 export const IncludeClosedTabs = {
-			Key: "includeClosedTabs"
-		};
+	Key: "includeClosedTabs"
+};
 export const ShowTabCount = {
-			Key: "showTabCount"
-		};
+	Key: "showTabCount"
+};
 export const UsePinyin = {
-			Key: "usePinyin"
-		};
+	Key: "usePinyin"
+};
 export const RestoreLastQuery = {
-			Key: "restoreLastQuery"
-		};
+	Key: "restoreLastQuery"
+};
 export const ShowBookmarkPaths = {
-			Key: "showBookmarkPaths"
-		};
+	Key: "showBookmarkPaths"
+};
 export const CurrentWindowLimitRecents = {
-			Key: "currentWindowLimitRecents"
-		};
+	Key: "currentWindowLimitRecents"
+};
 export const CurrentWindowLimitSearch = {
-			Key: "currentWindowLimitSearch"
-		};
+	Key: "currentWindowLimitSearch"
+};
 export const NavigateRecentsWithPopup = {
-			Key: "navigateRecentsWithPopup"
-		};
+	Key: "navigateRecentsWithPopup"
+};
 export const Shortcuts = {
-			Key: "shortcuts",
-			MRUSelect: "mruSelect",
-			CloseTab: "closeTab",
-			MoveTabLeft: "moveTabLeft",
-			MoveTabRight: "moveTabRight",
-			CopyURL: "copyURL",
-			CopyTitleURL: "copyTitleURL"
-		};
+	Key: "shortcuts",
+	MRUSelect: "mruSelect",
+	CloseTab: "closeTab",
+	MoveTabLeft: "moveTabLeft",
+	MoveTabRight: "moveTabRight",
+	CopyURL: "copyURL",
+	CopyTitleURL: "copyTitleURL"
+};
 
 cp.management.getSelf().then(({ installType }) => IsDev = installType === "development");
