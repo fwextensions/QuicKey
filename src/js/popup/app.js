@@ -445,10 +445,10 @@ export default class App extends React.Component {
 	}
 
 
-    async openItem(
+    openItem = async (
 		item,
 		shiftKey,
-		modKey)
+		modKey) =>
 	{
 		if (item) {
 			const {url} = item;
@@ -490,7 +490,7 @@ export default class App extends React.Component {
 
 			this.closeWindow(false, tabOrWindow);
 		}
-	}
+	};
 
 
     async focusTab (
@@ -522,8 +522,8 @@ export default class App extends React.Component {
 
 		// although this method also deletes bookmarks/history items, keep
 		// the closeTab name since that's the name of the shortcut setting
-    closeTab(
-		item)
+    closeTab = (
+		item) =>
 	{
 		const {query} = this.state;
 		const {mode} = this;
@@ -592,7 +592,7 @@ export default class App extends React.Component {
 				_.remove(this.recents, { url });
 			}
 		}
-	}
+	};
 
 
     moveTab(
