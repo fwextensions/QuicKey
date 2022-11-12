@@ -1,7 +1,7 @@
 import React from "react";
 
 
-function SectionLabel({
+export function SectionLabel({
 	id,
 	label,
 	selected,
@@ -19,7 +19,7 @@ function SectionLabel({
 }
 
 
-function SectionList({
+export function SectionList({
 	selected,
 	onClick,
 	children})
@@ -37,7 +37,7 @@ function SectionList({
 }
 
 
-function Section({
+export function Section({
 	id,
 	children})
 {
@@ -50,7 +50,7 @@ function Section({
 }
 
 
-function Sections({
+export function Sections({
 	selected,
 	children})
 {
@@ -60,11 +60,3 @@ function Sections({
 		</div>
 	);
 }
-
-
-export {
-	Sections,
-	Section,
-	SectionList,
-	SectionLabel
-};

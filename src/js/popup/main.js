@@ -1,5 +1,5 @@
 import React from "react";
-import ReactDOM from "react-dom";
+import { hydrateRoot } from "react-dom/client";
 import App from "./app";
 import trackers from "@/background/page-trackers";
 
@@ -18,8 +18,6 @@ if (gClose) {
 		// notified, or the input gets focused and then gets the esc event.
 	gPort.postMessage("closedByEsc");
 	window.close();
-
-//		return;
 }
 
 DEBUG && console.log("=== popup startup time", now - gInitTime, now);
@@ -44,7 +42,8 @@ gShortcutCache = null;
 
 function renderApp()
 {
-	ReactDOM.render(
+	hydrateRoot(
+		document.getElementById("root"),
 		React.createElement(App, {
 			initialQuery,
 			initialShortcuts,
@@ -53,8 +52,7 @@ function renderApp()
 			isPopup: params.has("focusSearch"),
 			focusSearch: params.get("focusSearch") == "true",
 			port: gPort
-		}),
-		document.getElementById("root")
+		})
 	);
 }
 

@@ -1,7 +1,7 @@
  import React from "react";
 
 
-function Checkbox({
+export function Checkbox({
 	id,
 	label,
 	value,
@@ -46,7 +46,7 @@ function Checkbox({
 }
 
 
-function RadioButton({
+export function RadioButton({
 	name,
 	label,
 	value,
@@ -87,7 +87,7 @@ function RadioButton({
 }
 
 
-function Group({
+export function Group({
 	id,
 	label,
 	children,
@@ -106,7 +106,7 @@ function Group({
 }
 
 
-function RadioGroup({
+export function RadioGroup({
 	id,
 	label,
 	value,
@@ -154,11 +154,3 @@ Checkbox.defaultProps = {
 RadioGroup.defaultProps = {
 	onChange: noop
 };
-
-
-export {
-	Checkbox,
-	RadioButton,
-	Group,
-	RadioGroup
-}

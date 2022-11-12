@@ -27,13 +27,13 @@ const CloseButtonTooltips = {
 const IncognitoTooltip = `This tab is in ${IncognitoNameLC} mode`;
 
 
-const ResultsListItem = React.createClass({
-	lastRenderTime: 0,
-	mouseMoveCount: 0,
+export default class ResultsListItem extends React.Component {
+    lastRenderTime = 0;
+    mouseMoveCount = 0;
 
 
-	onClick: function(
-		event)
+    onClick = (
+		event) =>
 	{
 		const {shiftKey, altKey} = event;
 		const {item} = this.props;
@@ -51,29 +51,28 @@ const ResultsListItem = React.createClass({
 				// pass in whether ctrl or cmd was pressed while clicking
 			this.props.onItemClicked(item, shiftKey, event[ModKeyBoolean]);
 		}
-	},
+	};
 
 
-	onClose: function(
-		event)
+    onClose = (
+		event) =>
 	{
 			// stop the click from bubbling so the tab doesn't get focused
 			// just before it's closed
 		event.stopPropagation();
 		this.props.onTabClosed(this.props.item);
-	},
+	};
 
 
-	onCloseMouseDown: function(
-		event)
+    onCloseMouseDown = (
+		event) =>
 	{
 			// prevent the click from stealing focus from the search box
 		event.preventDefault();
-	},
+	};
 
 
-	onMouseMove: function(
-		event)
+    onMouseMove = () =>
 	{
 		const {index, isSelected, setSelectedIndex} = this.props;
 
@@ -99,10 +98,10 @@ const ResultsListItem = React.createClass({
 		} else {
 			this.mouseMoveCount++;
 		}
-	},
+	};
 
 
-	render: function()
+    render()
 	{
 		const {
 			item,
@@ -222,7 +221,4 @@ const ResultsListItem = React.createClass({
 			</button>
 		</div>
 	}
-});
-
-
-export default ResultsListItem;
+}

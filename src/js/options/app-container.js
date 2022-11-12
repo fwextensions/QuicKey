@@ -3,30 +3,28 @@ import OptionsApp from "./app";
 import trackers from "@/background/page-trackers";
 import storage from "@/background/quickey-storage";
 import settings from "@/background/settings";
-import {Platform, ShowTabCount, CurrentWindowLimitRecents, CurrentWindowLimitSearch,
-	HidePopupBehavior, NavigateRecentsWithPopup} from "@/background/constants";
+import {Platform, ShowTabCount, HidePopupBehavior, NavigateRecentsWithPopup} from "@/background/constants";
+
+
 const PlusPattern = /\+/g;
 
 
-const OptionsAppContainer = React.createClass({
-	tracker: trackers.options,
-	platform: Platform,
+export default class OptionsAppContainer extends React.Component {
+	tracker = trackers.options;
+	platform = Platform;
 
 
-	getInitialState: function()
-	{
-		return {
-			settings: null,
-			showPinyinUpdateMessage: false,
-			defaultSection: "general",
-				// default this to Infinity so that no NEW badges are shown
-				// until we get the real value from storage
-			lastSeenOptionsVersion: Infinity
-		};
-	},
+    state = {
+        settings: null,
+        showPinyinUpdateMessage: false,
+        defaultSection: "general",
+            // default this to Infinity so that no NEW badges are shown
+            // until we get the real value from storage
+        lastSeenOptionsVersion: Infinity
+    };
 
 
-	componentDidMount: function()
+    componentDidMount()
 	{
 		const params = new URLSearchParams(location.search);
 		const showPinyinUpdateMessage = params.has("pinyin");
@@ -58,36 +56,36 @@ const OptionsAppContainer = React.createClass({
 			return { lastSeenOptionsVersion: storage.version };
 		});
 		this.tracker.pageview();
-	},
+	}
 
 
-	componentWillUnmount: function()
+    componentWillUnmount()
 	{
 		window.removeEventListener("focus", this.updateSettings);
-	},
+	}
 
 
-	updateSettings: function()
+    updateSettings = () =>
 	{
 		return settings.get()
 			.then(this.setSettingsState)
 			.catch(console.error);
- 		},
+	};
 
 
-	setSettingsState: function(
-		settings)
+	setSettingsState = (
+		settings) =>
 	{
 			// add a disabled flag to the Chrome shortcuts so the options
 			// page renders them as disabled
 		settings.chrome.shortcuts.forEach(shortcut => shortcut.disabled = true);
 		this.setState({ settings });
-	},
+	};
 
 
-	handleChange: function(
+    handleChange = (
 		value,
-		key)
+		key) =>
 	{
 		settings.set(key, value)
 			.then(settings => {
@@ -107,19 +105,19 @@ const OptionsAppContainer = React.createClass({
 			// convert the value to a string before trying to do the
 			// replacement, since some values are booleans
 		this.tracker.event("setting", key, String(value).replace(PlusPattern, "-"));
-	},
+	};
 
 
-	handleResetShortcuts: function()
+    handleResetShortcuts = () =>
 	{
 		settings.resetShortcuts()
 			.then(this.setSettingsState);
 
 		this.tracker.event("setting", "reset");
-	},
+	};
 
 
-	render: function()
+    render()
 	{
 		const {
 			settings,
@@ -145,7 +143,4 @@ const OptionsAppContainer = React.createClass({
 			}
 		</div>
 	}
-});
-
-
-export default OptionsAppContainer;
+}

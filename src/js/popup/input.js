@@ -4,96 +4,98 @@ import React from "react";
 // this class was based on this GitHub comment: https://github.com/facebook/react/issues/955#issuecomment-281802381
 
 
-var Input = React.createClass({
-	input: null,
+export default class Input extends React.Component {
+    static defaultProps = {
+        onChange: function() {},
+        onFocus: function() {},
+        onBlur: function() {}
+    };
 
 
-	getDefaultProps: function()
-	{
-		return {
-			onChange: function() {},
-			onFocus: function() {},
-			onBlur: function() {}
-		};
-	},
-
-
-	getInitialState: function()
-	{
-		return {
-			isFocused: false,
-			currentValue: this.props.value
-		};
-	},
-
-
-	componentWillReceiveProps: function(nextProps)
+	static getDerivedStateFromProps(
+		props,
+		state)
 	{
 			// the parent can pass forceUpdate to force the input's value
 			// to change even if it's focused
-		if (!this.state.isFocused || nextProps.forceUpdate) {
-			this.setState({ currentValue: nextProps.value });
+		if (!state.isFocused || props.forceUpdate) {
+			return { currentValue: props.value };
+		} else {
+			return null;
 		}
-	},
+	}
 
 
-	componentDidUpdate: function()
+    state = {
+        isFocused: false,
+        currentValue: this.props.value
+    };
+    input = null;
+
+
+    componentDidUpdate()
 	{
 			// wait until after the component has updated so that there's
 			// text to be selected
 		if (this.props.selectAll && this.input) {
 			this.input.select();
 		}
-	},
+	}
 
 
-	focus: function()
+	focus()
 	{
 		if (this.input) {
 			this.input.focus();
 		}
-	},
+	}
 
 
-	setSelectionRange: function(start, end)
+	setSelectionRange(
+		start,
+		end)
 	{
 		if (this.input) {
 			this.input.setSelectionRange(start, end);
 		}
-	},
+	}
 
 
-	handleRef: function(input)
+	handleRef = (
+		input) =>
 	{
 		this.input = input;
-	},
+	};
 
 
-	handleChange: function(e)
+    handleChange = (
+		e) =>
 	{
 		this.setState({ currentValue: e.target.value });
 		e.persist();
 		this.props.onChange(e);
-	},
+	};
 
 
-	handleFocus: function(e)
+    handleFocus = (
+		e) =>
 	{
 		this.setState({ isFocused: true });
 		e.persist();
 		this.props.onFocus(e);
-	},
+	};
 
 
-	handleBlur: function(e)
+    handleBlur = (
+		e) =>
 	{
 		this.setState({ isFocused: false });
 		e.persist();
 		this.props.onBlur(e);
-	},
+	};
 
 
-	render: function()
+    render()
 	{
 		const {selectAll, forceUpdate, ...inputProps} = this.props;
 
@@ -106,7 +108,4 @@ var Input = React.createClass({
 			onBlur={this.handleBlur}
 		/>;
 	}
-});
-
-
-export default Input;
+}

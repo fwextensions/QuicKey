@@ -75,7 +75,7 @@ Object.keys(KeyClasses).forEach(className => {
 });
 
 
-function Key(
+export default function Key(
 	props)
 {
 	const code = props.code;
@@ -89,5 +89,3 @@ function Key(
 
 	return <kbd className={className}><span>{label}</span></kbd>;
 }
-
-export default Key;

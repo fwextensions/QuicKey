@@ -61,43 +61,50 @@ function sortHistoryItems(
 }
 
 
-var App = React.createClass({
-	visible: true,
-	mode: "tabs",
-	tabs: [],
-	bookmarks: [],
-	history: [],
-	recents: [],
-		// this array is always empty, and is only used by getMatchingItems()
-		// when a / is typed and the mode is "command"
-	command: [],
-	tabsPromise: null,
-	bookmarksPromise: null,
-	historyPromise: null,
-	forceUpdate: false,
-	selectAllSearchBoxText: false,
-	openedForSearch: false,
-	ignoreNextBlur: false,
-	navigatingRecents: false,
-	gotModifierUp: false,
-	gotMRUKey: false,
-	mruModifier: "Alt",
-	resultsList: null,
-	searchBox: null,
-	settings: settings.getDefaults(),
-	settingsPromise: null,
-	className: "",
-	popupTabID: -1,
+export default class App extends React.Component {
+    visible = true;
+    mode = "tabs";
+    tabsPromise = null;
+    bookmarksPromise = null;
+    historyPromise = null;
+    forceUpdate = false;
+    selectAllSearchBoxText = false;
+    openedForSearch = false;
+    ignoreNextBlur = false;
+    navigatingRecents = false;
+    gotModifierUp = false;
+    gotMRUKey = false;
+    mruModifier = "Alt";
+    resultsList = null;
+    searchBox = null;
+	settings = null;
+    settingsPromise = null;
+    className = "";
+	popupTabID = -1;
 
 
-	getInitialState: function()
+    constructor(props, context)
 	{
-		const query = this.props.initialQuery;
+        super(props, context);
 
-		this.settingsPromise = this.updateSettings();
-		this.openedForSearch = this.props.focusSearch;
+        const query = props.initialQuery;
 
-		if (this.props.isPopup) {
+        this.openedForSearch = props.focusSearch;
+		this.tabs = [];
+		this.bookmarks = [];
+		this.history = [];
+		this.recents = [];
+			// this array is always empty, and is only used by getMatchingItems()
+			// when a / is typed and the mode is "command"
+		this.command = [];
+		this.settings = settings.getDefaults();
+        this.settingsPromise = this.updateSettings();
+			// we're saving the initial value of this prop instead of
+			// getting it every time in render, which is normally bad, but
+			// the platform will never change during the life of the app
+		this.className = this.props.platform + (k.IsFirefox ? " firefox" : "");
+
+        if (props.isPopup) {
 				// in showWindow() we set gotMRUKey based on whether the popup
 				// is being opened for search as well, but showWindow() isn't
 				// called in the flow when the popup is opened the first time.
@@ -110,7 +117,7 @@ var App = React.createClass({
 				.then(({id}) => this.popupTabID = id);
 		}
 
-		return {
+        this.state = {
 			query,
 			searchBoxText: query,
 			matchingItems: [],
@@ -119,16 +126,11 @@ var App = React.createClass({
 			selected: (query || !this.openedForSearch) ? 0 : -1,
 			newSettingsAvailable: false
 		};
-	},
+    }
 
 
-	componentWillMount: function()
+    componentDidMount()
 	{
-			// we're saving the initial value of this prop instead of
-			// getting it every time in render, which is normally bad, but
-			// the platform will never change during the life of the app
-		this.className = this.props.platform + (k.IsFirefox ? " firefox" : "");
-
 		this.loadTabs()
 			.then(tabs => {
 					// by the time we get here, the settings promise will
@@ -149,11 +151,7 @@ var App = React.createClass({
 
 				this.props.tracker.set("metric1", tabs.length);
 			});
-	},
 
-
-	componentDidMount: function()
-	{
 		if (this.props.isPopup) {
 				// we're being opened in a popup window, so add the event
 				// handlers that are only needed in that case
@@ -211,18 +209,18 @@ var App = React.createClass({
 			// also handles the edge case where the menu is open and a tab
 			// in another window is closed.
 		chrome.tabs.onRemoved.addListener(this.onTabRemoved);
-	},
+	}
 
 
-	componentDidUpdate: function()
+    componentDidUpdate()
 	{
 			// we only want these flags to be true through one render cycle
 		this.forceUpdate = false;
 		this.selectAllSearchBoxText = false;
-	},
+	}
 
 
-	loadPromisedItems: function(
+	loadPromisedItems(
 		loader,
 		itemName,
 		reload = false)
@@ -243,10 +241,10 @@ var App = React.createClass({
 		}
 
 		return this[promiseName];
-	},
+	}
 
 
-	loadTabs: function()
+	loadTabs()
 	{
 		const loader = async () => {
 			const settings = await this.settingsPromise;
@@ -307,10 +305,10 @@ var App = React.createClass({
 
 			// pass true to always force a reload
 		return this.loadPromisedItems(loader, "tabs", true);
-	},
+	};
 
 
-	setSearchBoxText: function(
+    setSearchBoxText(
 		searchBoxText)
 	{
 		const showBookmarkPaths = this.settings[k.ShowBookmarkPaths.Key];
@@ -350,10 +348,10 @@ var App = React.createClass({
 
 		this.setState({ searchBoxText });
 		this.setQuery(query);
-	},
+	};
 
 
-	setQuery: function(
+	setQuery(
 		query)
 	{
 		this.setState({
@@ -363,10 +361,10 @@ var App = React.createClass({
 				? 0
 				: -1
 		});
-	},
+	}
 
 
-	clearQuery: async function()
+	async clearQuery()
 	{
 		let {searchBoxText} = this.state;
 
@@ -399,10 +397,10 @@ var App = React.createClass({
 			this.resultsList.scrollToRow(0);
 			this.setSearchBoxText(searchBoxText);
 		}
-	},
+	}
 
 
-	getMatchingItems: function(
+	getMatchingItems(
 		query)
 	{
 			// score the items before checking the query, in case there had
@@ -444,10 +442,10 @@ var App = React.createClass({
 		);
 
 		return matchingItems;
-	},
+	}
 
 
-	openItem: async function(
+    async openItem(
 		item,
 		shiftKey,
 		modKey)
@@ -492,10 +490,10 @@ var App = React.createClass({
 
 			this.closeWindow(false, tabOrWindow);
 		}
-	},
+	}
 
 
-	focusTab: async function(
+    async focusTab (
 		tab,
 		unsuspend)
 	{
@@ -519,12 +517,12 @@ var App = React.createClass({
 		} else {
 			return null;
 		}
-	},
+	}
 
 
 		// although this method also deletes bookmarks/history items, keep
 		// the closeTab name since that's the name of the shortcut setting
-	closeTab: function(
+    closeTab(
 		item)
 	{
 		const {query} = this.state;
@@ -594,10 +592,10 @@ var App = React.createClass({
 				_.remove(this.recents, { url });
 			}
 		}
-	},
+	}
 
 
-	moveTab: function(
+    moveTab(
 		tab,
 		direction,
 		unsuspend)
@@ -646,8 +644,6 @@ var App = React.createClass({
 					movedTab = movedTab[0];
 				}
 
-//					const {selected} = this.state;
-
 					// use the movedTab from this callback, since
 					// the tab reference we had to it from before is
 					// likely stale.  we also have to call addURLs()
@@ -667,10 +663,10 @@ var App = React.createClass({
 //					return this.loadTabs()
 //						.then(() => this.setState({ selected }));
 			});
-	},
+	}
 
 
-	copyItemURL: function(
+    copyItemURL(
 		item,
 		includeTitle)
 	{
@@ -680,22 +676,22 @@ var App = React.createClass({
 
 			copyTextToClipboard(text);
 		}
-	},
+	}
 
 
-	modifySelected: function(
+    modifySelected(
 		delta,
 		mruKey)
 	{
 		const index = this.state.selected + delta;
 
 		return this.setSelectedIndex(index, mruKey);
-	},
+	}
 
 
-	setSelectedIndex: function(
+    setSelectedIndex = (
 		index,
-		mruKey)
+		mruKey) =>
 	{
 		var length = this.state.matchingItems.length;
 
@@ -714,10 +710,10 @@ var App = React.createClass({
 			// await the state change and re-render
 		return new Promise(resolve => this.setState({ selected: index },
 			() => resolve(this.state.selected)));
-	},
+	};
 
 
-	getActiveTab: function(
+    getActiveTab(
 		blurred = false)
 	{
 		if (!this.props.isPopup || blurred) {
@@ -728,10 +724,10 @@ var App = React.createClass({
 				// background, which recorded it before opening this window
 			return this.sendMessage("getActiveTab");
 		}
-	},
+	}
 
 
-	updateSettings: async function()
+    async updateSettings()
 	{
 		const data = await storage.get();
 
@@ -766,10 +762,10 @@ var App = React.createClass({
 		}
 
 		return this.settings;
-	},
+	}
 
 
-	showWindow: async function({
+    async showWindow({
 		focusSearch,
 		activeTab})
 	{
@@ -806,10 +802,10 @@ var App = React.createClass({
 			// load them again just to make sure
 		return this.loadTabs()
 			.then(() => this.showPopupWindow(activeTab));
-	},
+	}
 
 
-	closeWindow: function(
+    closeWindow(
 		closedByEsc,
 		focusedTabOrWindow)
 	{
@@ -841,7 +837,7 @@ var App = React.createClass({
 				storage.set(() => ({ lastQuery: "" }));
 			}
 
- 				this.forceUpdate = true;
+			this.forceUpdate = true;
 			this.resultsList.scrollToRow(0);
 			this.visible = false;
 			this.navigatingRecents = false;
@@ -861,25 +857,25 @@ var App = React.createClass({
 				// window comes forward
 			return popupWindow.hide(closedByEsc, focusedTabOrWindow);
 		}
-	},
+	}
 
 
-	reopenWindow: function()
+    reopenWindow()
 	{
 			// ignore the blur event triggered by closing the popup
 		this.ignoreNextBlur = true;
 		this.sendMessage("reopenPopup", { focusSearch: this.openedForSearch }, false);
-	},
+	}
 
 
-	showPopupWindow: function(
+    showPopupWindow(
 		activeTab)
 	{
 		return popupWindow.show(activeTab, activeTab ? "center-center" : "right-center");
-	},
+	}
 
 
-	blurPopupWindow: async function()
+    async blurPopupWindow()
 	{
 		if (this.props.isPopup
 				&& this.settings[k.HidePopupBehavior.Key] !== k.HidePopupBehavior.Minimize) {
@@ -893,10 +889,10 @@ var App = React.createClass({
 			this.ignoreNextBlur = true;
 			await popupWindow.blur();
 		}
-	},
+	}
 
 
-	sendMessage: function(
+    sendMessage(
 		message,
 		payload = {},
 		awaitResponse = true)
@@ -915,17 +911,17 @@ var App = React.createClass({
 				// otherwise, we'll get runtime errors about the port closing.
 			chrome.runtime.sendMessage(messageBody);
 		}
-	},
+	}
 
 
-	handleListRef: handleRef("resultsList"),
+	handleListRef = handleRef("resultsList", this);
 
 
-	handleSearchBoxRef: handleRef("searchBox"),
+	handleSearchBoxRef = handleRef("searchBox", this);
 
 
-	onTabRemoved: function(
-		tabID)
+    onTabRemoved = (
+		tabID) =>
 	{
 		const {selected} = this.state;
 
@@ -944,18 +940,18 @@ var App = React.createClass({
 				.then(() => this.setState(({matchingItems}) =>
 					({ selected: Math.min(selected, matchingItems.length - 1) })));
 		}
-	},
+	};
 
 
-	onQueryChange: function(
-		event)
+    onQueryChange = (
+		event) =>
 	{
 		this.setSearchBoxText(event.target.value);
-	},
+	};
 
 
-	onKeyDown: function(
-		event)
+    onKeyDown = (
+		event) =>
 	{
 			// reset this on every keyDown so we know if the user had typed
 			// an alt-W or alt-shift-W before releasing alt.  it will get set
@@ -964,11 +960,11 @@ var App = React.createClass({
 
 			// keydown handling is managed in another module
 		return shortcuts.handleEvent(event, this);
-	},
+	};
 
 
-	onKeyUp: async function(
-		event)
+    onKeyUp = async (
+		event) =>
 	{
 		if (event.key == this.mruModifier) {
 			if (!this.gotModifierUp && this.gotMRUKey && this.state.selected > -1) {
@@ -999,10 +995,10 @@ var App = React.createClass({
 			this.gotModifierUp = true;
 			this.gotMRUKey = false;
 		}
-	},
+	};
 
 
-	onOptionsClick: async function()
+    onOptionsClick = async () =>
 	{
 		const url = chrome.extension.getURL("options.html");
 		const [tab] = await cp.tabs.query({ url });
@@ -1023,12 +1019,12 @@ var App = React.createClass({
 			// blur the popup.
 		this.closeWindow(k.IsMac, optionsTab);
 		this.props.tracker.event("extension", "open-options");
-	},
+	};
 
 
-	onMessage: async function({
+    onMessage = async ({
 		message,
-		...payload})
+		...payload}) =>
 	{
 		switch (message) {
 			case "modifySelected":
@@ -1057,7 +1053,7 @@ var App = React.createClass({
 					await this.focusTab(this.state.matchingItems[index]);
 					await this.showPopupWindow(null, "right-center");
 				} else {
-					this.modifySelected(direction, true);
+					await this.modifySelected(direction, true);
 				}
 				break;
 
@@ -1070,7 +1066,7 @@ var App = React.createClass({
 				break;
 
 			case "showWindow":
-				this.showWindow(payload);
+				await this.showWindow(payload);
 				break;
 
 			case "stopNavigatingRecents":
@@ -1082,10 +1078,10 @@ var App = React.createClass({
 				this.tabsPromise.then(() => this.setState({ selected: -1 }));
 				break;
 		}
-	},
+	};
 
 
-	onWindowBlur: async function()
+    onWindowBlur = async () =>
 	{
 		if (!this.ignoreNextBlur && !this.navigatingRecents) {
 				// only call this if we're losing focus because the user
@@ -1099,10 +1095,10 @@ var App = React.createClass({
 		}
 
 		this.ignoreNextBlur = false;
-	},
+	};
 
 
-	render: function()
+    render()
 	{
 		const {
 			query,
@@ -1143,7 +1139,4 @@ var App = React.createClass({
 			/>
 		</div>
 	}
-});
-
-
-export default App;
+}

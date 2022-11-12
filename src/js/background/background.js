@@ -1,10 +1,59 @@
+import cp from "cp";
+import popupWindow from "@/background/popup-window";
+import toolbarIcon from "@/background/toolbar-icon";
+import recentTabs from "@/background/recent-tabs";
+import trackers from "@/background/page-trackers";
+import storage from "@/background/quickey-storage";
+import settings from "@/background/settings";
+import * as k from "@/background/constants";
+
+
+	// if the popup is opened and closed within this time, switch to the
+	// previous tab
+const MaxPopupLifetime = 450;
+const TabRemovedDelay = 1000;
+const RestartDelay = 60 * 1000;
 const TabActivatedOnStartupDelay = 750;
+const {
+	OpenPopupCommand,
+	PreviousTabCommand,
+	NextTabCommand,
+	ToggleTabsCommand,
+	FocusPopupCommand
+} = k.CommandIDs;
+const tracker = trackers.background;
+const MessageHandlers = {
+		// bring the tab's window forward *before* focusing the tab, since
+		// activating the window can sometimes put keyboard focus on the
+		// very first tab button on macOS 10.14 (could never repro on
+		// 10.12).  then focus the tab, which should fix any focus issues.
+	focusTab: ({tab: {id, windowId}, options = {}}) =>
+		cp.windows.update(windowId, { focused: true })
+			.then(() => cp.tabs.update(id, { active: true, ...options }))
+			.catch(error => {
+				tracker.exception(error);
+				console.error(error);
+			}),
+	restoreSession: ({sessionID}) => cp.sessions.restore(sessionID),
+	createWindow: ({url}) => cp.windows.create({ url }),
+	createTab: ({url}) => cp.tabs.create({ url }),
+	setURL: ({tabID, url}) => cp.tabs.update(tabID, { url })
+};
 
 
-let gStartingUp = false;
-let gInstalledPromise = new Promise(resolve => {
+const ports = {};
+let startingUp = false;
+let installedPromise = new Promise(resolve => {
 	chrome.runtime.onInstalled.addListener(details => resolve(details));
 });
+let lastTogglePromise = Promise.resolve();
+let currentWindowLimitRecents = false;
+let navigateRecentsWithPopup = false;
+let navigatingRecents = false;
+let activeTab;
+let lastWindowID;
+let lastUsedVersion;
+let usePinyin;
 
 
 function debounce(
@@ -54,84 +103,25 @@ chrome.runtime.onStartup.addListener(() => {
 DEBUG && console.log("==== last onActivated");
 
 			// we only need to call updateAll() if Chrome is still starting up,
-			// since gStartingUp will be set to false when the popup opens,
+			// since startingUp will be set to false when the popup opens,
 			// which will also update all the tabs
-		if (gStartingUp) {
-//			require([
-//				"background/recent-tabs"
-//			], function(
-//				recentTabs
-//			) {
-					// the stored recent tab data will be out of date, since the tabs
-					// will get new IDs when the app reloads each one
-				return recentTabs.updateAll()
-					.then(() => {
+		if (startingUp) {
+				// the stored recent tab data will be out of date, since the tabs
+				// will get new IDs when the app reloads each one
+			return recentTabs.updateAll()
+				.then(() => {
 DEBUG && console.log("===== updateAll done");
 
-						gStartingUp = false;
-					});
-//			});
+					startingUp = false;
+				});
 		}
 	}, TabActivatedOnStartupDelay);
 
 DEBUG && console.log("== onStartup");
 
-	gStartingUp = true;
+	startingUp = true;
 	chrome.tabs.onActivated.addListener(onActivated);
 });
-
-
-import cp from "cp";
-import popupWindow from "@/background/popup-window";
-import toolbarIcon from "@/background/toolbar-icon";
-import recentTabs from "@/background/recent-tabs";
-import trackers from "@/background/page-trackers";
-import storage from "@/background/quickey-storage";
-import settings from "@/background/settings";
-import * as k from "@/background/constants";
-
-
-	// if the popup is opened and closed within this time, switch to the
-	// previous tab
-const MaxPopupLifetime = 450;
-const TabRemovedDelay = 1000;
-const RestartDelay = 60 * 1000;
-const {
-	OpenPopupCommand,
-	PreviousTabCommand,
-	NextTabCommand,
-	ToggleTabsCommand,
-	FocusPopupCommand
-} = k.CommandIDs;
-const MessageHandlers = {
-		// bring the tab's window forward *before* focusing the tab, since
-		// activating the window can sometimes put keyboard focus on the
-		// very first tab button on macOS 10.14 (could never repro on
-		// 10.12).  then focus the tab, which should fix any focus issues.
-	focusTab: ({tab: {id, windowId}, options = {}}) =>
-		cp.windows.update(windowId, { focused: true })
-			.then(() => cp.tabs.update(id, { active: true, ...options }))
-			.catch(error => {
-				backgroundTracker.exception(error);
-				console.error(error);
-			}),
-	restoreSession: ({sessionID}) => cp.sessions.restore(sessionID),
-	createWindow: ({url}) => cp.windows.create({ url }),
-	createTab: ({url}) => cp.tabs.create({ url }),
-	setURL: ({tabID, url}) => cp.tabs.update(tabID, { url })
-};
-
-
-const backgroundTracker = trackers.background;
-const ports = {};
-let lastTogglePromise = Promise.resolve();
-let currentWindowLimitRecents = false;
-let navigateRecentsWithPopup = false;
-let navigatingRecents = false;
-let activeTab;
-let lastWindowID;
-let lastUsedVersion;
-let usePinyin;
 
 
 const addTab = debounce(
@@ -145,7 +135,7 @@ const addTab = debounce(
 				// is debounced and will fire after the window is closed,
 				// the tab no longer exists at that point.
 			if (error && error.message && error.message.indexOf("No tab") != 0) {
-				backgroundTracker.exception(error);
+				tracker.exception(error);
 			}
 		}),
 	k.MinTabDwellTime
@@ -153,7 +143,7 @@ const addTab = debounce(
 
 
 const handleTabRemoved = debounce(
-	(tabId, removeInfo) => !gStartingUp && recentTabs.remove(tabId, removeInfo),
+	(tabId, removeInfo) => !startingUp && recentTabs.remove(tabId, removeInfo),
 	TabRemovedDelay
 );
 
@@ -302,7 +292,7 @@ async function navigateRecents(
 
 			// this will record an event if the user hits alt-S when they're
 			// not currently navigating, but probably not worth worrying about
-		backgroundTracker.event("recents", action, label);
+		tracker.event("recents", action, label);
 	}
 }
 
@@ -341,7 +331,7 @@ function toggleRecentTabs(
 			// putting that tab on the top of the stack, even though a
 			// different tab was now active.
 		.then(addTab.execute)
-		.then(() => backgroundTracker.event("recents",
+		.then(() => tracker.event("recents",
 			fromShortcut ? "toggle-shortcut" : "toggle"));
 }
 
@@ -349,7 +339,7 @@ function toggleRecentTabs(
 function onCommandListener(
 	command)
 {
-	if (!gStartingUp) {
+	if (!startingUp) {
 		handleCommand(command);
 	} else {
 			// as below in the onConnect handler, the user is interacting
@@ -358,7 +348,7 @@ function onCommandListener(
 			// handler didn't call updateAll(), we need to do that before
 			// handling the command.  otherwise, the stored tab IDs are likely
 			// to be out of sync with the reopened tabs and navigation will fail.
-		gStartingUp = false;
+		startingUp = false;
 		recentTabs.updateAll()
 			.then(() => handleCommand(command));
 	}
@@ -381,7 +371,7 @@ function disableCommands()
 
 
 chrome.tabs.onActivated.addListener(event => {
-	if (!gStartingUp) {
+	if (!startingUp) {
 		handleTabActivated(event);
 	}
 });
@@ -390,7 +380,7 @@ chrome.tabs.onActivated.addListener(event => {
 chrome.tabs.onCreated.addListener(tab => {
 	toolbarIcon.updateTabCount(1);
 
-	if (!gStartingUp && !tab.active && tab.windowId !== popupWindow.id) {
+	if (!startingUp && !tab.active && tab.windowId !== popupWindow.id) {
 			// this tab was opened by ctrl-clicking a link or by opening
 			// all the tabs in a bookmark folder, so pass true to insert
 			// this tab in the penultimate position, which makes it the
@@ -415,7 +405,7 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
 	// tabs seem to get replaced with new IDs when they're auto-discarded by
 	// Chrome, so we want to update any recency data for them
 chrome.tabs.onReplaced.addListener((newID, oldID) => {
-	if (!gStartingUp) {
+	if (!startingUp) {
 		recentTabs.replace(oldID, newID);
 	}
 });
@@ -427,7 +417,7 @@ chrome.windows.onFocusChanged.addListener(windowID => {
 		// check this event's windowID against the last one we saw and
 		// ignore the event if it's the same.  that happens when the popup
 		// opens and no tab is selected or the user's double-pressing.
-	if (!gStartingUp && windowID != chrome.windows.WINDOW_ID_NONE &&
+	if (!startingUp && windowID != chrome.windows.WINDOW_ID_NONE &&
 			windowID != lastWindowID) {
 		lastWindowID = windowID;
 		cp.tabs.query({ active: true, windowId: windowID })
@@ -448,9 +438,9 @@ chrome.runtime.onConnect.addListener(port => {
 
 		// in newer versions of Chrome, reopened tabs don't trigger an
 		// onActivated event, so the handler set in onStartup won't fire
-		// until the first tab is manually activated.  set gStartingUp to
+		// until the first tab is manually activated.  set startingUp to
 		// false here in case the user opens the menu before that happens.
-	gStartingUp = false;
+	startingUp = false;
 	ports[port.name] = port;
 
 	if (port.name == "menu") {
@@ -479,7 +469,7 @@ chrome.runtime.onConnect.addListener(port => {
 		} else {
 				// send a background "pageview", since the popup is now closed,
 				// so that GA will track the time the popup was open
-			backgroundTracker.pageview();
+			tracker.pageview();
 		}
 	});
 });
@@ -551,8 +541,7 @@ DEBUG && console.log("=== reloading");
 	}
 
 	try {
-		backgroundTracker.event("extension", "update-available",
-			details && details.version);
+		tracker.event("extension", "update-available", details?.version);
 	} catch (e) {
 DEBUG && console.log(e);
 	}
@@ -601,17 +590,17 @@ storage.set(data => {
 	};
 })
 	.then(() => {
-		backgroundTracker.pageview();
-		backgroundTracker.timing("loading", "background", performance.now());
+		tracker.pageview();
+		tracker.timing("loading", "background", performance.now());
 DEBUG && console.log("=== startup done", performance.now());
 	})
 		// pause the chain to wait for the installed promise to resolve,
 		// which it will never do if the event doesn't fire.  if it does,
 		// it should do so before we get here, but we use a promise just
 		// in case it doesn't for some reason.
-	.then(() => gInstalledPromise)
+	.then(() => installedPromise)
 	.then(({reason, previousVersion}) => {
-		backgroundTracker.event("extension", reason, previousVersion);
+		tracker.event("extension", reason, previousVersion);
 
 		if (reason == "update" && lastUsedVersion == "1.4.0" && usePinyin) {
 				// open the options page with an update message for people
@@ -621,9 +610,7 @@ DEBUG && console.log("=== startup done", performance.now());
 			chrome.tabs.create({
 				url: chrome.extension.getURL("options.html?pinyin")
 			});
-			backgroundTracker.event("extension", "open-options");
+			tracker.event("extension", "open-options");
 		}
 	})
-	.catch(error => backgroundTracker.exception(error));
-
-
+	.catch(error => tracker.exception(error));

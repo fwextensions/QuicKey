@@ -19,30 +19,27 @@ const ProsCons = ({
 	</div>
 );
 
-const PopupSection = React.createClass({
-	getInitialState: function()
-	{
-		return {
-			currentOption: this.props.settings[k.HidePopupBehavior.Key]
-		};
-	},
+
+export default class PopupSection extends React.Component {
+    state = {
+        currentOption: this.props.settings[k.HidePopupBehavior.Key]
+    };
 
 
-	handleMouseEnter: function(
-		event)
+    handleMouseEnter = (
+		event) =>
 	{
 		this.setState({ currentOption: event.currentTarget.id });
-	},
+	};
 
 
-	handleMouseLeave: function(
-		event)
+    handleMouseLeave = () =>
 	{
 		this.setState({ currentOption: this.props.settings[k.HidePopupBehavior.Key] });
-	},
+	};
 
 
-	renderShortcut: function(
+	renderShortcut(
 		shortcutID,
 		direction)
 	{
@@ -54,15 +51,13 @@ const PopupSection = React.createClass({
 		return shortcutString
 			? <Shortcut keys={shortcutString} title={shortcutName} />
 			: <em>{shortcutName}</em>;
-	},
+	}
 
 
-	renderOption: function([
+	renderOption = ([
 		id,
 		label,
-			// it would be better to use a default value here, but esprima
-			// and r.js can't handle it
-		disabled])
+		disabled = false]) =>
 	{
 		const className = this.state.currentOption == id
 			? "hide-popup current-popup-option"
@@ -80,10 +75,10 @@ const PopupSection = React.createClass({
 				onMouseLeave={this.handleMouseLeave}
 			/>
 		);
-	},
+	};
 
 
-	render: function()
+    render()
 	{
 		const {id, settings, lastSeenOptionsVersion, onChange} = this.props;
 		const {currentOption} = this.state;
@@ -162,7 +157,4 @@ const PopupSection = React.createClass({
 			</Section>
 		);
 	}
-});
-
-
-export default PopupSection;
+}
