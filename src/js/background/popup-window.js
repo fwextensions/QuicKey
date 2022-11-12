@@ -316,7 +316,7 @@ async function blur()
 async function close()
 {
 		// look for any open popup tabs.  there should only ever be one, but
-		// but at least one time, two got opened, so get them all to be safe.
+		// at least one time, two got opened, so get them all to be safe.
 	const openTabs = await cp.tabs.query({ url: `${PopupURL}*` });
 
 		// set the IDs to 0 before calling remove(), so that if someone

@@ -47,42 +47,34 @@ const KeyCodes = "AZ09".split("").reduce((result, char) => {
 }, {});
 
 
-const ShortcutPicker = React.createClass({
-	lastKeyDown: "",
+export default class ShortcutPicker extends React.Component {
+    static defaultProps = {
+        placeholder: "Type a shortcut",
+        validate: function(
+            key,
+            modifiers,
+            baseKey,
+            shortcut)
+        {
+            return {
+                isKeyAllowed: true,
+                isShortcutValid: !!baseKey
+            };
+        }
+    };
 
 
-	getDefaultProps: function()
-	{
-		return {
-			placeholder: "Type a shortcut",
-			validate: function(
-				key,
-				modifiers,
-				baseKey,
-				shortcut)
-			{
-				return {
-					isKeyAllowed: true,
-					isShortcutValid: !!baseKey
-				};
-			}
-		};
-	},
+    state = {
+        focused: false,
+        arePressedKeysValid: false,
+        pressedKeys: [],
+        errorKey: "",
+        errorMessage: ""
+    };
+    lastKeyDown = "";
 
 
-	getInitialState: function()
-	{
-		return {
-			focused: false,
-			arePressedKeysValid: false,
-			pressedKeys: [],
-			errorKey: "",
-			errorMessage: ""
-		};
-	},
-
-
-	componentWillReceiveProps: function(
+    UNSAFE_componentWillReceiveProps(
 		nextProps)
 	{
 			// when getting new props, such as when the shortcuts have been
@@ -93,10 +85,10 @@ const ShortcutPicker = React.createClass({
 			arePressedKeysValid: false,
 			pressedKeys: []
 		});
-	},
+	}
 
 
-	getKeysFromShortcut: function(
+	getKeysFromShortcut(
 		shortcut)
 	{
 		const keys = [];
@@ -108,19 +100,19 @@ const ShortcutPicker = React.createClass({
 		});
 
 		return keys;
-	},
+	}
 
 
-	getShortcutFromKeys: function(
+	getShortcutFromKeys(
 		keys)
 	{
 			// filter out any empty items in the pressed keys array
 		return keys.filter(key => key)
 			.join(ShortcutSeparator);
-	},
+	}
 
 
-	getKeyString: function(
+	getKeyString(
 		event)
 	{
 		const keyCode = event.keyCode;
@@ -132,10 +124,10 @@ const ShortcutPicker = React.createClass({
 		} else {
 			return ShiftedKeyAliases[keyCode] || ModifierAliases[key] || key;
 		}
-	},
+	}
 
 
-	getKeyOrder: function(
+	getKeyOrder(
 		key)
 	{
 		const order = KeyOrder[key];
@@ -145,18 +137,18 @@ const ShortcutPicker = React.createClass({
 		} else {
 			return order;
 		}
-	},
+	}
 
 
-	isValidKey: function(
+	isValidKey(
 		key)
 	{
 		return key.length == 1 || KeyOrder[key] > -1 ||
 			FunctionKeyPattern.test(key) || !!ValidSpecialKeys[key];
-	},
+	}
 
 
-	validateShortcut: function(
+	validateShortcut(
 		key,
 		pressedKeys)
 	{
@@ -166,25 +158,23 @@ const ShortcutPicker = React.createClass({
 		const shortcut = this.getShortcutFromKeys(pressedKeys);
 
 		return this.props.validate(key, modifiers, baseKey, shortcut);
-	},
+	}
 
 
-	handleDisplayRef: handleRef("display"),
+	handleDisplayRef = handleRef("display", this);
 
 
-	handleFocus: function(
-		event)
+    handleFocus = () =>
 	{
 		this.setState({
 			focused: true,
 			arePressedKeysValid: false,
 			pressedKeys: []
 		});
-	},
+	};
 
 
-	handleBlur: function(
-		event)
+    handleBlur = () =>
 	{
 			// we need to use an updater function because if we were just
 			// blurred by handleKeyDown(), then the arePressedKeysValid
@@ -197,11 +187,11 @@ const ShortcutPicker = React.createClass({
 			pressedKeys: state.arePressedKeysValid ? state.pressedKeys : []
 		}));
 		this.lastKeyDown = "";
-	},
+	};
 
 
-	handleKeyDown: function(
-		event)
+    handleKeyDown = (
+		event) =>
 	{
 		const props = this.props;
 		const key = this.getKeyString(event);
@@ -251,11 +241,11 @@ const ShortcutPicker = React.createClass({
 				}
 			}
 		}
-	},
+	};
 
 
-	handleKeyUp: function(
-		event)
+    handleKeyUp = (
+		event) =>
 	{
 		const key = this.getKeyString(event);
 		const keyIndex = this.state.pressedKeys.indexOf(key);
@@ -276,29 +266,28 @@ const ShortcutPicker = React.createClass({
 		}
 
 		this.lastKeyDown = "";
-	},
+	};
 
 
-	handleClearMouseDown: function(
-		event)
+    handleClearMouseDown = (
+		event) =>
 	{
 			// don't focus when the clear button is clicked
 		event.preventDefault();
-	},
+	};
 
 
-	handleClearClick: function(
-		event)
+    handleClearClick = () =>
 	{
 		this.props.onChange("", this.props.id);
 
 			// in case another picker is focused when the user clicks the
 			// clear button, blur that picker
 		document.activeElement && document.activeElement.blur();
-	},
+	};
 
 
-	render: function()
+    render()
 	{
 		const {focused, errorMessage, pressedKeys, arePressedKeysValid} = this.state;
 		const {disabled, id, placeholder} = this.props;
@@ -315,10 +304,10 @@ const ShortcutPicker = React.createClass({
 				className="shortcut-display"
 				ref={this.handleDisplayRef}
 				tabIndex={tabIndex}
-				onFocus={!disabled && this.handleFocus}
-				onBlur={!disabled && this.handleBlur}
-				onKeyDown={!disabled && this.handleKeyDown}
-				onKeyUp={!disabled && this.handleKeyUp}
+				onFocus={!disabled ? this.handleFocus : undefined}
+				onBlur={!disabled ? this.handleBlur : undefined}
+				onKeyDown={!disabled ? this.handleKeyDown : undefined}
+				onKeyUp={!disabled ? this.handleKeyUp : undefined}
 			>
 				<Shortcut keys={keys} />
 				{
@@ -345,7 +334,4 @@ const ShortcutPicker = React.createClass({
 			}
 		</div>
 	}
-});
-
-
-export default ShortcutPicker;
+}

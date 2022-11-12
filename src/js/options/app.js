@@ -19,37 +19,34 @@ const BrowserClassName = k.IsFirefox
 		: "chrome";
 
 
-const OptionsApp = React.createClass({
-	getInitialState: function()
-	{
-		return {
-			selectedSection: this.props.defaultSection
-		};
-	},
+export default class OptionsApp extends React.Component {
+    state = {
+        selectedSection: this.props.defaultSection
+    };
 
 
-	handleSectionClick: function(
-		section)
+    handleSectionClick = (
+		section) =>
 	{
 		this.setState({ selectedSection: section });
-	},
+	};
 
 
-	handleHelpButtonClick: function()
+    handleHelpButtonClick = () =>
 	{
 		chrome.tabs.create({ url: "https://fwextensions.github.io/QuicKey/" });
 		this.props.tracker.event("extension", "options-help");
-	},
+	};
 
 
-	handleSupportClick: function()
+    handleSupportClick = () =>
 	{
 		chrome.tabs.create({ url: "https://fwextensions.github.io/QuicKey/support/" });
 		this.props.tracker.event("extension", "options-support");
-	},
+	};
 
 
-	render: function()
+    render()
 	{
 		const {selectedSection} = this.state;
 		const {
@@ -148,7 +145,4 @@ const OptionsApp = React.createClass({
 			</div>
 		</main>
 	}
-});
-
-
-export default OptionsApp;
+}

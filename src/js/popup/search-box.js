@@ -18,11 +18,11 @@ function Placeholder({
 }
 
 
-var SearchBox = React.createClass({
-	searchBox: null,
+export default class SearchBox extends React.Component {
+    searchBox = null;
 
 
-	componentDidMount: function()
+    componentDidMount()
 	{
 		var queryLength = this.props.query.length;
 
@@ -30,28 +30,28 @@ var SearchBox = React.createClass({
 			// to the beginning of the input field, instead of at the end.
 			// so move it there after the field is created.
 		this.searchBox.setSelectionRange(queryLength, queryLength);
-	},
+	}
 
 
-	focus: function()
+	focus()
 	{
 		this.searchBox.focus();
-	},
+	}
 
 
-	handleRef: handleRef("searchBox"),
+	handleRef = handleRef("searchBox", this);
 
 
-	handleCancelButtonClick: function()
+    handleCancelButtonClick = () =>
 	{
 			// unlike the cancel button in Chrome, clicking the one in FF
 			// steals the focus, so set it back in the input
 		this.focus();
 		this.props.onChange({ target: { value: "" } });
-	},
+	};
 
 
-	render: function()
+    render()
 	{
 		const {
 			query,
@@ -100,7 +100,4 @@ var SearchBox = React.createClass({
 			}
 		</div>
 	}
-});
-
-
-export default SearchBox;
+}

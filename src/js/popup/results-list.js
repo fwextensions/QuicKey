@@ -11,13 +11,13 @@ const RowHeight = 45;
 const Width = IsFirefox ? 495 : 490;
 
 
-const ResultsList = React.createClass({
-	startIndex: 0,
-	stopIndex: 0,
-	list: null,
+export default class ResultsList extends React.Component {
+    startIndex = 0;
+    stopIndex = 0;
+    list = null;
 
 
-	scrollByPage: function(
+	scrollByPage(
 		direction)
 	{
 		const {items: {length: itemCount}, maxItems, setSelectedIndex} = this.props;
@@ -39,32 +39,32 @@ const ResultsList = React.createClass({
 		}
 
 		setSelectedIndex(selectedIndex);
-	},
+	}
 
 
-	scrollToRow: function(
+	scrollToRow(
 		index)
 	{
 		this.list.scrollToRow(index);
-	},
+	}
 
 
-	handleListRef: handleRef("list"),
+	handleListRef = handleRef("list", this);
 
 
-	onRowsRendered: function(
-		event)
+    onRowsRendered = (
+		event) =>
 	{
 			// track the visible rendered rows so we know how to change the
 			// selection when the App tells us to page up/down, since it
 			// doesn't know what's visible
 		this.startIndex = event.startIndex;
 		this.stopIndex = event.stopIndex;
-	},
+	};
 
 
-	rowRenderer: function(
-		data)
+    rowRenderer = (
+		data) =>
 	{
 		const {props} = this;
 		const {itemComponent, selectedIndex} = props;
@@ -79,10 +79,10 @@ const ResultsList = React.createClass({
 			style={data.style}
 			{...props}
 		/>
-	},
+	};
 
 
-	render: function()
+    render()
 	{
 		const {props} = this;
 		const {items: {length: itemCount}, maxItems, selectedIndex} = props;
@@ -107,7 +107,4 @@ const ResultsList = React.createClass({
 			/>
 		</div>
 	}
-});
-
-
-export default ResultsList;
+}

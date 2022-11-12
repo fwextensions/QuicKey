@@ -7,24 +7,24 @@ import ShortcutPicker from "./shortcut-picker";
 import * as k from "@/background/constants";
 
 
-const ShortcutSection = React.createClass({
-	handleChangeShortcutsClick: function()
+export default class ShortcutSection extends React.Component {
+    handleChangeShortcutsClick = () =>
 	{
 		chrome.tabs.create({ url: "chrome://extensions/shortcuts" });
 		this.props.tracker.event("extension", "options-shortcuts");
-	},
+	};
 
 
-	handleCtrlTabClick: function()
+    handleCtrlTabClick = () =>
 	{
 		chrome.tabs.create({ url: "https://fwextensions.github.io/QuicKey/ctrl-tab/" });
 		this.props.tracker.event("extension", "options-ctrl-tab");
-	},
+	};
 
 
-	renderShortcutSetting: function(
+    renderShortcutSetting = (
 		shortcut,
-		i)
+		i) =>
 	{
 		const {settings} = this.props;
 		let label = shortcut.label;
@@ -57,19 +57,19 @@ const ShortcutSection = React.createClass({
 				onChange={this.props.onChange}
 			/>
 		</li>
-	},
+	};
 
 
-	renderShortcutList: function(
-		shortcuts)
+    renderShortcutList = (
+		shortcuts) =>
 	{
 		return <ul>
 			{shortcuts.map(this.renderShortcutSetting, this)}
 		</ul>
-	},
+	};
 
 
-	render: function()
+    render()
 	{
 		const {
 			id,
@@ -176,7 +176,4 @@ const ShortcutSection = React.createClass({
 			</Section>
 		);
 	}
-});
-
-
-export default ShortcutSection;
+}

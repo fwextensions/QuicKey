@@ -1,9 +1,10 @@
 export default function handleRef(
-		refName)
+	refName,
+	self)
+{
+	return function(
+		ref)
 	{
-		return function(
-			ref)
-		{
-			this[refName] = ref;
-		};
+		self[refName] = ref;
 	};
+};

@@ -1,9 +1,6 @@
 import React from "react";
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import OptionsAppContainer from "./app-container";
 
-
-ReactDOM.render(
-	React.createElement(OptionsAppContainer),
-	document.getElementById("root")
-);
+createRoot(document.getElementById("root"))
+	.render(React.createElement(OptionsAppContainer));
