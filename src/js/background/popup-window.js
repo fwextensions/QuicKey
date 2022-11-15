@@ -64,7 +64,7 @@ function getAlignedPosition(
 	size,
 	start,
 	availableSpace,
-	padding)
+	padding = 0)
 {
 	switch (alignment) {
 		case "left":
@@ -85,13 +85,29 @@ function calcPosition(
 	targetWindow,
 	alignment = "center-center")
 {
-	const {left: targetX, top: targetY, width: targetW, height: targetH} =
-		targetWindow || getScreen();
 	const width = PopupInnerWidth + popupAdjustmentWidth;
 	const height = PopupInnerHeight + popupAdjustmentHeight;
 	const [horizontal, vertical] = alignment.split("-");
-	const left = getAlignedPosition(horizontal, width, targetX, targetW, PopupPadding);
-	const top = getAlignedPosition(vertical, height, targetY, targetH, PopupPadding);
+	const screen = getScreen();
+	const {left: targetX, top: targetY, width: targetW, height: targetH} =
+		targetWindow || screen;
+		// Chrome will throw an error if the popup is more than 50% off-screen,
+		// which can happen if the target window has been dragged mostly off-
+		// screen.  so clamp the top/left to keep it fully on-screen, with padding.
+	const left = Math.max(
+		PopupPadding,
+		Math.min(
+			getAlignedPosition(horizontal, width, targetX, targetW, PopupPadding),
+			screen.width - width - PopupPadding
+		)
+	);
+	const top = Math.max(
+		PopupPadding,
+		Math.min(
+			getAlignedPosition(vertical, height, targetY, targetH, PopupPadding),
+			screen.height - height - PopupPadding
+		)
+	);
 
 	return { left, top, width, height };
 }
@@ -286,6 +302,8 @@ async function hide(
 		} else if (hideBehavior == Minimize) {
 			options.state = "minimized";
 		}
+
+DEBUG && (!Number.isInteger(options.left) || !Number.isInteger(options.top)) && console.error("==== bad popup options", options);
 
 		try {
 			await cp.windows.update(windowID, options);

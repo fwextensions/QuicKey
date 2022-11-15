@@ -14,8 +14,6 @@ import _ from "lodash";
 
 const MaxTitleLength = 70;
 const MaxURLLength = 75;
-const MinRenderDelay = 40;
-const MinMouseMoveCount = 2;
 const SuspendedFaviconOpacity = .5;
 const FaviconURL = "chrome://favicon/";
 const CloseButtonTooltips = {
@@ -28,10 +26,6 @@ const IncognitoTooltip = `This tab is in ${IncognitoNameLC} mode`;
 
 
 export default class ResultsListItem extends React.Component {
-    lastRenderTime = 0;
-    mouseMoveCount = 0;
-
-
     onClick = (
 		event) =>
 	{
@@ -49,22 +43,22 @@ export default class ResultsListItem extends React.Component {
 			].join("\n"));
 		} else {
 				// pass in whether ctrl or cmd was pressed while clicking
-			this.props.onItemClicked(item, shiftKey, event[ModKeyBoolean]);
+			this.props.openItem(item, shiftKey, event[ModKeyBoolean]);
 		}
 	};
 
 
-    onClose = (
+    handleClose = (
 		event) =>
 	{
 			// stop the click from bubbling so the tab doesn't get focused
 			// just before it's closed
 		event.stopPropagation();
-		this.props.onTabClosed(this.props.item);
+		this.props.closeTab(this.props.item);
 	};
 
 
-    onCloseMouseDown = (
+    handleCloseMouseDown = (
 		event) =>
 	{
 			// prevent the click from stealing focus from the search box
@@ -72,32 +66,9 @@ export default class ResultsListItem extends React.Component {
 	};
 
 
-    onMouseMove = () =>
+    handleMouseMove = () =>
 	{
-		const {index, isSelected, setSelectedIndex} = this.props;
-
-		if (!isSelected &&
-				(Date.now() - this.lastRenderTime > MinRenderDelay) &&
-				this.mouseMoveCount > MinMouseMoveCount) {
-				// we only want to listen to mouse moves if we're not already
-				// selected and the event didn't come immediately after a
-				// render.  if the event immediately follows a render, it
-				// probably means the item was rendered underneath the mouse,
-				// and not that the user is moving the mouse to select this
-				// item.  this avoids selecting an item when the popup is
-				// opened under the mouse or the user is scrolling via the
-				// keyboard and the mouse is over the list.  unfortunately,
-				// we *also* have to track the number of mouse moves, as it
-				// seems like 1 - 2 can get generated on the item under the
-				// mouse on a high DPI screen within the MinRenderDelay time.
-				// pass true so the app treats a mouse selection like one
-				// made by the MRU key, so that the user can press the menu
-				// shortcut, highlight a tab with the mouse, and then
-				// release alt to select it.
-			setSelectedIndex(index, true);
-		} else {
-			this.mouseMoveCount++;
-		}
+		this.props.onHover(this.props.index);
 	};
 
 
@@ -175,14 +146,11 @@ export default class ResultsListItem extends React.Component {
 			badgeTooltip = "This tab was closed recently";
 		}
 
-		this.lastRenderTime = Date.now();
-		this.mouseMoveCount = 0;
-
 		return <div className={className}
 			style={style}
 			title={tooltip}
 			onClick={this.onClick}
-			onMouseMove={this.onMouseMove}
+			onMouseMove={this.handleMouseMove}
 		>
 			<div className="favicon"
 				style={faviconStyle}
@@ -214,8 +182,8 @@ export default class ResultsListItem extends React.Component {
 			</div>
 			<button className="close-button"
 				title={CloseButtonTooltips[sessionId ? "closedTab" : mode]}
-				onClick={this.onClose}
-				onMouseDown={this.onCloseMouseDown}
+				onClick={this.handleClose}
+				onMouseDown={this.handleCloseMouseDown}
 			>
 				<ClearIcon />
 			</button>

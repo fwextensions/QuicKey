@@ -62,7 +62,7 @@ function sortHistoryItems(
 
 
 export default class App extends React.Component {
-    visible = true;
+    visible = false;
     mode = "tabs";
     tabsPromise = null;
     bookmarksPromise = null;
@@ -201,6 +201,7 @@ export default class App extends React.Component {
 		});
 
 		this.props.port.onMessage.addListener(this.onMessage);
+		this.visible = true;
 
 			// annoyingly, there seems to be a bug in Chrome where the
 			// closed tab is still around when the callback passed to
@@ -1134,8 +1135,8 @@ export default class App extends React.Component {
 				visible={this.visible}
 				selectedIndex={selected}
 				setSelectedIndex={this.setSelectedIndex}
-				onItemClicked={this.openItem}
-				onTabClosed={this.closeTab}
+				openItem={this.openItem}
+				closeTab={this.closeTab}
 			/>
 		</div>
 	}
