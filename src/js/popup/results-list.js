@@ -9,12 +9,32 @@ const RowHeight = 45;
 	// area, instead on the outside.  so make the virtual list go right to
 	// the edge of the popup, so the scrollbar doesn't cover the content.
 const Width = IsFirefox ? 495 : 490;
+const MinShownTime = 200;
 
 
 export default class ResultsList extends React.Component {
     startIndex = 0;
     stopIndex = 0;
     list = null;
+	renderTimer = null;
+	hoverSelectEnabled = false;
+
+
+	componentDidUpdate(
+		prevProps)
+	{
+		if (!prevProps.visible && this.props.visible) {
+			this.hoverSelectEnabled = false;
+			this.renderTimer = setTimeout(
+				() => { this.hoverSelectEnabled = true; this.renderTimer = null; },
+				MinShownTime
+			);
+		} else if (!this.props.visible && this.renderTimer) {
+			clearTimeout(this.renderTimer);
+			this.hoverSelectEnabled = false;
+			this.renderTimer = null;
+		}
+	}
 
 
 	scrollByPage(
@@ -49,10 +69,23 @@ export default class ResultsList extends React.Component {
 	}
 
 
+	handleItemHovered = (
+		index) =>
+	{
+		if (this.hoverSelectEnabled) {
+				// pass true so the app treats a mouse selection like one
+				// made by the MRU key, so that the user can press the menu
+				// shortcut, highlight a tab with the mouse, and then
+				// release alt to select it
+			this.props.setSelectedIndex(index, true);
+		}
+	};
+
+
 	handleListRef = handleRef("list", this);
 
 
-    onRowsRendered = (
+    handleRowsRendered = (
 		event) =>
 	{
 			// track the visible rendered rows so we know how to change the
@@ -67,7 +100,7 @@ export default class ResultsList extends React.Component {
 		data) =>
 	{
 		const {props} = this;
-		const {itemComponent, selectedIndex} = props;
+		const {itemComponent, selectedIndex, openItem, closeTab} = props;
 		const item = props.items[data.index];
 		const ItemComponent = item.component || itemComponent;
 
@@ -76,8 +109,10 @@ export default class ResultsList extends React.Component {
 			item={item}
 			index={data.index}
 			isSelected={selectedIndex == data.index}
+			openItem={openItem}
+			closeTab={closeTab}
+			onHover={this.handleItemHovered}
 			style={data.style}
-			{...props}
 		/>
 	};
 
@@ -102,8 +137,7 @@ export default class ResultsList extends React.Component {
 				rowHeight={RowHeight}
 				rowRenderer={this.rowRenderer}
 				scrollToIndex={selectedIndex}
-				onRowsRendered={this.onRowsRendered}
-				{...props}
+				onRowsRendered={this.handleRowsRendered}
 			/>
 		</div>
 	}
