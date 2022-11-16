@@ -23,13 +23,20 @@ export default class ResultsList extends React.Component {
 	componentDidUpdate(
 		prevProps)
 	{
+		if (prevProps.items !== this.props.items) {
+				// the virtual list doesn't know when the items have changed,
+				// so force it to update when they do
+			this.list.forceUpdateGrid();
+		}
+
 		if (!prevProps.visible && this.props.visible) {
 			this.hoverSelectEnabled = false;
 			this.renderTimer = setTimeout(
 				() => { this.hoverSelectEnabled = true; this.renderTimer = null; },
 				MinShownTime
 			);
-		} else if (!this.props.visible && this.renderTimer) {
+		} else if (prevProps.visible && !this.props.visible) {
+				// make sure the timer is cleared when the popup is hidden
 			clearTimeout(this.renderTimer);
 			this.hoverSelectEnabled = false;
 			this.renderTimer = null;
@@ -99,15 +106,24 @@ export default class ResultsList extends React.Component {
     rowRenderer = (
 		data) =>
 	{
-		const {props} = this;
-		const {itemComponent, selectedIndex, openItem, closeTab} = props;
-		const item = props.items[data.index];
+		const {
+			itemComponent,
+			items,
+			query,
+			mode,
+			selectedIndex,
+			openItem,
+			closeTab
+		} = this.props;
+		const item = items[data.index];
 		const ItemComponent = item.component || itemComponent;
 
 		return <ItemComponent
 			key={data.key}
 			item={item}
 			index={data.index}
+			query={query}
+			mode={mode}
 			isSelected={selectedIndex == data.index}
 			openItem={openItem}
 			closeTab={closeTab}
@@ -119,8 +135,7 @@ export default class ResultsList extends React.Component {
 
     render()
 	{
-		const {props} = this;
-		const {items: {length: itemCount}, maxItems, selectedIndex} = props;
+		const {items: {length: itemCount}, maxItems, selectedIndex} = this.props;
 		const height = Math.min(itemCount, maxItems) * RowHeight;
 		const style = { display: height ? "block" : "none" };
 
