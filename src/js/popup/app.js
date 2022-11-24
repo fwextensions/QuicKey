@@ -90,6 +90,7 @@ export default class App extends React.Component {
         const query = props.initialQuery;
 
         this.openedForSearch = props.focusSearch;
+		this.navigatingRecents = props.navigatingRecents;
 		this.tabs = [];
 		this.bookmarks = [];
 		this.history = [];
@@ -123,7 +124,7 @@ export default class App extends React.Component {
 			matchingItems: [],
 				// default to the first item being selected if we got an
 				// initial query or if the popup was opened in nav mode
-			selected: (query || !this.openedForSearch) ? 0 : -1,
+			selected: (query || !this.openedForSearch || this.navigatingRecents) ? 0 : -1,
 			newSettingsAvailable: false
 		};
     }
@@ -150,6 +151,19 @@ export default class App extends React.Component {
 				});
 
 				this.props.tracker.set("metric1", tabs.length);
+
+				if (this.navigatingRecents) {
+						// since the popup has just been opened and we're navigating
+						// recents, simulate getting a message from the background
+						// telling us to move the selection to the next tab and
+						// focus it, since the timing on getting a real message
+						// from the background after opening is tricky
+					return this.onMessage({
+						message: "modifySelected",
+						openPopup: true,
+						direction: 1
+					});
+				}
 			});
 
 		if (this.props.isPopup) {
@@ -231,7 +245,7 @@ export default class App extends React.Component {
 		if (!this[promiseName] || reload) {
 				// store the promise so we only load the items once
 			this[promiseName] = loader().then(items => {
-					// score the the items so the expected keys are added
+					// score the items so the expected keys are added
 					// to each one, and then update the results list with
 					// matches on the current query
 				this[itemName] = scoreItems(items, "");
@@ -358,7 +372,7 @@ export default class App extends React.Component {
 		this.setState({
 			query,
 			matchingItems: this.getMatchingItems(query),
-			selected: (query || (this.props.isPopup && !this.openedForSearch))
+			selected: (query || (this.props.isPopup && (!this.openedForSearch || this.navigatingRecents)))
 				? 0
 				: -1
 		});
@@ -694,23 +708,26 @@ export default class App extends React.Component {
 		index,
 		mruKey) =>
 	{
-		var length = this.state.matchingItems.length;
-
-		if (mruKey) {
-				// let the selected value go to -1 when using the MRU key to
-				// navigate up, and don't wrap at the end of the list
-			index = Math.min(Math.max(-1, index), length - 1);
-			this.gotModifierUp = false;
-			this.gotMRUKey = true;
-		} else {
-				// wrap around the end or beginning of the list
-			index = (index + length) % length;
-		}
-
 			// return the new selected state in a promise, so the caller can
 			// await the state change and re-render
-		return new Promise(resolve => this.setState({ selected: index },
-			() => resolve(this.state.selected)));
+		return new Promise(resolve => {
+				// get the current state before calculating the index so we have
+				// the latest items count
+			this.setState(({matchingItems: {length}}) => {
+				if (mruKey) {
+						// let the selected value go to -1 when using the MRU key to
+						// navigate up, and don't wrap at the end of the list
+					index = Math.min(Math.max(-1, index), length - 1);
+					this.gotModifierUp = false;
+					this.gotMRUKey = true;
+				} else {
+						// wrap around the end or beginning of the list
+					index = (index + length) % length;
+				}
+
+				return { selected: index };
+			}, () => resolve(this.state.selected));
+		});
 	};
 
 

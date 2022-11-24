@@ -10,6 +10,7 @@ const platform = /Mac/i.test(navigator.platform) ? "mac" : "win";
 const now = performance.now();
 const tracker = trackers.popup;
 const params = new URLSearchParams(location.search);
+const props = { ...JSON.parse(params.get("props")) };
 
 if (gClose) {
 		// the user hit esc before we started loading, so just close the
@@ -49,9 +50,9 @@ function renderApp()
 			initialShortcuts,
 			platform,
 			tracker,
-			isPopup: params.has("focusSearch"),
-			focusSearch: params.get("focusSearch") == "true",
-			port: gPort
+			isPopup: params.has("props"),
+			port: gPort,
+			...props,
 		})
 	);
 }
