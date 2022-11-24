@@ -227,12 +227,15 @@ async function openPopupWindow(
 		active: true,
 		lastFocusedWindow: true
 	});
-	navigatingRecents = false;
 
 	if (!popupWindow.isOpen || !ports.popup) {
-			// the popup window isn't open, so create a new one, with the
-			// search box either focused or not
-		popupWindow.create(activeTab, focusSearch);
+			// the popup window isn't open, so create a new one.  tell it whether
+			// to focus the search box or navigate recents.
+		await popupWindow.create(
+			activeTab,
+			{ focusSearch, navigatingRecents },
+			navigatingRecents ? "right-center" : "center-center"
+		);
 	} else if (!activeTab || activeTab.windowId !== popupWindow.id) {
 			// the popup window is open but not focused, so tell it to show
 			// itself centered on the current browser window, and whether to
@@ -246,7 +249,7 @@ async function openPopupWindow(
 		if (sendPopupMessage("modifySelected", { direction: 1 })) {
 				// an error was returned from sending the message, so close
 				// the popup
-			popupWindow.close();
+			await popupWindow.close();
 		}
 	}
 }
@@ -270,18 +273,29 @@ async function navigateRecents(
 		});
 	} else {
 		if (navigateRecentsWithPopup) {
-			if (!popupWindow.isOpen || !ports.popup) {
-					// execute any pending tab activation event so the recents
-					// list is up-to-date before we start navigating
-				await addTab.execute();
-				await openPopupWindow();
-			}
+				// when navigating with recents, we want to ignore the "next"
+				// direction if the window isn't currently visible, since that
+				// would just mean navigating to the currently active tab
+			if (direction == -1 || popupWindow.isVisible) {
+				navigatingRecents = true;
 
-			navigatingRecents = true;
-			sendPopupMessage("modifySelected", {
-				direction: -direction,
-				openPopup: true
-			});
+				if (!popupWindow.isOpen || !ports.popup) {
+						// execute any pending tab activation event so the recents
+						// list is up-to-date before we start navigating
+					await addTab.execute();
+
+						// since the popup isn't currently open, we rely on it
+						// to detect that it's being opened to navigate recents
+						// and then change the selection instead of sending it
+						// the modifySelected message below
+					await openPopupWindow();
+				} else {
+					sendPopupMessage("modifySelected", {
+						direction: -direction,
+						openPopup: true
+					});
+				}
+			}
 		} else if (direction == -1 || !toolbarIcon.isNormal) {
 				// we only want to invert the icon and start navigating if
 				// the user is going backwards or is going forwards before

@@ -79,7 +79,7 @@ export default class ResultsList extends React.Component {
 	handleItemHovered = (
 		index) =>
 	{
-		if (this.hoverSelectEnabled) {
+		if (this.hoverSelectEnabled && index !== this.props.selectedIndex) {
 				// pass true so the app treats a mouse selection like one
 				// made by the MRU key, so that the user can press the menu
 				// shortcut, highlight a tab with the mouse, and then

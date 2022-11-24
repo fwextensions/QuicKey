@@ -115,19 +115,23 @@ function calcPosition(
 
 async function create(
 	activeTab,
-	focusSearch,
+	props = {},
 	alignment)
 {
 		// close any existing window, in case one was still open
 	await close();
 
+	const propsJSON = JSON.stringify(props);
 		// get the full URL with the extension ID in it so that we can
 		// delete it from the history below, which requires an exact match
-	const url = `${PopupURL}?${new URLSearchParams({ focusSearch })}`;
+	const url = `${PopupURL}?${new URLSearchParams({ props: propsJSON })}`;
 		// we won't have an activeTab if the user is opening the popup with
 		// a devtools window in the foreground
 	const targetWindow = activeTab && await cp.windows.get(activeTab.windowId);
-	let {left, top, width, height} = calcPosition(targetWindow, alignment);
+	let {left, top, width, height} = calcPosition(
+			props.navigatingRecents ? null : targetWindow,
+			alignment
+		);
 	let window;
 
 	if (hideBehavior !== Tab) {
