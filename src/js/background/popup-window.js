@@ -307,7 +307,7 @@ async function hide(
 			options.state = "minimized";
 		}
 
-DEBUG && (!Number.isInteger(options.left) || !Number.isInteger(options.top)) && console.error("==== bad popup options", options);
+//DEBUG && (!Number.isInteger(options.left) || !Number.isInteger(options.top)) && console.error("==== bad popup options", options);
 
 		try {
 			await cp.windows.update(windowID, options);

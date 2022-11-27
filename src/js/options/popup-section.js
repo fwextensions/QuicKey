@@ -3,6 +3,7 @@ import {Checkbox, RadioButton, RadioGroup} from "./controls";
 import {Section} from "./sections";
 import NewSetting from "./new-setting";
 import Shortcut from "./shortcut";
+import NavigateRecents from "./demo/NavigateRecents";
 import * as k from "@/background/constants";
 
 
@@ -110,6 +111,8 @@ export default class PopupSection extends React.Component {
 						onChange={onChange}
 					/>
 				</NewSetting>
+
+				<NavigateRecents />
 
 
 				<h2>Hide popup window</h2>
