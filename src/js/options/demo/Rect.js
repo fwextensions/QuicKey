@@ -7,7 +7,8 @@ export function Rect({
 	left,
 	top,
 	className,
-	children
+	children,
+	...props
 })
 {
 	const scaled = useScaled();
@@ -32,6 +33,7 @@ export function Rect({
 		<div
 			className={className}
 			style={style}
+			{...props}
 		>
 			{children}
 		</div>

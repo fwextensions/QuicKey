@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { styled } from "goober";
 import { calcPosition } from "@/background/popup-utils";
 import { DemoContext } from "@/options/demo/DemoContext";
@@ -14,9 +14,9 @@ const Screen = styled(Rect)`
 
 export function DemoRoot({
 	width,
-	height
-})
+	height })
 {
+	const [activeTab, setActiveTab] = useState(0);
 	const { width: screenW, height: screenH } = window.screen;
 	const { left, top, width: popupW, height: popupH } = calcPosition(null, { alignment: "right-center" });
 	let scale = .1;
@@ -32,8 +32,12 @@ export function DemoRoot({
 			<Screen
 				width={screenW}
 				height={screenH}
+				onClick={() => setActiveTab((activeTab + 1) % 8)}
 			>
-				<Browser />
+				<Browser
+					tabCount={8}
+					activeTab={activeTab}
+				/>
 				<Window
 					width={popupW}
 					height={popupH}
