@@ -1,5 +1,5 @@
 import React from "react";
-import { createRoot } from "react-dom/client";
+import {createRoot} from "react-dom/client";
 import {setup} from "goober";
 import OptionsAppContainer from "./app-container";
 

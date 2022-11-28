@@ -30,6 +30,10 @@ export const IncognitoPermission = IsFirefox
 	: `Allow in ${IncognitoNameLC}`;
 export const MinTabDwellTime = 1250;
 export const PopupURL = chrome.runtime.getURL("popup.html");
+export const PopupInnerWidth = 500;
+export const PopupInnerHeight = 488;
+export const PopupPadding = 50;
+export const ResultsListRowHeight = 45;
 export const CommandIDs = {
 	OpenPopupCommand: "010-open-popup-window",
 	FocusPopupCommand: "020-focus-search",

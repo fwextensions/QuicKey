@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import {styled} from "goober";
+import { styled } from "goober";
 import cp from "cp";
+import { calcPosition } from "@/background/popup-utils";
 
 const DemoContext = createContext();
 
@@ -17,10 +18,9 @@ function Rect({
 	left,
 	top,
 	className,
-	children})
+	children })
 {
 	const scaled = useScaled();
-
 	const style = {
 		width: scaled(width),
 		height: scaled(height),
@@ -54,6 +54,7 @@ const Screen = styled(Rect)`
 	margin: 2em auto 0;
 `;
 const Window = styled(Rect)`
+	background: white;
 	border: 1px solid #ddd;
 	border-radius: 4px;
 	box-shadow: 0 2px 6px rgba(0, 0, 0, .1);
@@ -66,10 +67,11 @@ const TabBar = styled.div`
 
 function DemoRoot({
 	width,
-	height})
+	height })
 {
 	const [browserWindow, setBrowserWindow] = useState(null);
-	const {width: screenW, height: screenH} = window.screen;
+	const { width: screenW, height: screenH } = window.screen;
+	const { left, top, width: popupW, height: popupH } = calcPosition(null, { alignment: "right-center" });
 	let scale = .1;
 
 	if (Number.isFinite(width)) {
@@ -102,6 +104,12 @@ function DemoRoot({
 						<TabBar />
 					</Window>
 				}
+				<Window
+					width={popupW}
+					height={popupH}
+					left={left}
+					top={top}
+				/>
 			</Screen>
 		</DemoContext.Provider>
 	);
@@ -109,8 +117,10 @@ function DemoRoot({
 
 export default function NavigateRecents({
 	width = 250,
-	height})
+	height })
 {
+// TODO: move browserWindow into here?
+
 	return (
 		<DemoRoot
 			width={width}
