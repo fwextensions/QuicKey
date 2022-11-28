@@ -1,8 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { styled } from "goober";
-import cp from "cp";
 import { rndGradient } from "./utils";
 import { Window } from "./Window";
+
+function getWindowBounds()
+{
+	const { outerWidth: width, outerHeight: height, screenLeft: left, screenTop: top } = window;
+
+	return { width, height, left, top };
+}
 
 const BrowserWindow = styled(Window)`
 	background: ${({ bg }) => bg};
@@ -62,32 +68,33 @@ export default function Browser({
 	tabCount = 8,
 	activeTab = 3 })
 {
-	const [browserWindow, setBrowserWindow] = useState(null);
+	const [bounds, setBounds] = useState(getWindowBounds());
 	const [tabs, setTabs] = useState(createTabs(tabCount));
 
 	useEffect(() => {
-		(async () => {
-			const win = await cp.windows.getCurrent();
+		const interval = setInterval(() => {
+			setBounds(getWindowBounds());
+		}, 1000);
 
-			setBrowserWindow(win);
-		})();
+		return (() => clearInterval(interval));
 	}, []);
 
 	useEffect(() => {
 		setTabs(createTabs(tabCount, tabs));
 	}, [tabCount]);
 
-	return browserWindow &&
+	return (
 		<BrowserWindow
-			width={browserWindow.width}
-			height={browserWindow.height}
-			left={browserWindow.left}
-			top={browserWindow.top}
+			width={bounds.width}
+			height={bounds.height}
+			left={bounds.left}
+			top={bounds.top}
 			bg={tabs[activeTab]}
 		>
 			<TabBar
 				tabCount={tabCount}
 				activeTab={activeTab}
 			/>
-		</BrowserWindow>;
+		</BrowserWindow>
+	);
 }

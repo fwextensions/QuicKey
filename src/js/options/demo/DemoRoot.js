@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { styled } from "goober";
 import { calcPosition } from "@/background/popup-utils";
-import { DemoContext } from "@/options/demo/DemoContext";
-import { Window } from "@/options/demo/Window";
-import { Rect } from "@/options/demo/Rect";
-import Browser from "@/options/demo/Browser";
+import { DemoContext } from "./DemoContext";
+import { Window } from "./Window";
+import { Rect } from "./Rect";
+import Browser from "./Browser";
 
 const Screen = styled(Rect)`
 	background: white;
