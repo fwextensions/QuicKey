@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { styled } from "goober";
 import cp from "cp";
 import { calcPosition } from "@/background/popup-utils";
+import { rndGradient } from "@/options/demo/utils";
 
 const DemoContext = createContext();
 
@@ -59,10 +60,15 @@ const Window = styled(Rect)`
 	border-radius: 4px;
 	box-shadow: 0 2px 6px rgba(0, 0, 0, .1);
 `;
+const Browser = styled(Window)`
+	background: ${rndGradient()};
+`;
 const TabBar = styled.div`
 	width: 100%;
-	height: 6px;
+	height: 5px;
+	border-bottom: 4px solid white;
 	background: #e8eaed;
+	box-sizing: content-box;
 `;
 
 function DemoRoot({
@@ -95,14 +101,14 @@ function DemoRoot({
 				height={screenH}
 			>
 				{browserWindow &&
-					<Window
+					<Browser
 						width={browserWindow.width}
 						height={browserWindow.height}
 						left={browserWindow.left}
 						top={browserWindow.top}
 					>
 						<TabBar />
-					</Window>
+					</Browser>
 				}
 				<Window
 					width={popupW}
