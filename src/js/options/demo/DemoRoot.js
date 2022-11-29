@@ -1,10 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import { styled } from "goober";
-import { calcPosition } from "@/background/popup-utils";
 import { DemoContext } from "./DemoContext";
-import { Window } from "./Window";
 import { Rect } from "./Rect";
-import Browser from "./Browser";
 
 const Screen = styled(Rect)`
 	background: white;
@@ -14,11 +11,10 @@ const Screen = styled(Rect)`
 
 export function DemoRoot({
 	width,
-	height })
+	height,
+	children })
 {
-	const [activeTab, setActiveTab] = useState(3);
 	const { width: screenW, height: screenH } = window.screen;
-	const { left, top, width: popupW, height: popupH } = calcPosition(null, { alignment: "right-center" });
 	let scale = .1;
 
 	if (Number.isFinite(width)) {
@@ -32,18 +28,8 @@ export function DemoRoot({
 			<Screen
 				width={screenW}
 				height={screenH}
-				onClick={() => setActiveTab((activeTab + 1) % 8)}
 			>
-				<Browser
-					tabCount={8}
-					activeTab={activeTab}
-				/>
-				<Window
-					width={popupW}
-					height={popupH}
-					left={left}
-					top={top}
-				/>
+				{children}
 			</Screen>
 		</DemoContext.Provider>
 	);

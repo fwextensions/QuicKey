@@ -93,7 +93,8 @@ function TabBar({
 
 export default function Browser({
 	tabCount = 8,
-	activeTab = 3 })
+	activeTab = 3,
+	...props })
 {
 	const [bounds, setBounds] = useState(getWindowBounds());
 	const [tabs, setTabs] = useState(createTabs(tabCount));
@@ -117,6 +118,7 @@ export default function Browser({
 			left={bounds.left}
 			top={bounds.top}
 			bg={tabs[activeTab]}
+			{...props}
 		>
 			<TabBar
 				tabCount={tabCount}

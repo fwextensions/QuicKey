@@ -37,7 +37,7 @@ export function calcPosition(
 		alignment = "center-center",
 		popupAdjustmentWidth = 0,
 		popupAdjustmentHeight = 0
-	})
+	} = {})
 {
 	const width = PopupInnerWidth + popupAdjustmentWidth;
 	const height = PopupInnerHeight + popupAdjustmentHeight;
