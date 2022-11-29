@@ -15,12 +15,35 @@ const BrowserWindow = styled(Window)`
 `;
 const TabBarContainer = styled.div`
 	width: 100%;
-	height: 5px;
+	height: 9px;
 	border-bottom: 4px solid white;
 	background: #e8eaed;
-	box-sizing: content-box;
 	position: relative;
 `;
+	// add an after element to cover up the divider lines on the right side,
+	// since there's no easy way to limit the number of them
+const TabDividers = styled.div`
+	left: 0;
+	top: 1px;
+	width: 100%;
+	height: 3px;
+    background-image: linear-gradient(to right, transparent 95%, #cfcfcf 2%);
+    background-position: 0 0;
+    background-repeat: repeat-x;
+    background-size: ${({ tabWidth }) => tabWidth}% 3px;
+	position: absolute;
+	
+	&:after {
+		content: " ";
+		width: 15%;
+		height: 3px;
+		right: 0;
+		top: 0;
+		background: #e8eaed;
+		position: absolute;
+	}
+`;
+	// add a shadow on the left to make sure the divider there is covered
 const Tab = styled.div`
 	top: 1px;
 	left: ${({ left }) => left}%;
@@ -28,6 +51,7 @@ const Tab = styled.div`
 	height: 4px;
 	background: white;
 	position: absolute;
+	box-shadow: -2px 0 0 white;
 `;
 
 function createTabs(
@@ -49,13 +73,16 @@ function TabBar({
 	tabCount,
 	activeTab })
 {
-		// add one to the tabCount so that the right edge of the last tab ends
-		// at 80% of the browser window width
-	const width = (.8 / (tabCount + 1)) * 100;
+	const width = (.85 / (tabCount)) * 100;
 	const left = width * activeTab;
 
 	return (
-		<TabBarContainer>
+		<TabBarContainer
+			tabWidth={width}
+		>
+			<TabDividers
+				tabWidth={width}
+			/>
 			<Tab
 				width={width}
 				left={left}

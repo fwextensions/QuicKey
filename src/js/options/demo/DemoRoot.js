@@ -16,7 +16,7 @@ export function DemoRoot({
 	width,
 	height })
 {
-	const [activeTab, setActiveTab] = useState(0);
+	const [activeTab, setActiveTab] = useState(3);
 	const { width: screenW, height: screenH } = window.screen;
 	const { left, top, width: popupW, height: popupH } = calcPosition(null, { alignment: "right-center" });
 	let scale = .1;
