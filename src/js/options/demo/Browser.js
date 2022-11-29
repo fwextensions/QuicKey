@@ -5,9 +5,24 @@ import { Window } from "./Window";
 
 function getWindowBounds()
 {
-	const { outerWidth: width, outerHeight: height, screenLeft: left, screenTop: top } = window;
+	const { screenLeft: left, screenTop: top, outerWidth: width, outerHeight: height } = window;
 
-	return { width, height, left, top };
+	return { left, top, width, height };
+}
+
+function createTabs(
+	tabCount,
+	tabs = [])
+{
+	if (tabs.length > tabCount) {
+		tabs.length = tabCount;
+	} else {
+		for (let i = tabs.length; i < tabCount; i++) {
+			tabs.push(rndGradient());
+		}
+	}
+
+	return tabs;
 }
 
 const BrowserWindow = styled(Window)`
@@ -54,21 +69,6 @@ const Tab = styled.div`
 	box-shadow: -2px 0 0 white;
 `;
 
-function createTabs(
-	tabCount,
-	tabs = [])
-{
-	if (tabs.length > tabCount) {
-		tabs.length = tabCount;
-	} else {
-		for (let i = tabs.length; i < tabCount; i++) {
-			tabs.push(rndGradient());
-		}
-	}
-
-	return tabs;
-}
-
 function TabBar({
 	tabCount,
 	activeTab })
@@ -88,7 +88,7 @@ function TabBar({
 				left={left}
 			/>
 		</TabBarContainer>
-	)
+	);
 }
 
 export default function Browser({
@@ -113,10 +113,10 @@ export default function Browser({
 
 	return (
 		<BrowserWindow
-			width={bounds.width}
-			height={bounds.height}
 			left={bounds.left}
 			top={bounds.top}
+			width={bounds.width}
+			height={bounds.height}
 			bg={tabs[activeTab]}
 			{...props}
 		>
