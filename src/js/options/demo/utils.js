@@ -1,3 +1,11 @@
+export function linearGradient(
+	angle,
+	color1,
+	color2)
+{
+	return `linear-gradient(${angle}deg, ${color1}, ${color2})`;
+}
+
 export function rnd(
 	min = 0,
 	max = 1,
@@ -30,11 +38,16 @@ export function rndHSLA(
 	return `hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha})`;
 }
 
+export function rndGradientValues()
+{
+	return [
+		rnd(0, 360),
+		rndHSLA(0, rnd(50, 70, true), rnd(80, 95, true)),
+		rndHSLA(0, rnd(60, 80, true), rnd(70, 80, true))
+	];
+}
+
 export function rndGradient()
 {
-	const angle = rnd(0, 360);
-	const color1 = rndHSLA(0, rnd(50, 70, true), rnd(80, 95, true));
-	const color2 = rndHSLA(0, rnd(60, 80, true), rnd(70, 80, true));
-
-	return `linear-gradient(${angle}deg, ${color1}, ${color2})`;
+	return linearGradient(...rndGradientValues());
 }

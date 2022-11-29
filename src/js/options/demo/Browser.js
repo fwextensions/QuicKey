@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { styled } from "goober";
-import { rndGradient } from "./utils";
 import { Window } from "./Window";
 
 function getWindowBounds()
@@ -10,21 +9,6 @@ function getWindowBounds()
 	return { left, top, width, height };
 }
 
-function createTabs(
-	tabCount,
-	tabs = [])
-{
-	if (tabs.length > tabCount) {
-		tabs.length = tabCount;
-	} else {
-		for (let i = tabs.length; i < tabCount; i++) {
-			tabs.push(rndGradient());
-		}
-	}
-
-	return tabs;
-}
-
 const BrowserWindow = styled(Window)`
 	background: ${({ bg }) => bg};
 `;
@@ -32,7 +16,7 @@ const TabBarContainer = styled.div`
 	width: 100%;
 	height: 9px;
 	border-bottom: 4px solid white;
-	background: #e8eaed;
+	background: #dee1e6;
 	position: relative;
 `;
 	// add an after element to cover up the divider lines on the right side,
@@ -42,7 +26,8 @@ const TabDividers = styled.div`
 	top: 1px;
 	width: 100%;
 	height: 3px;
-    background-image: linear-gradient(to right, transparent 95%, #cfcfcf 2%);
+	background: inherit;
+    background-image: linear-gradient(to right, transparent 95%, #aaa 2%);
     background-position: 0 0;
     background-repeat: repeat-x;
     background-size: ${({ tabWidth }) => tabWidth}% 3px;
@@ -54,7 +39,7 @@ const TabDividers = styled.div`
 		height: 3px;
 		right: 0;
 		top: 0;
-		background: #e8eaed;
+		background: inherit;
 		position: absolute;
 	}
 `;
@@ -92,7 +77,7 @@ function TabBar({
 }
 
 export default function Browser({
-	tabCount = 8,
+	tabs,
 	activeTab = 3,
 	...props })
 {
@@ -100,7 +85,6 @@ export default function Browser({
 		// the values themselves change.  otherwise, we'd render with every
 		// interval tick since getWindowBounds() creates a new object each time.
 	const [boundsJSON, setBoundsJSON] = useState(JSON.stringify(getWindowBounds()));
-	const [tabs, setTabs] = useState(createTabs(tabCount));
 	const bounds = JSON.parse(boundsJSON);
 
 	useEffect(() => {
@@ -111,21 +95,17 @@ export default function Browser({
 		return (() => clearInterval(interval));
 	}, []);
 
-	useEffect(() => {
-		setTabs(createTabs(tabCount, tabs));
-	}, [tabCount]);
-
 	return (
 		<BrowserWindow
 			left={bounds.left}
 			top={bounds.top}
 			width={bounds.width}
 			height={bounds.height}
-			bg={tabs[activeTab]}
+			bg={tabs[activeTab].gradient}
 			{...props}
 		>
 			<TabBar
-				tabCount={tabCount}
+				tabCount={tabs.length}
 				activeTab={activeTab}
 			/>
 		</BrowserWindow>

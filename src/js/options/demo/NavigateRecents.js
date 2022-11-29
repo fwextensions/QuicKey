@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { calcPosition } from "@/background/popup-utils";
 import { DemoRoot } from "./DemoRoot";
 import Browser from "./Browser";
-import { Window } from "./Window";
+import Popup from "./Popup";
+import { linearGradient, rnd, rndGradientValues } from "@/options/demo/utils";
 
 function shuffle(
 	array)
@@ -15,14 +15,38 @@ function shuffle(
 	return array;
 }
 
+function createTabs(
+	tabCount,
+	tabs = [])
+{
+	if (tabs.length > tabCount) {
+		tabs.length = tabCount;
+	} else {
+		for (let i = tabs.length; i < tabCount; i++) {
+			const gradient = rndGradientValues();
+
+			tabs.push({
+				length: rnd(20, 80, true),
+				favicon: gradient[2],
+				gradient: linearGradient(...gradient)
+			});
+		}
+	}
+
+console.log(JSON.stringify(tabs, null, 2));
+	return tabs;
+}
+
 export default function NavigateRecents({
 	width = 250,
 	height,
 	tabCount = 8})
 {
+	const [tabs] = useState(createTabs(tabCount));
 	const [recents] = useState(shuffle(Array.from(Array(tabCount).keys())));
-	const [activeTab, setActiveTab] = useState(0);
-	const { left, top, width: popupW, height: popupH } = calcPosition(null, { alignment: "right-center" });
+	const [index, setIndex] = useState(0);
+		// create an array of tabs sorted by recency
+	const recentTabs = recents.map((index) => tabs[index]);
 
 	return (
 		<DemoRoot
@@ -30,15 +54,15 @@ export default function NavigateRecents({
 			height={height}
 		>
 			<Browser
-				tabCount={tabCount}
-				activeTab={recents[activeTab]}
-				onClick={() => setActiveTab((activeTab + 1) % 8)}
+				tabs={tabs}
+				activeTab={recents[index]}
+				onClick={() => setIndex((index + 1) % 8)}
 			/>
-			<Window
-				width={popupW}
-				height={popupH}
-				left={left}
-				top={top}
+			<Popup
+				tabs={recentTabs}
+				tabCount={tabCount}
+				selected={index}
+				alignment="right-center"
 			/>
 		</DemoRoot>
 	);
