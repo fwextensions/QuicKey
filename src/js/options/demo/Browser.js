@@ -96,13 +96,17 @@ export default function Browser({
 	activeTab = 3,
 	...props })
 {
-	const [bounds, setBounds] = useState(getWindowBounds());
+		// store the bounds as a string so that it won't trigger a render unless
+		// the values themselves change.  otherwise, we'd render with every
+		// interval tick since getWindowBounds() creates a new object each time.
+	const [boundsJSON, setBoundsJSON] = useState(JSON.stringify(getWindowBounds()));
 	const [tabs, setTabs] = useState(createTabs(tabCount));
+	const bounds = JSON.parse(boundsJSON);
 
 	useEffect(() => {
 		const interval = setInterval(() => {
-			setBounds(getWindowBounds());
-		}, 1000);
+			setBoundsJSON(JSON.stringify(getWindowBounds()));
+		}, 300);
 
 		return (() => clearInterval(interval));
 	}, []);

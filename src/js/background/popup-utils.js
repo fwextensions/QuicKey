@@ -44,7 +44,7 @@ export function calcPosition(
 	const [horizontal, vertical] = alignment.split("-");
 	const screen = getScreen();
 	const { left: targetX, top: targetY, width: targetW, height: targetH } =
-	targetWindow || screen;
+		targetWindow || screen;
 		// Chrome will throw an error if the popup is more than 50% off-screen,
 		// which can happen if the target window has been dragged mostly off-
 		// screen.  so clamp the top/left to keep it fully on-screen, with padding.

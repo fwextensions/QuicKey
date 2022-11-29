@@ -2,10 +2,10 @@ import React from "react";
 import { useScaled } from "./DemoContext";
 
 export function Rect({
-	width,
-	height,
 	left,
 	top,
+	width,
+	height,
 	className,
 	children,
 	...props
