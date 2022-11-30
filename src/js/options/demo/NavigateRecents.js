@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { styled } from "goober";
 import { linearGradient, rnd, rndGradientValues } from "./utils";
+import useStepper from "./useStepper";
 import { DemoRoot } from "./DemoRoot";
 import Browser from "./Browser";
 import Popup from "./Popup";
@@ -56,6 +57,8 @@ export default function NavigateRecents({
 		// create an array of tabs sorted by recency
 	const recentTabs = recents.map((index) => tabs[index]);
 
+	useStepper((count) => setIndex(count % tabCount), { from: 0, to: 3 });
+
 	return (
 		<Container onClick={(event) => event.preventDefault()}>
 			<DemoRoot
@@ -65,7 +68,7 @@ export default function NavigateRecents({
 				<Browser
 					tabs={tabs}
 					activeTab={recents[index]}
-					onClick={() => setIndex((index + 1) % 8)}
+					onClick={() => setIndex((index + 1) % tabCount)}
 				/>
 				<Popup
 					tabs={recentTabs}

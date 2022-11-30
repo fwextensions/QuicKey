@@ -92,7 +92,7 @@ export default function Browser({
 			setBoundsJSON(JSON.stringify(getWindowBounds()));
 		}, 300);
 
-		return (() => clearInterval(interval));
+		return () => clearInterval(interval);
 	}, []);
 
 	return (
