@@ -6,7 +6,6 @@ import { Rect } from "./Rect";
 const Screen = styled(Rect)`
 	background: white;
 	border: 1px solid #eee;
-	margin: 2em auto 0;
 `;
 
 export function DemoRoot({

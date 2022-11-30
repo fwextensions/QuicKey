@@ -14,8 +14,8 @@ const BrowserWindow = styled(Window)`
 `;
 const TabBarContainer = styled.div`
 	width: 100%;
-	height: 9px;
-	border-bottom: 4px solid white;
+	height: 10px;
+	border-bottom: 5px solid white;
 	background: #dee1e6;
 	position: relative;
 `;

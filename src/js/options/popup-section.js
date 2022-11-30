@@ -27,6 +27,15 @@ export default class PopupSection extends React.Component {
     };
 
 
+	getShortcut(
+		shortcutID)
+	{
+		return this.props.settings.chrome.shortcuts
+			.find(({id}) => id == shortcutID)
+			.shortcut;
+	}
+
+
     handleMouseEnter = (
 		event) =>
 	{
@@ -44,9 +53,7 @@ export default class PopupSection extends React.Component {
 		shortcutID,
 		direction)
 	{
-		const shortcutString = this.props.settings.chrome.shortcuts
-			.find(({id}) => id == shortcutID)
-			.shortcut;
+		const shortcutString = this.getShortcut(shortcutID);
 		const shortcutName = `Switch to ${direction} tab shortcut`;
 
 		return shortcutString
@@ -88,6 +95,7 @@ export default class PopupSection extends React.Component {
 			[k.HidePopupBehavior.Tab, "In a tab"],
 			[k.HidePopupBehavior.Minimize, "In a minimized window"]
 		].map(this.renderOption);
+		const previousShortcutString = this.getShortcut(k.CommandIDs.PreviousTabCommand);
 		const previousShortcut = this.renderShortcut(k.CommandIDs.PreviousTabCommand, "previous");
 		const nextShortcut = this.renderShortcut(k.CommandIDs.NextTabCommand, "next");
 
@@ -102,17 +110,20 @@ export default class PopupSection extends React.Component {
 					<Checkbox
 						id={k.NavigateRecentsWithPopup.Key}
 						label={
-							<span>
-								Show the recent tab list in a popup when
-								using {previousShortcut} and {nextShortcut}
-							</span>
+							<div>
+								<span>
+									Show the recent tab list in a popup when
+									using {previousShortcut} and {nextShortcut}
+								</span>
+								<NavigateRecents
+									previousShortcut={previousShortcutString}
+								/>
+							</div>
 						}
 						value={settings[k.NavigateRecentsWithPopup.Key]}
 						onChange={onChange}
 					/>
 				</NewSetting>
-
-				<NavigateRecents />
 
 
 				<h2>Hide popup window</h2>

@@ -1,8 +1,10 @@
 import React, { useState } from "react";
+import { styled } from "goober";
+import { linearGradient, rnd, rndGradientValues } from "./utils";
 import { DemoRoot } from "./DemoRoot";
 import Browser from "./Browser";
 import Popup from "./Popup";
-import { linearGradient, rnd, rndGradientValues } from "@/options/demo/utils";
+import ShortcutDisplay from "./ShortcutDisplay";
 
 function shuffle(
 	array)
@@ -33,14 +35,20 @@ function createTabs(
 		}
 	}
 
-console.log(JSON.stringify(tabs, null, 2));
 	return tabs;
 }
+
+const Container = styled.div`
+	margin: 2em 0 0 0;
+	gap: 2em;
+	display: flex;
+`;
 
 export default function NavigateRecents({
 	width = 250,
 	height,
-	tabCount = 8})
+	previousShortcut,
+	tabCount = 8 })
 {
 	const [tabs] = useState(createTabs(tabCount));
 	const [recents] = useState(shuffle(Array.from(Array(tabCount).keys())));
@@ -49,21 +57,24 @@ export default function NavigateRecents({
 	const recentTabs = recents.map((index) => tabs[index]);
 
 	return (
-		<DemoRoot
-			width={width}
-			height={height}
-		>
-			<Browser
-				tabs={tabs}
-				activeTab={recents[index]}
-				onClick={() => setIndex((index + 1) % 8)}
-			/>
-			<Popup
-				tabs={recentTabs}
-				tabCount={tabCount}
-				selected={index}
-				alignment="right-center"
-			/>
-		</DemoRoot>
+		<Container onClick={(event) => event.preventDefault()}>
+			<DemoRoot
+				width={width}
+				height={height}
+			>
+				<Browser
+					tabs={tabs}
+					activeTab={recents[index]}
+					onClick={() => setIndex((index + 1) % 8)}
+				/>
+				<Popup
+					tabs={recentTabs}
+					tabCount={tabCount}
+					selected={index}
+					alignment="right-center"
+				/>
+			</DemoRoot>
+			<ShortcutDisplay shortcut={previousShortcut} />
+		</Container>
 	);
 }
