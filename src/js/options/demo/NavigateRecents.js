@@ -57,7 +57,7 @@ export default function NavigateRecents({
 		// create an array of tabs sorted by recency
 	const recentTabs = recents.map((index) => tabs[index]);
 
-	useStepper((count) => setIndex(count % tabCount), { from: 0, to: 3 });
+	useStepper((index) => setIndex(index % tabCount), { from: 0, to: 3 });
 
 	return (
 		<Container onClick={(event) => event.preventDefault()}>
@@ -77,7 +77,10 @@ export default function NavigateRecents({
 					alignment="right-center"
 				/>
 			</DemoRoot>
-			<ShortcutDisplay shortcut={previousShortcut} />
+			<ShortcutDisplay
+				shortcut={previousShortcut}
+				pressedKeys={["alt"]}
+			/>
 		</Container>
 	);
 }

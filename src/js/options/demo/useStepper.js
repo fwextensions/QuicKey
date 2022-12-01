@@ -10,23 +10,30 @@ export default function useStepper(
 		step = 1,
 		delay = 1000
 	} = options;
-	const [count, setCount] = useState(from);
+	const [index, setIndex] = useState(from);
 	const savedCallback = useRef(callback);
 	const interval = useRef();
 
-	const handleStep = useCallback(() => setCount((count) => {
-		if (count > to) {
+	const handleStep = useCallback(() => setIndex((index) => {
+		if (index > to || index === null) {
 			clearInterval(interval.current);
+
+			return null;
 		} else {
-			savedCallback.current(count);
-			return count + step;
+			savedCallback.current(index);
+
+			return index + step;
 		}
-	}), []);
+	}), [from, to, step]);
 
 	useEffect(() => {
+			// call the callback immediately, so the component gets the first
+			// index without any delay.  then clear any existing interval and
+			// start a new one.
+		handleStep();
 		clearInterval(interval.current);
 		interval.current = setInterval(handleStep, delay);
 
 		return () => clearInterval(interval.current);
-	}, [from, to, delay]);
+	}, [handleStep, delay]);
 }

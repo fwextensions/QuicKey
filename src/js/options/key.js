@@ -87,5 +87,7 @@ export default function Key(
 		label = label.toUpperCase();
 	}
 
-	return <kbd className={className}><span>{label}</span></kbd>;
+	return <kbd className={`${className} ${props.className || ""}`}>
+		<span>{label}</span>
+	</kbd>;
 }
