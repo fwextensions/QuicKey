@@ -1,4 +1,4 @@
-import React from "react";
+import React, { forwardRef } from "react";
 
 
 const IsMac = /Mac/i.test(navigator.platform);
@@ -75,8 +75,9 @@ Object.keys(KeyClasses).forEach(className => {
 });
 
 
-export default function Key(
-	props)
+export default forwardRef(function Key(
+	props,
+	ref)
 {
 	const code = props.code;
 	const config = KeyConfigs[code];
@@ -87,7 +88,7 @@ export default function Key(
 		label = label.toUpperCase();
 	}
 
-	return <kbd className={`${className} ${props.className || ""}`}>
+	return <kbd ref={ref} className={`${className} ${props.className || ""}`}>
 		<span>{label}</span>
 	</kbd>;
-}
+});

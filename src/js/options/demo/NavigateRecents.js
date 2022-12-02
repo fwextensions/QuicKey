@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { styled } from "goober";
 import { linearGradient, rnd, rndGradientValues } from "./utils";
 import useStepper from "./useStepper";
 import { DemoRoot } from "./DemoRoot";
 import Browser from "./Browser";
 import Popup from "./Popup";
-import ShortcutDisplay from "./ShortcutDisplay";
+import Shortcut from "./Shortcut";
 
 function shuffle(
 	array)
@@ -44,6 +44,11 @@ const Container = styled.div`
 	gap: 2em;
 	display: flex;
 `;
+const ShortcutContainer = styled.div`
+	flex-direction: column;
+	justify-content: center;
+	display: flex;
+`;
 
 export default function NavigateRecents({
 	width = 250,
@@ -54,10 +59,14 @@ export default function NavigateRecents({
 	const [tabs] = useState(createTabs(tabCount));
 	const [recents] = useState(shuffle(Array.from(Array(tabCount).keys())));
 	const [index, setIndex] = useState(0);
+	const shortcutRef = useRef();
 		// create an array of tabs sorted by recency
 	const recentTabs = recents.map((index) => tabs[index]);
 
-	useStepper((index) => setIndex(index % tabCount), { from: 0, to: 3 });
+	useStepper((index) => {
+		setIndex(index % tabCount);
+		shortcutRef.current.press("A");
+	}, { from: 1, to: 3, delay: 1250 });
 
 	return (
 		<Container onClick={(event) => event.preventDefault()}>
@@ -77,10 +86,12 @@ export default function NavigateRecents({
 					alignment="right-center"
 				/>
 			</DemoRoot>
-			<ShortcutDisplay
-				shortcut={previousShortcut}
-				pressedKeys={["alt"]}
-			/>
+			<ShortcutContainer>
+				<Shortcut
+					ref={shortcutRef}
+					shortcut={previousShortcut}
+				/>
+			</ShortcutContainer>
 		</Container>
 	);
 }
