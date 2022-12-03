@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { styled } from "goober";
 import { getKeysFromShortcut } from "@/options/shortcut-utils";
 import { linearGradient, rnd, rndGradientValues } from "./utils";
@@ -7,6 +7,13 @@ import { DemoRoot } from "./DemoRoot";
 import Browser from "./Browser";
 import Popup from "./Popup";
 import Shortcut from "./Shortcut";
+
+const StepRange = { from: 1, to: 4 };
+const StepperOptions = {
+	...StepRange,
+	delay: 1250,
+	autoStart: false
+};
 
 function shuffle(
 	array)
@@ -61,14 +68,9 @@ export default function NavigateRecents({
 	const [recents] = useState(shuffle(Array.from(Array(tabCount).keys())));
 	const [index, setIndex] = useState(0);
 	const shortcutRef = useRef();
-	const shortcutInfo = getKeysFromShortcut(previousShortcut);
-		// create an array of tabs sorted by recency
-	const recentTabs = recents.map((index) => tabs[index]);
-	const stepRange = { from: 1, to: 4 };
-
-	useStepper((index) => {
-		if (index < stepRange.to) {
-			if (index === stepRange.from) {
+	const { start, active } = useStepper((index) => {
+		if (index < StepRange.to) {
+			if (index === StepRange.from) {
 				shortcutRef.current.keyDown(...shortcutInfo.modifiers);
 			}
 
@@ -77,12 +79,17 @@ export default function NavigateRecents({
 		} else {
 			shortcutRef.current.keyUp(...shortcutInfo.modifiers);
 		}
+	}, StepperOptions);
+	const shortcutInfo = getKeysFromShortcut(previousShortcut);
+		// create an array of tabs sorted by recency
+	const recentTabs = recents.map((index) => tabs[index]);
 
-//		shortcutRef.current.keyPress("shift", "A");
-	}, { ...stepRange, delay: 1250 });
+	useEffect(() => {
+		setTimeout(start, 2000);
+	}, []);
 
 	return (
-		<Container onClick={(event) => event.preventDefault()}>
+		<Container onClick={(event) => { event.preventDefault(); start(); }}>
 			<DemoRoot
 				width={width}
 				height={height}
@@ -97,6 +104,7 @@ export default function NavigateRecents({
 					tabCount={tabCount}
 					selected={index}
 					alignment="right-center"
+					visible={active}
 				/>
 			</DemoRoot>
 			<ShortcutContainer>

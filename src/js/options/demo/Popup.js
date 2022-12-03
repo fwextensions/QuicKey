@@ -5,6 +5,10 @@ import { Window } from "./Window";
 
 const RowHeight = 7;
 
+const PopupWindow = styled(Window)`
+	opacity: ${({ visible }) => visible ? 1 : 0};
+	transition: opacity .25s ease-out;
+`;
 const Selection = styled.div`
 	top: ${({ index }) => index * RowHeight}px;
 	width: 100%;
@@ -50,21 +54,23 @@ function Tab({
 export default function Popup({
 	tabs,
 	selected = 0,
-	alignment = "center-center" })
+	alignment = "center-center",
+	visible })
 {
 	const { left, top, width: popupW, height: popupH } = calcPosition(null, { alignment });
 
 	return (
-		<Window
+		<PopupWindow
 			left={left}
 			top={top}
 			width={popupW}
 			height={popupH}
+			visible={visible}
 		>
 			<Selection index={selected} />
 			<Tabs>
 				{tabs.map((tab, i) => <Tab key={i} tab={tab} />)}
 			</Tabs>
-		</Window>
+		</PopupWindow>
 	);
 }
