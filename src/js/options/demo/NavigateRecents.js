@@ -1,5 +1,6 @@
 import React, { useRef, useState } from "react";
 import { styled } from "goober";
+import { getKeysFromShortcut } from "@/options/shortcut-utils";
 import { linearGradient, rnd, rndGradientValues } from "./utils";
 import useStepper from "./useStepper";
 import { DemoRoot } from "./DemoRoot";
@@ -60,13 +61,25 @@ export default function NavigateRecents({
 	const [recents] = useState(shuffle(Array.from(Array(tabCount).keys())));
 	const [index, setIndex] = useState(0);
 	const shortcutRef = useRef();
+	const shortcutInfo = getKeysFromShortcut(previousShortcut);
 		// create an array of tabs sorted by recency
 	const recentTabs = recents.map((index) => tabs[index]);
+	const stepRange = { from: 1, to: 4 };
 
 	useStepper((index) => {
-		setIndex(index % tabCount);
-		shortcutRef.current.press("A");
-	}, { from: 1, to: 3, delay: 1250 });
+		if (index < stepRange.to) {
+			if (index === stepRange.from) {
+				shortcutRef.current.keyDown(...shortcutInfo.modifiers);
+			}
+
+			shortcutRef.current.keyPress(shortcutInfo.baseKey);
+			setIndex(index % tabCount);
+		} else {
+			shortcutRef.current.keyUp(...shortcutInfo.modifiers);
+		}
+
+//		shortcutRef.current.keyPress("shift", "A");
+	}, { ...stepRange, delay: 1250 });
 
 	return (
 		<Container onClick={(event) => event.preventDefault()}>

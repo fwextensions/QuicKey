@@ -8,15 +8,26 @@ import { styled } from "goober";
 import Key from "@/options/key";
 import { getKeysFromShortcut } from "@/options/shortcut-utils";
 
-const PressKeyframes = [
+const DownKeyframes = [
 	{ transform: "translateY(0)" },
-	{ transform: "translateY(.5em)" },
+	{ transform: "translateY(1em)" },
 ];
-const PressOptions = {
+const UpKeyframes = [
+	...[...DownKeyframes].reverse()
+];
+const PressKeyframes = [
+	...DownKeyframes,
+	...UpKeyframes
+];
+const UpDownOptions = {
 	duration: 200,
 	easing: "ease-out",
-	direction: "alternate",
-	iterations: 2,
+	fill: "forwards"
+};
+const PressOptions = {
+	duration: 500,
+	easing: "ease-out",
+	iterations: 1,
 };
 
 const Container = styled.div`
@@ -30,7 +41,34 @@ const Container = styled.div`
 	& kbd:last-of-type {
 		margin-right: 0;
 	}
+	
+	& > kbd {
+		position: relative;
+	}
 `;
+const ShadowKeyContainer = styled.div`
+	position: absolute;
+	
+	& kbd {
+		color: transparent;
+		opacity: .1;
+	}
+`;
+
+function animateKeys(
+	keys,
+	keyRefs,
+	frames,
+	options)
+{
+	keys.forEach((key) => {
+		const keyRef = keyRefs.current[key.toLowerCase()]?.current;
+
+		if (keyRef) {
+			keyRef.animate(frames, options);
+		}
+	});
+}
 
 export default forwardRef(function Shortcut(
 	{ shortcut },
@@ -38,32 +76,31 @@ export default forwardRef(function Shortcut(
 {
 	const keyRefs = useRef({});
 	const shortcutInfo = getKeysFromShortcut(shortcut);
+	const pressableKeys = shortcutInfo.keys.map(key => {
+		const ref = (keyRefs.current[key] = createRef());
+
+		return (
+			<Key
+				ref={ref}
+				key={key}
+				code={key}
+			/>
+		);
+	});
+	const shadowKeys = shortcutInfo.keys.map(key => <Key key={key} code={key} />);
 
 	useImperativeHandle(ref, () => ({
-		press(
-			key)
-		{
-			const keyRef = keyRefs.current[key.toLowerCase()]?.current;
-
-			if (keyRef) {
-				keyRef.animate(PressKeyframes, PressOptions);
-			}
-		}
+		keyDown(...keys) { animateKeys(keys, keyRefs, DownKeyframes, UpDownOptions); },
+		keyUp(...keys) { animateKeys(keys, keyRefs, UpKeyframes, UpDownOptions); },
+		keyPress(...keys) { animateKeys(keys, keyRefs, PressKeyframes, PressOptions); }
 	}));
 
 	return (
 		<Container>
-			{shortcutInfo.keys.map(key => {
-				const ref = (keyRefs.current[key] = createRef());
-
-				return (
-					<Key
-						ref={ref}
-						key={key}
-						code={key}
-					/>
-				);
-			})}
+			<ShadowKeyContainer>
+				{shadowKeys}
+			</ShadowKeyContainer>
+			{pressableKeys}
 		</Container>
 	);
 });
