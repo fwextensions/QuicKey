@@ -7,7 +7,7 @@ const RowHeight = 7;
 
 const PopupWindow = styled(Window)`
 	opacity: ${({ visible }) => visible ? 1 : 0};
-	transition: opacity .25s ease-out;
+	transition: opacity .15s ease-out;
 `;
 const Selection = styled.div`
 	top: ${({ index }) => index * RowHeight}px;
@@ -52,7 +52,7 @@ function Tab({
 }
 
 export default function Popup({
-	tabs,
+	recents,
 	selected = 0,
 	alignment = "center-center",
 	visible })
@@ -69,7 +69,7 @@ export default function Popup({
 		>
 			<Selection index={selected} />
 			<Tabs>
-				{tabs.map((tab, i) => <Tab key={i} tab={tab} />)}
+				{recents.map((tab, i) => <Tab key={i} tab={tab} />)}
 			</Tabs>
 		</PopupWindow>
 	);

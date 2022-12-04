@@ -38,12 +38,14 @@ export function rndHSLA(
 	return `hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha})`;
 }
 
-export function rndGradientValues()
+export function rndGradientValues(
+	hueRange = [0, 360],
+	hueRange2 = [0, 360])
 {
 	return [
-		rnd(0, 360),
-		rndHSLA(0, rnd(50, 70, true), rnd(80, 95, true)),
-		rndHSLA(0, rnd(60, 80, true), rnd(70, 80, true))
+		rnd(0, 360, true),
+		rndHSLA(hueRange, rnd(50, 70, true), rnd(80, 95, true)),
+		rndHSLA(hueRange2, rnd(60, 80, true), rnd(70, 80, true))
 	];
 }
 

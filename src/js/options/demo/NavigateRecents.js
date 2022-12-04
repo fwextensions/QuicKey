@@ -14,6 +14,8 @@ const StepperOptions = {
 	delay: 1250,
 	autoStart: false
 };
+const StartingHue = rnd(0, 360, true);
+const HueJitter = 5;
 
 function shuffle(
 	array)
@@ -30,13 +32,23 @@ function createTabs(
 	tabCount,
 	tabs = [])
 {
+	const hueStep = Math.floor(360 / tabCount);
+
 	if (tabs.length > tabCount) {
 		tabs.length = tabCount;
 	} else {
 		for (let i = tabs.length; i < tabCount; i++) {
-			const gradient = rndGradientValues();
+				// make sure the hues used for the gradients are spread roughly
+				// evenly around the color wheel from each other
+			const hue1 = StartingHue + hueStep * i;
+			const hue2 = StartingHue + hueStep * i + hueStep * tabCount / 3;
+			const gradient = rndGradientValues(
+				[hue1 - HueJitter, hue1 + HueJitter],
+				[hue2 - HueJitter, hue2 + HueJitter]
+			);
 
 			tabs.push({
+				id: i,
 				length: rnd(20, 80, true),
 				favicon: gradient[2],
 				gradient: linearGradient(...gradient)
@@ -64,9 +76,9 @@ export default function NavigateRecents({
 	previousShortcut,
 	tabCount = 8 })
 {
-	const [tabs] = useState(createTabs(tabCount));
-	const [recents] = useState(shuffle(Array.from(Array(tabCount).keys())));
-	const [index, setIndex] = useState(0);
+	const [tabs] = useState(() => createTabs(tabCount));
+	const [recents, setRecents] = useState(shuffle([...tabs.keys()]));
+	const [recentIndex, setRecentIndex] = useState(0);
 	const shortcutRef = useRef();
 	const { start, active } = useStepper((index) => {
 		if (index < StepRange.to) {
@@ -75,9 +87,14 @@ export default function NavigateRecents({
 			}
 
 			shortcutRef.current.keyPress(shortcutInfo.baseKey);
-			setIndex(index % tabCount);
+			setRecentIndex(index % tabCount);
 		} else {
 			shortcutRef.current.keyUp(...shortcutInfo.modifiers);
+
+				// move the current tab to the front of the recents stack
+			recents.unshift(...recents.splice(recentIndex, 1));
+			setRecents(recents);
+			setRecentIndex(0);
 		}
 	}, StepperOptions);
 	const shortcutInfo = getKeysFromShortcut(previousShortcut);
@@ -96,13 +113,11 @@ export default function NavigateRecents({
 			>
 				<Browser
 					tabs={tabs}
-					activeTab={recents[index]}
-					onClick={() => setIndex((index + 1) % tabCount)}
+					activeTab={recents[recentIndex]}
 				/>
 				<Popup
-					tabs={recentTabs}
-					tabCount={tabCount}
-					selected={index}
+					recents={recentTabs}
+					selected={recentIndex}
 					alignment="right-center"
 					visible={active}
 				/>
