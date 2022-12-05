@@ -8,56 +8,48 @@ export default function useStepper(
 		steps,
 		from = 0,
 		to = Array.isArray(steps) ? steps.length - 1 : 0,
-		step = 1,
+		increment = 1,
 		delay = 1000,
 		autoStart = true
 	} = options;
-	const [index, setIndex] = useState(from);
+	const [index, setIndex] = useState(autoStart ? from : null);
 	const callbackRef = useRef(callback);
-	const interval = useRef();
-
-		// make the call to callback from inside setIndex() so that we have the
-		// current value of index
-	const handleStep = useCallback(() => setIndex((index) => {
-			// pass the current item from the steps array, if we have one
-		const args = steps ? [steps[index], index] : [index];
-
-		callbackRef.current(...args);
-
-		if (index >= to || index === null) {
-			stop();
-
-			return null;
-		} else {
-			return index + step;
-		}
-	}), [from, to, step]);
+	const timer = useRef();
 
 	const start = useCallback(() => {
 		setIndex(from);
-
-			// call the callback immediately, so the component gets the first
-			// index without any delay.  then clear any existing interval and
-			// start a new one.
-		handleStep();
-		stop();
-		interval.current = setInterval(handleStep, delay);
-	}, [from, handleStep, delay]);
+	}, [from]);
 
 	const stop = useCallback(() => {
-		clearInterval(interval.current);
-		interval.current = null;
+		setIndex(null);
+		clearTimeout(timer.current);
+		timer.current = null;
 	}, []);
 
 	useEffect(() => {
-		if (autoStart) {
-			start();
+		if (index !== null && index <= to) {
+				// the caller can optionally specify a different delay per step
+			const [stepValue, stepDelay = delay] = steps ? [].concat(steps[index]) : [];
+				// pass the current item from the steps array, if we have one
+			const args = steps ? [stepValue, index] : [index];
+
+			callbackRef.current(...args);
+
+			if (index < to) {
+				timer.current = setTimeout(() => setIndex(index + increment), stepDelay);
+			} else {
+				stop();
+			}
+		} else {
+			stop();
 		}
-	}, []);
+
+		return () => clearTimeout(timer.current);
+	}, [index]);
 
 	useEffect(() => {
 		callbackRef.current = callback;
 	}, [callback]);
 
-	return { start, stop, active: !!interval.current };
+	return { start, stop, active: !!timer.current };
 }

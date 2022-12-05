@@ -12,11 +12,11 @@ const Steps = [
 	"start",
 	"down",
 	"down",
-	"end",
-	"pressDown",
-	"pressUp",
-	"pressDown",
-	"pressUp",
+	["end", 1500],
+	["pressDown", 250],
+	["pressUp", 1500],
+	["pressDown", 250],
+	["pressUp", 1500],
 ];
 const StepperOptions = {
 	steps: Steps,
@@ -83,7 +83,7 @@ export default function NavigateRecents({
 	width = 250,
 	height,
 	previousShortcut,
-	tabCount = 8 })
+	tabCount = 10 })
 {
 	const [tabs] = useState(() => createTabs(tabCount));
 	const [recents, setRecents] = useState(shuffle([...tabs.keys()]));

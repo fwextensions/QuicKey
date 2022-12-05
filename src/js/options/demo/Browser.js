@@ -50,8 +50,15 @@ const Tab = styled.div`
 	width: ${({ width }) => width}%;
 	height: 4px;
 	background: white;
+	border-radius: 2px 2px 0 0;
 	position: absolute;
 	box-shadow: -2px 0 0 white;
+`;
+const TabName = styled.div`
+	left: .6em;
+	bottom: .4em;
+	color: white;
+	position: absolute;
 `;
 
 function TabBar({
@@ -108,6 +115,9 @@ export default function Browser({
 				tabCount={tabs.length}
 				activeTab={activeTab}
 			/>
+			<TabName>
+				Tab {activeTab + 1}
+			</TabName>
 		</BrowserWindow>
 	);
 }
