@@ -8,9 +8,18 @@ import Browser from "./Browser";
 import Popup from "./Popup";
 import Shortcut from "./Shortcut";
 
-const StepRange = { from: 1, to: 4 };
+const Steps = [
+	"start",
+	"down",
+	"down",
+	"end",
+	"pressDown",
+	"pressUp",
+	"pressDown",
+	"pressUp",
+];
 const StepperOptions = {
-	...StepRange,
+	steps: Steps,
 	delay: 1250,
 	autoStart: false
 };
@@ -79,30 +88,55 @@ export default function NavigateRecents({
 	const [tabs] = useState(() => createTabs(tabCount));
 	const [recents, setRecents] = useState(shuffle([...tabs.keys()]));
 	const [recentIndex, setRecentIndex] = useState(0);
+	const [popupVisible, setPopupVisible] = useState(false);
 	const shortcutRef = useRef();
-	const { start, active } = useStepper((index) => {
-		if (index < StepRange.to) {
-			if (index === StepRange.from) {
+	const { start, stop } = useStepper((step) => {
+		switch (step) {
+			case "start":
 				shortcutRef.current.keyDown(...shortcutInfo.modifiers);
-			}
+				setPopupVisible(true);
+				// fall through so that the baseKey also gets pressed
 
-			shortcutRef.current.keyPress(shortcutInfo.baseKey);
-			setRecentIndex(index % tabCount);
-		} else {
-			shortcutRef.current.keyUp(...shortcutInfo.modifiers);
+			case "down":
+				shortcutRef.current.keyPress(shortcutInfo.baseKey);
+				setRecentIndex((recentIndex + 1) % tabCount);
+				break;
 
-				// move the current tab to the front of the recents stack
-			recents.unshift(...recents.splice(recentIndex, 1));
-			setRecents(recents);
-			setRecentIndex(0);
+			case "end":
+				shortcutRef.current.keyUp(...shortcutInfo.modifiers);
+				setPopupVisible(false);
+				updateRecents();
+				break;
+
+			case "pressDown":
+				shortcutRef.current.keyDown(...shortcutInfo.keys);
+				setPopupVisible(true);
+				setRecentIndex(1);
+				break;
+
+			case "pressUp":
+				shortcutRef.current.keyUp(...shortcutInfo.keys);
+				setPopupVisible(false);
+				updateRecents();
+				break;
 		}
 	}, StepperOptions);
 	const shortcutInfo = getKeysFromShortcut(previousShortcut);
 		// create an array of tabs sorted by recency
 	const recentTabs = recents.map((index) => tabs[index]);
 
+	const updateRecents = () => {
+			// move the current tab to the front of the recents stack
+		recents.unshift(...recents.splice(recentIndex, 1));
+		setRecents(recents);
+		setRecentIndex(0);
+	};
+
 	useEffect(() => {
 		setTimeout(start, 2000);
+
+			// make sure the stepper stops if we're unmounted
+		return stop;
 	}, []);
 
 	return (
@@ -119,7 +153,7 @@ export default function NavigateRecents({
 					recents={recentTabs}
 					selected={recentIndex}
 					alignment="right-center"
-					visible={active}
+					visible={popupVisible}
 				/>
 			</DemoRoot>
 			<ShortcutContainer>

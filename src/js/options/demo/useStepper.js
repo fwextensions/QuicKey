@@ -5,8 +5,9 @@ export default function useStepper(
 	options = {})
 {
 	const {
+		steps,
 		from = 0,
-		to,
+		to = Array.isArray(steps) ? steps.length - 1 : 0,
 		step = 1,
 		delay = 1000,
 		autoStart = true
@@ -15,8 +16,13 @@ export default function useStepper(
 	const callbackRef = useRef(callback);
 	const interval = useRef();
 
+		// make the call to callback from inside setIndex() so that we have the
+		// current value of index
 	const handleStep = useCallback(() => setIndex((index) => {
-		callbackRef.current(index);
+			// pass the current item from the steps array, if we have one
+		const args = steps ? [steps[index], index] : [index];
+
+		callbackRef.current(...args);
 
 		if (index >= to || index === null) {
 			stop();
