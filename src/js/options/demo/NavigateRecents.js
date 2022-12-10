@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { styled } from "goober";
 import { getKeysFromShortcut } from "@/options/shortcut-utils";
-import { linearGradient, rnd, rndGradientValues } from "./utils";
+import { createRecents, createTabs } from "./utils";
 import useStepper from "./useStepper";
 import { DemoRoot } from "./DemoRoot";
 import Browser from "./Browser";
@@ -50,50 +50,6 @@ const StepperOptions = {
 	delay: 1250,
 	autoStart: false
 };
-const StartingHue = rnd(0, 360, true);
-const HueJitter = 5;
-
-function shuffle(
-	array)
-{
-	for (let i = array.length - 1; i > 0; i--) {
-		const j = Math.floor(Math.random() * (i + 1));
-		[array[i], array[j]] = [array[j], array[i]];
-	}
-
-	return array;
-}
-
-function createTabs(
-	tabCount,
-	tabs = [])
-{
-	const hueStep = Math.floor(360 / tabCount);
-
-	if (tabs.length > tabCount) {
-		tabs.length = tabCount;
-	} else {
-		for (let i = tabs.length; i < tabCount; i++) {
-				// make sure the hues used for the gradients are spread roughly
-				// evenly around the color wheel from each other
-			const hue1 = StartingHue + hueStep * i;
-			const hue2 = StartingHue + hueStep * i + hueStep * tabCount / 3;
-			const gradient = rndGradientValues(
-				[hue1 - HueJitter, hue1 + HueJitter],
-				[hue2 - HueJitter, hue2 + HueJitter]
-			);
-
-			tabs.push({
-				id: i,
-				length: rnd(20, 80, true),
-				favicon: gradient[2],
-				gradient: linearGradient(...gradient)
-			});
-		}
-	}
-
-	return tabs;
-}
 
 const Container = styled.div`
 	margin: 2em 0 0 0;
@@ -113,7 +69,7 @@ export default function NavigateRecents({
 	tabCount = 10 })
 {
 	const [tabs] = useState(() => createTabs(tabCount));
-	const [recents, setRecents] = useState(shuffle([...tabs.keys()]));
+	const [recents, setRecents] = useState(createRecents(tabs));
 	const [recentIndex, setRecentIndex] = useState(0);
 	const [popupVisible, setPopupVisible] = useState(false);
 	const shortcutRef = useRef();
