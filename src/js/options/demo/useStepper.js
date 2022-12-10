@@ -28,7 +28,9 @@ export default function useStepper(
 
 	useEffect(() => {
 		if (index !== null && index <= to) {
-				// the caller can optionally specify a different delay per step
+				// the steps array can contain bare values, or tuples of a value
+				// and a per-step delay.  so if we have steps, make sure the
+				// current step is wrapped in an array if it's bare.
 			const [stepValue, stepDelay = delay] = steps ? [].concat(steps[index]) : [];
 				// pass the current item from the steps array, if we have one
 			const args = steps ? [stepValue, index] : [index];

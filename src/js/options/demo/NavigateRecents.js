@@ -8,16 +8,43 @@ import Browser from "./Browser";
 import Popup from "./Popup";
 import Shortcut from "./Shortcut";
 
-const Steps = [
-	"start",
-	"down",
-	"down",
-	["end", 1500],
-	["pressDown", 250],
-	["pressUp", 1500],
-	["pressDown", 250],
-	["pressUp", 1500],
-];
+const StepFunctions = {
+	start({ setPopupVisible, setRecentIndex, shortcut, key, recents }) {
+		key("down", ...shortcut.modifiers);
+		key("press", shortcut.baseKey);
+		setPopupVisible(true);
+		setRecentIndex((recentIndex) => (recentIndex + 1) % recents.length);
+	},
+	down({ setRecentIndex, shortcut, key, recents }) {
+		key("press", shortcut.baseKey);
+		setRecentIndex((recentIndex) => (recentIndex + 1) % recents.length);
+	},
+	end({ setPopupVisible, updateRecents, shortcut, key }) {
+		key("up", ...shortcut.modifiers);
+		setPopupVisible(false);
+		updateRecents();
+	},
+	pressDown({ setPopupVisible, setRecentIndex, shortcut, key }) {
+		key("down", ...shortcut.keys);
+		setPopupVisible(true);
+		setRecentIndex(1);
+	},
+	pressUp({ setPopupVisible, updateRecents, shortcut, key }) {
+		key("up", ...shortcut.keys);
+		setPopupVisible(false);
+		updateRecents();
+	},
+};
+const Steps = (({ start, down, end, pressDown, pressUp }) => [
+	start,
+	down,
+	down,
+	[end, 1500],
+	[pressDown, 250],
+	[pressUp, 1500],
+	[pressDown, 250],
+	[pressUp, 1500],
+])(StepFunctions);
 const StepperOptions = {
 	steps: Steps,
 	delay: 1250,
@@ -90,39 +117,18 @@ export default function NavigateRecents({
 	const [recentIndex, setRecentIndex] = useState(0);
 	const [popupVisible, setPopupVisible] = useState(false);
 	const shortcutRef = useRef();
-	const { start, stop } = useStepper((step) => {
-		switch (step) {
-			case "start":
-				shortcutRef.current.keyDown(...shortcutInfo.modifiers);
-				setPopupVisible(true);
-				// fall through so that the baseKey also gets pressed
-
-			case "down":
-				shortcutRef.current.keyPress(shortcutInfo.baseKey);
-				setRecentIndex((recentIndex + 1) % tabCount);
-				break;
-
-			case "end":
-				shortcutRef.current.keyUp(...shortcutInfo.modifiers);
-				setPopupVisible(false);
-				updateRecents();
-				break;
-
-			case "pressDown":
-				shortcutRef.current.keyDown(...shortcutInfo.keys);
-				setPopupVisible(true);
-				setRecentIndex(1);
-				break;
-
-			case "pressUp":
-				shortcutRef.current.keyUp(...shortcutInfo.keys);
-				setPopupVisible(false);
-				updateRecents();
-				break;
-		}
-	}, StepperOptions);
 	const shortcutInfo = getKeysFromShortcut(previousShortcut);
-		// create an array of tabs sorted by recency
+	const handleStep = (step) => step({
+		shortcut: shortcutInfo,
+		setRecentIndex,
+		setPopupVisible,
+		updateRecents,
+		recents,
+		key(action, ...args) {
+			shortcutRef.current[`key${action[0].toUpperCase() + action.slice(1)}`](...args);
+		}
+	});
+	const { start, stop } = useStepper(handleStep, StepperOptions);
 	const recentTabs = recents.map((index) => tabs[index]);
 
 	const updateRecents = () => {

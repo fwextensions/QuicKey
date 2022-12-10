@@ -14,10 +14,25 @@ const BrowserWindow = styled(Window)`
 `;
 const TabBarContainer = styled.div`
 	width: 100%;
-	height: 10px;
-	border-bottom: 5px solid white;
+	height: 5px;
 	background: #dee1e6;
 	position: relative;
+`;
+const LocationBar = styled.div`
+	width: 100%;
+	height: 5px;
+	border: 1px solid white;
+	border-width: 1px 40px 1px 10px;
+	background: #eee;
+	position: relative;
+`;
+const QuicKeyIcon = styled.div`
+	top: 0;
+	right: -6px;
+	width: 3px;
+	height: 3px;
+	background: ${({ navigating }) => navigating ? "#cecac9" : "#333638"};
+	position: absolute;
 `;
 	// add an after element to cover up the divider lines on the right side,
 	// since there's no easy way to limit the number of them
@@ -58,6 +73,7 @@ const TabName = styled.div`
 	left: .6em;
 	bottom: .4em;
 	color: white;
+	opacity: .8;
 	position: absolute;
 `;
 
@@ -115,6 +131,9 @@ export default function Browser({
 				tabCount={tabs.length}
 				activeTab={activeTab}
 			/>
+			<LocationBar>
+				<QuicKeyIcon />
+			</LocationBar>
 			<TabName>
 				Tab {activeTab + 1}
 			</TabName>
