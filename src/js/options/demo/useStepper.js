@@ -50,6 +50,16 @@ export default function useStepper(
 	}, [index]);
 
 	useEffect(() => {
+		const active = !!timer.current;
+
+		stop();
+
+		if (active || autoStart) {
+			start();
+		}
+	}, [steps]);
+
+	useEffect(() => {
 		callbackRef.current = callback;
 	}, [callback]);
 

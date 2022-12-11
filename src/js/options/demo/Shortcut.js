@@ -8,6 +8,9 @@ import { styled } from "goober";
 import Key from "@/options/key";
 import { getKeysFromShortcut } from "@/options/shortcut-utils";
 
+const ResetKeyframes = [
+	{ transform: "translateY(0)" },
+];
 const DownKeyframes = [
 	{ transform: "translateY(0)" },
 	{ transform: "translateY(1em)" },
@@ -35,7 +38,6 @@ const Container = styled.div`
 
 	& kbd {
 		margin-right: .25em;
-		transition: transform .15s ease-out;
 	}
 
 	& kbd:last-of-type {
@@ -92,7 +94,8 @@ export default forwardRef(function Shortcut(
 	useImperativeHandle(ref, () => ({
 		keyDown(...keys) { animateKeys(keys, keyRefs, DownKeyframes, UpDownOptions); },
 		keyUp(...keys) { animateKeys(keys, keyRefs, UpKeyframes, UpDownOptions); },
-		keyPress(...keys) { animateKeys(keys, keyRefs, PressKeyframes, PressOptions); }
+		keyPress(...keys) { animateKeys(keys, keyRefs, PressKeyframes, PressOptions); },
+		keyReset(...keys) { animateKeys(keys, keyRefs, ResetKeyframes, { fill: "forwards" }); },
 	}));
 
 	return (

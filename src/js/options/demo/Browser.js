@@ -102,6 +102,7 @@ function TabBar({
 export default function Browser({
 	tabs,
 	activeTab = 3,
+	navigating,
 	...props })
 {
 		// store the bounds as a string so that it won't trigger a render unless
@@ -132,7 +133,7 @@ export default function Browser({
 				activeTab={activeTab}
 			/>
 			<LocationBar>
-				<QuicKeyIcon />
+				<QuicKeyIcon navigating={navigating} />
 			</LocationBar>
 			<TabName>
 				Tab {activeTab + 1}

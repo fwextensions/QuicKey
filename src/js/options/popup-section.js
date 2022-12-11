@@ -117,6 +117,7 @@ export default class PopupSection extends React.Component {
 								</span>
 								<NavigateRecents
 									previousShortcut={previousShortcutString}
+									navigateWithPopup={settings[k.NavigateRecentsWithPopup.Key]}
 								/>
 							</div>
 						}
