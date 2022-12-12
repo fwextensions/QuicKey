@@ -7,7 +7,9 @@ import { DemoRoot } from "./DemoRoot";
 import Browser from "./Browser";
 import Popup from "./Popup";
 import Shortcut from "./Shortcut";
+import PlayButton from "@/options/demo/PlayButton";
 
+const Noop = () => {};
 const StepFunctions = {
 	reset({ setPopupVisible, setRecentIndex, setNavigating, shortcut, key }) {
 		key("reset", ...shortcut.keys);
@@ -40,7 +42,7 @@ const StepFunctions = {
 		setPopupVisible(false);
 		updateRecents();
 	},
-	startPreviousTab({ setPopupVisible, setNavigating, shortcut, key }) {
+	startPreviousTab({ setNavigating }) {
 		setNavigating(true);
 	},
 	pressPreviousTab({ setRecentIndex, shortcut, key, recents }) {
@@ -61,7 +63,9 @@ const PopupRecentsSteps = (({ reset, start, down, end, pressDown, pressUp }) => 
 	[pressDown, 250],
 	[pressUp, 1500],
 	[pressDown, 250],
-	[pressUp, 1500],
+	[pressUp, 1000],
+		// add a last noop step so there's a delay before the play button is shown
+	Noop
 ])(StepFunctions);
 const PopupRecentsOptions = {
 	steps: PopupRecentsSteps,
@@ -80,7 +84,8 @@ const KeyboardRecentsSteps = (({ reset, startPreviousTab, pressPreviousTab, endP
 	[endPreviousTab, 1500],
 	[startPreviousTab, 0],
 	[pressPreviousTab, 1250],
-	endPreviousTab,
+	[endPreviousTab, 1000],
+	Noop
 ])(StepFunctions);
 const KeyboardRecentsOptions = {
 	steps: KeyboardRecentsSteps,
@@ -124,8 +129,9 @@ export default function NavigateRecents({
 			shortcutRef.current[`key${action[0].toUpperCase() + action.slice(1)}`](...args);
 		}
 	});
-	const { start, stop } = useStepper(handleStep, navigateWithPopup ? PopupRecentsOptions : KeyboardRecentsOptions);
+	const { start, stop, active } = useStepper(handleStep, navigateWithPopup ? PopupRecentsOptions : KeyboardRecentsOptions);
 	const recentTabs = recents.map((index) => tabs[index]);
+	const playButtonEnabled = !active && animStarted;
 
 	const updateRecents = () => {
 			// move the current tab to the front of the recents stack
@@ -150,14 +156,14 @@ export default function NavigateRecents({
 	}, [navigateWithPopup]);
 
 	useEffect(() => {
-		setTimeout(startAnim, 2000);
+		setTimeout(startAnim, 1000);
 
 			// make sure the stepper stops if we're unmounted
 		return stop;
 	}, []);
 
 	return (
-		<Container onClick={(event) => { event.preventDefault(); startAnim(); }}>
+		<Container onClick={(event) => event.preventDefault()}>
 			<DemoRoot
 				width={width}
 				height={height}
@@ -172,6 +178,11 @@ export default function NavigateRecents({
 					selected={recentIndex}
 					alignment="right-center"
 					visible={popupVisible}
+				/>
+				<PlayButton
+					enabled={playButtonEnabled}
+					title={playButtonEnabled ? "Play demo" : ""}
+					onClick={playButtonEnabled ? startAnim : undefined}
 				/>
 			</DemoRoot>
 			<ShortcutContainer>
