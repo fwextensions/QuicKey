@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { styled } from "goober";
-import { getKeysFromShortcut } from "@/options/shortcut-utils";
 import { createRecents, createTabs } from "./utils";
+import { createAnimOptions, createStepHandler } from "@/options/demo/anim";
 import useStepper from "./useStepper";
 import { DemoRoot } from "./DemoRoot";
 import Browser from "./Browser";
@@ -18,57 +18,25 @@ function getBounds({
 	return { left, top, width, height };
 }
 
-const Noop = () => {};
-const StepFunctions = {
-	reset({ setPopupVisible, setRecentIndex, shortcut, key }) {
-		key("reset", ...shortcut.keys);
-		setPopupVisible(false);
-		setRecentIndex(0);
-	},
-	start({ setPopupVisible, setRecentIndex, shortcut, key, recents }) {
-		key("down", ...shortcut.modifiers);
-		key("press", shortcut.baseKey);
-		setPopupVisible(true);
-		setRecentIndex((recentIndex) => (recentIndex + 1) % recents.length);
-	},
-	down({ setRecentIndex, shortcut, key, recents }) {
-		key("press", shortcut.baseKey);
-		setRecentIndex((recentIndex) => (recentIndex + 1) % recents.length);
-	},
-	end({ setPopupVisible, updateRecents, shortcut, key }) {
-		key("up", ...shortcut.modifiers);
-		setPopupVisible(false);
-		updateRecents();
-	},
-	pressDown({ setPopupVisible, setRecentIndex, shortcut, key }) {
-		key("down", ...shortcut.keys);
-		setPopupVisible(true);
-		setRecentIndex(1);
-	},
-	pressUp({ setPopupVisible, updateRecents, shortcut, key }) {
-		key("up", ...shortcut.keys);
-		setPopupVisible(false);
-		updateRecents();
-	},
-};
-const HidePopupSteps = (({ reset, start, down, end, pressDown, pressUp }) => [
-	[reset, 0],
-	start,
-	down,
-	down,
-	[end, 1000],
-	[pressDown, 250],
-	[pressUp, 1500],
-	[pressDown, 250],
-	[pressUp, 1000],
-		// add a last noop step so there's a delay before the play button is shown
-	Noop
-])(StepFunctions);
-const HidePopupOptions = {
-	steps: HidePopupSteps,
-	delay: 1250,
-	autoStart: false
-};
+const HidePopupOptions = createAnimOptions(
+	[
+		["reset", 0],
+		"start",
+		"down",
+		"down",
+		["end", 1000],
+		["pressDown", 250],
+		["pressUp", 1500],
+		["pressDown", 250],
+		["pressUp", 1000],
+			// add a last noop step so there's a delay before the play button is shown
+		"noop"
+	],
+	{
+		delay: 1250,
+		autoStart: false
+	}
+);
 
 const Container = styled.div`
 	margin-left: 1.7em;
@@ -95,12 +63,13 @@ export default function HidePopup({
 	const [popupVisible, setPopupVisible] = useState(false);
 	const [animStarted, setAnimStarted] = useState(false);
 	const shortcutRef = useRef();
-	const handleStep = (step) => step({
-		shortcut: getKeysFromShortcut(shortcut),
+	const handleStep = createStepHandler({
+		shortcut,
+		shortcutRef,
+		recents,
 		setRecentIndex,
 		setActiveTab,
 		setPopupVisible,
-		recents,
 		updateRecents() {
 				// move the current tab to the front of the recents stack
 			recents.unshift(...recents.splice(recentIndex, 1));
@@ -108,9 +77,6 @@ export default function HidePopup({
 			setRecentIndex(0);
 			setActiveTab(recents[0])
 		},
-		key(action, ...args) {
-			shortcutRef.current[`key${action[0].toUpperCase() + action.slice(1)}`](...args);
-		}
 	});
 	const { start, stop, active } = useStepper(handleStep, HidePopupOptions);
 	const recentTabs = recents.map((index) => tabs[index]);

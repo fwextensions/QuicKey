@@ -124,7 +124,7 @@ export default class PopupSection extends React.Component {
 					/>
 				</NewSetting>
 				<NavigateRecents
-					previousShortcut={previousShortcutString}
+					shortcut={previousShortcutString}
 					navigateWithPopup={settings[k.NavigateRecentsWithPopup.Key]}
 				/>
 
