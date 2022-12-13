@@ -4,6 +4,7 @@ import {Section} from "./sections";
 import NewSetting from "./new-setting";
 import Shortcut from "./shortcut";
 import NavigateRecents from "./demo/NavigateRecents";
+import HidePopup from "./demo/HidePopup";
 import * as k from "@/background/constants";
 
 
@@ -96,6 +97,7 @@ export default class PopupSection extends React.Component {
 			[k.HidePopupBehavior.Minimize, "In a minimized window"]
 		].map(this.renderOption);
 		const previousShortcutString = this.getShortcut(k.CommandIDs.PreviousTabCommand);
+		const openPopupShortcutString = this.getShortcut(k.CommandIDs.OpenPopupCommand);
 		const previousShortcut = this.renderShortcut(k.CommandIDs.PreviousTabCommand, "previous");
 		const nextShortcut = this.renderShortcut(k.CommandIDs.NextTabCommand, "next");
 
@@ -115,16 +117,16 @@ export default class PopupSection extends React.Component {
 									Show the recent tab list in a popup when
 									using {previousShortcut} and {nextShortcut}
 								</span>
-								<NavigateRecents
-									previousShortcut={previousShortcutString}
-									navigateWithPopup={settings[k.NavigateRecentsWithPopup.Key]}
-								/>
 							</div>
 						}
 						value={settings[k.NavigateRecentsWithPopup.Key]}
 						onChange={onChange}
 					/>
 				</NewSetting>
+				<NavigateRecents
+					previousShortcut={previousShortcutString}
+					navigateWithPopup={settings[k.NavigateRecentsWithPopup.Key]}
+				/>
 
 
 				<h2>Hide popup window</h2>
@@ -169,6 +171,10 @@ export default class PopupSection extends React.Component {
 						</div>
 					</ProsCons>
 				</NewSetting>
+				<HidePopup
+					shortcut={openPopupShortcutString}
+					hidePopupBehavior={settings[k.HidePopupBehavior.Key]}
+				/>
 			</Section>
 		);
 	}

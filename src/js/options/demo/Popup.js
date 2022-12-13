@@ -54,10 +54,11 @@ function Tab({
 export default function Popup({
 	recents,
 	selected = 0,
+	targetWindow = null,
 	alignment = "center-center",
 	visible })
 {
-	const { left, top, width: popupW, height: popupH } = calcPosition(null, { alignment });
+	const { left, top, width: popupW, height: popupH } = calcPosition(targetWindow, { alignment });
 
 	return (
 		<PopupWindow

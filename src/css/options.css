@@ -263,6 +263,7 @@ kbd, button {
 	color: var(--color, #ccc);
 	padding: 0.2em 0.5em 0.35em 0.5em;
 	vertical-align: baseline;
+	line-height: normal;
 	box-shadow:
 		0.07em 0.07em 0.125em var(--shadow-color-1, rgba(0, 0, 0, 0.25)),
 		0 0 0 0.04em var(--shadow-color-2, rgba(0, 0, 0, 0.3)),

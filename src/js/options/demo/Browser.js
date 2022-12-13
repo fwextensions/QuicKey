@@ -102,7 +102,7 @@ function TabBar({
 export default function Browser({
 	tabs,
 	activeTab = 3,
-	navigating,
+	navigating = false,
 	...props })
 {
 		// store the bounds as a string so that it won't trigger a render unless

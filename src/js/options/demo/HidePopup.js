@@ -9,12 +9,20 @@ import Popup from "./Popup";
 import Shortcut from "./Shortcut";
 import PlayButton from "@/options/demo/PlayButton";
 
+function getBounds({
+	screenLeft: left,
+	screenTop: top,
+	outerWidth: width,
+	outerHeight: height })
+{
+	return { left, top, width, height };
+}
+
 const Noop = () => {};
 const StepFunctions = {
-	reset({ setPopupVisible, setRecentIndex, setNavigating, shortcut, key }) {
+	reset({ setPopupVisible, setRecentIndex, shortcut, key }) {
 		key("reset", ...shortcut.keys);
 		setPopupVisible(false);
-		setNavigating(false);
 		setRecentIndex(0);
 	},
 	start({ setPopupVisible, setRecentIndex, shortcut, key, recents }) {
@@ -42,24 +50,13 @@ const StepFunctions = {
 		setPopupVisible(false);
 		updateRecents();
 	},
-	startPreviousTab({ setNavigating }) {
-		setNavigating(true);
-	},
-	pressPreviousTab({ setRecentIndex, shortcut, key, recents }) {
-		key("press", ...shortcut.keys);
-		setRecentIndex((recentIndex) => (recentIndex + 1) % recents.length);
-	},
-	endPreviousTab({ setNavigating, updateRecents }) {
-		setNavigating(false);
-		updateRecents();
-	},
 };
-const PopupRecentsSteps = (({ reset, start, down, end, pressDown, pressUp }) => [
+const HidePopupSteps = (({ reset, start, down, end, pressDown, pressUp }) => [
 	[reset, 0],
 	start,
 	down,
 	down,
-	[end, 1500],
+	[end, 1000],
 	[pressDown, 250],
 	[pressUp, 1500],
 	[pressDown, 250],
@@ -67,34 +64,14 @@ const PopupRecentsSteps = (({ reset, start, down, end, pressDown, pressUp }) => 
 		// add a last noop step so there's a delay before the play button is shown
 	Noop
 ])(StepFunctions);
-const PopupRecentsOptions = {
-	steps: PopupRecentsSteps,
+const HidePopupOptions = {
+	steps: HidePopupSteps,
 	delay: 1250,
-	autoStart: false
-};
-const KeyboardRecentsSteps = (({ reset, startPreviousTab, pressPreviousTab, endPreviousTab }) => [
-	[reset, 0],
-	[startPreviousTab, 0],
-	pressPreviousTab,
-	pressPreviousTab,
-	pressPreviousTab,
-	[endPreviousTab, 1500],
-	[startPreviousTab, 0],
-	[pressPreviousTab, 1250],
-	[endPreviousTab, 1500],
-	[startPreviousTab, 0],
-	[pressPreviousTab, 1250],
-	[endPreviousTab, 1000],
-	Noop
-])(StepFunctions);
-const KeyboardRecentsOptions = {
-	steps: KeyboardRecentsSteps,
-	delay: 1000,
 	autoStart: false
 };
 
 const Container = styled.div`
-	margin: 2em 0 0 1.7em;
+	margin-left: 1.7em;
 	gap: 2em;
 	display: flex;
 `;
@@ -104,41 +81,40 @@ const ShortcutContainer = styled.div`
 	display: flex;
 `;
 
-export default function NavigateRecents({
+export default function HidePopup({
 	width = 250,
 	height,
-	previousShortcut,
-	navigateWithPopup,
+	shortcut,
+	hidePopupBehavior,
 	tabCount = 10 })
 {
 	const [tabs] = useState(() => createTabs(tabCount));
 	const [recents, setRecents] = useState(createRecents(tabs));
 	const [recentIndex, setRecentIndex] = useState(0);
+	const [activeTab, setActiveTab] = useState(recents[recentIndex]);
 	const [popupVisible, setPopupVisible] = useState(false);
-	const [navigating, setNavigating] = useState(false);
 	const [animStarted, setAnimStarted] = useState(false);
 	const shortcutRef = useRef();
 	const handleStep = (step) => step({
-		shortcut: getKeysFromShortcut(previousShortcut),
+		shortcut: getKeysFromShortcut(shortcut),
 		setRecentIndex,
+		setActiveTab,
 		setPopupVisible,
-		setNavigating,
-		updateRecents,
 		recents,
+		updateRecents() {
+				// move the current tab to the front of the recents stack
+			recents.unshift(...recents.splice(recentIndex, 1));
+			setRecents(recents);
+			setRecentIndex(0);
+			setActiveTab(recents[0])
+		},
 		key(action, ...args) {
 			shortcutRef.current[`key${action[0].toUpperCase() + action.slice(1)}`](...args);
 		}
 	});
-	const { start, stop, active } = useStepper(handleStep, navigateWithPopup ? PopupRecentsOptions : KeyboardRecentsOptions);
+	const { start, stop, active } = useStepper(handleStep, HidePopupOptions);
 	const recentTabs = recents.map((index) => tabs[index]);
 	const playButtonEnabled = !active && animStarted;
-
-	const updateRecents = () => {
-			// move the current tab to the front of the recents stack
-		recents.unshift(...recents.splice(recentIndex, 1));
-		setRecents(recents);
-		setRecentIndex(0);
-	};
 
 	const startAnim = () => {
 		setAnimStarted(true);
@@ -147,20 +123,16 @@ export default function NavigateRecents({
 	};
 
 	useEffect(() => {
-			// we only want to restart the animation if it's already been
-			// started, since this effect will run when the component is mounted
-			// and autoStart might be set to false
 		if (animStarted) {
 			startAnim();
+		} else {
+				// ignore the change of hidePopupBehavior on first mount, but
+				// restart the animation of future changes
+			setAnimStarted(true);
 		}
-	}, [navigateWithPopup]);
 
-	useEffect(() => {
-		setTimeout(startAnim, 1000);
-
-			// make sure the stepper stops if we're unmounted
 		return stop;
-	}, []);
+	}, [hidePopupBehavior]);
 
 	return (
 		<Container>
@@ -170,13 +142,13 @@ export default function NavigateRecents({
 			>
 				<Browser
 					tabs={tabs}
-					activeTab={recents[recentIndex]}
-					navigating={navigating}
+					activeTab={activeTab}
 				/>
 				<Popup
 					recents={recentTabs}
 					selected={recentIndex}
-					alignment="right-center"
+					alignment="center-center"
+					targetWindow={getBounds(window)}
 					visible={popupVisible}
 				/>
 				<PlayButton
@@ -188,7 +160,7 @@ export default function NavigateRecents({
 			<ShortcutContainer>
 				<Shortcut
 					ref={shortcutRef}
-					shortcut={previousShortcut}
+					shortcut={shortcut}
 				/>
 			</ShortcutContainer>
 		</Container>

@@ -18,6 +18,7 @@ const Container = styled.div`
 	
 	& svg {
 		width: 40px;
+		margin-left: 10px;
 	}
 	
 	&:hover {
@@ -40,7 +41,7 @@ export default function PlayButton({
 			{...props}
 		>
 			<svg viewBox="0 0 100 100">
-				<polygon points="7 0, 7 100, 93 50" />
+				<polygon points="14 0, 14 100, 100 50" />
 			</svg>
 		</Container>
 	);
