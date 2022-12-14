@@ -49,6 +49,14 @@ export function createRecents(
 	return shuffle([...tabs.keys()]);
 }
 
+export function getWindowBounds(
+	targetWindow = window)
+{
+	const { screenLeft: left, screenTop: top, outerWidth: width, outerHeight: height } = targetWindow;
+
+	return { left, top, width, height };
+}
+
 export function linearGradient(
 	angle,
 	color1,

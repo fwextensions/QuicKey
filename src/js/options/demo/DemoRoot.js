@@ -6,6 +6,11 @@ import { Rect } from "./Rect";
 const Screen = styled(Rect)`
 	background: white;
 	border: 1px solid #eee;
+	transition: border-color .25s ease-out;
+	
+	&:hover {
+		border-color: #ccc;
+	}
 `;
 
 export function DemoRoot({

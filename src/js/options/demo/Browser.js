@@ -1,13 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { styled } from "goober";
+import { getWindowBounds } from "@/options/demo/utils";
 import { Window } from "./Window";
-
-function getWindowBounds()
-{
-	const { screenLeft: left, screenTop: top, outerWidth: width, outerHeight: height } = window;
-
-	return { left, top, width, height };
-}
 
 const BrowserWindow = styled(Window)`
 	background: ${({ bg }) => bg};

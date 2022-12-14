@@ -79,6 +79,10 @@ export function createAnimOptions(
 export function createStepHandler(
 	locals)
 {
+		// return a function that takes one of the StepFunctions defined above
+		// and calls it with a hash of helper functions, most of which are
+		// defined inside the component, as well as vars like shortcutRef and
+		// recents
 	return (step) => step({
 			// supply some default noop functions, in case the caller doesn't
 			// pass in local versions of those

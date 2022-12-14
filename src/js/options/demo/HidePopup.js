@@ -1,22 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
 import { styled } from "goober";
-import { createRecents, createTabs } from "./utils";
-import { createAnimOptions, createStepHandler } from "@/options/demo/anim";
+import { HidePopupBehavior } from "@/background/constants";
+import { createRecents, createTabs, getWindowBounds } from "./utils";
+import { createAnimOptions, createStepHandler } from "./anim";
 import useStepper from "./useStepper";
 import { DemoRoot } from "./DemoRoot";
 import Browser from "./Browser";
 import Popup from "./Popup";
 import Shortcut from "./Shortcut";
-import PlayButton from "@/options/demo/PlayButton";
-
-function getBounds({
-	screenLeft: left,
-	screenTop: top,
-	outerWidth: width,
-	outerHeight: height })
-{
-	return { left, top, width, height };
-}
+import PlayButton from "./PlayButton";
 
 const HidePopupOptions = createAnimOptions(
 	[
@@ -56,7 +48,7 @@ export default function HidePopup({
 	hidePopupBehavior,
 	tabCount = 10 })
 {
-	const [tabs] = useState(() => createTabs(tabCount));
+	const [tabs, setTabs] = useState(() => createTabs(tabCount));
 	const [recents, setRecents] = useState(createRecents(tabs));
 	const [recentIndex, setRecentIndex] = useState(0);
 	const [activeTab, setActiveTab] = useState(recents[recentIndex]);
@@ -97,6 +89,16 @@ export default function HidePopup({
 			setAnimStarted(true);
 		}
 
+		if (hidePopupBehavior == HidePopupBehavior.Tab) {
+				// add a fake tab to account for the tab into which the popup
+				// will be hidden, so the tab widths shrink
+			setTabs(tabs.concat({}));
+		} else if (tabs.length !== tabCount) {
+				// restore the actual tab count
+			tabs.length = tabCount;
+			setTabs(tabs);
+		}
+
 		return stop;
 	}, [hidePopupBehavior]);
 
@@ -114,8 +116,9 @@ export default function HidePopup({
 					recents={recentTabs}
 					selected={recentIndex}
 					alignment="center-center"
-					targetWindow={getBounds(window)}
+					targetWindow={getWindowBounds(window)}
 					visible={popupVisible}
+					hideBehavior={hidePopupBehavior}
 				/>
 				<PlayButton
 					enabled={playButtonEnabled}
