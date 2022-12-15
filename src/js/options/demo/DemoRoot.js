@@ -7,6 +7,7 @@ const Screen = styled(Rect)`
 	background: white;
 	border: 1px solid #eee;
 	transition: border-color .25s ease-out;
+	box-shadow: inset 0 -${({ taskbarHeight }) => taskbarHeight}px 0 0 #ddd;
 	
 	&:hover {
 		border-color: #ccc;
@@ -18,7 +19,7 @@ export function DemoRoot({
 	height,
 	children })
 {
-	const { width: screenW, height: screenH } = window.screen;
+	const { width: screenW, height: screenH, availHeight } = window.screen;
 	let scale = .1;
 
 	if (Number.isFinite(width)) {
@@ -32,6 +33,7 @@ export function DemoRoot({
 			<Screen
 				width={screenW}
 				height={screenH}
+				taskbarHeight={(screenH - availHeight) * scale}
 			>
 				{children}
 			</Screen>

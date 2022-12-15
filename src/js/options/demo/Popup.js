@@ -44,14 +44,7 @@ const PopupWindow = styled(Window)`
 		border: none;
 		border-radius: 0;
 		transition-duration: .3s;
-	}
-	
-	&.hidden.tab {
 		background: yellow;
-	}
-	
-	&.hidden.minimize {
-		background: silver;
 	}
 `;
 const Selection = styled.div`
@@ -117,7 +110,7 @@ export default function Popup({
 			// if we change the TabBar layout in the Browser component, we'll
 			// need to update this calculation
 		const width = (.85 / (recents.length)) * targetWindow.width;
-		const left = Math.ceil(width * recents.length);
+		const left = targetWindow.left + (width * (recents.length - 1));
 
 			// these top and height values are a little arbitrary, and work for
 			// a 1440p monitor, but may not work for all
