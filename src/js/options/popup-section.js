@@ -5,11 +5,13 @@ import NewSetting from "./new-setting";
 import Shortcut from "./shortcut";
 import NavigateRecents from "./demo/NavigateRecents";
 import HidePopup from "./demo/HidePopup";
+import {createRecents, createTabs} from "./demo/utils";
 import * as k from "@/background/constants";
 
 
 const SwitchWindowShortcut = k.IsMac ? "cmd-`" : "alt-tab";
 const SwitchAppShortcut = k.IsMac ? "cmd-tab" : "alt-tab";
+const DemoTabCount = 10;
 
 
 const ProsCons = ({
@@ -24,7 +26,9 @@ const ProsCons = ({
 
 export default class PopupSection extends React.Component {
     state = {
-        currentOption: this.props.settings[k.HidePopupBehavior.Key]
+        currentOption: this.props.settings[k.HidePopupBehavior.Key],
+		tabs: createTabs(DemoTabCount),
+		recents: createRecents(Array(DemoTabCount))
     };
 
 
@@ -90,7 +94,7 @@ export default class PopupSection extends React.Component {
     render()
 	{
 		const {id, settings, lastSeenOptionsVersion, onChange} = this.props;
-		const {currentOption} = this.state;
+		const {currentOption, tabs, recents} = this.state;
 		const hideOptions = [
 			[k.HidePopupBehavior.Behind, "Behind the active window"],
 			[k.HidePopupBehavior.Tab, "In a tab"],
@@ -127,6 +131,8 @@ export default class PopupSection extends React.Component {
 					shortcut={previousShortcutString}
 					navigateWithPopup={settings[k.NavigateRecentsWithPopup.Key]}
 					tracker={this.props.tracker}
+					tabs={tabs}
+					recents={recents}
 				/>
 
 
@@ -176,6 +182,8 @@ export default class PopupSection extends React.Component {
 					shortcut={openPopupShortcutString}
 					hidePopupBehavior={settings[k.HidePopupBehavior.Key]}
 					tracker={this.props.tracker}
+					tabs={tabs}
+					recents={recents}
 				/>
 			</Section>
 		);

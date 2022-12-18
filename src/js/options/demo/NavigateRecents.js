@@ -66,11 +66,11 @@ export default function NavigateRecents({
 	height,
 	shortcut,
 	navigateWithPopup,
-	tabCount = 10,
-	tracker })
+	tracker,
+	tabs,
+	recents: initialRecents })
 {
-	const [tabs] = useState(() => createTabs(tabCount));
-	const [recents, setRecents] = useState(() => createRecents(tabs));
+	const [recents, setRecents] = useState([...initialRecents]);
 	const [recentIndex, setRecentIndex] = useState(0);
 	const [popupVisible, setPopupVisible] = useState(false);
 	const [navigating, setNavigating] = useState(false);

@@ -46,11 +46,12 @@ export default function HidePopup({
 	height,
 	shortcut,
 	hidePopupBehavior,
-	tabCount = 10,
-	tracker })
+	tracker,
+	tabs: initialTabs,
+	recents: initialRecents })
 {
-	const [tabs, setTabs] = useState(() => createTabs(tabCount));
-	const [recents, setRecents] = useState(createRecents(tabs));
+	const [tabs, setTabs] = useState([...initialTabs]);
+	const [recents, setRecents] = useState([...initialRecents]);
 	const [recentIndex, setRecentIndex] = useState(0);
 	const [activeTab, setActiveTab] = useState(recents[recentIndex]);
 	const [popupVisible, setPopupVisible] = useState(false);
@@ -94,9 +95,9 @@ export default function HidePopup({
 				// add a fake tab to account for the tab into which the popup
 				// will be hidden, so the tab widths shrink
 			setTabs(tabs.concat({}));
-		} else if (tabs.length !== tabCount) {
+		} else if (tabs.length !== initialTabs.length) {
 				// restore the actual tab count
-			tabs.length = tabCount;
+			tabs.length = initialTabs.length;
 			setTabs(tabs);
 		}
 
