@@ -66,7 +66,8 @@ export default function NavigateRecents({
 	height,
 	shortcut,
 	navigateWithPopup,
-	tabCount = 10 })
+	tabCount = 10,
+	tracker })
 {
 	const [tabs] = useState(() => createTabs(tabCount));
 	const [recents, setRecents] = useState(() => createRecents(tabs));
@@ -142,6 +143,7 @@ export default function NavigateRecents({
 				<Shortcut
 					ref={shortcutRef}
 					shortcut={shortcut}
+					tracker={tracker}
 				/>
 			</ShortcutContainer>
 		</Container>

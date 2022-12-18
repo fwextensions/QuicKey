@@ -3,6 +3,7 @@ import {Sections, Section, SectionList, SectionLabel} from "./sections";
 import GeneralSection from "./general-section";
 import PopupSection from "./popup-section";
 import ShortcutsSection from "./shortcuts-section";
+import {openTab} from "./open-tab";
 import * as k from "@/background/constants";
 
 
@@ -34,15 +35,13 @@ export default class OptionsApp extends React.Component {
 
     handleHelpButtonClick = () =>
 	{
-		chrome.tabs.create({ url: "https://fwextensions.github.io/QuicKey/" });
-		this.props.tracker.event("extension", "options-help");
+		openTab("https://fwextensions.github.io/QuicKey/", "help", this.props.tracker);
 	};
 
 
     handleSupportClick = () =>
 	{
-		chrome.tabs.create({ url: "https://fwextensions.github.io/QuicKey/support/" });
-		this.props.tracker.event("extension", "options-support");
+		openTab("https://fwextensions.github.io/QuicKey/support/", "support", this.props.tracker);
 	};
 
 
@@ -95,6 +94,7 @@ export default class OptionsApp extends React.Component {
 						id="popup"
 						settings={settings}
 						lastSeenOptionsVersion={lastSeenOptionsVersion}
+						tracker={tracker}
 						onChange={onChange}
 					/>
 

@@ -7,6 +7,7 @@ import React, {
 import { styled } from "goober";
 import Key from "@/options/key";
 import { getKeysFromShortcut } from "@/options/shortcut-utils";
+import { openTab } from "@/options/open-tab";
 
 const ResetKeyframes = [
 	{ transform: "translateY(0)" },
@@ -73,7 +74,10 @@ function animateKeys(
 }
 
 export default forwardRef(function Shortcut(
-	{ shortcut },
+	{
+		shortcut,
+		tracker
+	},
 	ref)
 {
 	const keyRefs = useRef({});
@@ -100,10 +104,19 @@ export default forwardRef(function Shortcut(
 
 	return (
 		<Container>
-			<ShadowKeyContainer>
-				{shadowKeys}
-			</ShadowKeyContainer>
-			{pressableKeys}
+			{shortcut
+				? <>
+					<ShadowKeyContainer>
+						{shadowKeys}
+					</ShadowKeyContainer>
+					{pressableKeys}
+				</>
+				: <button className="key"
+					onClick={() => openTab("chrome://extensions/shortcuts", "shortcuts", tracker)}
+				>
+					Set shortcut
+				</button>
+			}
 		</Container>
 	);
 });

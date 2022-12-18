@@ -46,7 +46,8 @@ export default function HidePopup({
 	height,
 	shortcut,
 	hidePopupBehavior,
-	tabCount = 10 })
+	tabCount = 10,
+	tracker })
 {
 	const [tabs, setTabs] = useState(() => createTabs(tabCount));
 	const [recents, setRecents] = useState(createRecents(tabs));
@@ -130,6 +131,7 @@ export default function HidePopup({
 				<Shortcut
 					ref={shortcutRef}
 					shortcut={shortcut}
+					tracker={tracker}
 				/>
 			</ShortcutContainer>
 		</Container>

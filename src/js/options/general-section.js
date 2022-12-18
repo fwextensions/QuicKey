@@ -2,6 +2,7 @@ import React from "react";
 import {Checkbox} from "./controls";
 import {Section} from "./sections";
 import NewSetting from "./new-setting";
+import {openTab} from "./open-tab";
 import {HistoryIcon, WindowIcon, IncognitoIcon, InPrivateIcon} from "@/common/icons";
 import * as k from "@/background/constants";
 
@@ -27,8 +28,7 @@ export default function GeneralSection({
 	{
 			// FF doesn't support opening the settings tab directly
 		if (!k.IsFirefox) {
-			chrome.tabs.create({ url: `chrome://extensions/?id=${chrome.runtime.id}` });
-			tracker.event("extension", "options-incognito");
+			openTab(`chrome://extensions/?id=${chrome.runtime.id}`, "incognito", tracker);
 		}
 	}
 

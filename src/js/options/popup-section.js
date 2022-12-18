@@ -126,6 +126,7 @@ export default class PopupSection extends React.Component {
 				<NavigateRecents
 					shortcut={previousShortcutString}
 					navigateWithPopup={settings[k.NavigateRecentsWithPopup.Key]}
+					tracker={this.props.tracker}
 				/>
 
 
@@ -174,6 +175,7 @@ export default class PopupSection extends React.Component {
 				<HidePopup
 					shortcut={openPopupShortcutString}
 					hidePopupBehavior={settings[k.HidePopupBehavior.Key]}
+					tracker={this.props.tracker}
 				/>
 			</Section>
 		);

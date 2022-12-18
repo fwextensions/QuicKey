@@ -4,21 +4,20 @@ import {Section} from "./sections";
 import NewSetting from "./new-setting";
 import Shortcuts from "./keyboard-shortcuts";
 import ShortcutPicker from "./shortcut-picker";
+import {openTab} from "./open-tab";
 import * as k from "@/background/constants";
 
 
 export default class ShortcutSection extends React.Component {
     handleChangeShortcutsClick = () =>
 	{
-		chrome.tabs.create({ url: "chrome://extensions/shortcuts" });
-		this.props.tracker.event("extension", "options-shortcuts");
+		openTab("chrome://extensions/shortcuts", "shortcuts", this.props.tracker);
 	};
 
 
     handleCtrlTabClick = () =>
 	{
-		chrome.tabs.create({ url: "https://fwextensions.github.io/QuicKey/ctrl-tab/" });
-		this.props.tracker.event("extension", "options-ctrl-tab");
+		openTab("https://fwextensions.github.io/QuicKey/ctrl-tab/", "ctrl-tab", this.props.tracker);
 	};
 
 
