@@ -25,7 +25,7 @@ const Container = styled.div`
 		opacity: ${({ enabled }) => enabled ? .3 : 0};
 	}
 	
-	&:active {
+	&:hover:active {
 		opacity: ${({ enabled }) => enabled ? .6 : 0};
 		transition: none;
 	}

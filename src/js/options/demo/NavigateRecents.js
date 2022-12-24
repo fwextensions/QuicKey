@@ -1,12 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { styled } from "goober";
-import { createRecents, createTabs } from "./utils";
 import { createAnimOptions, createStepHandler } from "@/options/demo/anim";
 import useStepper from "./useStepper";
 import { DemoRoot } from "./DemoRoot";
 import Browser from "./Browser";
 import Popup from "./Popup";
-import Shortcut from "./Shortcut";
+import Shortcut from "./AnimShortcut";
 import PlayButton from "@/options/demo/PlayButton";
 
 const PopupRecentsOptions = createAnimOptions(
@@ -67,6 +66,7 @@ export default function NavigateRecents({
 	shortcut,
 	navigateWithPopup,
 	tracker,
+	autoStart,
 	tabs,
 	recents: initialRecents })
 {
@@ -74,7 +74,7 @@ export default function NavigateRecents({
 	const [recentIndex, setRecentIndex] = useState(0);
 	const [popupVisible, setPopupVisible] = useState(false);
 	const [navigating, setNavigating] = useState(false);
-	const [animStarted, setAnimStarted] = useState(false);
+	const isLoaded = useRef(false);
 	const shortcutRef = useRef();
 	const handleStep = createStepHandler({
 		shortcut,
@@ -92,10 +92,9 @@ export default function NavigateRecents({
 	});
 	const { start, stop, active } = useStepper(handleStep, navigateWithPopup ? PopupRecentsOptions : KeyboardRecentsOptions);
 	const recentTabs = recents.map((index) => tabs[index]);
-	const playButtonEnabled = !active && animStarted;
+	const playButtonEnabled = !active && (isLoaded.current || !autoStart);
 
 	const startAnim = () => {
-		setAnimStarted(true);
 		setRecentIndex(0);
 		start();
 	};
@@ -104,16 +103,15 @@ export default function NavigateRecents({
 			// we only want to restart the animation if it's already been
 			// started, since this effect will run when the component is mounted
 			// and autoStart might be set to false
-		if (animStarted) {
+		if (isLoaded.current || autoStart) {
 			startAnim();
 		}
+
+		return stop;
 	}, [navigateWithPopup]);
 
 	useEffect(() => {
-		setTimeout(startAnim, 1000);
-
-			// make sure the stepper stops if we're unmounted
-		return stop;
+		isLoaded.current = true;
 	}, []);
 
 	return (

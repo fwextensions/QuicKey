@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import { styled } from "goober";
 import { HidePopupBehavior } from "@/background/constants";
-import { createRecents, createTabs, getWindowBounds } from "./utils";
+import { getWindowBounds } from "./utils";
 import { createAnimOptions, createStepHandler } from "./anim";
 import useStepper from "./useStepper";
 import { DemoRoot } from "./DemoRoot";
 import Browser from "./Browser";
 import Popup from "./Popup";
-import Shortcut from "./Shortcut";
+import Shortcut from "./AnimShortcut";
 import PlayButton from "./PlayButton";
 
 const HidePopupOptions = createAnimOptions(
@@ -47,6 +47,7 @@ export default function HidePopup({
 	shortcut,
 	hidePopupBehavior,
 	tracker,
+	autoStart,
 	tabs: initialTabs,
 	recents: initialRecents })
 {
@@ -55,7 +56,7 @@ export default function HidePopup({
 	const [recentIndex, setRecentIndex] = useState(0);
 	const [activeTab, setActiveTab] = useState(recents[recentIndex]);
 	const [popupVisible, setPopupVisible] = useState(false);
-	const [animStarted, setAnimStarted] = useState(false);
+	const isLoaded = useRef(false);
 	const shortcutRef = useRef();
 	const handleStep = createStepHandler({
 		shortcut,
@@ -74,21 +75,18 @@ export default function HidePopup({
 	});
 	const { start, stop, active } = useStepper(handleStep, HidePopupOptions);
 	const recentTabs = recents.map((index) => tabs[index]);
-	const playButtonEnabled = !active && animStarted;
+	const playButtonEnabled = !active && (isLoaded.current || !autoStart);
 
 	const startAnim = () => {
-		setAnimStarted(true);
 		setRecentIndex(0);
 		start();
 	};
 
 	useEffect(() => {
-		if (animStarted) {
+			// ignore the change of hidePopupBehavior on first mount, but
+			// restart the animation on future changes, or if autoStart is true
+		if (isLoaded.current || autoStart) {
 			startAnim();
-		} else {
-				// ignore the change of hidePopupBehavior on first mount, but
-				// restart the animation of future changes
-			setAnimStarted(true);
 		}
 
 		if (hidePopupBehavior == HidePopupBehavior.Tab) {
@@ -103,6 +101,10 @@ export default function HidePopup({
 
 		return stop;
 	}, [hidePopupBehavior]);
+
+	useEffect(() => {
+		isLoaded.current = true;
+	}, []);
 
 	return (
 		<Container>

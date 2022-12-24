@@ -22,8 +22,8 @@ export function createTabs(
 		tabs.length = tabCount;
 	} else {
 		for (let i = tabs.length; i < tabCount; i++) {
-			// make sure the hues used for the gradients are spread roughly
-			// evenly around the color wheel from each other
+				// make sure the hues used for the gradients are spread roughly
+				// evenly around the color wheel from each other
 			const hue1 = StartingHue + hueStep * i;
 			const hue2 = StartingHue + hueStep * i + hueStep * tabCount / 3;
 			const gradient = rndGradientValues(
@@ -44,9 +44,9 @@ export function createTabs(
 }
 
 export function createRecents(
-	tabs)
+	tabCount)
 {
-	return shuffle([...tabs.keys()]);
+	return shuffle([...Array(tabCount).keys()]);
 }
 
 export function getWindowBounds(

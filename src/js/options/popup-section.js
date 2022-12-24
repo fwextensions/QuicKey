@@ -28,7 +28,7 @@ export default class PopupSection extends React.Component {
     state = {
         currentOption: this.props.settings[k.HidePopupBehavior.Key],
 		tabs: createTabs(DemoTabCount),
-		recents: createRecents(Array(DemoTabCount))
+		recents: createRecents(DemoTabCount)
     };
 
 
@@ -107,30 +107,16 @@ export default class PopupSection extends React.Component {
 
 		return (
 			<Section id={id}>
-				<h2>Show popup window while navigating recent tabs</h2>
+				<h2>Show popup window</h2>
 
-				<NewSetting
-					addedVersion={12}
-					lastSeenOptionsVersion={lastSeenOptionsVersion}
-				>
-					<Checkbox
-						id={k.NavigateRecentsWithPopup.Key}
-						label={
-							<div>
-								<span>
-									Show the recent tab list in a popup when
-									using {previousShortcut} and {nextShortcut}
-								</span>
-							</div>
-						}
-						value={settings[k.NavigateRecentsWithPopup.Key]}
-						onChange={onChange}
-					/>
-				</NewSetting>
-				<NavigateRecents
-					shortcut={previousShortcutString}
-					navigateWithPopup={settings[k.NavigateRecentsWithPopup.Key]}
+				<p>
+					Press <Shortcut keys={openPopupShortcutString} /> to show the alt-tab-style popup.
+				</p>
+				<HidePopup
+					shortcut={openPopupShortcutString}
+					hidePopupBehavior={settings[k.HidePopupBehavior.Key]}
 					tracker={this.props.tracker}
+					autoStart={true}
 					tabs={tabs}
 					recents={recents}
 				/>
@@ -178,9 +164,31 @@ export default class PopupSection extends React.Component {
 						</div>
 					</ProsCons>
 				</NewSetting>
-				<HidePopup
-					shortcut={openPopupShortcutString}
-					hidePopupBehavior={settings[k.HidePopupBehavior.Key]}
+
+
+				<h2>Show popup window while navigating recent tabs</h2>
+
+				<NewSetting
+					addedVersion={12}
+					lastSeenOptionsVersion={lastSeenOptionsVersion}
+				>
+					<Checkbox
+						id={k.NavigateRecentsWithPopup.Key}
+						label={
+							<div>
+								<span>
+									Show the recent tab list in a popup when
+									using {previousShortcut} and {nextShortcut}
+								</span>
+							</div>
+						}
+						value={settings[k.NavigateRecentsWithPopup.Key]}
+						onChange={onChange}
+					/>
+				</NewSetting>
+				<NavigateRecents
+					shortcut={previousShortcutString}
+					navigateWithPopup={settings[k.NavigateRecentsWithPopup.Key]}
 					tracker={this.props.tracker}
 					tabs={tabs}
 					recents={recents}

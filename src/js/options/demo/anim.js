@@ -60,6 +60,9 @@ export function createAnimOptions(
 	options)
 {
 	const stepsWithFunctions = steps.map((item) => {
+			// if the step doesn't include a delay, it will be returned as
+			// undefined, and useStepper() will default to the delay specified
+			// in the options object for this step
 		const [functionName, delay] = [].concat(item);
 		let func = StepFunctions[functionName];
 
