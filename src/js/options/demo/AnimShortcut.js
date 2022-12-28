@@ -6,9 +6,8 @@ import React, {
 } from "react";
 import { styled } from "goober";
 import Key from "@/options/key";
-import TextButton from "@/options/demo/TextButton";
 import { getKeysFromShortcut } from "@/options/shortcut-utils";
-import { openTab } from "@/options/open-tab";
+import SetShortcutLink from "@/options/demo/SetShortcutLink";
 
 const ResetKeyframes = [
 	{ transform: "translateY(0)" },
@@ -74,11 +73,8 @@ function animateKeys(
 	});
 }
 
-export default forwardRef(function Shortcut(
-	{
-		shortcut,
-		tracker
-	},
+export default forwardRef(function AnimShortcut(
+	{ shortcut },
 	ref)
 {
 	const keyRefs = useRef({});
@@ -114,11 +110,7 @@ export default forwardRef(function Shortcut(
 						{pressableKeys}
 					</>
 				): (
-					<TextButton
-						onClick={() => openTab("chrome://extensions/shortcuts", "shortcuts", tracker)}
-					>
-						Set shortcut
-					</TextButton>
+					<SetShortcutLink />
 				)
 			}
 		</Container>

@@ -15,7 +15,7 @@ const Button = styled.button`
 	
 	&:hover {
 		text-decoration: underline;
-		opacity: .3;
+		opacity: .35;
 	}
 	
 	&:hover:active {

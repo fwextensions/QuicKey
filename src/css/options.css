@@ -670,7 +670,7 @@ label b, .label b {
 	Shortcut picker
    =========================================================================== */
 
-.shortcut-picker {
+.shortcut-setting > .shortcut-picker {
 	width: 45%;
 }
 

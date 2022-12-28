@@ -3,21 +3,27 @@ import {Checkbox, RadioButton, RadioGroup} from "./controls";
 import {Section} from "./sections";
 import NewSetting from "./new-setting";
 import Shortcut from "./shortcut";
+import ShortcutPicker from "./shortcut-picker";
+import {createRecents, createTabs} from "./demo/utils";
+import {OptionsContext} from "./options-provider";
 import NavigateRecents from "./demo/NavigateRecents";
 import HidePopup from "./demo/HidePopup";
-import {createRecents, createTabs} from "./demo/utils";
+import SetShortcutLink from "./demo/SetShortcutLink";
 import * as k from "@/background/constants";
-import ShortcutPicker from "./shortcut-picker";
-import {openTab} from "./open-tab";
-import TextButton from "./demo/TextButton";
 
 
 const SwitchWindowShortcut = k.IsMac ? "cmd-`" : "alt-tab";
 const SwitchAppShortcut = k.IsMac ? "cmd-tab" : "alt-tab";
 const DemoTabCount = 10;
+const {
+	OpenPopupCommand,
+	PreviousTabCommand,
+	NextTabCommand,
+	FocusPopupCommand
+} = k.CommandIDs;
 const PopupShortcutIDs = [
-	k.CommandIDs.OpenPopupCommand,
-	k.CommandIDs.FocusPopupCommand
+	OpenPopupCommand,
+	FocusPopupCommand
 ];
 
 
@@ -31,19 +37,10 @@ const ProsCons = ({
 );
 
 
-const SetShortcut = ({
-	onClick }) =>
-(
-	<TextButton
-		title="Open the browser's keyboard shortcuts page"
-		onClick={onClick}
-	>
-		Set shortcut
-	</TextButton>
-);
-
-
 export default class PopupSection extends React.Component {
+	static contextType = OptionsContext;
+
+
     state = {
         currentOption: this.props.settings[k.HidePopupBehavior.Key],
 		tabs: createTabs(DemoTabCount),
@@ -62,7 +59,7 @@ export default class PopupSection extends React.Component {
 
     handleChangeShortcutsClick = () =>
 	{
-		openTab("chrome://extensions/shortcuts", "shortcuts", this.props.tracker);
+		this.context.openTab("chrome://extensions/shortcuts", "shortcuts");
 	};
 
 
@@ -89,20 +86,28 @@ export default class PopupSection extends React.Component {
 			// default to an index-based key for fixed shortcuts
 		return <li className="shortcut-setting"
 			key={shortcut.id || `shortcut-${i}`}
-			title={shortcut.tooltip}
 		>
 			<div className="label">{label}</div>
 			{shortcut.shortcut
 				? (
-					<ShortcutPicker id={shortcut.id}
-							// non-customizable shortcuts will come with a shortcut
-							// sequence.  otherwise, look up the current shortcut
-							// in settings.
-						shortcut={shortcut.shortcut || settings.shortcuts[shortcut.id]}
-						disabled={shortcut.disabled}
-					/>
+					<div
+						title="Open the browser's keyboard shortcuts page"
+						onClick={this.handleChangeShortcutsClick}
+						style={{
+							cursor: "pointer",
+							width: "45%"
+						}}
+					>
+						<ShortcutPicker id={shortcut.id}
+								// non-customizable shortcuts will come with a shortcut
+								// sequence.  otherwise, look up the current shortcut
+								// in settings.
+							shortcut={shortcut.shortcut || settings.shortcuts[shortcut.id]}
+							disabled={shortcut.disabled}
+						/>
+					</div>
 				) : (
-					<SetShortcut onClick={this.handleChangeShortcutsClick} />
+					<SetShortcutLink />
 				)
 			}
 		</li>
@@ -166,10 +171,10 @@ export default class PopupSection extends React.Component {
 			[k.HidePopupBehavior.Tab, "In a tab"],
 			[k.HidePopupBehavior.Minimize, "In a minimized window"]
 		].map(this.renderOption);
-		const previousShortcutString = this.getShortcut(k.CommandIDs.PreviousTabCommand);
-		const openPopupShortcutString = this.getShortcut(k.CommandIDs.OpenPopupCommand);
-		const previousShortcut = this.renderShortcut(k.CommandIDs.PreviousTabCommand, "previous");
-		const nextShortcut = this.renderShortcut(k.CommandIDs.NextTabCommand, "next");
+		const previousShortcutString = this.getShortcut(PreviousTabCommand);
+		const openPopupShortcutString = this.getShortcut(OpenPopupCommand);
+		const previousShortcut = this.renderShortcut(PreviousTabCommand, "previous");
+		const nextShortcut = this.renderShortcut(NextTabCommand, "next");
 
 		return (
 			<Section id={id}>
@@ -180,7 +185,7 @@ export default class PopupSection extends React.Component {
 					popup window.  The popup appears nearly instantly (since the
 					window is never unloaded) and it lets you use a single
 					shortcut to show the window and then choose a tab to focus.
-					This provides the closest behavior to the alt-tab menu.
+					This provides the closest behavior to the {SwitchWindowShortcut} menu.
 				</p>
 
 				{this.renderPopupShortcuts()}

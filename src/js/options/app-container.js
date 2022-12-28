@@ -4,6 +4,7 @@ import trackers from "@/background/page-trackers";
 import storage from "@/background/quickey-storage";
 import settings from "@/background/settings";
 import {Platform, ShowTabCount, HidePopupBehavior, NavigateRecentsWithPopup} from "@/background/constants";
+import {OptionsProvider} from "./options-provider";
 
 
 const PlusPattern = /\+/g;
@@ -12,7 +13,14 @@ const PlusPattern = /\+/g;
 export default class OptionsAppContainer extends React.Component {
 	tracker = trackers.options;
 	platform = Platform;
-
+	contextValue = {
+		tracker: this.tracker,
+		openTab: (url, eventName) =>
+		{
+			chrome.tabs.create({ url });
+			this.tracker.event("extension", `options-${eventName}`);
+		}
+	};
 
     state = {
         settings: null,
@@ -129,18 +137,21 @@ export default class OptionsAppContainer extends React.Component {
 			// for the first render, don't return any UI so that it doesn't
 			// show default values that then change when the current
 			// settings are returned asynchronously
-		return <div className={this.platform}>
-			{settings &&
-				<OptionsApp
-					settings={settings}
-					showPinyinUpdateMessage={showPinyinUpdateMessage}
-					defaultSection={defaultSection}
-					lastSeenOptionsVersion={lastSeenOptionsVersion}
-					tracker={this.tracker}
-					onChange={this.handleChange}
-					onResetShortcuts={this.handleResetShortcuts}
-				/>
-			}
-		</div>
+		return (
+			<OptionsProvider value={this.contextValue}>
+				<div className={this.platform}>
+					{settings &&
+						<OptionsApp
+							settings={settings}
+							showPinyinUpdateMessage={showPinyinUpdateMessage}
+							defaultSection={defaultSection}
+							lastSeenOptionsVersion={lastSeenOptionsVersion}
+							onChange={this.handleChange}
+							onResetShortcuts={this.handleResetShortcuts}
+						/>
+					}
+				</div>
+			</OptionsProvider>
+		);
 	}
 }

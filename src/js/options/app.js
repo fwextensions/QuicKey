@@ -3,7 +3,7 @@ import {Sections, Section, SectionList, SectionLabel} from "./sections";
 import GeneralSection from "./general-section";
 import PopupSection from "./popup-section";
 import ShortcutsSection from "./shortcuts-section";
-import {openTab} from "./open-tab";
+import {OptionsContext} from "./options-provider";
 import * as k from "@/background/constants";
 
 
@@ -21,6 +21,9 @@ const BrowserClassName = k.IsFirefox
 
 
 export default class OptionsApp extends React.Component {
+	static contextType = OptionsContext;
+
+
     state = {
         selectedSection: this.props.defaultSection
     };
@@ -35,13 +38,13 @@ export default class OptionsApp extends React.Component {
 
     handleHelpButtonClick = () =>
 	{
-		openTab("https://fwextensions.github.io/QuicKey/", "help", this.props.tracker);
+		this.context.openTab("https://fwextensions.github.io/QuicKey/", "help");
 	};
 
 
     handleSupportClick = () =>
 	{
-		openTab("https://fwextensions.github.io/QuicKey/support/", "support", this.props.tracker);
+		this.context.openTab("https://fwextensions.github.io/QuicKey/support/", "support");
 	};
 
 
@@ -52,7 +55,6 @@ export default class OptionsApp extends React.Component {
 			settings,
 			showPinyinUpdateMessage,
 			lastSeenOptionsVersion,
-			tracker,
 			onChange,
 			onResetShortcuts
 		} = this.props;
@@ -86,7 +88,6 @@ export default class OptionsApp extends React.Component {
 						id="general"
 						settings={settings}
 						lastSeenOptionsVersion={lastSeenOptionsVersion}
-						tracker={tracker}
 						onChange={onChange}
 					/>
 
@@ -94,7 +95,6 @@ export default class OptionsApp extends React.Component {
 						id="popup"
 						settings={settings}
 						lastSeenOptionsVersion={lastSeenOptionsVersion}
-						tracker={tracker}
 						onChange={onChange}
 					/>
 
@@ -102,7 +102,6 @@ export default class OptionsApp extends React.Component {
 						id="shortcuts"
 						settings={settings}
 						lastSeenOptionsVersion={lastSeenOptionsVersion}
-						tracker={tracker}
 						onChange={onChange}
 						onResetShortcuts={onResetShortcuts}
 					/>
