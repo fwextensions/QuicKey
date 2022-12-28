@@ -6,6 +6,7 @@ import React, {
 } from "react";
 import { styled } from "goober";
 import Key from "@/options/key";
+import TextButton from "@/options/demo/TextButton";
 import { getKeysFromShortcut } from "@/options/shortcut-utils";
 import { openTab } from "@/options/open-tab";
 
@@ -105,17 +106,20 @@ export default forwardRef(function Shortcut(
 	return (
 		<Container>
 			{shortcut
-				? <>
-					<ShadowKeyContainer>
-						{shadowKeys}
-					</ShadowKeyContainer>
-					{pressableKeys}
-				</>
-				: <button className="key"
-					onClick={() => openTab("chrome://extensions/shortcuts", "shortcuts", tracker)}
-				>
-					Set shortcut
-				</button>
+				? (
+					<>
+						<ShadowKeyContainer>
+							{shadowKeys}
+						</ShadowKeyContainer>
+						{pressableKeys}
+					</>
+				): (
+					<TextButton
+						onClick={() => openTab("chrome://extensions/shortcuts", "shortcuts", tracker)}
+					>
+						Set shortcut
+					</TextButton>
+				)
 			}
 		</Container>
 	);

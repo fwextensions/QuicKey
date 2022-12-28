@@ -7,11 +7,18 @@ import NavigateRecents from "./demo/NavigateRecents";
 import HidePopup from "./demo/HidePopup";
 import {createRecents, createTabs} from "./demo/utils";
 import * as k from "@/background/constants";
+import ShortcutPicker from "./shortcut-picker";
+import {openTab} from "./open-tab";
+import TextButton from "./demo/TextButton";
 
 
 const SwitchWindowShortcut = k.IsMac ? "cmd-`" : "alt-tab";
 const SwitchAppShortcut = k.IsMac ? "cmd-tab" : "alt-tab";
 const DemoTabCount = 10;
+const PopupShortcutIDs = [
+	k.CommandIDs.OpenPopupCommand,
+	k.CommandIDs.FocusPopupCommand
+];
 
 
 const ProsCons = ({
@@ -21,6 +28,18 @@ const ProsCons = ({
 	<div className="proscons">
 		{children.filter(({props: {id}}) => id == option)}
 	</div>
+);
+
+
+const SetShortcut = ({
+	onClick }) =>
+(
+	<TextButton
+		title="Open the browser's keyboard shortcuts page"
+		onClick={onClick}
+	>
+		Set shortcut
+	</TextButton>
 );
 
 
@@ -41,6 +60,12 @@ export default class PopupSection extends React.Component {
 	}
 
 
+    handleChangeShortcutsClick = () =>
+	{
+		openTab("chrome://extensions/shortcuts", "shortcuts", this.props.tracker);
+	};
+
+
     handleMouseEnter = (
 		event) =>
 	{
@@ -51,6 +76,47 @@ export default class PopupSection extends React.Component {
     handleMouseLeave = () =>
 	{
 		this.setState({ currentOption: this.props.settings[k.HidePopupBehavior.Key] });
+	};
+
+
+    renderShortcutSetting = (
+		shortcut,
+		i) =>
+	{
+		const {settings} = this.props;
+		let label = shortcut.label;
+
+			// default to an index-based key for fixed shortcuts
+		return <li className="shortcut-setting"
+			key={shortcut.id || `shortcut-${i}`}
+			title={shortcut.tooltip}
+		>
+			<div className="label">{label}</div>
+			{shortcut.shortcut
+				? (
+					<ShortcutPicker id={shortcut.id}
+							// non-customizable shortcuts will come with a shortcut
+							// sequence.  otherwise, look up the current shortcut
+							// in settings.
+						shortcut={shortcut.shortcut || settings.shortcuts[shortcut.id]}
+						disabled={shortcut.disabled}
+					/>
+				) : (
+					<SetShortcut onClick={this.handleChangeShortcutsClick} />
+				)
+			}
+		</li>
+	};
+
+
+    renderPopupShortcuts = () =>
+	{
+		const shortcuts = this.props.settings.chrome.shortcuts
+			.filter(({ id }) => PopupShortcutIDs.includes(id));
+
+		return <ul>
+			{shortcuts.map(this.renderShortcutSetting, this)}
+		</ul>
 	};
 
 
@@ -110,8 +176,15 @@ export default class PopupSection extends React.Component {
 				<h2>Show popup window</h2>
 
 				<p>
-					Press <Shortcut keys={openPopupShortcutString} /> to show the alt-tab-style popup.
+					In addition to the toolbar menu, QuicKey can be shown in a
+					popup window.  The popup appears nearly instantly (since the
+					window is never unloaded) and it lets you use a single
+					shortcut to show the window and then choose a tab to focus.
+					This provides the closest behavior to the alt-tab menu.
 				</p>
+
+				{this.renderPopupShortcuts()}
+
 				<HidePopup
 					shortcut={openPopupShortcutString}
 					hidePopupBehavior={settings[k.HidePopupBehavior.Key]}
@@ -127,8 +200,8 @@ export default class PopupSection extends React.Component {
 				<p>
 					QuicKey offers different ways to hide the popup
 					window, since the browser doesn't provide a simple
-					solution for this.  Each approach has its own pros and cons, so
-					you can select the one that feels best to you.
+					solution for this.  Each approach has its own pros and
+					cons, so you can select the one that feels best to you.
 				</p>
 
 				<NewSetting
@@ -186,6 +259,7 @@ export default class PopupSection extends React.Component {
 						onChange={onChange}
 					/>
 				</NewSetting>
+
 				<NavigateRecents
 					shortcut={previousShortcutString}
 					navigateWithPopup={settings[k.NavigateRecentsWithPopup.Key]}

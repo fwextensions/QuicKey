@@ -31,7 +31,7 @@ const HidePopupOptions = createAnimOptions(
 );
 
 const Container = styled.div`
-	margin-left: 1.7em;
+	margin-top: 2em;
 	gap: 2em;
 	display: flex;
 `;

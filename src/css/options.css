@@ -658,7 +658,7 @@ main {
 	padding: .35em 0;
 	margin-right: 1em;
 	line-height: 1.1em;
-	flex: 1;
+	width: 55%;
 }
 
 label b, .label b {
@@ -671,7 +671,7 @@ label b, .label b {
    =========================================================================== */
 
 .shortcut-picker {
-	flex: 0.85;
+	width: 45%;
 }
 
 .shortcut-display {
