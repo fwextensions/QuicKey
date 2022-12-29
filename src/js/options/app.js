@@ -1,4 +1,5 @@
-import React from "react";
+import React, {useContext} from "react";
+import {Route, Routes, useLocation, useNavigate} from "react-router-dom";
 import {Sections, SectionList, SectionLabel} from "./sections";
 import GeneralSection from "./general-section";
 import PopupSection from "./popup-section";
@@ -21,46 +22,24 @@ const BrowserClassName = k.IsFirefox
 		: "chrome";
 
 
-export default class OptionsApp extends React.Component {
-	static contextType = OptionsContext;
+export default function OptionsApp({
+	settings,
+	showPinyinUpdateMessage,
+	lastSeenOptionsVersion,
+	onChange,
+	onResetShortcuts })
+{
+	const {openTab} = useContext(OptionsContext);
+	const navigate = useNavigate();
+	const location = useLocation();
+	const selectedSection = location.pathname.slice(1) || "general";
 
+    const handleSectionClick = (section) => navigate(`/${section}`);
 
-    state = {
-        selectedSection: this.props.defaultSection
-    };
+    const handleHelpButtonClick = () => openTab("https://fwextensions.github.io/QuicKey/", "help");
 
-
-    handleSectionClick = (
-		section) =>
-	{
-		this.setState({ selectedSection: section });
-	};
-
-
-    handleHelpButtonClick = () =>
-	{
-		this.context.openTab("https://fwextensions.github.io/QuicKey/", "help");
-	};
-
-
-    handleSupportClick = () =>
-	{
-		this.context.openTab("https://fwextensions.github.io/QuicKey/support/", "support");
-	};
-
-
-    render()
-	{
-		const {selectedSection} = this.state;
-		const {
-			settings,
-			showPinyinUpdateMessage,
-			lastSeenOptionsVersion,
-			onChange,
-			onResetShortcuts
-		} = this.props;
-
-		return <main className={BrowserClassName}>
+	return (
+		<main className={BrowserClassName}>
 			{
 				showPinyinUpdateMessage && UpdateMessage
 			}
@@ -68,14 +47,14 @@ export default class OptionsApp extends React.Component {
 			<h1 className="quickey">QuicKey options
 				<div className="help-button"
 					title="Learn more about QuicKey's features"
-					onClick={this.handleHelpButtonClick}
+					onClick={handleHelpButtonClick}
 				>?</div>
 			</h1>
 
 			<div className="sections-container">
 				<SectionList
 					selected={selectedSection}
-					onClick={this.handleSectionClick}
+					onClick={handleSectionClick}
 				>
 					<SectionLabel id="general" label="General" />
 					<SectionLabel id="popup" label="Popup window" />
@@ -84,31 +63,61 @@ export default class OptionsApp extends React.Component {
 				</SectionList>
 
 				<Sections selected={selectedSection}>
-					<GeneralSection
-						id="general"
-						settings={settings}
-						lastSeenOptionsVersion={lastSeenOptionsVersion}
-						onChange={onChange}
-					/>
-
-					<PopupSection
-						id="popup"
-						settings={settings}
-						lastSeenOptionsVersion={lastSeenOptionsVersion}
-						onChange={onChange}
-					/>
-
-					<ShortcutsSection
-						id="shortcuts"
-						settings={settings}
-						lastSeenOptionsVersion={lastSeenOptionsVersion}
-						onChange={onChange}
-						onResetShortcuts={onResetShortcuts}
-					/>
-
-					<AboutSection id="about" />
+					<Routes>
+						<Route
+							index
+							element={
+								<GeneralSection
+									id="general"
+									settings={settings}
+									lastSeenOptionsVersion={lastSeenOptionsVersion}
+									onChange={onChange}
+								/>
+							}
+						/>
+						<Route
+							path="general"
+							element={
+								<GeneralSection
+									id="general"
+									settings={settings}
+									lastSeenOptionsVersion={lastSeenOptionsVersion}
+									onChange={onChange}
+								/>
+							}
+						/>
+						<Route
+							path="popup"
+							element={
+								<PopupSection
+									id="popup"
+									settings={settings}
+									lastSeenOptionsVersion={lastSeenOptionsVersion}
+									onChange={onChange}
+								/>
+							}
+						/>
+						<Route
+							path="shortcuts"
+							element={
+								<ShortcutsSection
+									id="shortcuts"
+									settings={settings}
+									lastSeenOptionsVersion={lastSeenOptionsVersion}
+									onChange={onChange}
+									onResetShortcuts={onResetShortcuts}
+								/>
+							}
+						/>
+						<Route
+							path="about"
+							element={
+								<AboutSection id="about" />
+							}
+						/>
+					</Routes>
 				</Sections>
 			</div>
 		</main>
-	}
+	);
 }

@@ -51,12 +51,11 @@ export function Section({
 
 
 export function Sections({
-	selected,
 	children})
 {
 	return (
 		<div className="sections">
-			{children.filter(({props: {id}}) => id == selected)}
+			{children}
 		</div>
 	);
 }

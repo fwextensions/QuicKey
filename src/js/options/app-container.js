@@ -1,4 +1,5 @@
 import React from "react";
+import {HashRouter} from "react-router-dom";
 import OptionsApp from "./app";
 import trackers from "@/background/page-trackers";
 import storage from "@/background/quickey-storage";
@@ -138,20 +139,22 @@ export default class OptionsAppContainer extends React.Component {
 			// show default values that then change when the current
 			// settings are returned asynchronously
 		return (
-			<OptionsProvider value={this.contextValue}>
-				<div className={this.platform}>
-					{settings &&
-						<OptionsApp
-							settings={settings}
-							showPinyinUpdateMessage={showPinyinUpdateMessage}
-							defaultSection={defaultSection}
-							lastSeenOptionsVersion={lastSeenOptionsVersion}
-							onChange={this.handleChange}
-							onResetShortcuts={this.handleResetShortcuts}
-						/>
-					}
-				</div>
-			</OptionsProvider>
+			<HashRouter>
+				<OptionsProvider value={this.contextValue}>
+					<div className={this.platform}>
+						{settings &&
+							<OptionsApp
+								settings={settings}
+								showPinyinUpdateMessage={showPinyinUpdateMessage}
+								defaultSection={defaultSection}
+								lastSeenOptionsVersion={lastSeenOptionsVersion}
+								onChange={this.handleChange}
+								onResetShortcuts={this.handleResetShortcuts}
+							/>
+						}
+					</div>
+				</OptionsProvider>
+			</HashRouter>
 		);
 	}
 }
