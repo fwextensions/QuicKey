@@ -6,12 +6,13 @@ import storage from "@/background/quickey-storage";
 import settings from "@/background/settings";
 import {Platform, ShowTabCount, HidePopupBehavior, NavigateRecentsWithPopup} from "@/background/constants";
 import {OptionsProvider} from "./options-provider";
+import {withSearchParams} from "./with-search-params";
 
 
 const PlusPattern = /\+/g;
 
 
-export default class OptionsAppContainer extends React.Component {
+class OptionsAppContainer extends React.Component {
 	tracker = trackers.options;
 	platform = Platform;
 	contextValue = {
@@ -35,7 +36,7 @@ export default class OptionsAppContainer extends React.Component {
 
     componentDidMount()
 	{
-		const params = new URLSearchParams(location.search);
+		const {params} = this.props;
 		const showPinyinUpdateMessage = params.has("pinyin");
 		const defaultSection = params.get("section") || this.state.defaultSection;
 		const paramLastSeenOptionsVersion = parseInt(params.get("lastSeenOptionsVersion"));
@@ -139,22 +140,30 @@ export default class OptionsAppContainer extends React.Component {
 			// show default values that then change when the current
 			// settings are returned asynchronously
 		return (
-			<HashRouter>
-				<OptionsProvider value={this.contextValue}>
-					<div className={this.platform}>
-						{settings &&
-							<OptionsApp
-								settings={settings}
-								showPinyinUpdateMessage={showPinyinUpdateMessage}
-								defaultSection={defaultSection}
-								lastSeenOptionsVersion={lastSeenOptionsVersion}
-								onChange={this.handleChange}
-								onResetShortcuts={this.handleResetShortcuts}
-							/>
-						}
-					</div>
-				</OptionsProvider>
-			</HashRouter>
+			<OptionsProvider value={this.contextValue}>
+				<div className={this.platform}>
+					{settings &&
+						<OptionsApp
+							settings={settings}
+							showPinyinUpdateMessage={showPinyinUpdateMessage}
+							defaultSection={defaultSection}
+							lastSeenOptionsVersion={lastSeenOptionsVersion}
+							onChange={this.handleChange}
+							onResetShortcuts={this.handleResetShortcuts}
+						/>
+					}
+				</div>
+			</OptionsProvider>
 		);
 	}
 }
+
+	// wrap the container component with an HOC so it gets the hashed search
+	// params, which are only available via hook in react-router v6
+const WrappedOptionsAppContainer = withSearchParams(OptionsAppContainer);
+
+export default () => (
+	<HashRouter>
+		<WrappedOptionsAppContainer />
+	</HashRouter>
+);
