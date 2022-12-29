@@ -42,7 +42,7 @@ export default class PopupSection extends React.Component {
 
 
     state = {
-        currentOption: this.props.settings[k.HidePopupBehavior.Key],
+        currentOption: this.context.settings[k.HidePopupBehavior.Key],
 		tabs: createTabs(DemoTabCount),
 		recents: createRecents(DemoTabCount)
     };
@@ -51,7 +51,7 @@ export default class PopupSection extends React.Component {
 	getShortcut(
 		shortcutID)
 	{
-		return this.props.settings.chrome.shortcuts
+		return this.context.settings.chrome.shortcuts
 			.find(({id}) => id == shortcutID)
 			.shortcut;
 	}
@@ -72,7 +72,7 @@ export default class PopupSection extends React.Component {
 
     handleMouseLeave = () =>
 	{
-		this.setState({ currentOption: this.props.settings[k.HidePopupBehavior.Key] });
+		this.setState({ currentOption: this.context.settings[k.HidePopupBehavior.Key] });
 	};
 
 
@@ -80,7 +80,7 @@ export default class PopupSection extends React.Component {
 		shortcut,
 		i) =>
 	{
-		const {settings} = this.props;
+		const {settings} = this.context;
 		let label = shortcut.label;
 
 			// default to an index-based key for fixed shortcuts
@@ -116,7 +116,7 @@ export default class PopupSection extends React.Component {
 
     renderPopupShortcuts = () =>
 	{
-		const shortcuts = this.props.settings.chrome.shortcuts
+		const shortcuts = this.context.settings.chrome.shortcuts
 			.filter(({ id }) => PopupShortcutIDs.includes(id));
 
 		return <ul>
@@ -164,7 +164,8 @@ export default class PopupSection extends React.Component {
 
     render()
 	{
-		const {id, settings, lastSeenOptionsVersion, onChange} = this.props;
+		const {id} = this.props;
+		const {settings, lastSeenOptionsVersion, onChange} = this.context;
 		const {currentOption, tabs, recents} = this.state;
 		const hideOptions = [
 			[k.HidePopupBehavior.Behind, "Behind the active window"],
@@ -193,7 +194,6 @@ export default class PopupSection extends React.Component {
 				<HidePopup
 					shortcut={openPopupShortcutString}
 					hidePopupBehavior={settings[k.HidePopupBehavior.Key]}
-					tracker={this.props.tracker}
 					autoStart={true}
 					tabs={tabs}
 					recents={recents}
@@ -268,7 +268,6 @@ export default class PopupSection extends React.Component {
 				<NavigateRecents
 					shortcut={previousShortcutString}
 					navigateWithPopup={settings[k.NavigateRecentsWithPopup.Key]}
-					tracker={this.props.tracker}
 					tabs={tabs}
 					recents={recents}
 				/>

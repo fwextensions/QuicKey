@@ -28,7 +28,7 @@ export default class ShortcutSection extends React.Component {
 		shortcut,
 		i) =>
 	{
-		const {settings} = this.props;
+		const {settings, onChange} = this.context;
 		let label = shortcut.label;
 		let validator = shortcut.validate;
 
@@ -56,7 +56,7 @@ export default class ShortcutSection extends React.Component {
 				disabled={shortcut.disabled}
 				placeholder={shortcut.placeholder}
 				validate={validator}
-				onChange={this.props.onChange}
+				onChange={onChange}
 			/>
 		</li>
 	};
@@ -73,13 +73,13 @@ export default class ShortcutSection extends React.Component {
 
     render()
 	{
+		const {id} = this.props;
 		const {
-			id,
 			settings,
 			lastSeenOptionsVersion,
 			onChange,
 			onResetShortcuts
-		} = this.props;
+		} = this.context;
 
 		return (
 			<Section id={id}>

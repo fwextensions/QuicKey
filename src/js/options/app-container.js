@@ -15,19 +15,10 @@ const PlusPattern = /\+/g;
 class OptionsAppContainer extends React.Component {
 	tracker = trackers.options;
 	platform = Platform;
-	contextValue = {
-		tracker: this.tracker,
-		openTab: (url, eventName) =>
-		{
-			chrome.tabs.create({ url });
-			this.tracker.event("extension", `options-${eventName}`);
-		}
-	};
 
     state = {
         settings: null,
         showPinyinUpdateMessage: false,
-        defaultSection: "general",
             // default this to Infinity so that no NEW badges are shown
             // until we get the real value from storage
         lastSeenOptionsVersion: Infinity
@@ -38,7 +29,6 @@ class OptionsAppContainer extends React.Component {
 	{
 		const {params} = this.props;
 		const showPinyinUpdateMessage = params.has("pinyin");
-		const defaultSection = params.get("section") || this.state.defaultSection;
 		const paramLastSeenOptionsVersion = parseInt(params.get("lastSeenOptionsVersion"));
 
 			// asynchronously get settings now and whenever the window is
@@ -53,7 +43,6 @@ class OptionsAppContainer extends React.Component {
 		storage.set(({lastSeenOptionsVersion}) => {
 			this.setState({
 				showPinyinUpdateMessage,
-				defaultSection,
 				lastSeenOptionsVersion: Number.isInteger(paramLastSeenOptionsVersion)
 					? paramLastSeenOptionsVersion
 					: lastSeenOptionsVersion
@@ -93,6 +82,15 @@ class OptionsAppContainer extends React.Component {
 	};
 
 
+	openTab = (
+		url,
+		eventName) =>
+	{
+		chrome.tabs.create({ url });
+		this.tracker.event("extension", `options-${eventName}`);
+	}
+
+
     handleChange = (
 		value,
 		key) =>
@@ -129,28 +127,22 @@ class OptionsAppContainer extends React.Component {
 
     render()
 	{
-		const {
-			settings,
-			showPinyinUpdateMessage,
-			defaultSection,
-			lastSeenOptionsVersion
-		} = this.state;
+		const context = {
+			...this.state,
+			tracker: this.tracker,
+			openTab: this.openTab,
+			onChange: this.handleChange,
+			onResetShortcuts: this.handleResetShortcuts,
+		};
 
 			// for the first render, don't return any UI so that it doesn't
 			// show default values that then change when the current
 			// settings are returned asynchronously
 		return (
-			<OptionsProvider value={this.contextValue}>
+			<OptionsProvider value={context}>
 				<div className={this.platform}>
-					{settings &&
-						<OptionsApp
-							settings={settings}
-							showPinyinUpdateMessage={showPinyinUpdateMessage}
-							defaultSection={defaultSection}
-							lastSeenOptionsVersion={lastSeenOptionsVersion}
-							onChange={this.handleChange}
-							onResetShortcuts={this.handleResetShortcuts}
-						/>
+					{this.state.settings &&
+						<OptionsApp />
 					}
 				</div>
 			</OptionsProvider>

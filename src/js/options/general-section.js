@@ -18,12 +18,14 @@ const IncognitoInstructions = k.IsFirefox
 
 
 export default function GeneralSection({
-	id,
-	settings,
-	lastSeenOptionsVersion,
-	onChange})
+	id })
 {
-	const {openTab} = useContext(OptionsContext);
+	const {
+		openTab,
+		settings,
+		lastSeenOptionsVersion,
+		onChange
+	} = useContext(OptionsContext);
 
 
 	function handleChangeIncognitoClick()

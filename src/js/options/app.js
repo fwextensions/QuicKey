@@ -22,14 +22,9 @@ const BrowserClassName = k.IsFirefox
 		: "chrome";
 
 
-export default function OptionsApp({
-	settings,
-	showPinyinUpdateMessage,
-	lastSeenOptionsVersion,
-	onChange,
-	onResetShortcuts })
+export default function OptionsApp()
 {
-	const {openTab} = useContext(OptionsContext);
+	const {openTab, showPinyinUpdateMessage} = useContext(OptionsContext);
 	const navigate = useNavigate();
 	const location = useLocation();
 	const selectedSection = location.pathname.slice(1) || "general";
@@ -66,54 +61,23 @@ export default function OptionsApp({
 					<Routes>
 						<Route
 							index
-							element={
-								<GeneralSection
-									id="general"
-									settings={settings}
-									lastSeenOptionsVersion={lastSeenOptionsVersion}
-									onChange={onChange}
-								/>
-							}
+							element={<GeneralSection id="general" />}
 						/>
 						<Route
 							path="general"
-							element={
-								<GeneralSection
-									id="general"
-									settings={settings}
-									lastSeenOptionsVersion={lastSeenOptionsVersion}
-									onChange={onChange}
-								/>
-							}
+							element={<GeneralSection id="general" />}
 						/>
 						<Route
 							path="popup"
-							element={
-								<PopupSection
-									id="popup"
-									settings={settings}
-									lastSeenOptionsVersion={lastSeenOptionsVersion}
-									onChange={onChange}
-								/>
-							}
+							element={<PopupSection id="popup" />}
 						/>
 						<Route
 							path="shortcuts"
-							element={
-								<ShortcutsSection
-									id="shortcuts"
-									settings={settings}
-									lastSeenOptionsVersion={lastSeenOptionsVersion}
-									onChange={onChange}
-									onResetShortcuts={onResetShortcuts}
-								/>
-							}
+							element={<ShortcutsSection id="shortcuts" />}
 						/>
 						<Route
 							path="about"
-							element={
-								<AboutSection id="about" />
-							}
+							element={<AboutSection id="about" />}
 						/>
 					</Routes>
 				</Sections>
