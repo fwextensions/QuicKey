@@ -153,7 +153,7 @@ export default class ShortcutSection extends React.Component {
 				<h2>Browser shortcuts</h2>
 
 				<div className="chrome-shortcuts"
-					title="Click to open the browser's keyboard shortcuts page"
+					title="Open the browser's keyboard shortcuts page"
 					onClick={this.handleChangeShortcutsClick}
 				>
 					{this.renderShortcutList(settings.chrome.shortcuts)}

@@ -21,6 +21,13 @@ function getMinimizedBounds()
 }
 
 const PopupWindow = styled(Window)`
+	@media (prefers-color-scheme: dark) {
+		--popup-background: #202124;
+	}
+	
+	--popup-background: white;
+	
+	background: var(--popup-background);
 	transition: all .15s ease-out;
 
 	&.hidden {
@@ -48,10 +55,14 @@ const PopupWindow = styled(Window)`
 	}
 `;
 const Selection = styled.div`
+	@media (prefers-color-scheme: dark) {
+		background: #444547;
+	}
+
 	top: ${({ index }) => index * RowHeight}px;
 	width: 100%;
 	height: ${RowHeight}px;
-	border: 1px solid white;
+	border: 1px solid var(--popup-background);
 	border-left-width: 2px;
     border-right-width: 2px;
 	background: #ebebeb;
@@ -72,6 +83,10 @@ const Favicon = styled.div`
 	background: ${({ color }) => color};
 `;
 const Title = styled.div`
+	@media (prefers-color-scheme: dark) {
+		background: #777;
+	}
+	
 	width: ${({ width }) => width}%;
 	height: 1px;
 	margin: 3px 0;

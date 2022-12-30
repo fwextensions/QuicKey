@@ -4,39 +4,61 @@ import { getWindowBounds } from "@/options/demo/utils";
 import { Window } from "./Window";
 
 const BrowserWindow = styled(Window)`
+	@media (prefers-color-scheme: dark) {
+		--tab-container: #202124;
+		--tab-background: #35363a;
+		--location-bar: var(--tab-container);
+	}
+		
+	--tab-container: #dee1e6;
+	--tab-background: white;
+	--location-bar: #eee;
+	
 	background: ${({ bg }) => bg};
 `;
 const TabBarContainer = styled.div`
 	width: 100%;
 	height: 5px;
-	background: #dee1e6;
+	background: var(--tab-container);
 	position: relative;
 `;
 const LocationBar = styled.div`
 	width: 100%;
 	height: 5px;
-	border: 1px solid white;
+	border: 1px solid var(--tab-background);
 	border-width: 1px 40px 1px 10px;
-	background: #eee;
+	background: var(--location-bar);
 	position: relative;
 `;
 const QuicKeyIcon = styled.div`
+	@media (prefers-color-scheme: dark) {
+		--default-icon: #cecac9;
+		--navigating-icon: #282c2d;
+	}
+		
+	--default-icon: #282c2d;
+	--navigating-icon: #cecac9;
+	
 	top: 0;
 	right: -6px;
 	width: 3px;
 	height: 3px;
-	background: ${({ navigating }) => navigating ? "#cecac9" : "#333638"};
+	background: var(--${({ navigating }) => navigating ? "navigating" : "default"}-icon);
 	position: absolute;
 `;
 	// add an after element to cover up the divider lines on the right side,
 	// since there's no easy way to limit the number of them
 const TabDividers = styled.div`
+	@media (prefers-color-scheme: dark) {
+		--divider: #5e5f61;
+	}
+		
 	left: 0;
 	top: 1px;
 	width: 100%;
 	height: 3px;
 	background: inherit;
-    background-image: linear-gradient(to right, transparent 95%, #aaa 2%);
+    background-image: linear-gradient(to right, transparent 95%, var(--divider, #aaa) 2%);
     background-position: 0 0;
     background-repeat: repeat-x;
     background-size: ${({ tabWidth }) => tabWidth}% 3px;
@@ -58,10 +80,10 @@ const Tab = styled.div`
 	left: ${({ left }) => left}%;
 	width: ${({ width }) => width}%;
 	height: 4px;
-	background: white;
+	background: var(--tab-background);
 	border-radius: 2px 2px 0 0;
 	position: absolute;
-	box-shadow: -2px 0 0 white;
+	box-shadow: -2px 0 0 var(--tab-background);
 `;
 const TabName = styled.div`
 	left: .6em;

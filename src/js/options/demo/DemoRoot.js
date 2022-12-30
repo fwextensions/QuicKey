@@ -4,13 +4,20 @@ import { DemoContext } from "./DemoContext";
 import { Rect } from "./Rect";
 
 const Screen = styled(Rect)`
-	background: white;
-	border: 1px solid #eee;
+	@media (prefers-color-scheme: dark) {
+		--background: black;
+		--border-color: #333;
+		--border-color-hover: #666;
+		--taskbar: #555;
+	}
+
+	background: var(--background, white);
+	border: 1px solid var(--border-color, #eee);
 	transition: border-color .25s ease-out;
-	box-shadow: inset 0 -${({ taskbarHeight }) => taskbarHeight}px 0 0 #ddd;
+	box-shadow: inset 0 -${({ taskbarHeight }) => taskbarHeight}px 0 0 var(--taskbar, #ddd);
 	
 	&:hover {
-		border-color: #ccc;
+		border-color: var(--border-color-hover, #ccc);
 	}
 `;
 

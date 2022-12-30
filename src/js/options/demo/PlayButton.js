@@ -2,9 +2,17 @@ import React from "react";
 import { styled } from "goober";
 
 const Container = styled.div`
+	@media (prefers-color-scheme: dark) {
+		fill: white;
+		mix-blend-mode: lighten;
+		--opacity: .4;
+		--opacity-hover: .6;
+		--opacity-active: .8;
+	}
+		
 	mix-blend-mode: multiply;
 	fill: rgb(0, 0, 50);
-	opacity: ${({ enabled }) => enabled ? .1 : 0};
+	opacity: ${({ enabled }) => enabled ? "var(--opacity, .1)" : 0};
 	width: 100%;
 	height: 100%;
 	left: 0;
@@ -22,11 +30,11 @@ const Container = styled.div`
 	}
 	
 	&:hover {
-		opacity: ${({ enabled }) => enabled ? .3 : 0};
+		opacity: ${({ enabled }) => enabled ? "var(--opacity-hover, .3)" : 0};
 	}
 	
 	&:hover:active {
-		opacity: ${({ enabled }) => enabled ? .6 : 0};
+		opacity: ${({ enabled }) => enabled ? "var(--opacity-active, .6)" : 0};
 		transition: none;
 	}
 `;
