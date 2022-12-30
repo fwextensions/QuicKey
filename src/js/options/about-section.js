@@ -2,8 +2,7 @@ import React, { useContext } from "react";
 import {OptionsContext} from "./options-provider";
 import {Section} from "./sections";
 
-export default function AboutSection({
-	id })
+export default function AboutSection()
 {
 	const {openTab} = useContext(OptionsContext);
 	const {version} = chrome.runtime.getManifest();
@@ -11,7 +10,7 @@ export default function AboutSection({
     const handleSupportClick = () => openTab("https://fwextensions.github.io/QuicKey/support/", "support");
 
 	return (
-		<Section id={id}>
+		<Section>
 			<h2>About</h2>
 
 			<p>QuicKey adds keyboard shortcuts to switch tabs with a

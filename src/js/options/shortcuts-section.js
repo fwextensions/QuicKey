@@ -73,16 +73,14 @@ export default class ShortcutSection extends React.Component {
 
     render()
 	{
-		const {id} = this.props;
 		const {
 			settings,
-			lastSeenOptionsVersion,
 			onChange,
 			onResetShortcuts
 		} = this.context;
 
 		return (
-			<Section id={id}>
+			<Section>
 				<h2>Search box shortcuts</h2>
 
 				<RadioGroup
@@ -125,10 +123,7 @@ export default class ShortcutSection extends React.Component {
 					</RadioButton>
 				</RadioGroup>
 
-				<NewSetting
-					addedVersion={10}
-					lastSeenOptionsVersion={lastSeenOptionsVersion}
-				>
+				<NewSetting addedVersion={10}>
 					<RadioGroup
 						id={k.HomeEndBehavior.Key}
 						value={settings[k.HomeEndBehavior.Key]}

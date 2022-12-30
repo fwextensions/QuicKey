@@ -164,8 +164,7 @@ export default class PopupSection extends React.Component {
 
     render()
 	{
-		const {id} = this.props;
-		const {settings, lastSeenOptionsVersion, onChange} = this.context;
+		const {settings, onChange} = this.context;
 		const {currentOption, tabs, recents} = this.state;
 		const hideOptions = [
 			[k.HidePopupBehavior.Behind, "Behind the active window"],
@@ -178,7 +177,7 @@ export default class PopupSection extends React.Component {
 		const nextShortcut = this.renderShortcut(NextTabCommand, "next");
 
 		return (
-			<Section id={id}>
+			<Section>
 				<h2>Show popup window</h2>
 
 				<p>
@@ -186,7 +185,7 @@ export default class PopupSection extends React.Component {
 					popup window.  The popup appears nearly instantly (since the
 					window is never unloaded) and it lets you use a single
 					shortcut to show the window and then choose a tab to focus.
-					This provides the closest behavior to the {SwitchWindowShortcut} menu.
+					This provides the closest experience to the {SwitchWindowShortcut} menu.
 				</p>
 
 				{this.renderPopupShortcuts()}
@@ -209,10 +208,7 @@ export default class PopupSection extends React.Component {
 					cons, so you can select the one that feels best to you.
 				</p>
 
-				<NewSetting
-					addedVersion={12}
-					lastSeenOptionsVersion={lastSeenOptionsVersion}
-				>
+				<NewSetting addedVersion={12}>
 					<RadioGroup
 						id={k.HidePopupBehavior.Key}
 						value={settings[k.HidePopupBehavior.Key]}
@@ -246,10 +242,7 @@ export default class PopupSection extends React.Component {
 
 				<h2>Show popup window while navigating recent tabs</h2>
 
-				<NewSetting
-					addedVersion={12}
-					lastSeenOptionsVersion={lastSeenOptionsVersion}
-				>
+				<NewSetting addedVersion={12}>
 					<Checkbox
 						id={k.NavigateRecentsWithPopup.Key}
 						label={

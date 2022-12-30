@@ -61,23 +61,23 @@ export default function OptionsApp()
 					<Routes>
 						<Route
 							index
-							element={<GeneralSection id="general" />}
+							element={<GeneralSection />}
 						/>
 						<Route
 							path="general"
-							element={<GeneralSection id="general" />}
+							element={<GeneralSection />}
 						/>
 						<Route
 							path="popup"
-							element={<PopupSection id="popup" />}
+							element={<PopupSection />}
 						/>
 						<Route
 							path="shortcuts"
-							element={<ShortcutsSection id="shortcuts" />}
+							element={<ShortcutsSection />}
 						/>
 						<Route
 							path="about"
-							element={<AboutSection id="about" />}
+							element={<AboutSection />}
 						/>
 					</Routes>
 				</Sections>
