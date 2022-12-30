@@ -14,7 +14,9 @@ export function SectionLabel({
 		<li id={id}
 			className={className}
 			onClick={handleClick}
-		>{label}</li>
+		>
+			{label}
+		</li>
 	);
 }
 
@@ -38,12 +40,10 @@ export function SectionList({
 
 
 export function Section({
-	id,
 	children})
 {
 	return (
-		<div id={id}
-			className="section">
+		<div className="section">
 			{children}
 		</div>
 	);
@@ -51,12 +51,11 @@ export function Section({
 
 
 export function Sections({
-	selected,
 	children})
 {
 	return (
 		<div className="sections">
-			{children.filter(({props: {id}}) => id == selected)}
+			{children}
 		</div>
 	);
 }

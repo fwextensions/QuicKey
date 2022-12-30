@@ -28,7 +28,7 @@ export default class ShortcutSection extends React.Component {
 		shortcut,
 		i) =>
 	{
-		const {settings} = this.props;
+		const {settings, onChange} = this.context;
 		let label = shortcut.label;
 		let validator = shortcut.validate;
 
@@ -56,7 +56,7 @@ export default class ShortcutSection extends React.Component {
 				disabled={shortcut.disabled}
 				placeholder={shortcut.placeholder}
 				validate={validator}
-				onChange={this.props.onChange}
+				onChange={onChange}
 			/>
 		</li>
 	};
@@ -74,15 +74,13 @@ export default class ShortcutSection extends React.Component {
     render()
 	{
 		const {
-			id,
 			settings,
-			lastSeenOptionsVersion,
 			onChange,
 			onResetShortcuts
-		} = this.props;
+		} = this.context;
 
 		return (
-			<Section id={id}>
+			<Section>
 				<h2>Search box shortcuts</h2>
 
 				<RadioGroup
@@ -125,10 +123,7 @@ export default class ShortcutSection extends React.Component {
 					</RadioButton>
 				</RadioGroup>
 
-				<NewSetting
-					addedVersion={10}
-					lastSeenOptionsVersion={lastSeenOptionsVersion}
-				>
+				<NewSetting addedVersion={10}>
 					<RadioGroup
 						id={k.HomeEndBehavior.Key}
 						value={settings[k.HomeEndBehavior.Key]}

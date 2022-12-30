@@ -65,7 +65,6 @@ export default function NavigateRecents({
 	height,
 	shortcut,
 	navigateWithPopup,
-	tracker,
 	autoStart,
 	tabs,
 	recents: initialRecents })
@@ -141,7 +140,6 @@ export default function NavigateRecents({
 				<Shortcut
 					ref={shortcutRef}
 					shortcut={shortcut}
-					tracker={tracker}
 				/>
 			</ShortcutContainer>
 		</Container>

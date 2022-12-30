@@ -1,31 +1,24 @@
 import React from "react";
+import {HashRouter} from "react-router-dom";
 import OptionsApp from "./app";
 import trackers from "@/background/page-trackers";
 import storage from "@/background/quickey-storage";
 import settings from "@/background/settings";
 import {Platform, ShowTabCount, HidePopupBehavior, NavigateRecentsWithPopup} from "@/background/constants";
 import {OptionsProvider} from "./options-provider";
+import {withSearchParams} from "./with-search-params";
 
 
 const PlusPattern = /\+/g;
 
 
-export default class OptionsAppContainer extends React.Component {
+class OptionsAppContainer extends React.Component {
 	tracker = trackers.options;
 	platform = Platform;
-	contextValue = {
-		tracker: this.tracker,
-		openTab: (url, eventName) =>
-		{
-			chrome.tabs.create({ url });
-			this.tracker.event("extension", `options-${eventName}`);
-		}
-	};
 
     state = {
         settings: null,
         showPinyinUpdateMessage: false,
-        defaultSection: "general",
             // default this to Infinity so that no NEW badges are shown
             // until we get the real value from storage
         lastSeenOptionsVersion: Infinity
@@ -34,9 +27,8 @@ export default class OptionsAppContainer extends React.Component {
 
     componentDidMount()
 	{
-		const params = new URLSearchParams(location.search);
+		const {params} = this.props;
 		const showPinyinUpdateMessage = params.has("pinyin");
-		const defaultSection = params.get("section") || this.state.defaultSection;
 		const paramLastSeenOptionsVersion = parseInt(params.get("lastSeenOptionsVersion"));
 
 			// asynchronously get settings now and whenever the window is
@@ -51,7 +43,6 @@ export default class OptionsAppContainer extends React.Component {
 		storage.set(({lastSeenOptionsVersion}) => {
 			this.setState({
 				showPinyinUpdateMessage,
-				defaultSection,
 				lastSeenOptionsVersion: Number.isInteger(paramLastSeenOptionsVersion)
 					? paramLastSeenOptionsVersion
 					: lastSeenOptionsVersion
@@ -91,6 +82,15 @@ export default class OptionsAppContainer extends React.Component {
 	};
 
 
+	openTab = (
+		url,
+		eventName) =>
+	{
+		chrome.tabs.create({ url });
+		this.tracker.event("extension", `options-${eventName}`);
+	}
+
+
     handleChange = (
 		value,
 		key) =>
@@ -127,31 +127,35 @@ export default class OptionsAppContainer extends React.Component {
 
     render()
 	{
-		const {
-			settings,
-			showPinyinUpdateMessage,
-			defaultSection,
-			lastSeenOptionsVersion
-		} = this.state;
+		const context = {
+			...this.state,
+			tracker: this.tracker,
+			openTab: this.openTab,
+			onChange: this.handleChange,
+			onResetShortcuts: this.handleResetShortcuts,
+		};
 
 			// for the first render, don't return any UI so that it doesn't
 			// show default values that then change when the current
 			// settings are returned asynchronously
 		return (
-			<OptionsProvider value={this.contextValue}>
+			<OptionsProvider value={context}>
 				<div className={this.platform}>
-					{settings &&
-						<OptionsApp
-							settings={settings}
-							showPinyinUpdateMessage={showPinyinUpdateMessage}
-							defaultSection={defaultSection}
-							lastSeenOptionsVersion={lastSeenOptionsVersion}
-							onChange={this.handleChange}
-							onResetShortcuts={this.handleResetShortcuts}
-						/>
+					{this.state.settings &&
+						<OptionsApp />
 					}
 				</div>
 			</OptionsProvider>
 		);
 	}
 }
+
+	// wrap the container component with an HOC so it gets the hashed search
+	// params, which are only available via hook in react-router v6
+const WrappedOptionsAppContainer = withSearchParams(OptionsAppContainer);
+
+export default () => (
+	<HashRouter>
+		<WrappedOptionsAppContainer />
+	</HashRouter>
+);

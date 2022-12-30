@@ -46,7 +46,6 @@ export default function HidePopup({
 	height,
 	shortcut,
 	hidePopupBehavior,
-	tracker,
 	autoStart,
 	tabs: initialTabs,
 	recents: initialRecents })
@@ -134,7 +133,6 @@ export default function HidePopup({
 				<Shortcut
 					ref={shortcutRef}
 					shortcut={shortcut}
-					tracker={tracker}
 				/>
 			</ShortcutContainer>
 		</Container>
