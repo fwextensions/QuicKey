@@ -84,7 +84,7 @@ const Favicon = styled.div`
 `;
 const Title = styled.div`
 	@media (prefers-color-scheme: dark) {
-		background: #777;
+		background: #aaa;
 	}
 	
 	width: ${({ width }) => width}%;

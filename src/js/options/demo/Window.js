@@ -3,8 +3,8 @@ import { Rect } from "./Rect";
 
 export const Window = styled(Rect)`
 	@media (prefers-color-scheme: dark) {
-		--border-color: #222;
-		--shadow: rgba(255, 255, 255, .1);
+		--border-color: #444;
+		--shadow: rgba(68, 68, 68, .7);
 		background: #202124;
 	}
 		
