@@ -13,5 +13,8 @@
 				"modules": false
 			}
 		]
+	],
+	"plugins": [
+		"babel-plugin-transform-goober"
 	]
 }

@@ -4,21 +4,23 @@ import {Section} from "./sections";
 import NewSetting from "./new-setting";
 import Shortcuts from "./keyboard-shortcuts";
 import ShortcutPicker from "./shortcut-picker";
+import {OptionsContext} from "./options-provider";
 import * as k from "@/background/constants";
 
 
 export default class ShortcutSection extends React.Component {
+	static contextType = OptionsContext;
+
+
     handleChangeShortcutsClick = () =>
 	{
-		chrome.tabs.create({ url: "chrome://extensions/shortcuts" });
-		this.props.tracker.event("extension", "options-shortcuts");
+		this.context.openTab("chrome://extensions/shortcuts", "shortcuts");
 	};
 
 
     handleCtrlTabClick = () =>
 	{
-		chrome.tabs.create({ url: "https://fwextensions.github.io/QuicKey/ctrl-tab/" });
-		this.props.tracker.event("extension", "options-ctrl-tab");
+		this.context.openTab("https://fwextensions.github.io/QuicKey/ctrl-tab/", "ctrl-tab");
 	};
 
 
@@ -26,7 +28,7 @@ export default class ShortcutSection extends React.Component {
 		shortcut,
 		i) =>
 	{
-		const {settings} = this.props;
+		const {settings, onChange} = this.context;
 		let label = shortcut.label;
 		let validator = shortcut.validate;
 
@@ -54,7 +56,7 @@ export default class ShortcutSection extends React.Component {
 				disabled={shortcut.disabled}
 				placeholder={shortcut.placeholder}
 				validate={validator}
-				onChange={this.props.onChange}
+				onChange={onChange}
 			/>
 		</li>
 	};
@@ -72,15 +74,13 @@ export default class ShortcutSection extends React.Component {
     render()
 	{
 		const {
-			id,
 			settings,
-			lastSeenOptionsVersion,
 			onChange,
 			onResetShortcuts
-		} = this.props;
+		} = this.context;
 
 		return (
-			<Section id={id}>
+			<Section>
 				<h2>Search box shortcuts</h2>
 
 				<RadioGroup
@@ -123,10 +123,7 @@ export default class ShortcutSection extends React.Component {
 					</RadioButton>
 				</RadioGroup>
 
-				<NewSetting
-					addedVersion={10}
-					lastSeenOptionsVersion={lastSeenOptionsVersion}
-				>
+				<NewSetting addedVersion={10}>
 					<RadioGroup
 						id={k.HomeEndBehavior.Key}
 						value={settings[k.HomeEndBehavior.Key]}
@@ -156,7 +153,7 @@ export default class ShortcutSection extends React.Component {
 				<h2>Browser shortcuts</h2>
 
 				<div className="chrome-shortcuts"
-					title="Click to open the browser's keyboard shortcuts page"
+					title="Open the browser's keyboard shortcuts page"
 					onClick={this.handleChangeShortcutsClick}
 				>
 					{this.renderShortcutList(settings.chrome.shortcuts)}

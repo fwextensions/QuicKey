@@ -4,7 +4,10 @@ import {ModifierAliases, ShortcutSeparator} from "./key-constants";
 export function getKeysFromShortcut(
 	shortcut)
 {
-	const keys = String(shortcut).split(ShortcutSeparator).map(key => {
+	const keyArray = Array.isArray(shortcut)
+		? shortcut
+		: String(shortcut).split(ShortcutSeparator);
+	const keys = keyArray.map(key => {
 		const lcKey = key.toLowerCase();
 
 		return ModifierAliases[lcKey] || lcKey;

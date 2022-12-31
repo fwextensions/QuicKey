@@ -12,7 +12,7 @@ export default function Shortcut({
 		: getKeysFromShortcut(keys).keys;
 
 		// key key key...
-	return <div className="shortcut" {...props}>
+	return <span className="shortcut" {...props}>
 		{keyStrings.map(key => key && <Key key={key} code={key} />)}
-	</div>
+	</span>
 };
