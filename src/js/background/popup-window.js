@@ -1,13 +1,11 @@
 import cp from "cp";
 import shared from "@/lib/shared";
 import storage from "@/background/quickey-storage";
-import {PopupURL, HidePopupBehavior} from "@/background/constants";
+import {HidePopupBehavior, PopupInnerHeight, PopupInnerWidth, PopupURL} from "@/background/constants";
+import {calcPosition} from "@/background/popup-utils";
 
 
 const {Behind, Tab, Minimize} = HidePopupBehavior;
-const PopupInnerWidth = 500;
-const PopupInnerHeight = 488;
-const PopupPadding = 50;
 
 
 let popupAdjustmentWidth = 0;
@@ -48,71 +46,6 @@ async function getWindow(
 }
 
 
-function getScreen()
-{
-	return {
-		left: screen.availLeft || 0,
-		top: screen.availTop || 0,
-		width: screen.availWidth,
-		height: screen.availHeight
-	};
-}
-
-
-function getAlignedPosition(
-	alignment,
-	size,
-	start,
-	availableSpace,
-	padding = 0)
-{
-	switch (alignment) {
-		case "left":
-		case "top":
-			return start + padding;
-
-		case "center":
-			return start + Math.floor((availableSpace - size) / 2);
-
-		case "right":
-		case "bottom":
-			return start + availableSpace - padding - size;
-	}
-}
-
-
-function calcPosition(
-	targetWindow,
-	alignment = "center-center")
-{
-	const width = PopupInnerWidth + popupAdjustmentWidth;
-	const height = PopupInnerHeight + popupAdjustmentHeight;
-	const [horizontal, vertical] = alignment.split("-");
-	const screen = getScreen();
-	const {left: targetX, top: targetY, width: targetW, height: targetH} =
-		targetWindow || screen;
-		// Chrome will throw an error if the popup is more than 50% off-screen,
-		// which can happen if the target window has been dragged mostly off-
-		// screen.  so clamp the top/left to keep it fully on-screen, with padding.
-	const left = Math.max(
-		PopupPadding,
-		Math.min(
-			getAlignedPosition(horizontal, width, targetX, targetW, PopupPadding),
-			screen.width - width - PopupPadding
-		)
-	);
-	const top = Math.max(
-		PopupPadding,
-		Math.min(
-			getAlignedPosition(vertical, height, targetY, targetH, PopupPadding),
-			screen.height - height - PopupPadding
-		)
-	);
-
-	return { left, top, width, height };
-}
-
-
 async function create(
 	activeTab,
 	props = {},
@@ -129,9 +62,13 @@ async function create(
 		// a devtools window in the foreground
 	const targetWindow = activeTab && await cp.windows.get(activeTab.windowId);
 	let {left, top, width, height} = calcPosition(
-			props.navigatingRecents ? null : targetWindow,
-			alignment
-		);
+		props.navigatingRecents ? null : targetWindow,
+		{
+			alignment,
+			popupAdjustmentWidth,
+			popupAdjustmentHeight
+		}
+	);
 	let window;
 
 	if (hideBehavior !== Tab) {
@@ -207,7 +144,14 @@ async function show(
 	alignment)
 {
 	const targetWindow = activeTab && await cp.windows.get(activeTab.windowId);
-	let {left, top, width, height} = calcPosition(targetWindow, alignment);
+	let {left, top, width, height} = calcPosition(
+		targetWindow,
+		{
+			alignment,
+			popupAdjustmentWidth,
+			popupAdjustmentHeight
+		}
+	);
 	let result;
 
 		// if we're already visible and show() is being called again, that

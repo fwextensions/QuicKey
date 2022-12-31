@@ -1,10 +1,9 @@
 import React from "react";
 import {List} from "react-virtualized";
 import handleRef from "@/lib/handle-ref";
-import {IsFirefox} from "@/background/constants";
+import {IsFirefox, ResultsListRowHeight} from "@/background/constants";
 
 
-const RowHeight = 45;
 	// in FF, the scrollbar appears inside the right edge of the scrolling
 	// area, instead on the outside.  so make the virtual list go right to
 	// the edge of the popup, so the scrollbar doesn't cover the content.
@@ -136,7 +135,7 @@ export default class ResultsList extends React.Component {
     render()
 	{
 		const {items: {length: itemCount}, maxItems, selectedIndex} = this.props;
-		const height = Math.min(itemCount, maxItems) * RowHeight;
+		const height = Math.min(itemCount, maxItems) * ResultsListRowHeight;
 		const style = { display: height ? "block" : "none" };
 
 		return <div className="results-list-container"
@@ -149,7 +148,7 @@ export default class ResultsList extends React.Component {
 				width={Width}
 				height={height}
 				rowCount={itemCount}
-				rowHeight={RowHeight}
+				rowHeight={ResultsListRowHeight}
 				rowRenderer={this.rowRenderer}
 				scrollToIndex={selectedIndex}
 				onRowsRendered={this.handleRowsRendered}

@@ -1,8 +1,9 @@
-import React from "react";
+import React, {useContext} from "react";
 import {Checkbox} from "./controls";
 import {Section} from "./sections";
 import NewSetting from "./new-setting";
 import {HistoryIcon, WindowIcon, IncognitoIcon, InPrivateIcon} from "@/common/icons";
+import {OptionsContext} from "./options-provider";
 import * as k from "@/background/constants";
 
 
@@ -16,25 +17,26 @@ const IncognitoInstructions = k.IsFirefox
 		the <i>{IncognitoPermission}</i> setting and {IncognitoAction}</span>;
 
 
-export default function GeneralSection({
-	id,
-	settings,
-	lastSeenOptionsVersion,
-	tracker,
-	onChange})
+export default function GeneralSection()
 {
+	const {
+		openTab,
+		settings,
+		onChange
+	} = useContext(OptionsContext);
+
+
 	function handleChangeIncognitoClick()
 	{
 			// FF doesn't support opening the settings tab directly
 		if (!k.IsFirefox) {
-			chrome.tabs.create({ url: `chrome://extensions/?id=${chrome.runtime.id}` });
-			tracker.event("extension", "options-incognito");
+			openTab(`chrome://extensions/?id=${chrome.runtime.id}`, "incognito");
 		}
 	}
 
 
 	return (
-		<Section id={id}>
+		<Section>
 			<h2>Search results</h2>
 
 			<Checkbox
@@ -47,10 +49,7 @@ export default function GeneralSection({
 					Selecting a closed tab will reopen it with its full history.
 				</div>
 			</Checkbox>
-			<NewSetting
-				addedVersion={10}
-				lastSeenOptionsVersion={lastSeenOptionsVersion}
-			>
+			<NewSetting addedVersion={10}>
 				<Checkbox
 					id={k.ShowBookmarkPaths.Key}
 					label="Show the folder path to each bookmark in its title"
@@ -58,10 +57,7 @@ export default function GeneralSection({
 					onChange={onChange}
 				/>
 			</NewSetting>
-			<NewSetting
-				addedVersion={10}
-				lastSeenOptionsVersion={lastSeenOptionsVersion}
-			>
+			<NewSetting addedVersion={10}>
 				<Checkbox
 					id={k.RestoreLastQuery.Key}
 					label="Restore the last search query when the menu is reopened"
@@ -69,10 +65,7 @@ export default function GeneralSection({
 					onChange={onChange}
 				/>
 			</NewSetting>
-			<NewSetting
-				addedVersion={9}
-				lastSeenOptionsVersion={lastSeenOptionsVersion}
-			>
+			<NewSetting addedVersion={9}>
 				<Checkbox
 					id={k.UsePinyin.Key}
 					label="Use pinyin to match Chinese characters in titles and URLs"
@@ -84,10 +77,7 @@ export default function GeneralSection({
 
 			<h2>Multiple browser windows</h2>
 
-			<NewSetting
-				addedVersion={11}
-				lastSeenOptionsVersion={lastSeenOptionsVersion}
-			>
+			<NewSetting addedVersion={11}>
 				<Checkbox
 					id={k.CurrentWindowLimitRecents.Key}
 					label="Limit recent tabs to the current browser window"
@@ -129,10 +119,7 @@ export default function GeneralSection({
 
 			<h2>Toolbar icon</h2>
 
-			<NewSetting
-				addedVersion={8}
-				lastSeenOptionsVersion={lastSeenOptionsVersion}
-			>
+			<NewSetting addedVersion={8}>
 				<Checkbox
 					id={k.ShowTabCount.Key}
 					label="Show the number of open tabs in a badge on the QuicKey toolbar icon"
