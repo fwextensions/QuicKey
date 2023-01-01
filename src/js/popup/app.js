@@ -71,6 +71,7 @@ export default class App extends React.Component {
     selectAllSearchBoxText = false;
     openedForSearch = false;
     ignoreNextBlur = false;
+	ignoreNextResize = false;
     navigatingRecents = false;
     gotModifierUp = false;
     gotMRUKey = false;
@@ -179,10 +180,12 @@ export default class App extends React.Component {
 						// to close and reopen the window.
 					this.reopenWindow();
 					log("=== borders collapsed");
-				} else {
+				} else if (!this.ignoreNextResize) {
 						// prevent the window from resizing
 					window.resizeTo(outerWidth, outerHeight);
 				}
+
+				this.ignoreNextResize = false;
 			});
 
 				// hide the window if it loses focus
@@ -232,6 +235,21 @@ export default class App extends React.Component {
 			// we only want these flags to be true through one render cycle
 		this.forceUpdate = false;
 		this.selectAllSearchBoxText = false;
+
+			// when the number of matched items is < MaxItems, shrink the window
+			// height, but only in the popup case, since the toolbar menu does
+			// this automatically.  and only if the current mode's promise is
+			// loaded, so that the window doesn't flicker while loading items.
+		if (this.props.isPopup && this[this.mode].length) {
+			const bodyHeight = document.body.offsetHeight;
+			const windowPadding = outerHeight - innerHeight;
+
+			if (innerHeight !== bodyHeight) {
+					// don't fight with the onResize handler
+				this.ignoreNextResize = true;
+				resizeTo(outerWidth, bodyHeight + windowPadding);
+			}
+		}
 	}
 
 
