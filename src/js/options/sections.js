@@ -2,18 +2,17 @@ import React from "react";
 
 
 export function SectionLabel({
-	id,
+	section,
 	label,
 	selected,
 	onClick})
 {
 	const className = ["section-label", selected ? "selected" : ""].join(" ");
-	const handleClick = () => onClick(id);
 
 	return (
-		<li id={id}
+		<li
 			className={className}
-			onClick={handleClick}
+			onClick={() => onClick(section)}
 		>
 			{label}
 		</li>
@@ -30,7 +29,7 @@ export function SectionList({
 		<ul className="section-list">
 			{React.Children.toArray(children).map((child, i) =>
 				React.cloneElement(child, {
-					selected: child.props.id == selected,
+					selected: child.props.section == selected,
 					index: i,
 					onClick
 				}))}

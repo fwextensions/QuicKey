@@ -3,7 +3,6 @@ import {Checkbox, RadioButton, RadioGroup} from "./controls";
 import {Section} from "./sections";
 import NewSetting from "./new-setting";
 import Shortcut from "./shortcut";
-import ShortcutPicker from "./shortcut-picker";
 import {createRecents, createTabs} from "./demo/utils";
 import {OptionsContext} from "./options-provider";
 import NavigateRecents from "./demo/NavigateRecents";
@@ -21,10 +20,6 @@ const {
 	NextTabCommand,
 	FocusPopupCommand
 } = k.CommandIDs;
-const PopupShortcutIDs = [
-	OpenPopupCommand,
-	FocusPopupCommand
-];
 
 
 const ProsCons = ({
@@ -33,6 +28,24 @@ const ProsCons = ({
 (
 	<div className="proscons">
 		{children.filter(({props: {id}}) => id == option)}
+	</div>
+);
+
+
+const PopupShortcut = ({
+	shortcut: { label, shortcut: shortcutString },
+	onClick}) =>
+(
+	<div className="labeled-shortcut">
+		<div>{label}</div>
+		{shortcutString
+			? <Shortcut
+				keys={shortcutString}
+				title="Open the browser's keyboard shortcuts page"
+				onClick={onClick}
+			/>
+			: <SetShortcutLink />
+		}
 	</div>
 );
 
@@ -52,8 +65,7 @@ export default class PopupSection extends React.Component {
 		shortcutID)
 	{
 		return this.context.settings.chrome.shortcuts
-			.find(({id}) => id == shortcutID)
-			.shortcut;
+			.find(({id}) => id == shortcutID);
 	}
 
 
@@ -76,60 +88,11 @@ export default class PopupSection extends React.Component {
 	};
 
 
-    renderShortcutSetting = (
-		shortcut,
-		i) =>
-	{
-		const {settings} = this.context;
-		let label = shortcut.label;
-
-			// default to an index-based key for fixed shortcuts
-		return <li className="shortcut-setting"
-			key={shortcut.id || `shortcut-${i}`}
-		>
-			<div className="label">{label}</div>
-			{shortcut.shortcut
-				? (
-					<div
-						title="Open the browser's keyboard shortcuts page"
-						onClick={this.handleChangeShortcutsClick}
-						style={{
-							cursor: "pointer",
-							width: "45%"
-						}}
-					>
-						<ShortcutPicker id={shortcut.id}
-								// non-customizable shortcuts will come with a shortcut
-								// sequence.  otherwise, look up the current shortcut
-								// in settings.
-							shortcut={shortcut.shortcut || settings.shortcuts[shortcut.id]}
-							disabled={shortcut.disabled}
-						/>
-					</div>
-				) : (
-					<SetShortcutLink />
-				)
-			}
-		</li>
-	};
-
-
-    renderPopupShortcuts = () =>
-	{
-		const shortcuts = this.context.settings.chrome.shortcuts
-			.filter(({ id }) => PopupShortcutIDs.includes(id));
-
-		return <ul>
-			{shortcuts.map(this.renderShortcutSetting, this)}
-		</ul>
-	};
-
-
 	renderShortcut(
 		shortcutID,
 		direction)
 	{
-		const shortcutString = this.getShortcut(shortcutID);
+		const shortcutString = this.getShortcut(shortcutID).shortcut;
 		const shortcutName = `Switch to ${direction} tab shortcut`;
 
 		return shortcutString
@@ -171,10 +134,11 @@ export default class PopupSection extends React.Component {
 			[k.HidePopupBehavior.Tab, "In a tab"],
 			[k.HidePopupBehavior.Minimize, "In a minimized window"]
 		].map(this.renderOption);
-		const previousShortcutString = this.getShortcut(PreviousTabCommand);
-		const openPopupShortcutString = this.getShortcut(OpenPopupCommand);
-		const previousShortcut = this.renderShortcut(PreviousTabCommand, "previous");
-		const nextShortcut = this.renderShortcut(NextTabCommand, "next");
+		const openPopupShortcut = this.getShortcut(OpenPopupCommand);
+		const focusPopupShortcut = this.getShortcut(FocusPopupCommand);
+		const previousShortcut = this.getShortcut(PreviousTabCommand);
+		const previousShortcutKbd = this.renderShortcut(PreviousTabCommand, "previous");
+		const nextShortcutKbd = this.renderShortcut(NextTabCommand, "next");
 
 		return (
 			<Section>
@@ -188,10 +152,17 @@ export default class PopupSection extends React.Component {
 					This provides the closest experience to the {SwitchWindowShortcut} menu.
 				</p>
 
-				{this.renderPopupShortcuts()}
+				<PopupShortcut
+					shortcut={openPopupShortcut}
+					onClick={this.handleChangeShortcutsClick}
+				/>
+				<PopupShortcut
+					shortcut={focusPopupShortcut}
+					onClick={this.handleChangeShortcutsClick}
+				/>
 
 				<HidePopup
-					shortcut={openPopupShortcutString}
+					shortcut={openPopupShortcut.shortcut}
 					hidePopupBehavior={settings[k.HidePopupBehavior.Key]}
 					autoStart={true}
 					tabs={tabs}
@@ -249,7 +220,7 @@ export default class PopupSection extends React.Component {
 							<div>
 								<span>
 									Show the recent tab list in a popup when
-									using {previousShortcut} and {nextShortcut}
+									using {previousShortcutKbd} and {nextShortcutKbd}
 								</span>
 							</div>
 						}
@@ -259,7 +230,7 @@ export default class PopupSection extends React.Component {
 				</NewSetting>
 
 				<NavigateRecents
-					shortcut={previousShortcutString}
+					shortcut={previousShortcut.shortcut}
 					navigateWithPopup={settings[k.NavigateRecentsWithPopup.Key]}
 					tabs={tabs}
 					recents={recents}

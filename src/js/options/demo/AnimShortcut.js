@@ -100,7 +100,7 @@ export default forwardRef(function AnimShortcut(
 	}));
 
 	return (
-		<Container>
+		<Container className="shortcut">
 			{shortcut
 				? (
 					<>
