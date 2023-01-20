@@ -51,10 +51,10 @@ export default function OptionsApp()
 					selected={selectedSection}
 					onClick={handleSectionClick}
 				>
-					<SectionLabel id="general" label="General" />
-					<SectionLabel id="popup" label="Popup window" />
-					<SectionLabel id="shortcuts" label="Keyboard shortcuts" />
-					<SectionLabel id="about" label="About" />
+					<SectionLabel section="general" label="General" />
+					<SectionLabel section="popup" label="Popup window" />
+					<SectionLabel section="shortcuts" label="Keyboard shortcuts" />
+					<SectionLabel section="about" label="About" />
 				</SectionList>
 
 				<Sections selected={selectedSection}>
