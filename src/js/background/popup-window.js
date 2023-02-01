@@ -167,7 +167,9 @@ async function show(
 			await cp.windows.update(windowID, { focused: true, left, top });
 		}
 
-		result = cp.windows.update(windowID, { focused: true, left, top });
+			// we seem to have to pass width and height here, even if they
+			// haven't changed, to keep the window from shifting size
+		result = cp.windows.update(windowID, { focused: true, left, top, width, height });
 	} else {
 			// create a popup window with the tab that's hiding in another
 			// window, instead of passing in a URL.  that will move the
@@ -242,11 +244,19 @@ async function hide(
 		}
 
 		if (hideBehavior == Behind) {
-				// hide the popup behind the focused window
-			const {left, top} = calcPosition(targetWindow);
+				// hide the popup behind the focused window.  we have to pass in
+				// the adjustment deltas so calcPosition() calculates the position
+				// based on the correct size, which may shift slightly on screens
+				// with different DPIs.
+			const {left, top, width, height} = calcPosition(
+				targetWindow,
+				{
+					popupAdjustmentWidth,
+					popupAdjustmentHeight
+				}
+			);
 
-			options.left = left;
-			options.top = top;
+			Object.assign(options, { left, top, width, height });
 		} else if (hideBehavior == Minimize) {
 			options.state = "minimized";
 		}
@@ -279,6 +289,14 @@ async function blur()
 }
 
 
+async function resize(
+	width,
+	height)
+{
+	await cp.windows.update(windowID, { width, height });
+}
+
+
 async function close()
 {
 		// look for any open popup tabs.  there should only ever be one, but
@@ -303,6 +321,7 @@ export default shared("popupWindow", () => ({
 	show,
 	hide,
 	blur,
+	resize,
 	close,
 	get hideBehavior() {
 		return hideBehavior;
