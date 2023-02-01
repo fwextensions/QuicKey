@@ -170,7 +170,7 @@ export default class App extends React.Component {
 		if (this.props.isPopup) {
 				// we're being opened in a popup window, so add the event
 				// handlers that are only needed in that case
-			const {outerWidth, outerHeight} = window;
+			const {outerWidth: originalW, outerHeight: originalH} = window;
 
 			window.addEventListener("resize", () => {
 				if (innerWidth == outerWidth) {
@@ -180,9 +180,12 @@ export default class App extends React.Component {
 						// to close and reopen the window.
 					this.reopenWindow();
 					log("=== borders collapsed");
-				} else if (!this.ignoreNextResize) {
-						// prevent the window from resizing
-					window.resizeTo(outerWidth, outerHeight);
+				} else if (!this.ignoreNextResize &&
+						(window.outerWidth !== originalW || window.outerHeight !== originalH)) {
+						// prevent the window from resizing, but only if the width
+						// or height have actually changed, since we sometimes
+						// get resize events when the size is the same
+					popupWindow.resize(originalW, originalH);
 				}
 
 				this.ignoreNextResize = false;
@@ -191,18 +194,11 @@ export default class App extends React.Component {
 				// hide the window if it loses focus
 			window.addEventListener("blur", this.onWindowBlur);
 
-				// listen for resolution changes so we can close the popup
-				// and reset the sizing adjustments
+				// listen for resolution changes so we can resize the popup, in
+				// case it changes based on the new DPI
 			matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`).addListener(event => {
 				if (!event.matches) {
-					if (popupWindow.isVisible) {
-						this.reopenWindow();
-					} else {
-							// close the window when the resolution changes,
-							// not just hide it off-screen, so it then will
-							// get recreated with the right size offsets
-						popupWindow.close();
-					}
+					popupWindow.resize(originalW, originalH);
 				}
 			})
 		}
@@ -245,9 +241,11 @@ export default class App extends React.Component {
 			const windowPadding = outerHeight - innerHeight;
 
 			if (innerHeight !== bodyHeight) {
-					// don't fight with the onResize handler
+					// don't fight with the onResize handler, and use the Chrome
+					// API to resize the popup, since it can make the window
+					// shorter than window.resizeTo() can
 				this.ignoreNextResize = true;
-				resizeTo(outerWidth, bodyHeight + windowPadding);
+				popupWindow.resize(outerWidth, bodyHeight + windowPadding);
 			}
 		}
 	}
