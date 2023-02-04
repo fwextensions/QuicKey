@@ -23,6 +23,7 @@ const Container = styled.div`
 	justify-content: center;
 	display: flex;
 	transition: opacity .25s ease-out;
+	z-index: 100;
 	
 	& svg {
 		width: 40px;

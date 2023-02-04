@@ -15,6 +15,7 @@ const BrowserWindow = styled(Window)`
 	--location-bar: #eee;
 	
 	background: ${({ bg }) => bg};
+	z-index: 20;
 `;
 const TabBarContainer = styled.div`
 	width: 100%;

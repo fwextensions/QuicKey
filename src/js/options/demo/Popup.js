@@ -29,30 +29,36 @@ const PopupWindow = styled(Window)`
 	
 	background: var(--popup-background);
 	transition: all .15s ease-out;
+	z-index: 50;
 
-	&.hidden {
+	&.closed {
 		opacity: 0;
 		background: none;
 		box-shadow: none;
 	}
+
+	&.behind {
+		z-index: 10;
+	}
 	
-	&.hidden > * {
+	&.tab > *, &.minimize > * {
 		display: none;
 	}
 	
-	&.hidden.behind {
-		opacity: .3;
-		border: 2px dashed yellow;
-		mix-blend-mode: screen;
-	}
-	
-	&.hidden.tab, &.hidden.minimize {
-		opacity: 1;
+	&.tab, &.minimize {
 		border: none;
 		border-radius: 0;
 		transition-duration: .3s;
 		background: yellow;
+		box-shadow: none;
 	}
+`;
+const HiddenWindowBorder = styled(Window)`
+	background: none;
+	opacity: .3;
+	border: 2px dashed yellow;
+	mix-blend-mode: screen;
+	z-index: 50;
 `;
 const Selection = styled.div`
 	@media (prefers-color-scheme: dark) {
@@ -110,14 +116,14 @@ export default function Popup({
 	targetWindow = null,
 	alignment = "center-center",
 	visible,
-	hideBehavior = "" })
+	hideBehavior = "closed" })
 {
 	let bounds;
 
 		// for the navigate recents with popup demo, hideBehavior will be empty
 		// and targetWindow will be null, so the popup will be positioned
 		// relative to the screen
-	if (visible || hideBehavior === HidePopupBehavior.Behind || !hideBehavior) {
+	if (visible || hideBehavior === HidePopupBehavior.Behind || hideBehavior === "closed") {
 		bounds = calcPosition(targetWindow, { alignment });
 	} else if (hideBehavior === HidePopupBehavior.Minimize) {
 		bounds = getMinimizedBounds();
@@ -137,20 +143,20 @@ export default function Popup({
 		};
 	}
 
-	const { left, top, width, height } = bounds;
-
 	return (
-		<PopupWindow
-			left={left}
-			top={top}
-			width={width}
-			height={height}
-			className={[visible ? "visible" : "hidden", hideBehavior].join(" ")}
-		>
-			<Selection index={selected} />
-			<Tabs>
-				{recents.map((tab, i) => <Tab key={i} tab={tab} />)}
-			</Tabs>
-		</PopupWindow>
+		<>
+			<PopupWindow
+				{...bounds}
+				className={visible ? "visible" : hideBehavior}
+			>
+				<Selection index={selected} />
+				<Tabs>
+					{recents.map((tab, i) => <Tab key={i} tab={tab} />)}
+				</Tabs>
+			</PopupWindow>
+			{(hideBehavior === HidePopupBehavior.Behind) &&
+				<HiddenWindowBorder {...bounds} />
+			}
+		</>
 	);
 }
