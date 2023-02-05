@@ -93,11 +93,13 @@ export default class PopupSection extends React.Component {
 		direction)
 	{
 		const shortcutString = this.getShortcut(shortcutID).shortcut;
-		const shortcutName = `Switch to ${direction} tab shortcut`;
 
 		return shortcutString
-			? <Shortcut keys={shortcutString} title={shortcutName} />
-			: <em>{shortcutName}</em>;
+			? <Shortcut
+				keys={shortcutString}
+				title={`Switch to ${direction} tab shortcut`}
+			/>
+			: <span><em>Switch to {direction} tab</em> shortcut</span>;
 	}
 
 
@@ -150,6 +152,8 @@ export default class PopupSection extends React.Component {
 					window is never unloaded) and it lets you use a single
 					shortcut to show the window and then choose a tab to focus.
 					This provides the closest experience to the {SwitchWindowShortcut} menu.
+					A different shortcut opens the popup with the search box focused
+					to quickly find a tab.
 				</p>
 
 				<PopupShortcut
@@ -213,13 +217,20 @@ export default class PopupSection extends React.Component {
 
 				<h2>Show popup window while navigating recent tabs</h2>
 
+				<p>
+					This option lets you view each tab for as long as you want
+					while navigating with the <em>Switch to next/previous
+					tab</em> shortcuts.  Keep holding the modifier key until you
+					find the desired tab, and then release it to hide the popup.
+				</p>
+
 				<NewSetting addedVersion={12}>
 					<Checkbox
 						id={k.NavigateRecentsWithPopup.Key}
 						label={
 							<div>
 								<span>
-									Show the recent tab list in a popup when
+									Show the recent tabs popup while
 									using {previousShortcutKbd} and {nextShortcutKbd}
 								</span>
 							</div>
