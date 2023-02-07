@@ -7,7 +7,7 @@ import useStepper from "./useStepper";
 import { DemoRoot } from "./DemoRoot";
 import Browser from "./Browser";
 import Popup from "./Popup";
-import Shortcut from "./AnimShortcut";
+import AnimShortcut from "./AnimShortcut";
 import PlayButton from "./PlayButton";
 
 const HidePopupOptions = createAnimOptions(
@@ -130,7 +130,7 @@ export default function HidePopup({
 				/>
 			</DemoRoot>
 			<ShortcutContainer>
-				<Shortcut
+				<AnimShortcut
 					ref={shortcutRef}
 					shortcut={shortcut}
 				/>

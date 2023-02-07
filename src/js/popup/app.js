@@ -173,11 +173,13 @@ export default class App extends React.Component {
 			const {outerWidth: originalW, outerHeight: originalH} = window;
 
 			window.addEventListener("resize", () => {
-				if (innerWidth == outerWidth) {
+				if (innerWidth == outerWidth && k.IsWin) {
 						// sometimes, something forces the popup to redraw in
 						// a weird way, where the borders and window drop
 						// shadow are lost.  seems like the only solution is
-						// to close and reopen the window.
+						// to close and reopen the window.  this happens only on
+						// Windows.  on macOS, the inner and outer widths are
+						// always the same.
 					this.reopenWindow();
 					log("=== borders collapsed");
 				} else if (!this.ignoreNextResize &&
