@@ -1,6 +1,6 @@
 import React from "react";
 import { styled } from "goober";
-import { HidePopupBehavior } from "@/background/constants";
+import { IsMac, HidePopupBehavior } from "@/background/constants";
 import { calcPosition } from "@/background/popup-utils";
 import { Window } from "./Window";
 
@@ -8,12 +8,15 @@ const RowHeight = 7;
 
 function getMinimizedBounds()
 {
-	const { width, height } = screen;
-	const minimizedW = width * .05;
-	const minimizedH = minimizedW * .5;
+	const { width, height, availHeight } = screen;
+	const taskbarH = height - availHeight;
+	const minimizedW = taskbarH * (IsMac ? 1 : 2);
+	const minimizedH = taskbarH;
 
+		// on macOS, we make the minimized window a square icon and position it
+		// towards the right edge of the dock, where minimized windows go
 	return {
-		left: width * .2,
+		left: width * (IsMac ? .7 : .2),
 		top: height - minimizedH,
 		width: minimizedW,
 		height: minimizedH
@@ -51,6 +54,11 @@ const PopupWindow = styled(Window)`
 		transition-duration: .3s;
 		background: yellow;
 		box-shadow: none;
+	}
+	
+	&.minimize {
+			/* put the minimized window above the taskbar */
+		z-index: 80;
 	}
 `;
 const HiddenWindowBorder = styled(Window)`
