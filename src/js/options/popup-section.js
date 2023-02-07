@@ -185,7 +185,7 @@ export default class PopupSection extends React.Component {
 					<RadioGroup
 						id={k.HidePopupBehavior.Key}
 						value={settings[k.HidePopupBehavior.Key]}
-						label={<span>When the {SwitchAppShortcut}-style popup closes, hide it:</span>}
+						label={<span style={{ whiteSpace: "nowrap" }}>When the {SwitchAppShortcut}-style popup closes, hide it:</span>}
 						onChange={onChange}
 						style={{
 							width: "21em",

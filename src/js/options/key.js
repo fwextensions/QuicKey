@@ -61,7 +61,7 @@ Object.keys(KeyClasses).forEach(className => {
 	KeyClasses[className].forEach(keyName => {
 		const config = {
 			label: keyName,
-			className: className
+			className
 		};
 		let code = keyName;
 

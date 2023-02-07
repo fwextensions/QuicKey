@@ -5,7 +5,7 @@ import useStepper from "./useStepper";
 import { DemoRoot } from "./DemoRoot";
 import Browser from "./Browser";
 import Popup from "./Popup";
-import Shortcut from "./AnimShortcut";
+import AnimShortcut from "./AnimShortcut";
 import PlayButton from "@/options/demo/PlayButton";
 
 const PopupRecentsOptions = createAnimOptions(
@@ -137,7 +137,7 @@ export default function NavigateRecents({
 				/>
 			</DemoRoot>
 			<ShortcutContainer>
-				<Shortcut
+				<AnimShortcut
 					ref={shortcutRef}
 					shortcut={shortcut}
 				/>

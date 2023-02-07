@@ -11,6 +11,7 @@ const languageMatch = primaryLanguage.match(languagePattern);
 
 export const IsMac = /Mac/i.test(platform);
 export const IsLinux = /Linux/i.test(platform);
+export const IsWin = !IsMac && !IsLinux;
 export const IsEdge = /Edg\//i.test(userAgent);
 export const IsFirefox = /Firefox\//i.test(userAgent);
 export const Platform = IsMac ? "mac" : "win";
