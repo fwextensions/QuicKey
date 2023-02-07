@@ -15,9 +15,9 @@ const PopupRecentsOptions = createAnimOptions(
 		"down",
 		"down",
 		["end", 1500],
-		["pressDown", 250],
+		["pressDown", 350],
 		["pressUp", 1500],
-		["pressDown", 250],
+		["pressDown", 350],
 		["pressUp", 1000],
 			// add a last noop step so there's a delay before the play button is shown
 		"noop"

@@ -239,10 +239,6 @@ async function hide(
 		const options = {};
 		const targetWindow = await getWindow(targetTabOrWindow);
 
-		if (unfocus) {
-			options.focused = false;
-		}
-
 		if (hideBehavior == Behind) {
 				// hide the popup behind the focused window.  we have to pass in
 				// the adjustment deltas so calcPosition() calculates the position
@@ -257,11 +253,18 @@ async function hide(
 			);
 
 			Object.assign(options, { left, top, width, height });
+
+				// we only want to explicitly unfocus the popup if we're hiding
+				// it behind the target window.  if it's being minimized,
+				// unfocusing it as well can cause window stacking weirdness.
+			if (unfocus) {
+				options.focused = false;
+			}
 		} else if (hideBehavior == Minimize) {
 			options.state = "minimized";
 		}
 
-DEBUG && (!Number.isInteger(options.left) || !Number.isInteger(options.top)) && console.error("==== bad popup options", options);
+DEBUG && hideBehavior == Behind && (!Number.isInteger(options.left) || !Number.isInteger(options.top)) && console.error("==== bad popup options", options);
 
 		try {
 			await cp.windows.update(windowID, options);
