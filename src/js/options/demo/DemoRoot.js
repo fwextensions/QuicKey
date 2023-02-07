@@ -14,10 +14,23 @@ const Screen = styled(Rect)`
 	background: var(--background, white);
 	border: 1px solid var(--border-color, #eee);
 	transition: border-color .25s ease-out;
-	box-shadow: inset 0 -${({ taskbarHeight }) => taskbarHeight}px 0 0 var(--taskbar, #ddd);
+	position: relative;
+	box-sizing: content-box;
 	
 	&:hover {
 		border-color: var(--border-color-hover, #ccc);
+	}
+`;
+const Taskbar = styled(Rect)`
+	width: 100%;
+	background: var(--taskbar, #ddd);
+	bottom: 0;
+	position: absolute;
+	z-index: 75;
+	
+	.mac & {
+		width: 60%;
+		left: 20%;
 	}
 `;
 
@@ -40,8 +53,8 @@ export function DemoRoot({
 			<Screen
 				width={screenW}
 				height={screenH}
-				taskbarHeight={(screenH - availHeight) * scale}
 			>
+				<Taskbar height={screenH - availHeight} />
 				{children}
 			</Screen>
 		</DemoContext.Provider>
