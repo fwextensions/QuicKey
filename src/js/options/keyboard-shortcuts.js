@@ -49,9 +49,9 @@ export default {
 			createLabel: function(
 				modifier)
 			{
-				return <span>Select the next tab while
+				return <span>Select the next item while
 					holding <b>{modifier}</b> (include <b>shift</b> to
-					select the previous tab)</span>
+					select the previous item)</span>
 			},
 			createValidator: function(
 				modifier,
@@ -106,11 +106,6 @@ export default {
 		}
 	],
 	fixed: [
-		{
-			label: "Switch to the selected tab",
-			shortcut: "enter",
-			disabled: true
-		},
 		{
 			label: <span>Open the selected bookmark or history item in the <b>same tab</b></span>,
 			shortcut: "enter",

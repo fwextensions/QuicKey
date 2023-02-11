@@ -144,6 +144,11 @@ export default class ShortcutSection extends React.Component {
 
 				<h2>Customizable shortcuts</h2>
 
+				<p>
+					These shortcuts can be used only when the QuicKey menu or popup
+					window is open and has focus.
+				</p>
+
 				{this.renderShortcutList(Shortcuts.customizable)}
 				<button className="key"
 					onClick={onResetShortcuts}
@@ -151,6 +156,10 @@ export default class ShortcutSection extends React.Component {
 
 
 				<h2>Browser shortcuts</h2>
+
+				<p>
+					These shortcuts can be used on any tab.
+				</p>
 
 				<div className="chrome-shortcuts"
 					title="Open the browser's keyboard shortcuts page"
@@ -167,7 +176,12 @@ export default class ShortcutSection extends React.Component {
 				>Use ctrl-tab as a shortcut</button>
 
 
-				<h2>Other shortcuts</h2>
+				<h2>Bookmark and history shortcuts</h2>
+
+				<p>
+					These shortcuts control where a bookmark or history item
+					is opened.
+				</p>
 
 				{this.renderShortcutList(Shortcuts.fixed)}
 			</Section>
