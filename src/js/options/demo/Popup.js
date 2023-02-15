@@ -4,7 +4,7 @@ import { IsMac, HidePopupBehavior } from "@/background/constants";
 import { calcPosition } from "@/background/popup-utils";
 import { Window } from "./Window";
 
-const RowHeight = 7;
+const RowHeight = 65;
 
 function getMinimizedBounds()
 {
@@ -23,12 +23,25 @@ function getMinimizedBounds()
 	};
 }
 
+function getScreenBounds()
+{
+		// we don't want to use screen.availLeft/Top because we want the origin
+		// to start at 0,0 even if we're on a monitor to the left of the main one
+	return {
+		left: 0,
+		top: 0,
+		width: screen.availWidth,
+		height: screen.availHeight
+	};
+}
+
 const PopupWindow = styled(Window)`
 	@media (prefers-color-scheme: dark) {
 		--popup-background: #202124;
 	}
 	
 	--popup-background: white;
+	--row-height: calc(${RowHeight} * var(--px));
 	
 	background: var(--popup-background);
 	transition: all .15s ease-out;
@@ -73,9 +86,9 @@ const Selection = styled.div`
 		background: #444547;
 	}
 
-	top: ${({ index }) => index * RowHeight}px;
+	top: calc(${({ index }) => index} * var(--row-height));
 	width: 100%;
-	height: ${RowHeight}px;
+	height: var(--row-height);
 	border: 1px solid var(--popup-background);
 	border-left-width: 2px;
     border-right-width: 2px;
@@ -87,33 +100,37 @@ const Tabs = styled.div`
 `;
 const TabItem = styled.div`
 	width: 100%;
+	height: var(--row-height);
 	flex-direction: row;
 	display: flex;
+	align-items: center;
 `;
 const Favicon = styled.div`
-	width: 3px;
-	height: 3px;
-	margin: 2px;
-	background: ${({ color }) => color};
+	width: calc(32 * var(--px)); 
+	height: calc(32 * var(--px)); 
+	margin: 5%;
 `;
+	// we use a min-height below because the titles don't look great if the calc'd
+	// height is ~1.5 and some end up at 1px and others at 2px
 const Title = styled.div`
 	@media (prefers-color-scheme: dark) {
 		background: #aaa;
 	}
 	
-	width: ${({ width }) => width}%;
-	height: 1px;
-	margin: 3px 0;
+	height: calc(16 * var(--px));
+	min-height: 2px;
 	background: #aaa;
 `;
 
 function Tab({
 	tab })
 {
+		// use styles to customize each component instead of passing a value into
+		// the CSS so that we don't generate a separate class for each element
 	return (
 		<TabItem>
-			<Favicon color={tab.favicon}/>
-			<Title width={tab.length} />
+			<Favicon style={{ background: tab.favicon }} />
+			<Title style={{ width: tab.length + "%" }} />
 		</TabItem>
 	);
 }
@@ -121,7 +138,7 @@ function Tab({
 export default function Popup({
 	recents,
 	selected = 0,
-	targetWindow = null,
+	targetWindow = getScreenBounds(),
 	alignment = "center-center",
 	visible,
 	hideBehavior = "closed" })
@@ -129,7 +146,7 @@ export default function Popup({
 	let bounds;
 
 		// for the navigate recents with popup demo, hideBehavior will be empty
-		// and targetWindow will be null, so the popup will be positioned
+		// and targetWindow will be the screen bounds, so the popup will be positioned
 		// relative to the screen
 	if (visible || hideBehavior === HidePopupBehavior.Behind || hideBehavior === "closed") {
 		bounds = calcPosition(targetWindow, { alignment });

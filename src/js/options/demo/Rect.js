@@ -1,22 +1,20 @@
 import React from "react";
-import { useScaled } from "./DemoContext";
 import { styled } from "goober";
 
 function scaledValue(
 	props,
 	name)
 {
-	const scaled = useScaled();
 	const value = props[name];
 
 	if (Number.isFinite(value)) {
-		return `${name}: ${scaled(value)}`;
+		return `${name}: calc(${value} * var(--px))`;
 	} else {
 		return "";
 	}
 }
 
-const ScaledContainer = styled.div`
+export const Rect = styled.div`
 	${(props) => scaledValue(props, "left")};
 	${(props) => scaledValue(props, "top")};
 	${(props) => scaledValue(props, "width")};
@@ -24,23 +22,3 @@ const ScaledContainer = styled.div`
 	position: ${({ left, top }) => Number.isFinite(left) || Number.isFinite(top) ? "absolute" : "relative"};
 	overflow: hidden;
 `;
-
-export function Rect({
-	left,
-	top,
-	width,
-	height,
-	className,
-	children })
-{
-	const bounds = { left, top, width, height };
-
-	return (
-		<ScaledContainer
-			{...bounds}
-			className={className}
-		>
-			{children}
-		</ScaledContainer>
-	);
-}
