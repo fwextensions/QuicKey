@@ -52,7 +52,12 @@ export function createRecents(
 export function getWindowBounds(
 	targetWindow = window)
 {
-	const { screenLeft: left, screenTop: top, outerWidth: width, outerHeight: height } = targetWindow;
+	let { screenLeft: left, screenTop: top, outerWidth: width, outerHeight: height } = targetWindow;
+
+		// make sure the window origin is relative to 0,0, in case the current
+		// screen is to the left of the main one
+	left -= screen.availLeft;
+	top -= screen.availTop;
 
 	return { left, top, width, height };
 }

@@ -1,6 +1,5 @@
 import React from "react";
 import { styled } from "goober";
-import { DemoContext } from "./DemoContext";
 import { Rect } from "./Rect";
 
 const Screen = styled(Rect)`
@@ -10,6 +9,8 @@ const Screen = styled(Rect)`
 		--border-color-hover: #666;
 		--taskbar: #555;
 	}
+	
+	--px: ${({ scale }) => scale}px;
 
 	background: var(--background, white);
 	border: 1px solid var(--border-color, #eee);
@@ -49,14 +50,13 @@ export function DemoRoot({
 	}
 
 	return (
-		<DemoContext.Provider value={{ scale }}>
-			<Screen
-				width={screenW}
-				height={screenH}
-			>
-				<Taskbar height={screenH - availHeight} />
-				{children}
-			</Screen>
-		</DemoContext.Provider>
+		<Screen
+			scale={scale}
+			width={screenW}
+			height={screenH}
+		>
+			<Taskbar height={screenH - availHeight} />
+			{children}
+		</Screen>
 	);
 }
