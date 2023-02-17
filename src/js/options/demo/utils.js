@@ -33,7 +33,7 @@ export function createTabs(
 
 			tabs.push({
 				id: i,
-				length: rnd(20, 80, true),
+				length: rnd(20, 65, true),
 				favicon: gradient[2],
 				gradient: linearGradient(...gradient)
 			});
