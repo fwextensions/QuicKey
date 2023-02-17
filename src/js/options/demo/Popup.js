@@ -83,16 +83,14 @@ const HiddenWindowBorder = styled(Window)`
 `;
 const Selection = styled.div`
 	@media (prefers-color-scheme: dark) {
-		background: #444547;
+		background: hsl(240, 40%, 60%);
 	}
 
 	top: calc(${({ index }) => index} * var(--row-height));
 	width: 100%;
 	height: var(--row-height);
 	border: 1px solid var(--popup-background);
-	border-left-width: 2px;
-    border-right-width: 2px;
-	background: #ebebeb;
+	background: hsl(240, 90%, 93%);
 	position: absolute;
 `;
 const Tabs = styled.div`
@@ -179,7 +177,7 @@ export default function Popup({
 					{recents.map((tab, i) => <Tab key={i} tab={tab} />)}
 				</Tabs>
 			</PopupWindow>
-			{(hideBehavior === HidePopupBehavior.Behind) &&
+			{(hideBehavior === HidePopupBehavior.Behind && !visible) &&
 				<HiddenWindowBorder {...bounds} />
 			}
 		</>

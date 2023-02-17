@@ -87,7 +87,7 @@ const Tab = styled.div`
 	box-shadow: -2px 0 0 var(--tab-background);
 `;
 const TabName = styled.div`
-	font-weight: bold;
+	font-weight: 500;
 	left: .6em;
 	bottom: .4em;
 	color: white;
