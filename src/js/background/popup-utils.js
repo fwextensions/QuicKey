@@ -1,13 +1,45 @@
+import cp from "cp";
 import {PopupInnerWidth, PopupInnerHeight, PopupPadding} from "@/background/constants";
 
-function getScreen()
+let screens;
+
+cp.system.display.getInfo().then((screenInfo) => {
+	screens = screenInfo.map(({ workArea }) => ({
+		...workArea,
+		right: workArea.left + workArea.width,
+		bottom: workArea.top + workArea.height
+	}));
+});
+
+function getScreen(
+	targetWindow)
 {
-	return {
-		left: screen.availLeft || 0,
-		top: screen.availTop || 0,
-		width: screen.availWidth,
-		height: screen.availHeight
-	};
+	if (targetWindow && screens.length > 1) {
+		const { left, top, width, height } = targetWindow;
+		const right = left + width;
+		const bottom = top + height;
+		let maxOverlapX = 0;
+		let maxOverlapY = 0;
+		let targetScreen;
+
+		for (const screen of screens) {
+			const overlapX = (left < screen.left ? (right - screen.left) : (screen.right - left));
+			const overlapY = (top < screen.top ? (bottom - screen.top) : (screen.bottom - top));
+
+			if (overlapX >= maxOverlapX && overlapY >= maxOverlapY) {
+				targetScreen = screen;
+			}
+		}
+
+		return targetScreen;
+	} else {
+		return {
+			left: screen.availLeft || 0,
+			top: screen.availTop || 0,
+			width: screen.availWidth,
+			height: screen.availHeight
+		};
+	}
 }
 
 function getAlignedPosition(
@@ -42,7 +74,7 @@ export function calcPosition(
 	const width = PopupInnerWidth + popupAdjustmentWidth;
 	const height = PopupInnerHeight + popupAdjustmentHeight;
 	const [horizontal, vertical] = alignment.split("-");
-	const screen = getScreen();
+	const screen = getScreen(targetWindow);
 	const { left: targetX, top: targetY, width: targetW, height: targetH } =
 		targetWindow || screen;
 		// Chrome will throw an error if the popup is more than 50% off-screen,
