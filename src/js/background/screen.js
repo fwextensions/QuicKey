@@ -2,15 +2,9 @@ import cp from "cp";
 
 let screens;
 
-//cp.system.display.getInfo().then((screenInfo) => {
-//	screens = screenInfo.map(({ workArea }) => ({
-//		...workArea,
-//			// add the right and bottom bounds so it's easier to calculate the
-//			// overlap with those edges
-//		right: workArea.left + workArea.width,
-//		bottom: workArea.top + workArea.height
-//	}));
-//});
+chrome.system.display.onDisplayChanged.addListener(updateScreenInfo);
+
+updateScreenInfo();
 
 function updateScreenInfo()
 {
@@ -26,7 +20,7 @@ function updateScreenInfo()
 export function getScreenFromWindow(
 	targetWindow)
 {
-	if (targetWindow && screens.length > 1) {
+	if (targetWindow && screens?.length > 1) {
 		const { left, top, width, height } = targetWindow;
 		const right = left + width;
 		const bottom = top + height;
@@ -53,7 +47,3 @@ export function getScreenFromWindow(
 		};
 	}
 }
-
-chrome.system.display.onDisplayChanged.addListener(updateScreenInfo);
-
-updateScreenInfo();
