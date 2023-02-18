@@ -13,6 +13,7 @@
 		"history",
 		"storage",
 		"sessions",
+		"system.display",
 		"chrome://favicon/"
 	],
 	"icons": {

@@ -1,14 +1,5 @@
 import {PopupInnerWidth, PopupInnerHeight, PopupPadding} from "@/background/constants";
-
-function getScreen()
-{
-	return {
-		left: screen.availLeft || 0,
-		top: screen.availTop || 0,
-		width: screen.availWidth,
-		height: screen.availHeight
-	};
-}
+import {getScreenFromWindow} from "@/background/screen";
 
 function getAlignedPosition(
 	alignment,
@@ -42,7 +33,7 @@ export function calcPosition(
 	const width = PopupInnerWidth + popupAdjustmentWidth;
 	const height = PopupInnerHeight + popupAdjustmentHeight;
 	const [horizontal, vertical] = alignment.split("-");
-	const screen = getScreen();
+	const screen = getScreenFromWindow(targetWindow);
 	const { left: targetX, top: targetY, width: targetW, height: targetH } =
 		targetWindow || screen;
 		// Chrome will throw an error if the popup is more than 50% off-screen,
