@@ -29,6 +29,7 @@ const HidePopupOptions = createAnimOptions(
 		autoStart: false
 	}
 );
+const AutoStartDelay = 1500;
 
 const Container = styled.div`
 	margin-top: 2em;
@@ -55,7 +56,8 @@ export default function HidePopup({
 	const [recentIndex, setRecentIndex] = useState(0);
 	const [activeTab, setActiveTab] = useState(recents[recentIndex]);
 	const [popupVisible, setPopupVisible] = useState(false);
-	const isLoaded = useRef(false);
+	const [startAnim, setStartAnim] = useState(null);
+	const isMounted = useRef(false);
 	const shortcutRef = useRef();
 	const handleStep = createStepHandler({
 		shortcut,
@@ -74,18 +76,27 @@ export default function HidePopup({
 	});
 	const { start, stop, active } = useStepper(handleStep, HidePopupOptions);
 	const recentTabs = recents.map((index) => tabs[index]);
-	const playButtonEnabled = !active && (isLoaded.current || !autoStart);
+	const playButtonEnabled = !active && (isMounted.current || !autoStart);
 
-	const startAnim = () => {
-		setRecentIndex(0);
-		start();
-	};
+	useEffect(() => {
+			// the "restart" state should force the anim to restart even if it's
+			// already playing.  we have to control the animation via a state
+			// flag so that the timeout and click handlers don't use stale values.
+		if (startAnim == "restart" || (startAnim == "start" && !active)) {
+			setRecentIndex(0);
+			start();
+		}
+
+		setStartAnim(null);
+	}, [startAnim, start]);
 
 	useEffect(() => {
 			// ignore the change of hidePopupBehavior on first mount, but
-			// restart the animation on future changes, or if autoStart is true
-		if (isLoaded.current || autoStart) {
-			startAnim();
+			// restart the animation on future changes.  this will force a
+			// restart of the animation, even if it's already going, so it's
+			// always showing the current hide behavior.
+		if (isMounted.current) {
+			setStartAnim("restart");
 		}
 
 		if (hidePopupBehavior == HidePopupBehavior.Tab) {
@@ -101,8 +112,16 @@ export default function HidePopup({
 		return stop;
 	}, [hidePopupBehavior]);
 
+		// this effect has to be at the end, so that the previous one sees
+		// isMounted as false when it's first run
 	useEffect(() => {
-		isLoaded.current = true;
+		isMounted.current = true;
+
+		if (autoStart) {
+				// when the component is mounted, start the animation after a
+				// slight delay, so the user doesn't miss the beginning of it
+			setTimeout(() => setStartAnim("start"), AutoStartDelay);
+		}
 	}, []);
 
 	return (
@@ -116,6 +135,7 @@ export default function HidePopup({
 					activeTab={activeTab}
 				/>
 				<Popup
+					mode="normal"
 					recents={recentTabs}
 					selected={recentIndex}
 					alignment="center-center"
@@ -126,7 +146,7 @@ export default function HidePopup({
 				<PlayButton
 					enabled={playButtonEnabled}
 					title={playButtonEnabled ? "Play demo" : ""}
-					onClick={playButtonEnabled ? startAnim : undefined}
+					onClick={playButtonEnabled ? () => setStartAnim("start") : undefined}
 				/>
 			</DemoRoot>
 			<ShortcutContainer>
