@@ -57,6 +57,9 @@ let lastUsedVersion;
 let usePinyin;
 
 
+const isPopupWindow = (tab) => tab?.url.includes(k.PopupURL);
+
+
 chrome.runtime.onStartup.addListener(() => {
 	const onActivated = debounce(() => {
 		chrome.tabs.onActivated.removeListener(onActivated);
@@ -87,9 +90,17 @@ DEBUG && console.log("== onStartup");
 
 const addTab = debounce(
 	tabId => cp.tabs.get(tabId)
-			// update activeTab to be the one we're pushing onto recents
-		.then(tab => activeTab = tab)
-		.then(recentTabs.add)
+		.then(tab => {
+				// update activeTab to be the one we're pushing onto recents, but
+				// only if it's not the popup window.  though handleTabActivated()
+				// checks popupWindow.id, that may be 0 right after it's been
+				// created and triggers the tab activated event.
+			if (!isPopupWindow(tab)) {
+				activeTab = tab;
+
+				return recentTabs.add(tab);
+			}
+		})
 		.catch(error => {
 				// ignore the "No tab with id:" errors, which will happen
 				// closing a window with multiple tabs.  since addTab()
@@ -184,6 +195,8 @@ function sendPopupMessage(
 async function openPopupWindow(
 	focusSearch = false)
 {
+	const currentActiveTab = activeTab;
+
 	[activeTab] = await cp.tabs.query({
 		active: true,
 		lastFocusedWindow: true
@@ -197,7 +210,7 @@ async function openPopupWindow(
 			{ focusSearch, navigatingRecents },
 			navigatingRecents ? "right-center" : "center-center"
 		);
-	} else if (!activeTab || activeTab.windowId !== popupWindow.id) {
+	} else if (!activeTab || !isPopupWindow(activeTab)) {
 			// the popup window is open but not focused, so tell it to show
 			// itself centered on the current browser window, and whether to
 			// select the first item.  if there's no activeTab (such as when
@@ -205,6 +218,10 @@ async function openPopupWindow(
 			// foreground), the popup will appear aligned to the screen.
 		sendPopupMessage("showWindow", { focusSearch, activeTab });
 	} else {
+			// change activeTab back to what it was before, since we don't want
+			// to treat the popup window as the active tab
+		activeTab = currentActiveTab;
+
 			// it's open and focused, so use the shortcut to move the
 			// selection DOWN
 		if (sendPopupMessage("modifySelected", { direction: 1 })) {
@@ -355,7 +372,7 @@ chrome.tabs.onActivated.addListener(event => {
 chrome.tabs.onCreated.addListener(tab => {
 	toolbarIcon.updateTabCount(1);
 
-	if (!startingUp && !tab.active && tab.windowId !== popupWindow.id) {
+	if (!startingUp && !tab.active && !isPopupWindow(tab)) {
 			// this tab was opened by ctrl-clicking a link or by opening
 			// all the tabs in a bookmark folder, so pass true to insert
 			// this tab in the penultimate position, which makes it the
@@ -477,7 +494,7 @@ chrome.runtime.onMessage.addListener(({message, ...payload}, sender, sendRespons
 				// instead of closing the popup and then calling
 				// openPopupWindow() to reopen it, we just call create(),
 				// which always closes the window first, and pass the current
-				// activeTab, since the query openPopupWindow() seems to
+				// activeTab, since the query in openPopupWindow() seems to
 				// not find a last focused window, so we end up with an
 				// undefined activeTab
 			await popupWindow.create(currentActiveTab, payload.focusSearch);

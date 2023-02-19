@@ -30,7 +30,7 @@ const MinItems = 4;
 const MinScoreDiff = .1;
 const BookmarksQuery = "/b ";
 const HistoryQuery = "/h ";
-const CommandQueryPattern = /^\/[bh]?$/;
+const CommandQueryPattern = /^\/[bh]?$/i;
 const NoRecentTabsMessage = [{
 	message: "Recently used tabs will appear here as you continue browsing",
 	faviconURL: "img/alert.svg",
@@ -330,9 +330,10 @@ export default class App extends React.Component {
 	{
 		const showBookmarkPaths = this.settings[k.ShowBookmarkPaths.Key];
 		const usePinyin = this.settings[k.UsePinyin.Key];
+		const searchBoxTextLC = searchBoxText.toLowerCase();
 		let query = searchBoxText;
 
-		if (searchBoxText.indexOf(BookmarksQuery) == 0) {
+		if (searchBoxTextLC.indexOf(BookmarksQuery) == 0) {
 			this.mode = "bookmarks";
 			query = searchBoxText.slice(BookmarksQuery.length);
 
@@ -344,7 +345,7 @@ export default class App extends React.Component {
 					"bookmarks"
 				);
 			}
-		} else if (searchBoxText.indexOf(HistoryQuery) == 0) {
+		} else if (searchBoxTextLC.indexOf(HistoryQuery) == 0) {
 			this.mode = "history";
 			query = searchBoxText.slice(HistoryQuery.length);
 
@@ -390,14 +391,16 @@ export default class App extends React.Component {
 				// if the user checked the always close option
 			this.closeWindow(true, await this.getActiveTab());
 		} else {
+			const searchBoxTextLC = searchBoxText.toLowerCase();
+
 				// if we're searching for bookmarks or history, reset the
 				// query to just /b or /h, rather than clearing it, unless
 				// it's already a command, in which case, clear it
 			if (
 				this.mode == "tabs" ||
 				this.mode == "command" ||
-				searchBoxText == BookmarksQuery ||
-				searchBoxText == HistoryQuery
+				searchBoxTextLC == BookmarksQuery ||
+				searchBoxTextLC == HistoryQuery
 			) {
 				searchBoxText = "";
 			} else if (this.mode == "bookmarks") {
