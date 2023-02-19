@@ -134,6 +134,7 @@ function Tab({
 }
 
 export default function Popup({
+	mode,
 	recents,
 	selected = 0,
 	targetWindow = getScreenBounds(),
@@ -141,6 +142,11 @@ export default function Popup({
 	visible,
 	hideBehavior = "closed" })
 {
+		// mode controls whether we show the current tab in the results list.  the
+		// selected prop is always based on the full recents list, so we have to
+		// adjust it when hiding the current tab.
+	const resultsList = recents.slice(mode == "normal" ? 1 : 0);
+	const resultsListSelection = mode == "normal" ? selected - 1 : selected;
 	let bounds;
 
 		// for the navigate recents with popup demo, hideBehavior will be empty
@@ -172,9 +178,9 @@ export default function Popup({
 				{...bounds}
 				className={visible ? "visible" : hideBehavior}
 			>
-				<Selection index={selected} />
+				<Selection index={resultsListSelection} />
 				<Tabs>
-					{recents.map((tab, i) => <Tab key={i} tab={tab} />)}
+					{resultsList.map((tab, i) => <Tab key={i} tab={tab} />)}
 				</Tabs>
 			</PopupWindow>
 			{(hideBehavior === HidePopupBehavior.Behind && !visible) &&

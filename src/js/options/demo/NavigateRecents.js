@@ -125,6 +125,7 @@ export default function NavigateRecents({
 					navigating={navigating}
 				/>
 				<Popup
+					mode="navigate-recents"
 					recents={recentTabs}
 					selected={recentIndex}
 					alignment="right-center"
