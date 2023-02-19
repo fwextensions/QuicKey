@@ -3,12 +3,11 @@ import shared from "@/lib/shared";
 import addURLs from "@/popup/data/add-urls";
 import storage from "./quickey-storage";
 import pageTrackers from "./page-trackers";
-import {MinTabDwellTime} from "./constants";
+import {MinTabDwellTime, PopupURL} from "./constants";
 
 
 const MaxTabsLength = 50;
 const TabKeys = ["id", "url", "windowId"];
-const PopupURL = `chrome-extension://${chrome.runtime.id}/popup.html`;
 
 
 function titleOrURL(
