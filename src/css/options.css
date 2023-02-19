@@ -350,6 +350,9 @@ main {
 .section-list {
 	font-size: 1.3em;
 	margin-left: -.75em;
+	top: 2em;
+	position: sticky;
+    align-self: flex-start;
 }
 
 .section-label {
