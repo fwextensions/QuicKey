@@ -4,15 +4,10 @@ import { styled } from "goober";
 const Container = styled.div`
 	@media (prefers-color-scheme: dark) {
 		fill: white;
-		mix-blend-mode: lighten;
-		--opacity: .4;
-		--opacity-hover: .6;
-		--opacity-active: .8;
 	}
 		
-	mix-blend-mode: multiply;
 	fill: rgb(0, 0, 50);
-	opacity: ${({ enabled }) => enabled ? "var(--opacity, .1)" : 0};
+	opacity: ${({ enabled }) => enabled ? "var(--opacity, .3)" : 0};
 	width: 100%;
 	height: 100%;
 	left: 0;
@@ -25,18 +20,18 @@ const Container = styled.div`
 	transition: opacity .25s ease-out;
 	z-index: 100;
 	
-	& svg {
-		width: 40px;
-		margin-left: 10px;
-	}
-	
 	&:hover {
-		opacity: ${({ enabled }) => enabled ? "var(--opacity-hover, .3)" : 0};
+		opacity: ${({ enabled }) => enabled ? "var(--opacity-hover, .5)" : 0};
 	}
 	
 	&:hover:active {
-		opacity: ${({ enabled }) => enabled ? "var(--opacity-active, .6)" : 0};
+		opacity: ${({ enabled }) => enabled ? "var(--opacity-active, .7)" : 0};
 		transition: none;
+	}
+	
+	& svg {
+		width: 40px;
+		margin-left: 10px;
 	}
 `;
 

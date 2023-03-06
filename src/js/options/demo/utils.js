@@ -1,5 +1,77 @@
-const StartingHue = rnd(0, 360, true);
-const HueJitter = 5;
+function rnd(
+	min = 0,
+	max = 1,
+	floor = false)
+{
+	let value = Math.random() * (max - min) + min;
+
+	if (floor) {
+		value = Math.floor(value);
+	}
+
+	return value;
+}
+
+const rndDeg = () => rnd(0, 360, true);
+const rndH = rndDeg;
+const rndS = () => rnd(80, 95, true);
+const rndL = () => rnd(30, 55, true);
+const rndSDark = () => rnd(30, 65, true);
+const rndSLight = () => rnd(60, 85, true);
+const rndLDark = () => rnd(30, 55, true);
+const rndLLight = () => rnd(60, 85, true);
+const hsla = (h, s, l, a = 1) => `hsla(${h}, ${s}%, ${l}%, ${a})`;
+
+function generateTriadPalette(
+	seed = [rndH(), rndS(), rndL()])
+{
+	const seedHue = seed[0];
+
+	return [
+		hsla(seedHue + 120, rndSDark(), rndLDark(), .6),
+		hsla(seedHue + 120, rndSLight(), rndLLight(), .35),
+		hsla(...seed, .6),
+		hsla(seedHue - 120, rndSLight(), rndLLight(), .35),
+		hsla(seedHue - 120, rndSDark(), rndLDark(), .6),
+	];
+}
+
+function repeatingLinearGradient(
+	deg,
+	colors,
+	{
+		width = 1,
+		widthUnit = "em",
+		widthJitter = 0
+	} = {})
+{
+	let currentWidth = 0;
+	const gradientSteps = colors.reduce((result, color) => [
+		...result,
+		`${color} ${currentWidth}${widthUnit}`,
+		`${color} ${currentWidth += (width + rnd(-widthJitter, widthJitter))}${widthUnit}`
+	], []);
+
+	return `repeating-linear-gradient(${deg}deg, ${gradientSteps.join(", ")})`;
+}
+
+function generatePlaidPattern()
+{
+	const colors = generateTriadPalette();
+	const deg1 = rndDeg();
+	const deg2 = deg1 + rnd(60, 120, true);
+
+	return {
+			// use the seed color as the favicon, since it should be the most obvious
+		favicon: colors[2],
+		background: `
+background: 
+	${repeatingLinearGradient(deg1, colors, { widthJitter: .5 })}, 
+	${repeatingLinearGradient(deg2, colors, { widthJitter: .5 })};
+font-size: ${rnd(12, 24, true)}px;	
+`
+	};
+}
 
 export function shuffle(
 	array)
@@ -16,26 +88,14 @@ export function createTabs(
 	tabCount,
 	tabs = [])
 {
-	const hueStep = Math.floor(360 / tabCount);
-
 	if (tabs.length > tabCount) {
 		tabs.length = tabCount;
 	} else {
 		for (let i = tabs.length; i < tabCount; i++) {
-				// make sure the hues used for the gradients are spread roughly
-				// evenly around the color wheel from each other
-			const hue1 = StartingHue + hueStep * i;
-			const hue2 = StartingHue + hueStep * i + hueStep * tabCount / 3;
-			const gradient = rndGradientValues(
-				[hue1 - HueJitter, hue1 + HueJitter],
-				[hue2 - HueJitter, hue2 + HueJitter]
-			);
-
 			tabs.push({
 				id: i,
 				length: rnd(20, 65, true),
-				favicon: gradient[2],
-				gradient: linearGradient(...gradient)
+				...generatePlaidPattern()
 			});
 		}
 	}
@@ -60,60 +120,4 @@ export function getWindowBounds(
 	top -= screen.availTop;
 
 	return { left, top, width, height };
-}
-
-export function linearGradient(
-	angle,
-	color1,
-	color2)
-{
-	return `linear-gradient(${angle}deg, ${color1}, ${color2})`;
-}
-
-export function rnd(
-	min = 0,
-	max = 1,
-	floor = false)
-{
-	let value = Math.random() * (max - min) + min;
-
-	if (floor) {
-		value = Math.floor(value);
-	}
-
-	return value;
-}
-
-export function rndHSLA(
-	hueRange,
-	saturation = 60,
-	lightness = 80,
-	alpha = 1)
-{
-	let hueMin = 0;
-	let hueMax = 360;
-
-	if (Array.isArray(hueRange)) {
-		[hueMin, hueMax] = hueRange;
-	}
-
-	const hue = rnd(hueMin, hueMax, true) % 360;
-
-	return `hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha})`;
-}
-
-export function rndGradientValues(
-	hueRange = [0, 360],
-	hueRange2 = [0, 360])
-{
-	return [
-		rnd(0, 360, true),
-		rndHSLA(hueRange, rnd(50, 70, true), rnd(80, 95, true)),
-		rndHSLA(hueRange2, rnd(60, 80, true), rnd(70, 80, true))
-	];
-}
-
-export function rndGradient()
-{
-	return linearGradient(...rndGradientValues());
 }
