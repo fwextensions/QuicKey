@@ -14,8 +14,16 @@ const BrowserWindow = styled(Window)`
 	--tab-background: white;
 	--location-bar: #eee;
 	
-	background: ${({ bg }) => bg};
 	z-index: 20;
+`;
+const Background = styled.div`
+	width: 110%;
+	height: 110%;
+	top: -5%;
+	left: -5%;
+	filter: blur(5px);
+	position: absolute;
+	${({ bg }) => bg}
 `;
 const TabBarContainer = styled.div`
 	width: 100%;
@@ -88,6 +96,7 @@ const Tab = styled.div`
 `;
 const TabName = styled.div`
 	font-weight: 500;
+	font-size: 1rem;
 	left: .6em;
 	bottom: .4em;
 	color: white;
@@ -143,9 +152,9 @@ export default function Browser({
 			top={bounds.top}
 			width={bounds.width}
 			height={bounds.height}
-			bg={tabs[activeTab].gradient}
 			{...props}
 		>
+			<Background bg={tabs[activeTab].background} />
 			<TabBar
 				tabCount={tabs.length}
 				activeTab={activeTab}
