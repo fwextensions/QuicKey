@@ -1,14 +1,16 @@
+import { MapCache } from "@/popup/score/MapCache";
+
 const SyntaxPattern = /[\^$\\.*+?()[\]{}|]/g;
-const RegexStackMaxLength = 1000;
+const DefaultSingleCharRegexes = [
+	..."abcdefghijklmnopqrstuvwxyz",
+	..."0123456789",
+	...",./<>?;':\"[]\\{}|`~!@#$%^&*()-=_+"
+].map((char) => [char, createRegexCI(char)]);
 
-const regexCache = new Map();
-const regexStack = [];
-// TODO: this should maybe be Math.pow(2, 16) to match maxIterations, which is much larger
-
-	// precache the alphabet and then reset the stack so the letters don't count
-	// against the max length and get deleted
-[..."abcdefghijklmnopqrstuvwxyz"].map(getRegex);
-regexStack.length = 0;
+	// precache the alphabet and other common single chars
+const singleCharCache = new MapCache(0, DefaultSingleCharRegexes);
+const multiCharCache = new MapCache(1000);
+// TODO: this maxSize should maybe be Math.pow(2, 16) to match maxIterations, which is much larger
 
 function createRegexCI(
 	searchString)
@@ -16,29 +18,14 @@ function createRegexCI(
 	return new RegExp(searchString.replace(SyntaxPattern, "\\$&"), "i");
 }
 
-function getRegex(
-	searchString)
-{
-	let regex = regexCache.get(searchString);
-
-	if (!regex) {
-		regex = createRegexCI(searchString);
-		regexCache.set(searchString, regex);
-		regexStack.push(searchString);
-
-		if (regexStack.length > RegexStackMaxLength) {
-			regexCache.delete(regexStack.shift());
-		}
-	}
-
-	return regex;
-}
-
 export function indexOfCI(
 	string,
 	searchString)
 {
-	const regex = getRegex(searchString);
+	const cache = searchString.length === 1
+		? singleCharCache
+		: multiCharCache;
+	const regex = cache.get(searchString, createRegexCI);
 
 	return string.search(regex);
 }

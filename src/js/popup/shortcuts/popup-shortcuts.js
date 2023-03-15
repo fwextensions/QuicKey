@@ -24,6 +24,7 @@ const MenuBindings = [
 			return true;
 		}
 	}],
+	[["ctrl+Space", "ctrl+shift+Space"], event => self.modifySelected(event.shiftKey ? -1 : 1)],
 	[["Space", "shift+Space"],
 		event => {
 			if (self.mode != "command" && self.settings[k.SpaceBehavior.Key] !== k.SpaceBehavior.Space) {
