@@ -1,3 +1,34 @@
+const SpacePattern = /\s+/;
+const ReplacedStringLength = 100;
+const ReplacedString = new Array(ReplacedStringLength).fill("*").join("");
+
+
+function getStringReplacement(
+	length)
+{
+// TODO: support longer replacements
+	return ReplacedString.slice(0, length);
+}
+
+
+function replaceRange(
+	string,
+	range)
+{
+	const start = range[0];
+	const end = range[range.length - 1];
+
+	return string.slice(0, start) + getStringReplacement(end - start) + string.slice(end);
+}
+
+
+function compareRanges(
+	a,
+	b)
+{
+	return a - b;
+}
+
 
 export default function(
 	score,
@@ -49,13 +80,39 @@ export default function(
 				// find the highest score for each keyed string on this item
 			item.score = keys.reduce((currentScore, {key, score}) => {
 				const hitMask = [];
-				const string = item[key];
-					// score empty strings as 0
-				const newScore = string
-					? score(string, text, hitMask) * (item.recentBoost || 1)
-					: 0;
+				let string = item[key];
+				let newScore = 0;
 
-				item.scores[key] = newScore;
+					// empty strings will get a score of 0
+				if (string) {
+					const tokens = text.trim().split(SpacePattern);
+
+					if (tokens.length < 2) {
+						newScore = score(string, text, hitMask);
+					} else {
+						for (const token of tokens) {
+							const tokenMatches = [];
+							const tokenScore = score(string, token, tokenMatches);
+
+							if (tokenScore) {
+								string = replaceRange(string, tokenMatches);
+								hitMask.push(...tokenMatches);
+								newScore += tokenScore;
+							} else {
+								newScore = 0;
+								hitMask.length = 0;
+
+								break;
+							}
+						}
+
+						if (newScore) {
+							hitMask.sort(compareRanges);
+						}
+					}
+				}
+
+				item.scores[key] = newScore * (item.recentBoost || 1);
 				item.hitMasks[key] = hitMask;
 
 				return Math.max(currentScore, newScore);
