@@ -1,6 +1,7 @@
 const SpacePattern = /\s+/;
 const ReplacedStringLength = 100;
 const ReplacedString = new Array(ReplacedStringLength).fill("*").join("");
+// TODO: use a different replacement char
 
 
 function getStringReplacement(
@@ -85,10 +86,14 @@ export default function(
 
 					// empty strings will get a score of 0
 				if (string) {
-					const tokens = text.trim().split(SpacePattern);
+						// trim any trailing space so that if the user typed one
+						// word and then hit space, we'll turn that into just one
+						// token, instead of the word plus an empty token
+					const query = text.trim();
+					const tokens = query.split(SpacePattern);
 
 					if (tokens.length < 2) {
-						newScore = score(string, text, hitMask);
+						newScore = score(string, query, hitMask);
 					} else {
 						for (const token of tokens) {
 							const tokenMatches = [];
@@ -112,7 +117,8 @@ export default function(
 					}
 				}
 
-				item.scores[key] = newScore * (item.recentBoost || 1);
+				newScore *= (item.recentBoost || 1);
+				item.scores[key] = newScore;
 				item.hitMasks[key] = hitMask;
 
 				return Math.max(currentScore, newScore);

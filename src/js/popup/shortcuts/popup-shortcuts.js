@@ -2,6 +2,9 @@ import ShortcutManager from "./shortcut-manager";
 import * as k from "@/background/constants";
 
 
+const EmptyOrSpacePattern = /^(?:\s*|.*\s)$/;
+
+
 const MenuBindings = [
 	[["ArrowUp", "Ctrl+P", "Ctrl+K"], () => self.modifySelected(-1)],
 	[["ArrowDown", "Ctrl+N", "Ctrl+J"], () => self.modifySelected(1)],
@@ -25,16 +28,18 @@ const MenuBindings = [
 		}
 	}],
 	[["ctrl+Space", "ctrl+shift+Space"], event => self.modifySelected(event.shiftKey ? -1 : 1)],
-	[["Space", "shift+Space"],
-		event => {
-			if (self.mode != "command" && self.settings[k.SpaceBehavior.Key] !== k.SpaceBehavior.Space) {
-				self.modifySelected(event.shiftKey ? -1 : 1);
-			} else {
-					// in command mode, return true so that the space after
-					// the /h or b isn't swallowed
-				return true;
-			}
-		}]
+	[["Space", "shift+Space"], event => {
+			// in command mode, return true so that the space after the
+			// /h or /b isn't swallowed
+		if (self.mode !== "command" && (
+			EmptyOrSpacePattern.test(self.state.query)
+			|| self.settings[k.SpaceBehavior.Key] !== k.SpaceBehavior.Space
+		)) {
+			self.modifySelected(event.shiftKey ? -1 : 1);
+		} else {
+			return true;
+		}
+	}]
 ];
 const Manager = new ShortcutManager();
 const Handlers = {
