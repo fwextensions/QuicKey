@@ -1,29 +1,35 @@
 const SpacePattern = /\s+/;
-const ReplacedStringLength = 100;
-const ReplacedString = new Array(ReplacedStringLength).fill("*").join("");
-// TODO: use a different replacement char
+const CharPattern = /./g;
+	// use a NUL character to replace the matches so nothing in subsequent query
+	// tokens will match an existing match
+const ReplacementChar = "\x00";
 
 
-function getStringReplacement(
-	length)
-{
-// TODO: support longer replacements
-	return ReplacedString.slice(0, length);
-}
-
-
-function replaceRange(
+function replaceMatches(
 	string,
-	range)
+	matches)
 {
-	const start = range[0];
-	const end = range[range.length - 1];
+	const start = matches[0];
+	const end = matches[matches.length - 1];
+	const replacementSection = string.slice(start, end + 1);
+	const indexes = [...matches];
+	let nextIndex = indexes.shift();
 
-	return string.slice(0, start) + getStringReplacement(end - start) + string.slice(end);
+	return string.slice(0, start) +
+		replacementSection.replace(CharPattern, (char, i) => {
+			if (start + i == nextIndex) {
+				nextIndex = indexes.shift();
+
+				return ReplacementChar;
+			} else {
+				return char;
+			}
+		}) +
+		string.slice(end + 1);
 }
 
 
-function compareRanges(
+function compareMatches(
 	a,
 	b)
 {
@@ -100,7 +106,7 @@ export default function(
 							const tokenScore = score(string, token, tokenMatches);
 
 							if (tokenScore) {
-								string = replaceRange(string, tokenMatches);
+								string = replaceMatches(string, tokenMatches);
 								hitMask.push(...tokenMatches);
 								newScore += tokenScore;
 							} else {
@@ -112,7 +118,7 @@ export default function(
 						}
 
 						if (newScore) {
-							hitMask.sort(compareRanges);
+							hitMask.sort(compareMatches);
 						}
 					}
 				}
