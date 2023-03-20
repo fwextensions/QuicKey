@@ -237,7 +237,7 @@ async function hide(
 		await hideInTab();
 	} else {
 		const options = {};
-		const targetWindow = await getWindow(targetTabOrWindow);
+		let targetWindow = await getWindow(targetTabOrWindow);
 
 		if (hideBehavior == Behind) {
 				// hide the popup behind the focused window.  we have to pass in
@@ -267,7 +267,19 @@ async function hide(
 DEBUG && hideBehavior == Behind && (!Number.isInteger(options.left) || !Number.isInteger(options.top)) && console.error("==== bad popup options", options);
 
 		try {
-			await cp.windows.update(windowID, options);
+			const {state} = await cp.windows.update(windowID, options);
+
+			if (hideBehavior == Minimize && state !== "minimized") {
+					// for some irritating reason, minimizing the popup after it
+					// was blurred because another window was focused doesn't
+					// work reliably.  and just trying it again immediately also
+					// doesn't work.  waiting even 100ms wasn't reliable, so wait
+					// a whole quarter second to minimize it again.  ffs
+				setTimeout(() => cp.windows.update(windowID, options), 250);
+			}
+
+				// get the target window's current state after updating the popup
+			targetWindow = await getWindow(targetTabOrWindow);
 
 			if (unfocus && !targetWindow.focused) {
 					// we just unfocused the popup, but the targetWindow
