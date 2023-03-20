@@ -58,7 +58,22 @@ function sortHistoryItems(
 	a,
 	b)
 {
+		// we want a decreasing sort order, so newer items come first
 	return b.lastVisitTime - a.lastVisitTime;
+}
+
+
+function notEqual(
+	a,
+	b)
+{
+	const diff = Math.abs(a - b);
+
+		// because of rounding issues in Chrome when the UI is not scaled to a
+		// whole number, we want to ignore differences <= 2 in that case
+	return Number.isInteger(devicePixelRatio)
+		? diff > 0
+		: diff > 2;
 }
 
 
@@ -226,7 +241,7 @@ export default class App extends React.Component {
 			const bodyHeight = document.body.offsetHeight;
 			const windowPadding = outerHeight - innerHeight;
 
-			if (innerHeight !== bodyHeight) {
+			if (notEqual(innerHeight, bodyHeight)) {
 					// don't fight with the onResize handler, and use the Chrome
 					// API to resize the popup, since it can make the window
 					// shorter than window.resizeTo() can
@@ -429,7 +444,7 @@ const t = performance.now();
 			// if the query is now empty, we need to clear the hitMasks from
 			// all the items so no chars are shown matching.
 		const items = scoreItems(this[this.mode], query, this.settings[k.UsePinyin.Key]);
-log(`"${query}"`, performance.now() - t);
+//query && log(`"${query}"`, performance.now() - t);
 
 		if (!query) {
 			switch (this.mode) {
@@ -1142,7 +1157,7 @@ log(`"${query}"`, performance.now() - t);
 			this.reopenWindow();
 			log("=== borders collapsed");
 		} else if (!this.ignoreNextResize &&
-			(outerWidth !== this.popupW || outerHeight !== this.popupH)) {
+				(notEqual(outerWidth, this.popupW) || notEqual(outerHeight, this.popupH))) {
 				// prevent the window from resizing, but only if the width
 				// or height have actually changed, since we sometimes
 				// get resize events when the size is the same
