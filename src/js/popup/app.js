@@ -423,11 +423,13 @@ export default class App extends React.Component {
 	getMatchingItems(
 		query)
 	{
+const t = performance.now();
 			// score the items before checking the query, in case there had
 			// been a previous query, leaving hitMasks on all the items.
 			// if the query is now empty, we need to clear the hitMasks from
 			// all the items so no chars are shown matching.
 		const items = scoreItems(this[this.mode], query, this.settings[k.UsePinyin.Key]);
+log(`"${query}"`, performance.now() - t);
 
 		if (!query) {
 			switch (this.mode) {

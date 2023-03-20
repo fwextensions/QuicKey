@@ -18,7 +18,8 @@ const DefaultKeys = [
 		{
 				// add true to not give a higher score to matches after
 				// spaces or on capitals in the URL
-			return quickScore(itemString, abbreviation, hitMask, true);
+			return quickScore(itemString, abbreviation, hitMask);
+//			return quickScore(itemString, abbreviation, hitMask, true);
 		}
 	}
 ];

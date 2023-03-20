@@ -75,6 +75,7 @@ export default function(
 				item.score = 0;
 				item.scores = {};
 				item.hitMasks = {};
+item.tokenScores = {};
 
 				keys.forEach(({key}) => {
 					item.scores[key] = 0;
@@ -87,6 +88,7 @@ export default function(
 				// find the highest score for each keyed string on this item
 			item.score = keys.reduce((currentScore, {key, score}) => {
 				const hitMask = [];
+const tokenScores = [];
 				let string = item[key];
 				let newScore = 0;
 
@@ -109,6 +111,7 @@ export default function(
 								string = replaceMatches(string, tokenMatches);
 								hitMask.push(...tokenMatches);
 								newScore += tokenScore;
+tokenScores.push([token, Math.round(tokenScore * 1000)]);
 							} else {
 								newScore = 0;
 								hitMask.length = 0;
@@ -126,6 +129,7 @@ export default function(
 				newScore *= (item.recentBoost || 1);
 				item.scores[key] = newScore;
 				item.hitMasks[key] = hitMask;
+item.tokenScores[key] = tokenScores;
 
 				return Math.max(currentScore, newScore);
 			}, 0);
