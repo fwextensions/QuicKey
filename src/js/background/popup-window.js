@@ -3,6 +3,7 @@ import shared from "@/lib/shared";
 import storage from "@/background/quickey-storage";
 import {HidePopupBehavior, PopupInnerHeight, PopupInnerWidth, PopupURL} from "@/background/constants";
 import {calcPosition} from "@/background/popup-utils";
+import {popupEmitter} from "@/background/popup-emitter";
 
 
 const {Behind, Tab, Minimize} = HidePopupBehavior;
@@ -128,6 +129,7 @@ async function create(
 
 	lastActiveTab = activeTab;
 	isVisible = true;
+	popupEmitter.emit("create", { window });
 
 		// after opening the popup, we want to remove its entry from the
 		// history, since it's not a real webpage.  doing this in a timeout
@@ -194,7 +196,10 @@ async function show(
 	isVisible = true;
 	isHiddenInTab = false;
 
-	return result.catch(console.error);
+		// emit the show event only after the window has actually been shown
+	return result
+		.then((window) => popupEmitter.emit("show", { window }))
+		.catch(console.error);
 }
 
 
@@ -287,6 +292,8 @@ DEBUG && hideBehavior == Behind && (!Number.isInteger(options.left) || !Number.i
 					// macOS, so force it into focus
 				await cp.windows.update(targetWindow.id, { focused: true });
 			}
+
+			popupEmitter.emit("hide", { hideBehavior });
 		} catch (e) {
 DEBUG && console.error("Failed to hide popup", e);
 
@@ -301,6 +308,7 @@ async function blur()
 {
 	isVisible = false;
 	await cp.windows.update(windowID, { focused: false });
+	popupEmitter.emit("blur", { windowID });
 }
 
 
@@ -317,6 +325,7 @@ async function close()
 		// look for any open popup tabs.  there should only ever be one, but
 		// at least one time, two got opened, so get them all to be safe.
 	const openTabs = await cp.tabs.query({ url: `${PopupURL}*` });
+	const originalWindowID = windowID;
 
 		// set the IDs to 0 before calling remove(), so that if someone
 		// calls isOpen() before the tab is fully closed, isOpen will
@@ -328,6 +337,12 @@ async function close()
 	try {
 		await cp.tabs.remove(openTabs.map(({id}) => id));
 	} catch (e) {}
+
+	if (originalWindowID) {
+			// close() may be called even when there's no open popup, so only
+			// dispatch the event if the window was actually open
+		popupEmitter.emit("close", { windowID: originalWindowID });
+	}
 }
 
 
@@ -338,6 +353,15 @@ export default shared("popupWindow", () => ({
 	blur,
 	resize,
 	close,
+
+	on(type, callback) {
+		popupEmitter.on(type, callback);
+	},
+
+	removeListener(type, callback) {
+		popupEmitter.removeListener(type, callback);
+	},
+
 	get hideBehavior() {
 		return hideBehavior;
 	},
@@ -350,15 +374,19 @@ export default shared("popupWindow", () => ({
 			close();
 		}
 	},
+
 	get id() {
 		return windowID;
 	},
+
 	get isOpen() {
 		return chrome.extension.getViews({ tabId: tabID }).length > 0;
 	},
+
 	get isVisible() {
 		return isVisible;
 	},
+
 	get activeTab() {
 		return lastActiveTab;
 	}
