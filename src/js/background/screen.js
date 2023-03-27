@@ -2,9 +2,11 @@ import cp from "cp";
 
 let screens;
 
-chrome.system.display.onDisplayChanged.addListener(updateScreenInfo);
+if (chrome.system) {
+	chrome.system.display.onDisplayChanged.addListener(updateScreenInfo);
 
-updateScreenInfo();
+	updateScreenInfo();
+}
 
 function updateScreenInfo()
 {

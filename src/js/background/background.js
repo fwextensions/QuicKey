@@ -24,17 +24,24 @@ const {
 } = k.CommandIDs;
 const tracker = trackers.background;
 const MessageHandlers = {
-		// bring the tab's window forward *before* focusing the tab, since
-		// activating the window can sometimes put keyboard focus on the
-		// very first tab button on macOS 10.14 (could never repro on
-		// 10.12).  then focus the tab, which should fix any focus issues.
-	focusTab: ({tab: {id, windowId}, options = {}}) =>
-		cp.windows.update(windowId, { focused: true })
+	focusTab: ({tab: {id, windowId}, options = {}, stopNavigatingRecents}) => {
+		if (stopNavigatingRecents) {
+				// change the flag before focusing the tab, so that its
+				// activation event will get tracked
+			navigatingRecents = false;
+		}
+
+			// bring the tab's window forward *before* focusing the tab, since
+			// activating the window can sometimes put keyboard focus on the
+			// very first tab button on macOS 10.14 (could never repro on
+			// 10.12).  then focus the tab, which should fix any focus issues.
+		return cp.windows.update(windowId, { focused: true })
 			.then(() => cp.tabs.update(id, { active: true, ...options }))
 			.catch(error => {
 				tracker.exception(error);
 				console.error(error);
-			}),
+			});
+	},
 	restoreSession: ({sessionID}) => cp.sessions.restore(sessionID),
 	createWindow: ({url}) => cp.windows.create({ url }),
 	createTab: ({url}) => cp.tabs.create({ url }),
@@ -360,6 +367,12 @@ function disableCommands()
 {
 	chrome.commands.onCommand.removeListener(onCommandListener);
 }
+
+
+	// update this flag in case the popup gets hidden or closed while the user
+	// is navigating recents by some mechanism other than releasing the modifier
+	// to select the currently focused tab
+popupWindow.on(["hide", "close"], () => navigatingRecents = false);
 
 
 chrome.tabs.onActivated.addListener(event => {

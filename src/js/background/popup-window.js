@@ -1,8 +1,9 @@
 import cp from "cp";
 import shared from "@/lib/shared";
 import storage from "@/background/quickey-storage";
-import {HidePopupBehavior, PopupInnerHeight, PopupInnerWidth, PopupURL} from "@/background/constants";
-import {calcPosition} from "@/background/popup-utils";
+import {HidePopupBehavior, IsFirefox, PopupInnerHeight, PopupInnerWidth, PopupURL} from "@/background/constants";
+import {calcBounds} from "@/background/popup-utils";
+import {popupEmitter} from "@/background/popup-emitter";
 
 
 const {Behind, Tab, Minimize} = HidePopupBehavior;
@@ -19,6 +20,31 @@ let lastActiveTab;
 
 
 storage.get(data => ({popupAdjustmentWidth, popupAdjustmentHeight} = data));
+
+
+async function createPopup(
+	options)
+{
+	const defaultOptions = {
+		type: "popup",
+		focused: true
+	};
+
+	if (!IsFirefox) {
+		defaultOptions.setSelfAsOpener = true;
+	}
+
+	const window = await cp.windows.create({
+		...defaultOptions,
+		...options,
+	});
+
+	windowID = window.id;
+	tabID = window.tabs[0].id;
+	popupEmitter.emit("create", { window });
+
+	return window;
+}
 
 
 async function getLastWindow()
@@ -61,7 +87,7 @@ async function create(
 		// we won't have an activeTab if the user is opening the popup with
 		// a devtools window in the foreground
 	const targetWindow = activeTab && await cp.windows.get(activeTab.windowId);
-	let {left, top, width, height} = calcPosition(
+	const bounds = calcBounds(
 		props.navigatingRecents ? null : targetWindow,
 		{
 			alignment,
@@ -72,18 +98,7 @@ async function create(
 	let window;
 
 	if (hideBehavior !== Tab) {
-		window = await cp.windows.create({
-			url,
-			type: "popup",
-			focused: true,
-			setSelfAsOpener: true,
-			left,
-			top,
-			width,
-			height
-		});
-		windowID = window.id;
-		tabID = window.tabs[0].id;
+		window = await createPopup({ url, ...bounds });
 	} else {
 			// first create a tab in the last unfocused window
 		const lastWindow = await getLastWindow();
@@ -114,15 +129,15 @@ async function create(
 			// popup size
 		popupAdjustmentWidth += widthDelta;
 		popupAdjustmentHeight += heightDelta;
-		width += widthDelta;
-		height += heightDelta;
+		bounds.width += widthDelta;
+		bounds.height += heightDelta;
 
 			// shift the position by half a negative delta to keep the
 			// window centered in the target area
-		left += -Math.floor(widthDelta / 2);
-		top += -Math.floor(heightDelta / 2);
+		bounds.left += -Math.floor(widthDelta / 2);
+		bounds.top += -Math.floor(heightDelta / 2);
 
-		await cp.windows.update(window.id, { left, top, width, height });
+		await cp.windows.update(window.id, bounds);
 		await storage.set(() => ({ popupAdjustmentWidth, popupAdjustmentHeight }));
 	}
 
@@ -144,7 +159,7 @@ async function show(
 	alignment)
 {
 	const targetWindow = activeTab && await cp.windows.get(activeTab.windowId);
-	let {left, top, width, height} = calcPosition(
+	const bounds = calcBounds(
 		targetWindow,
 		{
 			alignment,
@@ -152,7 +167,7 @@ async function show(
 			popupAdjustmentHeight
 		}
 	);
-	let result;
+	let window;
 
 		// if we're already visible and show() is being called again, that
 		// means the user is navigating recent tabs while keeping the popup
@@ -164,37 +179,26 @@ async function show(
 			// won't move back to the focused window after it's shown while
 			// navigating recents.
 		if (hideBehavior == "minimize" && !isVisible) {
-			await cp.windows.update(windowID, { focused: true, left, top });
+			await cp.windows.update(windowID, { focused: true, left: bounds.left, top: bounds.top });
 		}
 
 			// we seem to have to pass width and height here, even if they
 			// haven't changed, to keep the window from shifting size
-		result = cp.windows.update(windowID, { focused: true, left, top, width, height });
+		window = await cp.windows.update(windowID, { focused: true, ...bounds });
 	} else {
 			// create a popup window with the tab that's hiding in another
 			// window, instead of passing in a URL.  that will move the
 			// existing tab into the new popup.
-		const window = await cp.windows.create({
-			type: "popup",
-			tabId: tabID,
-			focused: true,
-			setSelfAsOpener: true,
-			left,
-			top,
-			width,
-			height
-		});
-
-		windowID = window.id;
-
-		result = Promise.resolve(window);
+		window = await createPopup({ tabId: tabID, ...bounds });
 	}
 
 	lastActiveTab = activeTab;
 	isVisible = true;
 	isHiddenInTab = false;
 
-	return result.catch(console.error);
+	popupEmitter.emit("show", { window });
+
+	return window;
 }
 
 
@@ -244,7 +248,7 @@ async function hide(
 				// the adjustment deltas so calcPosition() calculates the position
 				// based on the correct size, which may shift slightly on screens
 				// with different DPIs.
-			const {left, top, width, height} = calcPosition(
+			const bounds = calcBounds(
 				targetWindow,
 				{
 					popupAdjustmentWidth,
@@ -252,7 +256,7 @@ async function hide(
 				}
 			);
 
-			Object.assign(options, { left, top, width, height });
+			Object.assign(options, bounds);
 
 				// we only want to explicitly unfocus the popup if we're hiding
 				// it behind the target window.  if it's being minimized,
@@ -287,6 +291,8 @@ DEBUG && hideBehavior == Behind && (!Number.isInteger(options.left) || !Number.i
 					// macOS, so force it into focus
 				await cp.windows.update(targetWindow.id, { focused: true });
 			}
+
+			popupEmitter.emit("hide", { hideBehavior });
 		} catch (e) {
 DEBUG && console.error("Failed to hide popup", e);
 
@@ -301,6 +307,7 @@ async function blur()
 {
 	isVisible = false;
 	await cp.windows.update(windowID, { focused: false });
+	popupEmitter.emit("blur", { windowID });
 }
 
 
@@ -317,6 +324,7 @@ async function close()
 		// look for any open popup tabs.  there should only ever be one, but
 		// at least one time, two got opened, so get them all to be safe.
 	const openTabs = await cp.tabs.query({ url: `${PopupURL}*` });
+	const originalWindowID = windowID;
 
 		// set the IDs to 0 before calling remove(), so that if someone
 		// calls isOpen() before the tab is fully closed, isOpen will
@@ -328,6 +336,12 @@ async function close()
 	try {
 		await cp.tabs.remove(openTabs.map(({id}) => id));
 	} catch (e) {}
+
+	if (originalWindowID) {
+			// close() may be called even when there's no open popup, so only
+			// dispatch the event if the window was actually open
+		popupEmitter.emit("close", { windowID: originalWindowID });
+	}
 }
 
 
@@ -338,6 +352,15 @@ export default shared("popupWindow", () => ({
 	blur,
 	resize,
 	close,
+
+	on(type, callback) {
+		popupEmitter.on(type, callback);
+	},
+
+	removeListener(type, callback) {
+		popupEmitter.removeListener(type, callback);
+	},
+
 	get hideBehavior() {
 		return hideBehavior;
 	},
@@ -350,15 +373,19 @@ export default shared("popupWindow", () => ({
 			close();
 		}
 	},
+
 	get id() {
 		return windowID;
 	},
+
 	get isOpen() {
 		return chrome.extension.getViews({ tabId: tabID }).length > 0;
 	},
+
 	get isVisible() {
 		return isVisible;
 	},
+
 	get activeTab() {
 		return lastActiveTab;
 	}
