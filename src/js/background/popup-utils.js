@@ -22,7 +22,7 @@ function getAlignedPosition(
 	}
 }
 
-export function calcPosition(
+export function calcBounds(
 	targetWindow,
 	{
 		alignment = "center-center",

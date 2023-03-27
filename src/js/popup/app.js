@@ -488,8 +488,15 @@ export default class App extends React.Component {
 						{ sessionID: item.sessionId });
 					this.props.tracker.event("tabs", "restore");
 				} else {
-						// switch to the tab
-					tabOrWindow = await this.focusTab(item, shiftKey);
+						// switch to the tab.  pass navigatingRecents so that if
+						// we're currently doing that it'll pass true to
+						// focusTab(), which will then cause the handler in the
+						// background to set that flag to false before focusing
+						// the tab.  this is needed so that the tab activation
+						// will get tracked when the popup was opened to navigate
+						// recents, but then the user clicked an item, or hit
+						// enter to select the current one.
+					tabOrWindow = await this.focusTab(item, shiftKey, this.navigatingRecents);
 				}
 			} else if (shiftKey) {
 					// open in a new window
@@ -515,7 +522,8 @@ export default class App extends React.Component {
 
     async focusTab (
 		tab,
-		unsuspend)
+		unsuspend,
+		stopNavigatingRecents)
 	{
 		if (tab) {
 			const queryLength = this.state.query.length;
@@ -533,7 +541,7 @@ export default class App extends React.Component {
 			this.props.tracker.event(category, event,
 				queryLength ? queryLength : this.state.selected);
 
-			return this.sendMessage("focusTab", { tab, options });
+			return this.sendMessage("focusTab", { tab, options, stopNavigatingRecents });
 		} else {
 			return null;
 		}
