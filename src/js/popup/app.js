@@ -244,9 +244,11 @@ export default class App extends React.Component {
 			if (notEqual(innerHeight, bodyHeight)) {
 					// don't fight with the onResize handler, and use the Chrome
 					// API to resize the popup, since it can make the window
-					// shorter than window.resizeTo() can
+					// shorter than window.resizeTo() can.  pass the saved
+					// outerWidth in this.popupW, in case the actual outerWidth
+					// has changed for some reason.
 				this.ignoreNextResize = true;
-				popupWindow.resize(outerWidth, bodyHeight + windowPadding);
+				popupWindow.resize(this.popupW, bodyHeight + windowPadding);
 			}
 		}
 	}
