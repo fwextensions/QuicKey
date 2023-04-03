@@ -1180,6 +1180,7 @@ const t = performance.now();
 			selected,
 			newSettingsAvailable
 		} = this.state;
+log("======== render", `|${query}|`, `|${searchBoxText}|`, selected)
 
 		return <div className={this.className}>
 			<SearchBox

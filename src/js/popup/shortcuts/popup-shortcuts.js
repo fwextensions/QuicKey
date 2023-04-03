@@ -29,16 +29,21 @@ const MenuBindings = [
 	}],
 	[["ctrl+Space", "ctrl+shift+Space"], event => self.modifySelected(event.shiftKey ? -1 : 1)],
 	[["Space", "shift+Space"], event => {
-			// in command mode, return true so that the space after the
-			// /h or /b isn't swallowed
-		if (self.mode !== "command" && (
-			EmptyOrSpacePattern.test(self.state.query)
-			|| self.settings[k.SpaceBehavior.Key] !== k.SpaceBehavior.Space
-		)) {
-			self.modifySelected(event.shiftKey ? -1 : 1);
+		const allowSpace = !event.shiftKey && !EmptyOrSpacePattern.test(self.state.query);
+		const currentSelection = self.state.selected;
+
+		if (allowSpace) {
+				// we are going to allow the space to be inserted, which will
+				// change the searchBoxText, which will in turn reset the selection
+				// to the 0th item.  since we don't currently have a clean way to
+				// execute this after that state change has been made, change the
+				// selection in a timeout.  FIXME
+			setTimeout(() => self.setSelectedIndex(currentSelection + 1), 25);
 		} else {
-			return true;
+			self.modifySelected(event.shiftKey ? -1 : 1);
 		}
+
+		return allowSpace;
 	}]
 ];
 const Manager = new ShortcutManager();

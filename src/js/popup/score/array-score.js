@@ -17,7 +17,7 @@ function replaceMatches(
 
 	return string.slice(0, start) +
 		replacementSection.replace(CharPattern, (char, i) => {
-			if (start + i == nextIndex) {
+			if (start + i === nextIndex) {
 				nextIndex = indexes.shift();
 
 				return ReplacementChar;
@@ -54,7 +54,7 @@ export default function(
 		a,
 		b)
 	{
-		if (a.score == b.score) {
+		if (a.score === b.score) {
 			if (a.lastVisit && b.lastVisit) {
 				return b.lastVisit - a.lastVisit;
 			} else {
@@ -66,9 +66,8 @@ export default function(
 	}
 
 
-	return function scoreArray(
-		items,
-		text)
+	function initItems(
+		items)
 	{
 		if (items.length && !items[0].scores) {
 			items.forEach(function(item) {
@@ -83,26 +82,59 @@ item.tokenScores = {};
 				});
 			});
 		}
+	}
 
-		items.forEach(item => {
+
+	function scoreSingleToken(
+		items,
+		query)
+	{
+		for (const item of items) {
 				// find the highest score for each keyed string on this item
 			item.score = keys.reduce((currentScore, {key, score}) => {
 				const hitMask = [];
+				const string = item[key];
+					// score empty strings as 0
+				const newScore = string
+					? score(string, query, hitMask) * (item.recentBoost || 1)
+					: 0;
+
+				item.scores[key] = newScore;
+				item.hitMasks[key] = hitMask;
+
+				return Math.max(currentScore, newScore);
+			}, 0);
+		}
+	}
+
+
+	return function scoreArray(
+		items,
+		text)
+	{
+		initItems(items);
+
+			// trim any trailing space so that if the user typed one
+			// word and then hit space, we'll turn that into just one
+			// token, instead of the word plus an empty token
+		const tokens = text.trim().split(SpacePattern);
+
+			// if the query is empty, the only thing we'll do is sort the items
+			// array below, so it's alphabetized
+		if (tokens.length === 1) {
+				// use a simpler loop when there's just one token
+			scoreSingleToken(items, tokens[0]);
+		} else if (tokens.length > 1) {
+			for (const item of items) {
+					// find the highest score for each keyed string on this item
+				item.score = keys.reduce((currentScore, {key, score}) => {
+					const hitMask = [];
 const tokenScores = [];
-				let string = item[key];
-				let newScore = 0;
+					let string = item[key];
+					let newScore = 0;
 
-					// empty strings will get a score of 0
-				if (string) {
-						// trim any trailing space so that if the user typed one
-						// word and then hit space, we'll turn that into just one
-						// token, instead of the word plus an empty token
-					const query = text.trim();
-					const tokens = query.split(SpacePattern);
-
-					if (tokens.length < 2) {
-						newScore = score(string, query, hitMask);
-					} else {
+						// empty strings will get a score of 0
+					if (string) {
 						for (const token of tokens) {
 							const tokenMatches = [];
 							const tokenScore = score(string, token, tokenMatches);
@@ -124,16 +156,17 @@ tokenScores.push([token, Math.round(tokenScore * 1000)]);
 							hitMask.sort(compareMatches);
 						}
 					}
-				}
+// TODO: multiply by number of matched tokens?
 
-				newScore *= (item.recentBoost || 1);
-				item.scores[key] = newScore;
-				item.hitMasks[key] = hitMask;
+					newScore *= (item.recentBoost || 1);
+					item.scores[key] = newScore;
+					item.hitMasks[key] = hitMask;
 item.tokenScores[key] = tokenScores;
 
-				return Math.max(currentScore, newScore);
-			}, 0);
-		});
+					return Math.max(currentScore, newScore);
+				}, 0);
+			}
+		}
 
 		items.sort(compareScoredStrings);
 
