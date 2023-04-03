@@ -3,13 +3,8 @@ export class MapCache {
 		maxSize = 0,
 		defaultEntries = [])
 	{
-		this.cache = new Map();
+		this.cache = new Map(defaultEntries);
 		this.maxSize = maxSize;
-
-			// we ignore the maxSize when adding the default entries
-		for (const [key, value] of defaultEntries) {
-			this.cache.set(key, value);
-		}
 	}
 
 	get(

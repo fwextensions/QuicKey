@@ -119,7 +119,8 @@ tokenScores,
 		if (IsDev) {
 			tooltip = _.toPairs(scores)
 .concat(_.toPairs(tokenScores).map(([key, scores]) => [key, scores.map(([token, score]) => token + ": " + score).join(" | ")]))
-				.concat([["recentBoost", item.recentBoost], ["id", item.id]])
+				.concat([["recentBoost", item.recentBoost], ["id", item.id], ["score", item.score]])
+//				.concat([["recentBoost", item.recentBoost], ["id", item.id]])
 				.map(keyValue => keyValue.join(": "))
 				.concat([title != pinyinTitle && pinyinTitle, displayURL != pinyinDisplayURL && pinyinDisplayURL])
 				.filter(string => string)

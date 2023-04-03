@@ -29,7 +29,10 @@ const MenuBindings = [
 	}],
 	[["ctrl+Space", "ctrl+shift+Space"], event => self.modifySelected(event.shiftKey ? -1 : 1)],
 	[["Space", "shift+Space"], event => {
-		const allowSpace = !event.shiftKey && !EmptyOrSpacePattern.test(self.state.query);
+			// when the mode is command, query will be empty, even though `/b`
+			// has been typed in the search box
+		const allowSpace = self.mode === "command"
+			|| (!event.shiftKey && !EmptyOrSpacePattern.test(self.state.query));
 		const currentSelection = self.state.selected;
 
 		if (allowSpace) {

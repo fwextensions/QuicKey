@@ -37,6 +37,24 @@ function compareMatches(
 }
 
 
+function sumScores(
+	tokenScores)
+{
+	let score = 0;
+
+	for (const [, value] of tokenScores) {
+		if (!value) {
+			return 0;
+		}
+
+		score += value;
+	}
+
+	return score;
+}
+
+
+
 export default function(
 	score,
 	searchKeyInfo)
@@ -125,13 +143,17 @@ item.tokenScores = {};
 				// use a simpler loop when there's just one token
 			scoreSingleToken(items, tokens[0]);
 		} else if (tokens.length > 1) {
+			const defaultTokenScores = tokens.map((token) => [token, 0]);
+
 			for (const item of items) {
-					// find the highest score for each keyed string on this item
-				item.score = keys.reduce((currentScore, {key, score}) => {
+					// init the map with 0 for each key, so we don't have to
+					// handle missing keys in Math.max() below
+				const tokenScores = new Map(defaultTokenScores);
+
+				for (const { key, score } of keys) {
 					const hitMask = [];
-const tokenScores = [];
 					let string = item[key];
-					let newScore = 0;
+					let keyScore = 0;
 
 						// empty strings will get a score of 0
 					if (string) {
@@ -142,29 +164,24 @@ const tokenScores = [];
 							if (tokenScore) {
 								string = replaceMatches(string, tokenMatches);
 								hitMask.push(...tokenMatches);
-								newScore += tokenScore;
-tokenScores.push([token, Math.round(tokenScore * 1000)]);
-							} else {
-								newScore = 0;
-								hitMask.length = 0;
-
-								break;
+								keyScore += tokenScore;
+								tokenScores.set(token, Math.max(tokenScore, tokenScores.get(token)));
 							}
 						}
 
-						if (newScore) {
+						if (keyScore) {
 							hitMask.sort(compareMatches);
 						}
 					}
-// TODO: multiply by number of matched tokens?
 
-					newScore *= (item.recentBoost || 1);
-					item.scores[key] = newScore;
+					item.scores[key] = keyScore;
 					item.hitMasks[key] = hitMask;
-item.tokenScores[key] = tokenScores;
+item.tokenScores[key] = [...tokenScores];
+				}
 
-					return Math.max(currentScore, newScore);
-				}, 0);
+					// set the score to 0 if every token doesn't match at least
+					// one of the keys
+				item.score = sumScores(tokenScores) * (item.recentBoost ?? 1);
 			}
 		}
 
