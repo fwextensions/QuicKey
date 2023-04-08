@@ -1,4 +1,3 @@
-const SpacePattern = /\s+/;
 const CharPattern = /./g;
 	// use a NUL character to replace the matches so nothing in subsequent query
 	// tokens will match an existing match
@@ -40,17 +39,17 @@ function compareMatches(
 function sumScores(
 	tokenScores)
 {
-	let score = 0;
+	let total = 0;
 
-	for (const [, value] of tokenScores) {
-		if (!value) {
+	for (const score of tokenScores) {
+		if (!score) {
 			return 0;
 		}
 
-		score += value;
+		total += score;
 	}
 
-	return score;
+	return total;
 }
 
 
@@ -92,7 +91,6 @@ export default function(
 				item.score = 0;
 				item.scores = {};
 				item.hitMasks = {};
-item.tokenScores = {};
 
 				keys.forEach(({key}) => {
 					item.scores[key] = 0;
@@ -128,14 +126,9 @@ item.tokenScores = {};
 
 	return function scoreArray(
 		items,
-		text)
+		tokens)
 	{
 		initItems(items);
-
-			// trim any trailing space so that if the user typed one
-			// word and then hit space, we'll turn that into just one
-			// token, instead of the word plus an empty token
-		const tokens = text.trim().split(SpacePattern);
 
 			// if the query is empty, the only thing we'll do is sort the items
 			// array below, so it's alphabetized
@@ -143,12 +136,10 @@ item.tokenScores = {};
 				// use a simpler loop when there's just one token
 			scoreSingleToken(items, tokens[0]);
 		} else if (tokens.length > 1) {
-			const defaultTokenScores = tokens.map((token) => [token, 0]);
-
 			for (const item of items) {
 					// init the map with 0 for each key, so we don't have to
 					// handle missing keys in Math.max() below
-				const tokenScores = new Map(defaultTokenScores);
+				const tokenScores = new Array(tokens.length).fill(0);
 
 				for (const { key, score } of keys) {
 					const hitMask = [];
@@ -157,7 +148,8 @@ item.tokenScores = {};
 
 						// empty strings will get a score of 0
 					if (string) {
-						for (const token of tokens) {
+						for (let i = 0, len = tokens.length; i < len; i++) {
+							const token = tokens[i];
 							const tokenMatches = [];
 							const tokenScore = score(string, token, tokenMatches);
 
@@ -165,7 +157,7 @@ item.tokenScores = {};
 								string = replaceMatches(string, tokenMatches);
 								hitMask.push(...tokenMatches);
 								keyScore += tokenScore;
-								tokenScores.set(token, Math.max(tokenScore, tokenScores.get(token)));
+								tokenScores[i] = Math.max(tokenScore, tokenScores[i]);
 							}
 						}
 
@@ -176,7 +168,6 @@ item.tokenScores = {};
 
 					item.scores[key] = keyScore;
 					item.hitMasks[key] = hitMask;
-item.tokenScores[key] = [...tokenScores];
 				}
 
 					// set the score to 0 if every token doesn't match at least

@@ -40,7 +40,6 @@ export default class ResultsListItem extends React.Component {
 				this.props.query,
 				item.recentBoost,
 				_.toPairs(item.scores).map(a => a.join(": ")).join("\n"),
-_.toPairs(item.tokenScores).map(([key, scores]) => `${key}: ${scores.join(" | ")}`).join("\n")
 			].join("\n"));
 		} else {
 				// pass in whether ctrl or cmd was pressed while clicking
@@ -84,7 +83,6 @@ _.toPairs(item.tokenScores).map(([key, scores]) => `${key}: ${scores.join(" | ")
 		} = this.props;
 		const {
 			scores,
-tokenScores,
 			hitMasks,
 			title,
 			titleIndex,
@@ -118,9 +116,7 @@ tokenScores,
 
 		if (IsDev) {
 			tooltip = _.toPairs(scores)
-.concat(_.toPairs(tokenScores).map(([key, scores]) => [key, scores.map(([token, score]) => token + ": " + score).join(" | ")]))
 				.concat([["recentBoost", item.recentBoost], ["id", item.id], ["score", item.score]])
-//				.concat([["recentBoost", item.recentBoost], ["id", item.id]])
 				.map(keyValue => keyValue.join(": "))
 				.concat([title != pinyinTitle && pinyinTitle, displayURL != pinyinDisplayURL && pinyinDisplayURL])
 				.filter(string => string)

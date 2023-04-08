@@ -12,14 +12,11 @@ const DefaultKeys = [
 	{
 		key: "displayURL",
 		score: function(
-			itemString,
-			abbreviation,
-			hitMask)
+			...args)
 		{
 				// add true to not give a higher score to matches after
 				// spaces or on capitals in the URL
-			return quickScore(itemString, abbreviation, hitMask);
-//			return quickScore(itemString, abbreviation, hitMask, true);
+			return quickScore(...args, true);
 		}
 	}
 ];
@@ -41,16 +38,16 @@ const MaxQueryLength = 25;
 
 export default function scoreItems(
 	items,
-	query,
+	tokens,
 	usePinyin)
 {
-	if (query.length <= MaxQueryLength) {
+	if (tokens.length <= MaxQueryLength) {
 		if (usePinyin) {
-			return PinyinQuickScoreArray(items, query);
+			return PinyinQuickScoreArray(items, tokens);
 		} else {
-			return QuickScoreArray(items, query);
+			return QuickScoreArray(items, tokens);
 		}
 	} else {
-		return SimpleScoreArray(items, query);
+		return SimpleScoreArray(items, tokens);
 	}
-};
+}
