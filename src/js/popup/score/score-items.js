@@ -11,13 +11,7 @@ const DefaultKeys = [
 	},
 	{
 		key: "displayURL",
-		score: function(
-			...args)
-		{
-				// add true to not give a higher score to matches after
-				// spaces or on capitals in the URL
-			return quickScore(...args, true);
-		}
+		score: quickScore
 	}
 ];
 const PinyinKeys = DefaultKeys.concat([

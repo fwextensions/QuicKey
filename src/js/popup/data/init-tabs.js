@@ -40,7 +40,6 @@ export default async function initTabs(
 	tabsPromise,
 	activeTab,
 	markTabsInOtherWindows,
-	normalizeWhitespace,
 	usePinyin)
 {
 	let tabsByTitle = {};
@@ -101,14 +100,6 @@ export default async function initTabs(
 					if (match) {
 						tab.title = decode(match[1]);
 					}
-				}
-
-				if (normalizeWhitespace) {
-						// replace all non-standard spaces with a regular
-						// space so that users who've enabled the option to
-						// insert spaces in the query can match against
-						// these titles
-					tab.title = tab.title.replace(WhitespacePattern, " ");
 				}
 
 				if (usePinyin) {

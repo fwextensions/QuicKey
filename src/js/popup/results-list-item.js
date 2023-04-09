@@ -32,7 +32,7 @@ export default class ResultsListItem extends React.Component {
 		const {shiftKey, altKey} = event;
 		const {item} = this.props;
 
-		if (IsDev && altKey) {
+		if (IsDev && altKey && shiftKey) {
 				// copy some debug info to the clipboard
 			copyTextToClipboard([
 				item.title,

@@ -296,10 +296,6 @@ export default class App extends React.Component {
 					// null so initTabs() doesn't filter it out
 				this.navigatingRecents ? null : activeTab,
 				settings[k.MarkTabsInOtherWindows.Key],
-					// pass in the space key behavior so initTabs() knows
-					// whether to normalize all whitespace, which is not
-					// needed if space moves the selection
-				settings[k.SpaceBehavior.Key] == k.SpaceBehavior.Space,
 				settings[k.UsePinyin.Key]
 			);
 			const currentWindowID = activeTab && activeTab.windowId;
@@ -1190,7 +1186,6 @@ const t = performance.now();
 			selected,
 			newSettingsAvailable
 		} = this.state;
-log("======== render", `|${query}|`, `|${searchBoxText}|`, selected)
 
 		return <div className={this.className}>
 			<SearchBox

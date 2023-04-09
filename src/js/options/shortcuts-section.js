@@ -83,6 +83,7 @@ export default class ShortcutSection extends React.Component {
 			<Section>
 				<h2>Search box shortcuts</h2>
 
+{/*
 				<RadioGroup
 					id={k.SpaceBehavior.Key}
 					value={settings[k.SpaceBehavior.Key]}
@@ -98,6 +99,7 @@ export default class ShortcutSection extends React.Component {
 						value={k.SpaceBehavior.Space}
 					/>
 				</RadioGroup>
+*/}
 
 				<RadioGroup
 					id={k.EscBehavior.Key}
