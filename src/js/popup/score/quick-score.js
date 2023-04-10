@@ -1,4 +1,4 @@
-import { indexOfCI } from "@/popup/score/indexOfCI";
+import { search } from "@/popup/score/search";
 
 
 const WhitespacePattern = "-/\\:()<>%._=&[] \t\n\r",
@@ -227,7 +227,7 @@ function rangeOfString(
 	searchRange = new Range(0, string.length))
 {
 	const stringToSearch = string.substr(searchRange.location, searchRange.length);
-	const subStringIndex = indexOfCI(stringToSearch, substring);
+	const subStringIndex = search(stringToSearch, substring);
 	const result = new Range();
 
 	if (subStringIndex > -1) {

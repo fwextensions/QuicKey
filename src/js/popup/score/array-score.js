@@ -4,6 +4,9 @@ const CharPattern = /./g;
 const ReplacementChar = "\x00";
 
 
+const numerically = (a, b) => a - b;
+
+
 function replaceMatches(
 	string,
 	matches)
@@ -25,14 +28,6 @@ function replaceMatches(
 			}
 		}) +
 		string.slice(end + 1);
-}
-
-
-function compareMatches(
-	a,
-	b)
-{
-	return a - b;
 }
 
 
@@ -162,7 +157,7 @@ export default function(
 						}
 
 						if (keyScore) {
-							hitMask.sort(compareMatches);
+							hitMask.sort(numerically);
 						}
 					}
 

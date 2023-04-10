@@ -268,7 +268,7 @@ export default class App extends React.Component {
 					// score the items so the expected keys are added
 					// to each one, and then update the results list with
 					// matches on the current query
-				this[itemName] = scoreItems(items, "");
+				this[itemName] = scoreItems(items, []);
 				this.setQuery(this.state.query);
 
 				return items;
