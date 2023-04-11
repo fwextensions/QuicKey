@@ -29,8 +29,9 @@ export function search(
 	if (regex) {
 		return string.search(regex);
 	} else {
-			// the single-char search string doesn't require a case-insensitive
-			// search, so just use indexOf()
+			// if we don't have a regex, it means the query is a single-char
+			// string that doesn't have an uppercase version, so we can just
+			// use indexOf()
 		return string.indexOf(searchString);
 	}
 }

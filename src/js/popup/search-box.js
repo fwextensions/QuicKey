@@ -39,6 +39,14 @@ export default class SearchBox extends React.Component {
 	}
 
 
+	getSelection()
+	{
+		const {selectionStart, selectionEnd, value} = this.searchBox.input;
+
+		return value.substring(selectionStart, selectionEnd);
+	}
+
+
 	handleRef = handleRef("searchBox", this);
 
 
