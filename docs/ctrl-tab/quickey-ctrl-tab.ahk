@@ -14,22 +14,20 @@ SetKeyDelay, -1, -1     ;
 SetKeyDelay, -1, -1     ; No delay at all will occur after each keystroke sent by Send and ControlSend
 SetWinDelay, 0          ; Changed to 0 upon recommendation of documentation
 
+; Note that there's a \u200b after the `t' of `Microsoft'
+BrowserName               := "Google Chrome|Microsoft" . Chr(0x200b) . " Edge"
 
-BrowserName               := "Google Chrome|Edge"
-DeveloperToolsWindowTitle := "Developer Tools"
 TicksToToggleTab          := 450
 MinUpDownTicks            := 200
 OpenedTickCount           := 0
 SawCtrlTab                := 0
-ExcludedTitles            := ["(Visual Studio Code|VSCodium)( - Insiders)?$"] ; Add patterns to this array to exclude other apps
-ExcludedTitlePattern      := ExcludedTitles[1]
 
-; Build a string that OR's all the excluded title patterns
-For Idx, Title in ExcludedTitles {
-	If (Idx > 1) {
-		ExcludedTitlePattern .= "|" . Title
-	}
-}
+; Add patterns to this continuation section (one pattern per line) to exclude other apps
+ExcludedTitlePattern      := "
+( Join| Comments
+(Visual Studio Code|VSCodium)( - Insiders)?$ ; VSCode / VSCodium
+Developer Tools|DevTools                     ; Developer Tools
+)"
 
 
 IsChromiumBrowser()
@@ -49,11 +47,20 @@ HasPopupWindowSize()
 }
 
 
+; Check if active window is search box
+IsSearchBox()
+{
+	WinGetText, WinText, A
+
+	return !WinText
+}
+
+
 IsPopupActive()
 {
-	global BrowserName, DeveloperToolsWindowTitle
+	global BrowserName
 
-	return IsChromiumBrowser() and !WinActive(BrowserName) and !WinActive(DeveloperToolsWindowTitle) and HasPopupWindowSize()
+	return IsChromiumBrowser() and !IsSearchBox() and !WinActive(BrowserName) and HasPopupWindowSize()
 }
 
 
@@ -62,7 +69,7 @@ IsPopupActive()
 ; Ctrl+Tab
 ^Tab::
 {
-	if WinActive(BrowserName) {
+	if WinActive(BrowserName) or IsSearchBox() {
 		SawCtrlTab := 1
 
 		Send !{q}
@@ -101,7 +108,7 @@ IsPopupActive()
 ; Ctrl+Shift+Tab
 ^+Tab::
 {
-	if WinActive(BrowserName) {
+	if WinActive(BrowserName) or IsSearchBox() {
 		Send !{q}
 		OpenedTickCount := A_TickCount
 	} else {
