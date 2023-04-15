@@ -47,11 +47,20 @@ HasPopupWindowSize()
 }
 
 
+; Check if active window is search box
+IsSearchBox()
+{
+	WinGetText, WinText, A
+
+	return !WinText
+}
+
+
 IsPopupActive()
 {
 	global BrowserName
 
-	return IsChromiumBrowser() and !WinActive(BrowserName) and HasPopupWindowSize()
+	return IsChromiumBrowser() and !IsSearchBox() and !WinActive(BrowserName) and HasPopupWindowSize()
 }
 
 
@@ -60,7 +69,7 @@ IsPopupActive()
 ; Ctrl+Tab
 ^Tab::
 {
-	if WinActive(BrowserName) {
+	if WinActive(BrowserName) or IsSearchBox() {
 		SawCtrlTab := 1
 
 		Send !{q}
@@ -99,7 +108,7 @@ IsPopupActive()
 ; Ctrl+Shift+Tab
 ^+Tab::
 {
-	if WinActive(BrowserName) {
+	if WinActive(BrowserName) or IsSearchBox() {
 		Send !{q}
 		OpenedTickCount := A_TickCount
 	} else {
