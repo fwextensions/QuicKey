@@ -27,6 +27,8 @@ class OptionsAppContainer extends React.Component {
 
     componentDidMount()
 	{
+			// the params props are passed in via the withSearchParams HOC, which
+			// takes the params after the hash, like #shortcuts?pinyin
 		const {params} = this.props;
 		const showPinyinUpdateMessage = params.has("pinyin");
 		const paramLastSeenOptionsVersion = parseInt(params.get("lastSeenOptionsVersion"));

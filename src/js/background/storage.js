@@ -11,7 +11,7 @@ function emptyDefaultData()
 
 function alwaysValidate()
 {
-	return true;
+	return Promise.resolve(true);
 }
 
 

@@ -53,7 +53,7 @@ export default shared("quickeyStorage", () => {
 
 
 	const Updaters = {
-		"3": update(data =>
+		3: update(data =>
 		{
 				// add installTime in v4
 			data.installTime = Date.now();
@@ -62,12 +62,12 @@ export default shared("quickeyStorage", () => {
 			delete data.switchFromShortcut;
 			delete data.lastShortcutTabID;
 		}),
-		"4": update(async data =>
+		4: update(async data =>
 		{
 				// add settings in v5
 			data.settings = (await DefaultData).settings;
 		}),
-		"5": update(async data =>
+		5: update(async data =>
 		{
 				// add includeClosedTabs option and lastUsedVersion in
 				// v6.  leave lastUsedVersion empty so the background
@@ -75,10 +75,10 @@ export default shared("quickeyStorage", () => {
 			await addDefaultSetting(k.IncludeClosedTabs)(data);
 			data.lastUsedVersion = "";
 		}),
-		"6": update(addDefaultSetting(k.MarkTabsInOtherWindows)),
-		"7": update(addDefaultSetting(k.ShowTabCount)),
-		"8": update(addDefaultSetting(k.UsePinyin)),
-		"9": update(async data =>
+		6: update(addDefaultSetting(k.MarkTabsInOtherWindows)),
+		7: update(addDefaultSetting(k.ShowTabCount)),
+		8: update(addDefaultSetting(k.UsePinyin)),
+		9: update(async data =>
 		{
 				// since addDefaultSetting() returns a function, we have to
 				// call it with the stored data passed in by update()
@@ -89,14 +89,14 @@ export default shared("quickeyStorage", () => {
 			)(data);
 			data.lastQuery = "";
 		}),
-		"10": update(async data =>
+		10: update(async data =>
 		{
 			await addDefaultSetting(
 				k.CurrentWindowLimitRecents,
 				k.CurrentWindowLimitSearch
 			)(data);
 		}),
-		"11": update(async data =>
+		11: update(async data =>
 		{
 			await addDefaultSetting(
 				k.HidePopupBehavior,
@@ -104,7 +104,11 @@ export default shared("quickeyStorage", () => {
 			)(data);
 			data.popupAdjustmentWidth = 0;
 			data.popupAdjustmentHeight = 0;
-		})
+		}),
+		12: update(async data =>
+		{
+			data.settings[k.SpaceBehavior.Key] = k.SpaceBehavior.Both;
+		}),
 	};
 		// calculate the version by incrementing the highest key in the
 		// Updaters hash, so that the version is automatically increased
@@ -119,10 +123,9 @@ export default shared("quickeyStorage", () => {
 		.then(([windows, tabs]) => {
 			let hanPattern;
 
-				// our minimum Chrome version is 55, but the Unicode property
-				// support was added in 64, so this may throw in older
-				// browsers.  in that case, auto-detecting Chinese characters
-				// won't work, but the user can always enable it manually.
+				// our minimum Chrome version used to be 55, but the Unicode
+				// property support was added in 64, so this may have thrown in
+				// older browsers, but the try/catch isn't really needed now
 			try { hanPattern = /\p{Script=Han}/u; } catch (e) {}
 
 			if (k.Language.indexOf("zh") == 0) {
@@ -144,6 +147,9 @@ export default shared("quickeyStorage", () => {
 				}
 			}
 
+				// mark tabs in other windows if there are 3 or fewer windows
+				// open, as someone with lots of open windows is probably
+				// jumping between them frequently, so the icon is less relevant
 			DefaultSettings[k.MarkTabsInOtherWindows.Key] = windows.length < 4;
 
 			return {

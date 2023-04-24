@@ -45,7 +45,8 @@ export const CommandIDs = {
 export const SpaceBehavior = {
 	Key: "spaceBehavior",
 	Select: "select",
-	Space: "space"
+	Space: "space",
+	Both: "both"
 };
 export const EscBehavior = {
 	Key: "escBehavior",

@@ -437,7 +437,6 @@ export default class App extends React.Component {
 	getMatchingItems(
 		query)
 	{
-const t = performance.now();
 			// trim any trailing space so that if the user typed one
 			// word and then hit space, we'll turn that into just one
 			// token, instead of the word plus an empty token
@@ -447,7 +446,6 @@ const t = performance.now();
 			// if the query is now empty, we need to clear the hitMasks from
 			// all the items before returning so no chars are shown matching.
 		const items = scoreItems(this[this.mode], tokens, this.settings[k.UsePinyin.Key]);
-//query && log(`"${query}"`, performance.now() - t);
 
 		if (!query) {
 			switch (this.mode) {
