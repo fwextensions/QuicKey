@@ -32,14 +32,14 @@ export default class ResultsListItem extends React.Component {
 		const {shiftKey, altKey} = event;
 		const {item} = this.props;
 
-		if (IsDev && altKey) {
+		if (IsDev && altKey && shiftKey) {
 				// copy some debug info to the clipboard
 			copyTextToClipboard([
 				item.title,
 				item.displayURL,
 				this.props.query,
 				item.recentBoost,
-				_.toPairs(item.scores).map(a => a.join(": ")).join("\n")
+				_.toPairs(item.scores).map(a => a.join(": ")).join("\n"),
 			].join("\n"));
 		} else {
 				// pass in whether ctrl or cmd was pressed while clicking
@@ -116,7 +116,7 @@ export default class ResultsListItem extends React.Component {
 
 		if (IsDev) {
 			tooltip = _.toPairs(scores)
-				.concat([["recentBoost", item.recentBoost], ["id", item.id]])
+				.concat([["recentBoost", item.recentBoost], ["id", item.id], ["score", item.score]])
 				.map(keyValue => keyValue.join(": "))
 				.concat([title != pinyinTitle && pinyinTitle, displayURL != pinyinDisplayURL && pinyinDisplayURL])
 				.filter(string => string)

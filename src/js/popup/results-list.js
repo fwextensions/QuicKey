@@ -22,23 +22,19 @@ export default class ResultsList extends React.Component {
 	componentDidUpdate(
 		prevProps)
 	{
-		if (prevProps.items !== this.props.items) {
+		const itemsChanged = prevProps.items !== this.props.items;
+
+		if (itemsChanged) {
 				// the virtual list doesn't know when the items have changed,
 				// so force it to update when they do
 			this.list.forceUpdateGrid();
 		}
 
-		if (!prevProps.visible && this.props.visible) {
-			this.hoverSelectEnabled = false;
-			this.renderTimer = setTimeout(
-				() => { this.hoverSelectEnabled = true; this.renderTimer = null; },
-				MinShownTime
-			);
+		if (itemsChanged || (!prevProps.visible && this.props.visible)) {
+			this.enableHoverSelectDelayed();
 		} else if (prevProps.visible && !this.props.visible) {
 				// make sure the timer is cleared when the popup is hidden
-			clearTimeout(this.renderTimer);
-			this.hoverSelectEnabled = false;
-			this.renderTimer = null;
+			this.disableHoverSelect();
 		}
 	}
 
@@ -72,6 +68,28 @@ export default class ResultsList extends React.Component {
 		index)
 	{
 		this.list.scrollToRow(index);
+	}
+
+
+	enableHoverSelectDelayed()
+	{
+		this.disableHoverSelect();
+		this.renderTimer = setTimeout(this.handleRenderTimerDone, MinShownTime);
+	}
+
+
+	disableHoverSelect()
+	{
+		clearTimeout(this.renderTimer);
+		this.hoverSelectEnabled = false;
+		this.renderTimer = null;
+	}
+
+
+	handleRenderTimerDone = () =>
+	{
+		this.hoverSelectEnabled = true;
+		this.renderTimer = null;
 	}
 
 

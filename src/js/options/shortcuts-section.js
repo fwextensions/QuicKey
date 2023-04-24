@@ -83,21 +83,27 @@ export default class ShortcutSection extends React.Component {
 			<Section>
 				<h2>Search box shortcuts</h2>
 
-				<RadioGroup
-					id={k.SpaceBehavior.Key}
-					value={settings[k.SpaceBehavior.Key]}
-					label={<span>Press <kbd>space</kbd> to:</span>}
-					onChange={onChange}
-				>
-					<RadioButton
-						label={<span>Select the next item (include <b>shift</b> to select the previous one)</span>}
-						value={k.SpaceBehavior.Select}
-					/>
-					<RadioButton
-						label="Insert a space in the search query"
-						value={k.SpaceBehavior.Space}
-					/>
-				</RadioGroup>
+				<NewSetting addedVersion={13}>
+					<RadioGroup
+						id={k.SpaceBehavior.Key}
+						value={settings[k.SpaceBehavior.Key]}
+						label={<span>Press <kbd>space</kbd> to:</span>}
+						onChange={onChange}
+					>
+						<RadioButton
+							label={<span>Select the next item (include <b>shift</b> to select the previous one)</span>}
+							value={k.SpaceBehavior.Select}
+						/>
+						<RadioButton
+							label="Insert a space between search tokens"
+							value={k.SpaceBehavior.Space}
+						/>
+						<RadioButton
+							label="Do all of the above"
+							value={k.SpaceBehavior.Both}
+						/>
+					</RadioGroup>
+				</NewSetting>
 
 				<RadioGroup
 					id={k.EscBehavior.Key}
