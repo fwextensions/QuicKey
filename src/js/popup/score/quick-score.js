@@ -1,3 +1,6 @@
+import { search } from "@/popup/score/search";
+
+
 const WhitespacePattern = "-/\\:()<>%._=&[] \t\n\r",
 	UpperCasePattern = (function() {
 			var charCodeA = "A".charCodeAt(0),
@@ -221,13 +224,11 @@ Range.prototype.toString = function()
 function rangeOfString(
 	string,
 	substring,
-	searchRange)
+	searchRange = new Range(0, string.length))
 {
-	searchRange = searchRange || new Range(0, string.length);
-
-	var stringToSearch = string.substr(searchRange.location, searchRange.length).toLocaleLowerCase(),
-		subStringIndex = stringToSearch.indexOf(substring.toLocaleLowerCase()),
-		result = new Range();
+	const stringToSearch = string.substr(searchRange.location, searchRange.length);
+	const subStringIndex = search(stringToSearch, substring);
+	const result = new Range();
 
 	if (subStringIndex > -1) {
 		result.location = subStringIndex + searchRange.location;

@@ -11,15 +11,7 @@ const DefaultKeys = [
 	},
 	{
 		key: "displayURL",
-		score: function(
-			itemString,
-			abbreviation,
-			hitMask)
-		{
-				// add true to not give a higher score to matches after
-				// spaces or on capitals in the URL
-			return quickScore(itemString, abbreviation, hitMask, true);
-		}
+		score: quickScore
 	}
 ];
 const PinyinKeys = DefaultKeys.concat([
@@ -35,21 +27,32 @@ const PinyinKeys = DefaultKeys.concat([
 const QuickScoreArray = arrayScore(quickScore, DefaultKeys);
 const PinyinQuickScoreArray = arrayScore(quickScore, PinyinKeys);
 const SimpleScoreArray = arrayScore(simpleScore, DefaultKeys.map(({key}) => key));
-const MaxQueryLength = 25;
+const MaxAverageLength = 14;
+const MaxQueryLength = 2 * MaxAverageLength;
+
+
+function totalLength(
+	strings)
+{
+	return strings.reduce((result, string) => result + string.length, 0);
+}
 
 
 export default function scoreItems(
 	items,
-	query,
+	tokens,
 	usePinyin)
 {
-	if (query.length <= MaxQueryLength) {
+	const queryLength = totalLength(tokens);
+	const averageLength = queryLength / tokens.length;
+
+	if (queryLength <= MaxQueryLength && averageLength <= MaxAverageLength) {
 		if (usePinyin) {
-			return PinyinQuickScoreArray(items, query);
+			return PinyinQuickScoreArray(items, tokens);
 		} else {
-			return QuickScoreArray(items, query);
+			return QuickScoreArray(items, tokens);
 		}
 	} else {
-		return SimpleScoreArray(items, query);
+		return SimpleScoreArray(items, tokens);
 	}
-};
+}

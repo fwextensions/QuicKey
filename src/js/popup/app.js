@@ -37,6 +37,7 @@ const NoRecentTabsMessage = [{
 	component: MessageItem
 }];
 const DeleteBookmarkConfirmation = "Are you sure you want to permanently delete this bookmark?";
+const SpacePattern = /\s+/;
 
 
 function sortRecents(
@@ -58,7 +59,22 @@ function sortHistoryItems(
 	a,
 	b)
 {
+		// we want a decreasing sort order, so newer items come first
 	return b.lastVisitTime - a.lastVisitTime;
+}
+
+
+function notEqual(
+	a,
+	b)
+{
+	const diff = Math.abs(a - b);
+
+		// because of rounding issues in Chrome when the UI is not scaled to a
+		// whole number, we want to ignore differences <= 2 in that case
+	return Number.isInteger(devicePixelRatio)
+		? diff > 0
+		: diff > 2;
 }
 
 
@@ -226,12 +242,14 @@ export default class App extends React.Component {
 			const bodyHeight = document.body.offsetHeight;
 			const windowPadding = outerHeight - innerHeight;
 
-			if (innerHeight !== bodyHeight) {
+			if (notEqual(innerHeight, bodyHeight)) {
 					// don't fight with the onResize handler, and use the Chrome
 					// API to resize the popup, since it can make the window
-					// shorter than window.resizeTo() can
+					// shorter than window.resizeTo() can.  pass the saved
+					// outerWidth in this.popupW, in case the actual outerWidth
+					// has changed for some reason.
 				this.ignoreNextResize = true;
-				popupWindow.resize(outerWidth, bodyHeight + windowPadding);
+				popupWindow.resize(this.popupW, bodyHeight + windowPadding);
 			}
 		}
 	}
@@ -250,7 +268,7 @@ export default class App extends React.Component {
 					// score the items so the expected keys are added
 					// to each one, and then update the results list with
 					// matches on the current query
-				this[itemName] = scoreItems(items, "");
+				this[itemName] = scoreItems(items, []);
 				this.setQuery(this.state.query);
 
 				return items;
@@ -278,10 +296,6 @@ export default class App extends React.Component {
 					// null so initTabs() doesn't filter it out
 				this.navigatingRecents ? null : activeTab,
 				settings[k.MarkTabsInOtherWindows.Key],
-					// pass in the space key behavior so initTabs() knows
-					// whether to normalize all whitespace, which is not
-					// needed if space moves the selection
-				settings[k.SpaceBehavior.Key] == k.SpaceBehavior.Space,
 				settings[k.UsePinyin.Key]
 			);
 			const currentWindowID = activeTab && activeTab.windowId;
@@ -423,11 +437,15 @@ export default class App extends React.Component {
 	getMatchingItems(
 		query)
 	{
+			// trim any trailing space so that if the user typed one
+			// word and then hit space, we'll turn that into just one
+			// token, instead of the word plus an empty token
+		const tokens = query.trim().split(SpacePattern);
 			// score the items before checking the query, in case there had
 			// been a previous query, leaving hitMasks on all the items.
 			// if the query is now empty, we need to clear the hitMasks from
-			// all the items so no chars are shown matching.
-		const items = scoreItems(this[this.mode], query, this.settings[k.UsePinyin.Key]);
+			// all the items before returning so no chars are shown matching.
+		const items = scoreItems(this[this.mode], tokens, this.settings[k.UsePinyin.Key]);
 
 		if (!query) {
 			switch (this.mode) {
@@ -450,15 +468,20 @@ export default class App extends React.Component {
 			}
 		}
 
-		const firstScoresDiff = (items.length > 1 && items[0].score > MinScore)
+			// adjust these min values based on the number of tokens, since each
+			// item's score is based on the total from each token
+		const minScore = MinScore * tokens.length;
+		const minScoreDiff = MinScoreDiff * tokens.length;
+		const nearlyZeroScore = NearlyZeroScore * tokens.length;
+		const firstScoresDiff = (items.length > 1 && items[0].score > minScore)
 			? items[0].score - items[1].score
 			: 0;
 			// drop barely-matching results, keeping a minimum of 3,
 			// unless there's a big difference in scores between the
 			// first two items, which may mean we need a longer tail
 		const matchingItems = _.dropRightWhile(items, ({score}, i) =>
-			score < NearlyZeroScore ||
-				(score < MinScore && (i + 1 > MinItems || firstScoresDiff > MinScoreDiff))
+			score < nearlyZeroScore ||
+				(score < minScore && (i + 1 > MinItems || firstScoresDiff > minScoreDiff))
 		);
 
 		return matchingItems;
@@ -1140,7 +1163,7 @@ export default class App extends React.Component {
 			this.reopenWindow();
 			log("=== borders collapsed");
 		} else if (!this.ignoreNextResize &&
-			(outerWidth !== this.popupW || outerHeight !== this.popupH)) {
+				(notEqual(outerWidth, this.popupW) || notEqual(outerHeight, this.popupH))) {
 				// prevent the window from resizing, but only if the width
 				// or height have actually changed, since we sometimes
 				// get resize events when the size is the same

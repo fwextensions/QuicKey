@@ -1,7 +1,7 @@
 function rnd(
 	min = 0,
 	max = 1,
-	floor = false)
+	floor = true)
 {
 	let value = Math.random() * (max - min) + min;
 
@@ -12,14 +12,14 @@ function rnd(
 	return value;
 }
 
-const rndDeg = () => rnd(0, 360, true);
+const rndDeg = () => rnd(0, 360);
 const rndH = rndDeg;
-const rndS = () => rnd(80, 95, true);
-const rndL = () => rnd(30, 55, true);
-const rndSDark = () => rnd(30, 65, true);
-const rndSLight = () => rnd(60, 85, true);
-const rndLDark = () => rnd(30, 55, true);
-const rndLLight = () => rnd(60, 85, true);
+const rndS = () => rnd(80, 95);
+const rndL = () => rnd(30, 55);
+const rndSDark = () => rnd(30, 65);
+const rndSLight = () => rnd(60, 85);
+const rndLDark = () => rnd(30, 55);
+const rndLLight = () => rnd(60, 85);
 const hsla = (h, s, l, a = 1) => `hsla(${h}, ${s}%, ${l}%, ${a})`;
 
 function generateTriadPalette(
@@ -49,7 +49,7 @@ function repeatingLinearGradient(
 	const gradientSteps = colors.reduce((result, color) => [
 		...result,
 		`${color} ${currentWidth}${widthUnit}`,
-		`${color} ${currentWidth += (width + rnd(-widthJitter, widthJitter))}${widthUnit}`
+		`${color} ${currentWidth += (width + rnd(-widthJitter, widthJitter, false))}${widthUnit}`
 	], []);
 
 	return `repeating-linear-gradient(${deg}deg, ${gradientSteps.join(", ")})`;
@@ -59,7 +59,7 @@ function generatePlaidPattern()
 {
 	const colors = generateTriadPalette();
 	const deg1 = rndDeg();
-	const deg2 = deg1 + rnd(60, 120, true);
+	const deg2 = deg1 + rnd(60, 120);
 
 	return {
 			// use the seed color as the favicon, since it should be the most obvious
@@ -68,7 +68,7 @@ function generatePlaidPattern()
 background: 
 	${repeatingLinearGradient(deg1, colors, { widthJitter: .5 })}, 
 	${repeatingLinearGradient(deg2, colors, { widthJitter: .5 })};
-font-size: ${rnd(12, 24, true)}px;	
+font-size: ${rnd(12, 24)}px;	
 `
 	};
 }
@@ -94,7 +94,7 @@ export function createTabs(
 		for (let i = tabs.length; i < tabCount; i++) {
 			tabs.push({
 				id: i,
-				length: rnd(20, 65, true),
+				length: rnd(20, 65),
 				...generatePlaidPattern()
 			});
 		}

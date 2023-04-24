@@ -1,17 +1,20 @@
+import { search } from "@/popup/score/search";
+
+
 function simpleScore(
 	string,
 	query,
 	hitMask)
 {
-	var index = string.toLocaleLowerCase().indexOf(query.toLocaleLowerCase()),
-		stringLength = string.length,
-		queryLength = query.length,
-		score = 0;
+	const index = search(string, query);
+	const stringLength = string.length;
+	const queryLength = query.length;
+	let score = 0;
 
 	if (index > -1) {
 		score = ((stringLength - index) / stringLength) * (queryLength / stringLength);
 
-		for (var i = index; i < index + queryLength; i++) {
+		for (let i = index, len = index + queryLength; i < len; i++) {
 			hitMask.push(i);
 		}
 	}
