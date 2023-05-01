@@ -38,6 +38,13 @@ const NoRecentTabsMessage = [{
 }];
 const DeleteBookmarkConfirmation = "Are you sure you want to permanently delete this bookmark?";
 const SpacePattern = /\s+/;
+const {
+	OpenMenuCommand,
+	OpenPopupCommand,
+	FocusPopupCommand,
+	PreviousTabCommand,
+	NextTabCommand
+} = k.CommandIDs;
 
 
 function sortRecents(
@@ -180,7 +187,7 @@ export default class App extends React.Component {
 						// from the background after opening is tricky
 					return this.onMessage({
 						message: "modifySelected",
-						openPopup: true,
+						navigatingRecents: true,
 						direction: 1
 					});
 				}
@@ -551,8 +558,9 @@ export default class App extends React.Component {
 		if (tab) {
 			const queryLength = this.state.query.length;
 			const category = queryLength ? "tabs" : "recents";
-			let event = (category == "recents" && this.gotMRUKey) ?
-				"focus-mru" : "focus";
+			let event = (category == "recents" && this.gotMRUKey)
+				? "focus-mru"
+				: "focus";
 			let options;
 
 			if (unsuspend && tab.unsuspendURL) {
@@ -805,8 +813,11 @@ export default class App extends React.Component {
 			// pass the data we got from storage to settings so it
 			// doesn't have to get its own copy of it
 		this.settings = await settings.get(data);
-		this.mruModifier = this.settings.chrome.popup.modifierEventName;
 		shortcuts.update(this.settings);
+
+			// update the modifier event name based on the latest settings, in
+			// case the keyboard shortcut has been changed
+		this.updateMRUModifier();
 
 		if (this.settings.usePinyin) {
 				// searching by pinyin is enabled, so load the lib now, so
@@ -816,6 +827,27 @@ export default class App extends React.Component {
 		}
 
 		return this.settings;
+	}
+
+
+	updateMRUModifier(
+		direction)
+	{
+		let commandID;
+
+		if (!this.props.isPopup) {
+			commandID = OpenMenuCommand;
+		} else if (this.navigatingRecents) {
+			commandID = (direction === 1)
+				? NextTabCommand
+				: PreviousTabCommand;
+		} else {
+			commandID = this.openedForSearch
+				? FocusPopupCommand
+				: OpenPopupCommand;
+		}
+
+		this.mruModifier = this.settings.chrome.shortcutsByID[commandID]?.modifierEventName;
 	}
 
 
@@ -1082,9 +1114,9 @@ export default class App extends React.Component {
 	{
 		switch (message) {
 			case "modifySelected":
-				const {openPopup, direction} = payload;
+				const {navigatingRecents, direction} = payload;
 
-				if (openPopup) {
+				if (navigatingRecents) {
 					this.navigatingRecents = true;
 
 					if (!this.visible) {
@@ -1102,11 +1134,14 @@ export default class App extends React.Component {
 						await this.setSelectedIndex(direction == 1 ? 0 : 1, true);
 					}
 
+					this.updateMRUModifier(direction);
+
 					const index = await this.modifySelected(direction, true);
 
 					await this.focusTab(this.state.matchingItems[index]);
 					await this.showPopupWindow(null, "right-center");
 				} else {
+					this.updateMRUModifier();
 					await this.modifySelected(direction, true);
 				}
 				break;

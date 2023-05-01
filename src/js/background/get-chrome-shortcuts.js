@@ -3,6 +3,8 @@
 /* @preserve ⌃⇧⌥⌘ */
 
 import cp from "cp";
+import { getKeysFromShortcut } from "@/options/shortcut-utils";
+import { ModifierEventNames } from "@/options/key-constants";
 
 
 const KeyAliases = {
@@ -91,13 +93,17 @@ export default function getShortcuts()
 				.map(key => KeyAliases[key] || key)
 				.join(ShortcutSeparator)
 				.toLowerCase();
+			const info = getKeysFromShortcut(shortcut);
+			const modifierEventName = ModifierEventNames[info.modifiers[0]];
 
 			return {
 					// the shortcut for opening the menu doesn't have a
 					// description in the manifest
 				label: chromeShortcut.description || "Open the QuicKey menu",
 				id: chromeShortcut.name,
-				shortcut
+				shortcut,
+				modifierEventName,
+				...info
 			};
 		})
 	)

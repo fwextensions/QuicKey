@@ -143,6 +143,7 @@ export default {
 		const {
 			shortcuts,
 			chrome: {
+// TODO: get rid of popup special case here and use shortcutsByID instead
 				popup: {modifiers: popupModifiers},
 				shortcuts: chromeShortcuts}
 		} = settings;

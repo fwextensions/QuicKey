@@ -2,7 +2,7 @@ import storage from "./quickey-storage";
 import getDefaultSettings from "./get-default-settings";
 import getChromeShortcuts from "./get-chrome-shortcuts";
 import {ModifierEventNames} from "@/options/key-constants";
-import {areShortcutsIdentical} from "@/options/shortcut-utils";
+import {areShortcutsIdentical, getKeysFromShortcut} from "@/options/shortcut-utils";
 import {IsMac, Platform} from "./constants";
 
 
@@ -28,33 +28,29 @@ function addChromeShortcuts(
 
 	return getChromeShortcuts()
 		.then(chromeShortcuts => {
-			const popupShortcut = chromeShortcuts.filter(
-				({id}) => id == "_execute_browser_action")[0].shortcut || "";
-			const popupKeys = popupShortcut.split("+");
-				// filter out shift from the modifiers, since we'll use
-				// shift+<mruKey> to navigate up the list
-			const popupModifiers = popupKeys.slice(0, -1).filter(
-				key => key.toLowerCase() != "shift");
-
-			if (!popupModifiers.length) {
-					// for some reason, Chrome sometimes doesn't return the
-					// shortcut for the browser action, even if it's getting
-					// triggered by it.  or the non-ASCII modifier symbols
-					// on Mac might have gotten corrupted, so they don't
-					// match what Chrome returns, and therefore we think
-					// there's no shortcut defined.  so default to a platform-
-					// specific modifier so the user can still use alt-W to
-					// navigate the MRU list.
-				popupModifiers[0] = DefaultPopupModifier;
-			}
+			const shortcutsByID = chromeShortcuts.reduce((result, info) => ({
+					...result,
+					[info.id]: info
+				}), {});
+			const menuShortcut = chromeShortcuts.find(({id}) => id == "_execute_browser_action").shortcut || "";
+			const {baseKey, modifiers} = getKeysFromShortcut(menuShortcut);
 
 			settings.chrome = {
 				popup: {
-					key: popupKeys.pop(),
-					modifiers: popupModifiers,
-					modifierEventName: ModifierEventNames[popupModifiers[0]]
+					key: baseKey,
+					modifiers,
+						// for some reason, Chrome sometimes doesn't return the
+						// shortcut for the browser action, even if it's getting
+						// triggered by it.  or the non-ASCII modifier symbols
+						// on Mac might have gotten corrupted, so they don't
+						// match what Chrome returns, and therefore we think
+						// there's no shortcut defined.  so default to a platform-
+						// specific modifier so the user can still use alt-W to
+						// navigate the MRU list.
+					modifierEventName: ModifierEventNames[modifiers[0] || DefaultPopupModifier]
 				},
-				shortcuts: chromeShortcuts
+				shortcuts: chromeShortcuts,
+				shortcutsByID
 			};
 
 			return settings;
