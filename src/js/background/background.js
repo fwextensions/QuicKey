@@ -96,7 +96,9 @@ DEBUG && console.log("== onStartup");
 
 
 const addTab = debounce(
-	tabId => cp.tabs.get(tabId)
+		// make sure tabId is valid, as calling tabs.get() with undefined will
+		// throw an exception that isn't caught by the .catch() below
+	tabId => Number.isInteger(tabId) && cp.tabs.get(tabId)
 		.then(tab => {
 				// update activeTab to be the one we're pushing onto recents, but
 				// only if it's not the popup window.  though handleTabActivated()
@@ -115,6 +117,7 @@ const addTab = debounce(
 				// the tab no longer exists at that point.
 			if (error && error.message && error.message.indexOf("No tab") != 0) {
 				tracker.exception(error);
+				console.error(`ERROR: tabId: ${tabId}.`, error);
 			}
 		}),
 	k.MinTabDwellTime
@@ -137,8 +140,11 @@ function handleTabActivated({
 		// because the last tab in tabIDs wouldn't match the event.  if the
 		// user is navigating through tabs and activating each one as it's
 		// selected, we don't want to update the recents list until they
-		// finish and the window closes.
-	if (windowId !== popupWindow.id && !navigatingRecents) {
+		// finish and the window closes.  we also need to make sure tabId is
+		// valid, since we may be getting called from an event that was triggered
+		// by a window in another profile, in which case we can't access any
+		// info about the tabs there.
+	if (Number.isInteger(tabId) && windowId !== popupWindow.id && !navigatingRecents) {
 		addTab(tabId);
 
 		if (ports.popup) {
@@ -277,7 +283,7 @@ async function navigateRecents(
 				} else {
 					sendPopupMessage("modifySelected", {
 						direction: -direction,
-						openPopup: true
+						navigatingRecents: true
 					});
 				}
 			}
@@ -426,9 +432,10 @@ chrome.windows.onFocusChanged.addListener(windowID => {
 			windowID != lastWindowID) {
 		lastWindowID = windowID;
 		cp.tabs.query({ active: true, windowId: windowID })
-				// if this window somehow doesn't have an active tab, which
-				// should never happen, it'll pass undefined to addTab(),
-				// which will catch the exception.
+				// if this window doesn't have an active tab, it's likely in a
+				// different profile, so this instance of QuicKey can't access
+				// any info about it.  we'll just pass undefined to addTab(),
+				// which will ignore it.
 			.then(([tab = {}]) => handleTabActivated({
 				tabId: tab.id,
 				windowId: windowID
