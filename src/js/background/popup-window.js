@@ -234,10 +234,14 @@ async function hide(
 {
 	isVisible = false;
 
-	if (hideBehavior == Tab || (hideBehavior == Behind && !targetTabOrWindow)) {
+	if (hideBehavior == Tab
+		|| (hideBehavior == Behind && (!targetTabOrWindow || targetTabOrWindow.id === tabID))) {
 			// if we didn't get a target to hide behind, probably because
 			// a devtools window got focused, then temporarily fall back to
-			// hiding in a tab, so that the popup is no longer visible
+			// hiding in a tab, so that the popup is no longer visible.  the
+			// target may also be the popup itself, usually when a window from a
+			// different profile is focused, which means we can't get the bounds
+			// of that window, so we have to hide in a tab.
 		await hideInTab();
 	} else {
 		const options = {};
