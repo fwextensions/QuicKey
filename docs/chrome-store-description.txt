@@ -194,9 +194,11 @@ Use keyboard shortcuts to navigate the list:
  • HOME: go to the top of the list
  • ESC: clear the search or close the menu
 
-If you type more than 25 letters, which should be plenty to find the right tab, QuicKey switches to an exact string search to stay fast.
-
 Recently used tabs get a slight boost in the search results ranking, so getting back to a tab you were just using should require typing fewer letters.
+
+Typing a space lets you enter multiple queries, all of which must match either the tab's title or URL, in any order.
+
+If you type more than 25 letters, which should be plenty to find the right tab, QuicKey switches to an exact string search to stay fast.
 
 
 ★ Customize shortcuts and other options
