@@ -22,6 +22,16 @@ define([
 		"Media Next Track": "MediaTrackNext",
 		"Media Play/Pause": "MediaPlayPause",
 		"Media Stop": "MediaStop",
+		...Object.fromEntries([
+			[0x2190, "ArrowLeft"],
+			[0x2192, "ArrowRight"],
+			[0x2191, "ArrowUp"],
+			[0x2193, "ArrowDown"],
+			[0x2303, "Ctrl"],
+			[0x21E7, "Shift"],
+			[0x2325, "Opt"],
+			[0x2318, "Cmd"]
+		].map(([codePoint, alias]) => [String.fromCodePoint(codePoint), alias]))
 			// Unicode chars used as keys show up as broken chars in Chrome after
 			// r.js combines the files, possibly only after adding bluebird.min.js
 //		"←": "ArrowLeft",
@@ -51,14 +61,14 @@ define([
 		// the only way to prevent babel from converting the \u strings to
 		// literal chars seems to be to set the keys this way after the object's
 		// been created
-	KeyAliases["\u2190"] = "ArrowLeft";
-	KeyAliases["\u2192"] = "ArrowRight";
-	KeyAliases["\u2191"] = "ArrowUp";
-	KeyAliases["\u2193"] = "ArrowDown";
-	KeyAliases["\u2303"] = "Ctrl";
-	KeyAliases["\u21E7"] = "Shift";
-	KeyAliases["\u2325"] = "Opt";
-	KeyAliases["\u2318"] = "Cmd";
+//	KeyAliases["\u2190"] = "ArrowLeft";
+//	KeyAliases["\u2192"] = "ArrowRight";
+//	KeyAliases["\u2191"] = "ArrowUp";
+//	KeyAliases["\u2193"] = "ArrowDown";
+//	KeyAliases["\u2303"] = "Ctrl";
+//	KeyAliases["\u21E7"] = "Shift";
+//	KeyAliases["\u2325"] = "Opt";
+//	KeyAliases["\u2318"] = "Cmd";
 
 	return function getShortcuts()
 	{
