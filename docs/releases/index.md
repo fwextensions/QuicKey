@@ -8,6 +8,13 @@ comments: true
 # Release history
 
 
+## 1.8.1 - 2023-06-06
+
+### Fixed
+
+* Sometimes the <b><kbd>ctrl</kbd><kbd>W</kbd></b> shortcut for moving the selection in the menu would not work on macOS.
+
+
 ## 1.8.0 - 2022-10-26
 
 ### Added
