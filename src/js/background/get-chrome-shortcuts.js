@@ -7,22 +7,34 @@ define([
 ], function(
 	cp
 ) {
-	const KeyAliases = {
-		"Left Arrow": "ArrowLeft",
-		"Right Arrow": "ArrowRight",
-		"Up Arrow": "ArrowUp",
-		"Down Arrow": "ArrowDown",
-		"Page Up": "PageUp",
-		"Page Down": "PageDown",
-		"Ins": "Insert",
-		"Del": "Delete",
-		"Comma": ",",
-		"Period": ".",
-		"Media Previous Track": "MediaTrackPrevious",
-		"Media Next Track": "MediaTrackNext",
-		"Media Play/Pause": "MediaPlayPause",
-		"Media Stop": "MediaStop",
-		...Object.fromEntries([
+	const KeyAliases = Object.assign(
+		{
+			"Left Arrow": "ArrowLeft",
+			"Right Arrow": "ArrowRight",
+			"Up Arrow": "ArrowUp",
+			"Down Arrow": "ArrowDown",
+			"Page Up": "PageUp",
+			"Page Down": "PageDown",
+			"Ins": "Insert",
+			"Del": "Delete",
+			"Comma": ",",
+			"Period": ".",
+			"Media Previous Track": "MediaTrackPrevious",
+			"Media Next Track": "MediaTrackNext",
+			"Media Play/Pause": "MediaPlayPause",
+			"Media Stop": "MediaStop",
+		},
+				// Unicode chars used as keys show up as broken chars in Chrome
+				// after r.js and babel combine the files
+//			"←": "ArrowLeft",
+//			"→": "ArrowRight",
+//			"↑": "ArrowUp",
+//			"↓": "ArrowDown",
+//			"⌃": "Ctrl",
+//			"⇧": "Shift",
+//			"⌥": "Opt",
+//			"⌘": "Cmd",
+		Object.fromEntries([
 			[0x2190, "ArrowLeft"],
 			[0x2192, "ArrowRight"],
 			[0x2191, "ArrowUp"],
@@ -32,26 +44,7 @@ define([
 			[0x2325, "Opt"],
 			[0x2318, "Cmd"]
 		].map(([codePoint, alias]) => [String.fromCodePoint(codePoint), alias]))
-			// Unicode chars used as keys show up as broken chars in Chrome after
-			// r.js combines the files, possibly only after adding bluebird.min.js
-//		"←": "ArrowLeft",
-//		"→": "ArrowRight",
-//		"↑": "ArrowUp",
-//		"↓": "ArrowDown",
-//		"⌃": "Ctrl",
-//		"⇧": "Shift",
-//		"⌥": "Opt",
-//		"⌘": "Cmd",
-			// babel converts these back to single chars during the build
-//		["\u2303"]: "Ctrl",
-//		["\u21E7"]: "Shift",
-//		["\u2325"]: "Opt",
-//		["\u2318"]: "Cmd",
-//		"\u2303": "Ctrl",
-//		"\u21E7": "Shift",
-//		"\u2325": "Opt",
-//		"\u2318": "Cmd",
-	};
+	);
 	const ShortcutSeparator = "+";
 	const ShortcutSeparatorPattern = /\s*\+\s*/;
 	const MacShortcutPattern = /([\u2303\u21E7\u2325\u2318]+)(.+)/;
