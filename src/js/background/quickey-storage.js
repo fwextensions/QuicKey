@@ -103,7 +103,7 @@ define([
 					k.CurrentWindowLimitRecents,
 					k.CurrentWindowLimitSearch
 				)(data);
-			})
+			}),
 		};
 			// calculate the version by incrementing the highest key in the
 			// Updaters hash, so that the version is automatically increased

@@ -1,14 +1,34 @@
 define([
 	"shared",
+	"lib/ga4mp.umd",
 	"./tracker",
+	"./client-id",
 	"./constants"
 ], function(
 	shared,
+	ga4mp,
 	Tracker,
-	{IsEdge}
+	clientID,
+	{ IsEdge }
 ) {
 	const TrackerID = `UA-108153491-${IsEdge ? "4" : "3"}`;
 
+	const ga4tracker = ga4mp(["G-C4JVSJ09QQ"], {
+		client_id: clientID,
+		user_id: undefined,
+		non_personalized_ads: true,
+		debug: true
+	});
+
+	window.t = ga4tracker;
+
+//	ga4tracker.trackEvent("page_view");
+//	ga4tracker.trackEvent("recents", "next");
+
+	console.log(ga4tracker.getSessionId(), ga4tracker.getClientId());
+//window.log("==== derp");
+//window.log(ga4tracker);
+//console.log(ga4tracker)
 
 	return shared("trackers", function() {
 			// create a separate tracker for the background, popup and options
