@@ -1,3 +1,10 @@
+	// set up a global log() call so that the popup and options pages can call
+	// it and log to the persistent background console
+window.log = function(...args) {
+	DEBUG && console.log.apply(console, args);
+};
+
+
 	// if the popup is opened and closed within this time, switch to the
 	// previous tab
 const MaxPopupLifetime = 450;
@@ -500,11 +507,6 @@ DEBUG && console.log(e);
 
 		restartExtension();
 	});
-
-
-	window.log = function(...args) {
-		DEBUG && console.log.apply(console, args);
-	};
 
 
 		// update the icon, in case we're in dark mode when the extension loads,

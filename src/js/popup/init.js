@@ -9,8 +9,12 @@ let gShortcutCache = [];
 let gClose = false;
 let gOnKeyDown;
 
+	// set up a global log() call pointing at the function on the background page
+	// before main.js is loaded, so that any lib can call it
+window.log = chrome.extension.getBackgroundPage().log;
+
 	// check lastError to suppress errors showing up in the extensions page
-chrome.runtime.lastError && console.log("Chrome error:", chrome.runtime.lastError);
+chrome.runtime.lastError && (window.log || console.log)("Chrome error:", chrome.runtime.lastError);
 
 
 (function() {

@@ -11,24 +11,10 @@ define([
 	clientID,
 	{ IsEdge }
 ) {
-	const TrackerID = `UA-108153491-${IsEdge ? "4" : "3"}`;
-
-	const ga4tracker = ga4mp(["G-C4JVSJ09QQ"], {
-		client_id: clientID,
-		user_id: undefined,
-		non_personalized_ads: true,
-		debug: true
-	});
-
-	window.t = ga4tracker;
-
-//	ga4tracker.trackEvent("page_view");
-//	ga4tracker.trackEvent("recents", "next");
-
-	console.log(ga4tracker.getSessionId(), ga4tracker.getClientId());
-//window.log("==== derp");
-//window.log(ga4tracker);
-//console.log(ga4tracker)
+	const TrackerID = IsEdge
+		? "G-C4JVSJ09QQ"
+		: "G-C4JVSJ09QQ";
+// TODO: create ID for Chrome
 
 	return shared("trackers", function() {
 			// create a separate tracker for the background, popup and options
@@ -36,31 +22,31 @@ define([
 		return {
 			background: new Tracker({
 				id: TrackerID,
-				name: "background",
 				settings: {
-					location: "/background.html",
-					page: "/background",
-					transport: "beacon"
+					persistentEventParameters: {
+						page_location: "/background.html",
+						page_title: "/background",
+					}
 				},
 				sendPageview: false
 			}),
 			popup: new Tracker({
 				id: TrackerID,
-				name: "popup",
 				settings: {
-					location: "/popup.html",
-					page: "/popup",
-					transport: "beacon"
+					persistentEventParameters: {
+						page_location: "/popup.html",
+						page_title: "/popup",
+					}
 				},
 				sendPageview: false
 			}),
 			options: new Tracker({
 				id: TrackerID,
-				name: "options",
 				settings: {
-					location: "/options.html",
-					page: "/options",
-					transport: "beacon"
+					persistentEventParameters: {
+						page_location: "/options.html",
+						page_title: "/options",
+					}
 				},
 				sendPageview: false
 			})
