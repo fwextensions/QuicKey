@@ -13,8 +13,7 @@ define([
 ) {
 	const TrackerID = IsEdge
 		? "G-C4JVSJ09QQ"
-		: "G-C4JVSJ09QQ";
-// TODO: create ID for Chrome
+		: "G-Y6PNZ406H1";
 
 	return shared("trackers", function() {
 			// create a separate tracker for the background, popup and options

@@ -11,7 +11,7 @@ define([
 		client_id: clientID,
 		user_id: undefined,
 		non_personalized_ads: true,
-		debug: true,
+		debug: false,
 	};
 
 	class Tracker {
