@@ -67,7 +67,7 @@ define([
 			action,
 			value)
 		{
-			const eventName = action && typeof action == "string"
+			const eventName = (action && typeof action == "string")
 				? action
 				: category;
 			let params;
@@ -81,7 +81,7 @@ define([
 					if (typeof value == "string") {
 						params.event_label = value;
 					} else if (typeof value == "number") {
-						params.value = value;
+						params.count = value;
 					}
 				}
 			}
@@ -99,14 +99,15 @@ define([
 			name,
 			value)
 		{
+			const roundedValue = Math.round(value);
+
 			if (category == "loading") {
-				this.send("timing_complete", {
+				this.send(name, {
 					event_category: category,
-					event_label: name,
-					value: Math.round(value)
+					ms: roundedValue
 				});
 			} else {
-				this.send(category, name, Math.round(value));
+				this.event(category, name, roundedValue);
 			}
 		}
 

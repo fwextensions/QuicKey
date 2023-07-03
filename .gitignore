@@ -1,6 +1,7 @@
 /build/build.txt
 /build/rjs
 /build/out
+/build/temp
 /dist
 /node_modules
 /release

@@ -537,24 +537,23 @@ DEBUG && console.log(e);
 		};
 	})
 		.then(() => cp.management.getSelf())
-		.then(info => {
-			const installType = (info.installType == "development") ? "D" : "P";
+		.then(({ version, installType }) => {
+			const isDev = installType == "development";
 			const dimensions = {
-				"dimension1": info.version,
-				"dimension2": installType
+				version,
+				installType: isDev ? "dev" : "prod"
 			};
 
-			if (installType == "D") {
-					// changing a constant at runtime is gross, but here we are
-				k.IsDev = true;
-			}
+				// changing a constant at runtime is gross, but here we are
+			k.IsDev = isDev;
 
+				// set params that will be sent with every event
 			backgroundTracker.set(dimensions);
 			trackers.popup.set(dimensions);
 			trackers.options.set(dimensions);
 
 			backgroundTracker.pageview();
-			backgroundTracker.timing("loading", "background", performance.now());
+			backgroundTracker.timing("loading", "background-loaded", performance.now());
 DEBUG && console.log("=== startup done", performance.now());
 		})
 			// pause the chain to wait for the installed promise to resolve,
