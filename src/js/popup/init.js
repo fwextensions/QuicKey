@@ -1,3 +1,23 @@
+{
+	const params = new URLSearchParams(location.search);
+	const reloadedParam = "reloaded";
+
+	if (typeof chrome.runtime?.connect !== "function") {
+		if (!params.has(reloadedParam)) {
+				// the chrome.runtime API isn't available for some reason, so we
+		  		// want to reload to fix it, but only if we haven't already
+				// reloaded once, so we don't get in a loop
+			const reloadURL = new URL(location.href);
+
+			reloadURL.searchParams.set(reloadedParam, true);
+			history.replaceState(null, null, reloadURL);
+			location.href = reloadURL;
+		}
+	} else if (params.has(reloadedParam)) {
+		chrome.extension.getBackgroundPage().warn("BAD API: Popup reloaded");
+	}
+}
+
 	// connect to the default port so the background page will get the
 	// onDisconnect event when the popup is closed.  do it first thing, in case
 	// the user quickly hits the shortcut again.  pass in a name based on
@@ -13,11 +33,12 @@ let gOnKeyDown;
 	// check lastError to suppress errors showing up in the extensions page
 chrome.runtime.lastError && console.log("Chrome error:", chrome.runtime.lastError);
 
-window.log = chrome.extension.getBackgroundPage().log;
-
-
-(function() {
+{
 	const AllowedPattern = /[-'!"#$%&()\*+,\.\/:;<=>?@\[\\\]\^_`{|}~ \w]/;
+	const background = chrome.extension.getBackgroundPage();
+
+		// make the background console methods available globally
+	["log", "warn", "error"].forEach((method) => window[method] = background[method]);
 
 
 	gOnKeyDown = function(
@@ -56,4 +77,4 @@ window.log = chrome.extension.getBackgroundPage().log;
 		// and instantiates the components. the gKeyCache global will be passed
 		// to the TabSelector as the default query when it loads.
 	document.addEventListener("keydown", gOnKeyDown);
-})();
+}

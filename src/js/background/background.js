@@ -7,6 +7,7 @@ import storage from "@/background/quickey-storage";
 import settings from "@/background/settings";
 import { debounce } from "@/background/debounce";
 import * as k from "@/background/constants";
+import "@/background/log";
 
 
 	// if the popup is opened and closed within this time, switch to the
@@ -561,10 +562,6 @@ DEBUG && console.log(e);
 	restartExtension();
 });
 
-
-window.log = function(...args) {
-	DEBUG && console.log.apply(console, args);
-};
 
 enableCommands();
 
