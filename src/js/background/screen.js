@@ -41,11 +41,6 @@ export function getScreenFromWindow(
 
 		return targetScreen;
 	} else {
-		return {
-			left: screen.availLeft || 0,
-			top: screen.availTop || 0,
-			width: screen.availWidth,
-			height: screen.availHeight
-		};
+		return screens[0];
 	}
 }

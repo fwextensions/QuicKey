@@ -26,7 +26,7 @@ module.exports = {
 			getRecentlyClosed: arrayNoop
 		},
 		commands: {
-			getAll: () => [{ name: "_execute_browser_action" }]
+			getAll: () => [{ name: "_execute_action" }]
 		},
 		storage: {
 			local: {

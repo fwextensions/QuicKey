@@ -8,7 +8,7 @@ const ProtocolPattern = /^((chrome-extension:\/\/[^/]+\/suspended\.html#(?:.*&)?
 const FirefoxToolPattern = /\/mozapps\//;
 const TGSIconPath = "chrome-extension://klbibkeccnjlkjkiokjodocebajanakg/img/";
 const DefaultFaviconPath = "img/default-favicon.svg";
-const FaviconURLPrefix = "chrome://favicon/";
+const FaviconURLPrefix = `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=`;
 
 
 export default function addURLs(

@@ -1,12 +1,11 @@
 {
-	"manifest_version": 2,
+	"manifest_version": 3,
 	"name": "QuicKey DEV",
 	"short_name": "QuicKey DEV",
 	"version": "2.0.0",
 	"description": "Add keyboard shortcuts to switch tabs with a Quicksilver-style search or a most recently used menu",
 	"author": "John Dunning",
-	"content_security_policy": "script-src 'self' 'unsafe-eval' https://www.google-analytics.com; object-src 'self'",
-	"minimum_chrome_version": "65",
+	"minimum_chrome_version": "110",
 	"permissions": [
 		"tabs",
 		"bookmarks",
@@ -14,14 +13,21 @@
 		"storage",
 		"sessions",
 		"system.display",
-		"chrome://favicon/"
+		"favicon"
+	],
+	"web_accessible_resources": [
+		{
+			"resources": ["_favicon/*"],
+			"matches": ["<all_urls>"],
+			"extension_ids": ["*"]
+		}
 	],
 	"icons": {
 		"16": "img/icon-16.png",
 		"48": "img/icon-48.png",
 		"128": "img/icon-128.png"
 	},
-	"browser_action": {
+	"action": {
 		"default_icon": {
 			"19": "img/icon-19.png",
 			"38": "img/icon-38.png"
@@ -30,15 +36,14 @@
 		"default_popup": "popup.html"
 	},
 	"background": {
-		"page": "background.html",
-		"persistent": true
+		"service_worker": "js/background.js"
 	},
 	"options_ui": {
 		"open_in_tab": true,
 		"page": "options.html"
 	},
 	"commands": {
-		"_execute_browser_action": {
+		"_execute_action": {
 			"suggested_key": {
 				"default": "Alt+Q",
 				"mac": "MacCtrl+Q"

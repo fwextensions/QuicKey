@@ -14,12 +14,22 @@ let popupAdjustmentHeight = 0;
 let isVisible = false;
 let isHiddenInTab = false;
 let hideBehavior = Behind;
-let windowID;
-let tabID;
+let { windowID, tabID } = await getPopupID();
 let lastActiveTab;
 
 
 storage.get(data => ({popupAdjustmentWidth, popupAdjustmentHeight} = data));
+
+async function getPopupID()
+{
+	const contexts = await chrome.runtime.getContexts({ contextTypes: ["TAB"] });
+	const [popup] = contexts.filter(({ documentUrl }) => documentUrl.includes("popup.html"));
+
+	return {
+		tabID: popup?.tabId || 0,
+		windowID: popup?.windowId || 0
+	};
+}
 
 
 async function createPopup(
@@ -29,10 +39,6 @@ async function createPopup(
 		type: "popup",
 		focused: true
 	};
-
-	if (!IsFirefox) {
-		defaultOptions.setSelfAsOpener = true;
-	}
 
 	const window = await cp.windows.create({
 		...defaultOptions,
@@ -383,7 +389,7 @@ export default shared("popupWindow", () => ({
 	},
 
 	get isOpen() {
-		return chrome.extension.getViews({ tabId: tabID }).length > 0;
+		throw new Error("popupWindow.isOpen: Not implemented");
 	},
 
 	get isVisible() {
