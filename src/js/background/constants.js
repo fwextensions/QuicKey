@@ -36,7 +36,7 @@ export const PopupInnerHeight = 488;
 export const PopupPadding = 50;
 export const ResultsListRowHeight = 45;
 export const CommandIDs = {
-	OpenMenuCommand: "_execute_browser_action",
+	OpenMenuCommand: "_execute_action",
 	OpenPopupCommand: "010-open-popup-window",
 	FocusPopupCommand: "020-focus-search",
 	PreviousTabCommand: "1-previous-tab",

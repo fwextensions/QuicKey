@@ -20,7 +20,7 @@ module.exports = (env, argv) => {
 	const mode = ifProduction("production", "development");
 	const baseConfig = {
 		mode,
-		devtool: ifProduction(false, "eval-source-map"),
+		devtool: ifProduction(false, "source-map"),
 		resolve: {
 			alias: {
 				"@": resolve(__dirname, "src/js"),
@@ -67,8 +67,8 @@ module.exports = (env, argv) => {
 		// version will be output below.
 	manifest.name = FullName;
 	manifest.short_name = ShortName;
-	manifest.browser_action.default_title = ShortName;
-	manifest.content_security_policy = manifest.content_security_policy.replace(" 'unsafe-eval'", "");
+	manifest.action.default_title = ShortName;
+//	manifest.content_security_policy = manifest.content_security_policy.replace(" 'unsafe-eval'", "");
 
 	console.log(`Build mode: ${mode} ${ifBuildPopup("buildPopup", "")} (${buildTime})`);
 
@@ -120,9 +120,10 @@ module.exports = (env, argv) => {
 				})),
 			]),
 			optimization: {
-				splitChunks: {
-					chunks: "all",
-				},
+//				splitChunks: {
+//					chunks: "all",
+//				},
+				minimize: ifProduction(true, false),
 			},
 			output
 		},

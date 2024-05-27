@@ -2,13 +2,14 @@ import cp from "cp";
 import popupWindow from "@/background/popup-window";
 import toolbarIcon from "@/background/toolbar-icon";
 import recentTabs from "@/background/recent-tabs";
-import trackers from "@/background/page-trackers";
+//import trackers from "@/background/page-trackers";
 import storage from "@/background/quickey-storage";
 import settings from "@/background/settings";
 import { debounce } from "@/background/debounce";
 import * as k from "@/background/constants";
 import "@/background/log";
 
+globalThis.DEBUG = true;
 
 	// if the popup is opened and closed within this time, switch to the
 	// previous tab
@@ -23,7 +24,13 @@ const {
 	ToggleTabsCommand,
 	FocusPopupCommand
 } = k.CommandIDs;
-const tracker = trackers.background;
+const tracker = {
+	exception() {},
+	event() {},
+	pageview() {},
+	timing() {}
+};
+//const tracker = trackers.background;
 const MessageHandlers = {
 	focusTab: ({tab: {id, windowId}, options = {}, stopNavigatingRecents}) => {
 		if (stopNavigatingRecents) {
@@ -146,6 +153,7 @@ function handleTabActivated({
 		// by a window in another profile, in which case we can't access any
 		// info about the tabs there.
 	if (Number.isInteger(tabId) && windowId !== popupWindow.id && !navigatingRecents) {
+// TODO: popupWindow.id will be 0.  have to get it from getContexts().
 		addTab(tabId);
 
 		if (ports.popup) {
@@ -216,7 +224,8 @@ async function openPopupWindow(
 		lastFocusedWindow: true
 	});
 
-	if (!popupWindow.isOpen || !ports.popup) {
+	if (!ports.popup) {
+//	if (!popupWindow.isOpen || !ports.popup) {
 			// the popup window isn't open, so create a new one.  tell it whether
 			// to focus the search box or navigate recents.
 		await popupWindow.create(
@@ -271,7 +280,8 @@ async function navigateRecents(
 			if (direction == -1 || popupWindow.isVisible) {
 				navigatingRecents = true;
 
-				if (!popupWindow.isOpen || !ports.popup) {
+				if (!ports.popup) {
+//				if (!popupWindow.isOpen || !ports.popup) {
 						// execute any pending tab activation event so the recents
 						// list is up-to-date before we start navigating
 					await addTab.execute();
@@ -469,9 +479,9 @@ chrome.runtime.onConnect.addListener(port => {
 		activeTab = null;
 
 		if (port.name == "popup") {
-			if (popupWindow.isOpen) {
+//			if (popupWindow.isOpen) {
 				popupWindow.close();
-			}
+//			}
 		} else {
 			enableCommands();
 		}
@@ -617,7 +627,7 @@ DEBUG && console.log("=== startup done", performance.now());
 				// language set to Chinese or who have open tabs with
 				// Chinese characters
 			chrome.tabs.create({
-				url: chrome.extension.getURL("options.html?pinyin")
+				url: chrome.runtime.getURL("options.html?pinyin")
 			});
 			tracker.event("extension", "open-options");
 		}

@@ -35,10 +35,9 @@ chrome.runtime.lastError && console.log("Chrome error:", chrome.runtime.lastErro
 
 {
 	const AllowedPattern = /[-'!"#$%&()\*+,\.\/:;<=>?@\[\\\]\^_`{|}~ \w]/;
-	const background = chrome.extension.getBackgroundPage();
 
-		// make the background console methods available globally
-	["log", "warn", "error"].forEach((method) => window[method] = background[method]);
+		// point these globals at the popup's console, not the background page's
+	["log", "warn", "error"].forEach((method) => window[method] = console[method]);
 
 
 	gOnKeyDown = function(

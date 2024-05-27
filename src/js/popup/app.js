@@ -1086,7 +1086,7 @@ export default class App extends React.Component {
 
     onOptionsClick = async () =>
 	{
-		const url = chrome.extension.getURL("options.html");
+		const url = chrome.runtime.getURL("options.html");
 		const [tab] = await cp.tabs.query({ url });
 		let optionsTab;
 

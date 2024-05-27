@@ -32,7 +32,7 @@ function addChromeShortcuts(
 					...result,
 					[info.id]: info
 				}), {});
-			const menuShortcut = chromeShortcuts.find(({id}) => id == "_execute_browser_action").shortcut || "";
+			const menuShortcut = chromeShortcuts.find(({id}) => id == "_execute_action").shortcut || "";
 			const {baseKey, modifiers} = getKeysFromShortcut(menuShortcut);
 
 			settings.chrome = {

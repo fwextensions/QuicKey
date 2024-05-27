@@ -49,8 +49,9 @@ let inversionTimer;
 function getIconsAndBadgeColor(
 	inverted)
 {
-	const osMode = matchMedia("(prefers-color-scheme: dark)").matches ?
-		"dark" : "light";
+	const osMode = "light";
+//	const osMode = matchMedia("(prefers-color-scheme: dark)").matches ?
+//		"dark" : "light";
 	const iconMode = inverted ? "inverted" : "normal";
 	const paths = IconPaths[osMode][iconMode];
 	const color = BadgeColors[osMode][iconMode];
