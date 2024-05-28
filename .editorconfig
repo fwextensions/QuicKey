@@ -4,3 +4,6 @@ root = true
 charset = utf-8
 indent_style = tab
 indent_size = 4
+
+[*.{yml,yaml,md,mdx,json}]
+indent_style = space

@@ -22,7 +22,6 @@ if (gClose) {
 }
 
 DEBUG && console.log("=== popup startup time", now - gInitTime, now);
-window.log && log("=== popup startup time", now - gInitTime, now);
 
 if (tracker) {
 		// send a pageview event after a delay, in case the user is toggling
