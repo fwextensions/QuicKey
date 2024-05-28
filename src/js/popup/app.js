@@ -1150,6 +1150,7 @@ export default class App extends React.Component {
 				if (!this.navigatingRecents) {
 						// loadTabs() calls loadPromisedItems() with a forced
 						// reload, so it'll trigger a render with the new items
+console.log("==== calling loadTabs from tabActivated");
 					this.loadTabs();
 				}
 				break;

@@ -1,3 +1,4 @@
+import { deepEqual } from "fast-equals";
 import cp from "cp";
 import Mutex from "./mutex";
 import trackers from "./page-trackers";
@@ -22,6 +23,19 @@ function returnData(
 }
 
 
+function isNewDataEqual(
+	newData,
+	data)
+{
+		// newData and data should normally be non-null, but check just in case
+	if (typeof newData === "object" && typeof data === "object" && newData && data) {
+		return Object.keys(newData).every((key) => deepEqual(newData[key], data[key]));
+	}
+
+	return false;
+}
+
+
 export default function createStorage({
 	version = 1,
 	getDefaultData = emptyDefaultData,
@@ -29,18 +43,25 @@ export default function createStorage({
 	updaters = {} })
 {
 	const storageMutex = new Mutex(Promise);
-	const lastSavedFrom = globalThis.location.pathname;
+	const storageLocation = globalThis.location.pathname;
 	let dataPromise = initialize();
+	let lastSavedFrom;
 
 
 	chrome.storage.onChanged.addListener((changes, area) => {
 		const changedLocation = changes?.lastSavedFrom?.newValue;
 
-		if (area === "local" && changedLocation && changedLocation !== lastSavedFrom) {
+		if (area === "local" && (changedLocation || lastSavedFrom) !== storageLocation) {
 				// this storage has been updated from a different thread, so set
 				// the dataPromise to null so that the next call to getAll() will
 				// reload the storage and pick up the latest data
 			dataPromise = null;
+console.log("==== storage.onChanged", changedLocation || lastSavedFrom, storageLocation, dataPromise, changes);
+// TODO: instead of nulling the dataPromise, save the new data to our cache.
+//  or just always create a new resolved promise with the new data, regardless of
+//  what the lastSavedFrom is.  don't even need to track that then, or create a
+//  new promise in save(), though there's enough of a delay in getting onChanged
+//  that we may still want to update in save().
 		}
 	});
 
@@ -52,7 +73,9 @@ const t = performance.now();
 			// pass null to get everything in storage
 		return cp.storage.local.get(null)
 			.then(storage => {
-console.log(`--- INITIALIZE ${lastSavedFrom}: loaded storage in`, performance.now() - t, "ms");
+console.log(`--- INITIALIZE ${storageLocation}: loaded storage in`, performance.now() - t, "ms");
+				lastSavedFrom = storage?.lastSavedFrom;
+
 				if (!storage || !storage.data) {
 						// this is likely a new install, so reset the storage
 						// to the default.  we need to do this without locking
@@ -71,18 +94,18 @@ console.log(`--- INITIALIZE ${lastSavedFrom}: loaded storage in`, performance.no
 
 	function getAll()
 	{
-		if (dataPromise) {
-			return dataPromise;
-		}
-
+		if (!dataPromise) {
 const t = performance.now();
+				// pass null to get everything in storage, since the cache is empty
+			dataPromise = cp.storage.local.get(null)
+				.then(storage => {
+console.log(`--- ${storageLocation}: loaded storage in`, performance.now() - t, "ms");
 
-			// pass null to get everything in storage
-		dataPromise = cp.storage.local.get(null)
-			.then(storage => {
-console.log(`--- ${lastSavedFrom}: loaded storage in`, performance.now() - t, "ms");
-				return storage.data;
-			});
+					lastSavedFrom = storage.lastSavedFrom;
+
+					return storage.data;
+				});
+		}
 
 		return dataPromise;
 	}
@@ -134,16 +157,25 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 	function saveWithVersion(
 		data)
 	{
-		return cp.storage.local.set({ version, data, lastSavedFrom })
-			.then(() => data);
+		dataPromise = Promise.resolve(data);
+		lastSavedFrom = storageLocation;
+
+		return cp.storage.local.set({ version, data, lastSavedFrom: storageLocation })
+			.then(() => structuredClone(data));
 	}
 
 
 	function save(
 		data)
 	{
-		return cp.storage.local.set({ data, lastSavedFrom })
-			.then(() => data);
+			// point our cache promise to the new data
+		dataPromise = Promise.resolve(data);
+		lastSavedFrom = storageLocation;
+
+		return cp.storage.local.set({ data, lastSavedFrom: storageLocation })
+				// return a clone of the changed data so that whatever's next in
+				// the chain can use it without affecting the cache
+			.then(() => structuredClone(data));
 	}
 
 
@@ -167,9 +199,15 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 		saveResult)
 	{
 		return storageMutex.lock(() => getAll()
-			.then(data => Promise.resolve(task.call(thisArg, data))
+				// we have to clone the data before passing it to the task function,
+				// so that any changes it makes to the data won't be reflected in
+				// the cached storage.  when can then compare newData to what's
+				// in the cache and only call save() if it actually changed.  by
+				// only saving when there's an actual change, we don't have to
+				// bust the cache in the other thread unnecessarily.
+			.then(data => Promise.resolve(task.call(thisArg, structuredClone(data)))
 				.then(newData => {
-					if (saveResult && newData) {
+					if (saveResult && newData && !isNewDataEqual(newData, data)) {
 							// since all the values are stored on the .data
 							// key of the storage instead of at the topmost
 							// level, we need to update that object with the
@@ -177,10 +215,11 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 							// otherwise, we'd lose any values that weren't
 							// changed and returned by the task function.
 						Object.assign(data, newData);
-console.log("==== SAVE", lastSavedFrom, newData);
+console.log("==== SAVE", storageLocation, newData);
 
 						return save(data);
 					} else {
+//isNewDataEqual(newData, data) && console.log("==== NO CHANGE", storageLocation, newData, data);
 						return newData;
 					}
 				})));
