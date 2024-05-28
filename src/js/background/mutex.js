@@ -1,9 +1,9 @@
 function Mutex(
-	promiseConstructor)
+	promiseConstructor = Promise)
 {
 	this._locked = false;
 	this._queue = [];
-	this._promiseConstructor = promiseConstructor || Promise;
+	this._promiseConstructor = promiseConstructor;
 }
 
 
@@ -23,7 +23,7 @@ Object.assign(Mutex.prototype, {
 
 	_dequeue: function()
 	{
-		var next = this._queue.shift();
+		const next = this._queue.shift();
 
 		if (next) {
 			this._locked = true;
@@ -37,9 +37,7 @@ Object.assign(Mutex.prototype, {
 	_execute: function(
 		record)
 	{
-		var task = record[0],
-			resolve = record[1],
-			reject = record[2];
+		const [task, resolve, reject] = record;
 
 		task().then(resolve, reject).then(function() {
 			this._dequeue();

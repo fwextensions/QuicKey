@@ -140,8 +140,7 @@ const handleTabRemoved = debounce(
 
 
 function handleTabActivated({
-	tabId,
-	windowId})
+	tabId})
 {
 		// don't add the popup window to the recent tabs.  even though
 		// recentTabs.add() will ignore the popup window, we don't want to
@@ -163,7 +162,7 @@ function handleTabActivated({
 					// reactivated after the popup was hidden, so we don't
 					// need to tell the popup to re-render in that case
 				if (tabId !== tabIDs.slice(-1)[0]) {
-//console.log("--- sending tabActivated", tabId, "old", tabIDs.slice(-1)[0]);
+console.log("--- sending tabActivated", tabId, "old", tabIDs.slice(-1)[0]);
 					sendPopupMessage("tabActivated");
 				} else {
 //console.log("--- NOT sending tabActivated");
