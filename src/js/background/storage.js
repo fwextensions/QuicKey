@@ -29,14 +29,30 @@ export default function createStorage({
 	updaters = {} })
 {
 	const storageMutex = new Mutex(Promise);
-	let dataPromise = getAll();
+	const lastSavedFrom = globalThis.location.pathname;
+	let dataPromise = initialize();
 
 
-	function getAll()
+	chrome.storage.onChanged.addListener((changes, area) => {
+		const changedLocation = changes?.lastSavedFrom?.newValue;
+
+		if (area === "local" && changedLocation && changedLocation !== lastSavedFrom) {
+				// this storage has been updated from a different thread, so set
+				// the dataPromise to null so that the next call to getAll() will
+				// reload the storage and pick up the latest data
+			dataPromise = null;
+		}
+	});
+
+
+	function initialize()
 	{
+const t = performance.now();
+
 			// pass null to get everything in storage
 		return cp.storage.local.get(null)
 			.then(storage => {
+console.log(`--- INITIALIZE ${lastSavedFrom}: loaded storage in`, performance.now() - t, "ms");
 				if (!storage || !storage.data) {
 						// this is likely a new install, so reset the storage
 						// to the default.  we need to do this without locking
@@ -50,6 +66,25 @@ export default function createStorage({
 					return update(storage);
 				}
 			});
+	}
+
+
+	function getAll()
+	{
+		if (dataPromise) {
+			return dataPromise;
+		}
+
+const t = performance.now();
+
+			// pass null to get everything in storage
+		dataPromise = cp.storage.local.get(null)
+			.then(storage => {
+console.log(`--- ${lastSavedFrom}: loaded storage in`, performance.now() - t, "ms");
+				return storage.data;
+			});
+
+		return dataPromise;
 	}
 
 
@@ -99,7 +134,7 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 	function saveWithVersion(
 		data)
 	{
-		return cp.storage.local.set({ version, data })
+		return cp.storage.local.set({ version, data, lastSavedFrom })
 			.then(() => data);
 	}
 
@@ -107,7 +142,7 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 	function save(
 		data)
 	{
-		return cp.storage.local.set({ data })
+		return cp.storage.local.set({ data, lastSavedFrom })
 			.then(() => data);
 	}
 
@@ -131,7 +166,7 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 		thisArg,
 		saveResult)
 	{
-		return storageMutex.lock(() => dataPromise
+		return storageMutex.lock(() => getAll()
 			.then(data => Promise.resolve(task.call(thisArg, data))
 				.then(newData => {
 					if (saveResult && newData) {
@@ -142,6 +177,7 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 							// otherwise, we'd lose any values that weren't
 							// changed and returned by the task function.
 						Object.assign(data, newData);
+console.log("==== SAVE", lastSavedFrom, newData);
 
 						return save(data);
 					} else {

@@ -86,37 +86,37 @@ function notEqual(
 
 
 export default class App extends React.Component {
-    visible = false;
-    mode = "tabs";
-    tabsPromise = null;
-    bookmarksPromise = null;
-    historyPromise = null;
-    forceUpdate = false;
-    selectAllSearchBoxText = false;
-    openedForSearch = false;
-    ignoreNextBlur = false;
+	visible = false;
+	mode = "tabs";
+	tabsPromise = null;
+	bookmarksPromise = null;
+	historyPromise = null;
+	forceUpdate = false;
+	selectAllSearchBoxText = false;
+	openedForSearch = false;
+	ignoreNextBlur = false;
 	ignoreNextResize = false;
-    navigatingRecents = false;
-    gotModifierUp = false;
-    gotMRUKey = false;
-    mruModifier = "Alt";
-    resultsList = null;
-    searchBox = null;
+	navigatingRecents = false;
+	gotModifierUp = false;
+	gotMRUKey = false;
+	mruModifier = "Alt";
+	resultsList = null;
+	searchBox = null;
 	settings = null;
-    settingsPromise = null;
-    className = "";
+	settingsPromise = null;
+	className = "";
 	popupTabID = -1;
 	popupW = 0;
 	popupH = 0;
 
 
-    constructor(props, context)
+	constructor(props, context)
 	{
-        super(props, context);
+		super(props, context);
 
-        const query = props.initialQuery;
+		const query = props.initialQuery;
 
-        this.openedForSearch = props.focusSearch;
+		this.openedForSearch = props.focusSearch;
 		this.navigatingRecents = props.navigatingRecents;
 		this.tabs = [];
 		this.bookmarks = [];
@@ -126,13 +126,13 @@ export default class App extends React.Component {
 			// when a / is typed and the mode is "command"
 		this.command = [];
 		this.settings = settings.getDefaults();
-        this.settingsPromise = this.updateSettings();
+		this.settingsPromise = this.updateSettings();
 			// we're saving the initial value of this prop instead of
 			// getting it every time in render, which is normally bad, but
 			// the platform will never change during the life of the app
 		this.className = this.props.platform + (k.IsFirefox ? " firefox" : "");
 
-        if (props.isPopup) {
+		if (props.isPopup) {
 				// in showWindow() we set gotMRUKey based on whether the popup
 				// is being opened for search as well, but showWindow() isn't
 				// called in the flow when the popup is opened the first time.
@@ -145,7 +145,7 @@ export default class App extends React.Component {
 				.then(({id}) => this.popupTabID = id);
 		}
 
-        this.state = {
+		this.state = {
 			query,
 			searchBoxText: query,
 			matchingItems: [],
@@ -154,10 +154,10 @@ export default class App extends React.Component {
 			selected: (query || !this.openedForSearch || this.navigatingRecents) ? 0 : -1,
 			newSettingsAvailable: false
 		};
-    }
+	}
 
 
-    componentDidMount()
+	componentDidMount()
 	{
 		this.loadTabs()
 			.then(tabs => {
@@ -235,7 +235,7 @@ export default class App extends React.Component {
 	}
 
 
-    componentDidUpdate()
+	componentDidUpdate()
 	{
 			// we only want these flags to be true through one render cycle
 		this.forceUpdate = false;
@@ -346,7 +346,7 @@ export default class App extends React.Component {
 	};
 
 
-    setSearchBoxText(
+	setSearchBoxText(
 		searchBoxText)
 	{
 		const showBookmarkPaths = this.settings[k.ShowBookmarkPaths.Key];
@@ -495,7 +495,7 @@ export default class App extends React.Component {
 	}
 
 
-    openItem = async (
+	openItem = async (
 		item,
 		shiftKey,
 		modKey) =>
@@ -550,7 +550,7 @@ export default class App extends React.Component {
 	};
 
 
-    async focusTab (
+	async focusTab (
 		tab,
 		unsuspend,
 		stopNavigatingRecents)
@@ -581,7 +581,7 @@ export default class App extends React.Component {
 
 		// although this method also deletes bookmarks/history items, keep
 		// the closeTab name since that's the name of the shortcut setting
-    closeTab = (
+	closeTab = (
 		item) =>
 	{
 		const {query} = this.state;
@@ -654,7 +654,7 @@ export default class App extends React.Component {
 	};
 
 
-    moveTab(
+	moveTab(
 		tab,
 		direction,
 		unsuspend)
@@ -725,7 +725,7 @@ export default class App extends React.Component {
 	}
 
 
-    copyItemURL(
+	copyItemURL(
 		item,
 		includeTitle)
 	{
@@ -738,7 +738,7 @@ export default class App extends React.Component {
 	}
 
 
-    modifySelected(
+	modifySelected(
 		delta,
 		mruKey)
 	{
@@ -748,7 +748,7 @@ export default class App extends React.Component {
 	}
 
 
-    setSelectedIndex = (
+	setSelectedIndex = (
 		index,
 		mruKey) =>
 	{
@@ -775,7 +775,7 @@ export default class App extends React.Component {
 	};
 
 
-    getActiveTab(
+	getActiveTab(
 		blurred = false)
 	{
 		if (!this.props.isPopup || blurred) {
@@ -789,7 +789,7 @@ export default class App extends React.Component {
 	}
 
 
-    async updateSettings()
+	async updateSettings()
 	{
 		const data = await storage.get();
 
@@ -851,7 +851,7 @@ export default class App extends React.Component {
 	}
 
 
-    async showWindow({
+	async showWindow({
 		focusSearch,
 		activeTab})
 	{
@@ -891,7 +891,7 @@ export default class App extends React.Component {
 	}
 
 
-    closeWindow(
+	closeWindow(
 		closedByEsc,
 		focusedTabOrWindow)
 	{
@@ -946,7 +946,7 @@ export default class App extends React.Component {
 	}
 
 
-    reopenWindow()
+	reopenWindow()
 	{
 			// ignore the blur event triggered by closing the popup
 		this.ignoreNextBlur = true;
@@ -954,14 +954,14 @@ export default class App extends React.Component {
 	}
 
 
-    showPopupWindow(
+	showPopupWindow(
 		activeTab)
 	{
 		return popupWindow.show(activeTab, activeTab ? "center-center" : "right-center");
 	}
 
 
-    async blurPopupWindow()
+	async blurPopupWindow()
 	{
 		if (this.props.isPopup
 				&& this.settings[k.HidePopupBehavior.Key] !== k.HidePopupBehavior.Minimize) {
@@ -978,7 +978,7 @@ export default class App extends React.Component {
 	}
 
 
-    sendMessage(
+	sendMessage(
 		message,
 		payload = {},
 		awaitResponse = true)
@@ -1006,7 +1006,7 @@ export default class App extends React.Component {
 	handleSearchBoxRef = handleRef("searchBox", this);
 
 
-    onTabRemoved = (
+	onTabRemoved = (
 		tabID) =>
 	{
 		const {selected} = this.state;
@@ -1029,14 +1029,14 @@ export default class App extends React.Component {
 	};
 
 
-    onQueryChange = (
+	onQueryChange = (
 		event) =>
 	{
 		this.setSearchBoxText(event.target.value);
 	};
 
 
-    onKeyDown = (
+	onKeyDown = (
 		event) =>
 	{
 			// reset this on every keyDown so we know if the user had typed
@@ -1049,7 +1049,7 @@ export default class App extends React.Component {
 	};
 
 
-    onKeyUp = async (
+	onKeyUp = async (
 		event) =>
 	{
 		if (event.key == this.mruModifier) {
@@ -1084,7 +1084,7 @@ export default class App extends React.Component {
 	};
 
 
-    onOptionsClick = async () =>
+	onOptionsClick = async () =>
 	{
 		const url = chrome.runtime.getURL("options.html");
 		const [tab] = await cp.tabs.query({ url });
@@ -1108,7 +1108,7 @@ export default class App extends React.Component {
 	};
 
 
-    onMessage = async ({
+	onMessage = async ({
 		message,
 		...payload}) =>
 	{
@@ -1170,7 +1170,7 @@ export default class App extends React.Component {
 	};
 
 
-    onWindowBlur = async () =>
+	onWindowBlur = async () =>
 	{
 		if (!this.ignoreNextBlur && !this.navigatingRecents) {
 				// only call this if we're losing focus because the user
@@ -1210,7 +1210,7 @@ export default class App extends React.Component {
 	}, 250);
 
 
-    render()
+	render()
 	{
 		const {
 			query,

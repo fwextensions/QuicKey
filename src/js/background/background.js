@@ -10,6 +10,7 @@ import * as k from "@/background/constants";
 import "@/background/log";
 
 globalThis.DEBUG = true;
+globalThis.printTabs = recentTabs.print;
 
 	// if the popup is opened and closed within this time, switch to the
 	// previous tab
@@ -152,8 +153,7 @@ function handleTabActivated({
 		// valid, since we may be getting called from an event that was triggered
 		// by a window in another profile, in which case we can't access any
 		// info about the tabs there.
-	if (Number.isInteger(tabId) && windowId !== popupWindow.id && !navigatingRecents) {
-// TODO: popupWindow.id will be 0.  have to get it from getContexts().
+	if (Number.isInteger(tabId) && tabId !== popupWindow.tabID && !navigatingRecents) {
 		addTab(tabId);
 
 		if (ports.popup) {
