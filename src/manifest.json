@@ -5,7 +5,7 @@
 	"version": "2.0.0",
 	"description": "Add keyboard shortcuts to switch tabs with a Quicksilver-style search or a most recently used menu",
 	"author": "John Dunning",
-	"minimum_chrome_version": "110",
+	"minimum_chrome_version": "115",
 	"permissions": [
 		"tabs",
 		"bookmarks",
@@ -36,7 +36,8 @@
 		"default_popup": "popup.html"
 	},
 	"background": {
-		"service_worker": "js/background.js"
+		"service_worker": "js/background.js",
+		"type": "module"
 	},
 	"options_ui": {
 		"open_in_tab": true,

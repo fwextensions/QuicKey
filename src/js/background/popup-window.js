@@ -388,6 +388,10 @@ export default shared("popupWindow", () => ({
 		return windowID;
 	},
 
+	get tabID() {
+		return tabID;
+	},
+
 	get isOpen() {
 		throw new Error("popupWindow.isOpen: Not implemented");
 	},

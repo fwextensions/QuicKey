@@ -271,6 +271,8 @@ DEBUG && console.log("tab replaced", oldID, "index", index, getRecentStackString
 function getAll(
 	includeClosedTabs)
 {
+const t = performance.now();
+
 	return storage.get(data => {
 		return Promise.all([
 			cp.tabs.query({}),
@@ -355,6 +357,7 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 					// returned, to make the recents menu render faster.
 				storage.set(() => newData);
 
+console.log("getAll took", performance.now() - t, "ms");
 				return tabs;
 			});
 	});
