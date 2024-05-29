@@ -42,26 +42,20 @@ export default function createStorage({
 	validateUpdate = alwaysValidate,
 	updaters = {} })
 {
-	const storageMutex = new Mutex(Promise);
+	const storageMutex = new Mutex();
 	const storageLocation = globalThis.location.pathname;
 	let dataPromise = initialize();
 	let lastSavedFrom;
 
 
 	chrome.storage.onChanged.addListener((changes, area) => {
-		const changedLocation = changes?.lastSavedFrom?.newValue;
+		const changedData = changes?.data?.newValue;
+//		const changedLocation = changes?.lastSavedFrom?.newValue;
 
-		if (area === "local" && (changedLocation || lastSavedFrom) !== storageLocation) {
-				// this storage has been updated from a different thread, so set
-				// the dataPromise to null so that the next call to getAll() will
-				// reload the storage and pick up the latest data
-			dataPromise = null;
-console.log("==== storage.onChanged", changedLocation || lastSavedFrom, storageLocation, dataPromise, changes);
-// TODO: instead of nulling the dataPromise, save the new data to our cache.
-//  or just always create a new resolved promise with the new data, regardless of
-//  what the lastSavedFrom is.  don't even need to track that then, or create a
-//  new promise in save(), though there's enough of a delay in getting onChanged
-//  that we may still want to update in save().
+		if (area === "local" && changedData) {
+			dataPromise = Promise.resolve(changedData);
+//console.log("==== storage.onChanged", changedLocation, storageLocation, dataPromise, changes);
+//			lastSavedFrom = storageLocation;
 		}
 	});
 
