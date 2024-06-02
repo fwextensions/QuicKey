@@ -1,27 +1,23 @@
-function Mutex(
-	promiseConstructor = Promise)
-{
-	this._locked = false;
-	this._queue = [];
-	this._promiseConstructor = promiseConstructor;
-}
+export default class Mutex {
+	constructor()
+	{
+		this._queue = [];
+		this._locked = false;
+	}
 
-
-Object.assign(Mutex.prototype, {
-	lock: function(
+	lock(
 		task)
 	{
-		return new this._promiseConstructor(function(resolve, reject) {
+		return new Promise((resolve, reject) => {
 			this._queue.push([task, resolve, reject]);
 
 			if (!this._locked) {
 				this._dequeue();
 			}
-		}.bind(this));
-	},
+		});
+	}
 
-
-	_dequeue: function()
+	_dequeue()
 	{
 		const next = this._queue.shift();
 
@@ -31,19 +27,15 @@ Object.assign(Mutex.prototype, {
 		} else {
 			this._locked = false;
 		}
-	},
+	}
 
-
-	_execute: function(
+	_execute(
 		record)
 	{
 		const [task, resolve, reject] = record;
 
-		task().then(resolve, reject).then(function() {
-			this._dequeue();
-		}.bind(this));
+		Promise.resolve(task())
+			.then(resolve, reject)
+			.finally(() => this._dequeue());
 	}
-});
-
-
-export default Mutex;
+}

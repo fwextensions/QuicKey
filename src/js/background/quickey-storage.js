@@ -2,12 +2,19 @@ import cp from "cp";
 import shared from "@/lib/shared";
 import objectsHaveSameKeys from "@/lib/objects-have-same-keys";
 import decode from "@/lib/decode";
-import createStorage from "./storage";
+import {createStorageClient, default as createStorage} from "./storage";
 import getDefaultSettings from "./get-default-settings";
 import * as k from "./constants";
 
 
 export default shared("quickeyStorage", () => {
+	if (globalThis.location.pathname.includes("popup.html")) {
+			// create a client that exchanges messages with the service worker
+			// to get/set the storage data
+		return createStorageClient();
+	}
+
+
 	function increment(
 		value)
 	{

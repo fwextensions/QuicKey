@@ -4,6 +4,22 @@ import Mutex from "./mutex";
 import trackers from "./page-trackers";
 
 
+if (typeof Promise.withResolvers === "undefined") {
+	Promise.withResolvers = function() {
+		let resolve, reject;
+		const promise = new Promise((res, rej) => {
+			resolve = res;
+			reject = rej;
+		});
+
+		return { promise, resolve, reject };
+	};
+}
+
+
+const StoragePrefix = "storage:";
+
+
 function emptyDefaultData()
 {
 	return Promise.resolve({});
@@ -19,17 +35,17 @@ function alwaysValidate()
 function returnData(
 	data)
 {
-	return data;
+	return Promise.resolve(data);
 }
 
 
-function isNewDataEqual(
+function isNewDataDifferent(
 	newData,
 	data)
 {
 		// newData and data should normally be non-null, but check just in case
 	if (typeof newData === "object" && typeof data === "object" && newData && data) {
-		return Object.keys(newData).every((key) => deepEqual(newData[key], data[key]));
+		return !Object.keys(newData).every((key) => deepEqual(newData[key], data[key]));
 	}
 
 	return false;
@@ -44,18 +60,63 @@ export default function createStorage({
 {
 	const storageMutex = new Mutex();
 	const storageLocation = globalThis.location.pathname;
+	const promisesByID = new Map();
 	let dataPromise = initialize();
 	let lastSavedFrom;
 
 
+	chrome.runtime.onMessage.addListener(({message, payload, id}, sender, sendResponse) => {
+		if (!message.startsWith(StoragePrefix)) {
+			return;
+		}
+
+		const method = message.slice(StoragePrefix.length);
+		let asyncResponse = true;
+
+		if (method === "get" || method === "set") {
+			const responsePromise = Promise.withResolvers();
+			const methodFunc = method === "get" ? get : set;
+
+			promisesByID.set(id, responsePromise);
+			methodFunc((data) => {
+//console.log("-------", method, "about to sendResponse", id, data);
+				sendResponse(data);
+// TODO: maybe return Promise.all([data, responsePromise.promise]) so that the full data is sent back
+//  when the done message comes in
+
+				return responsePromise.promise;
+			});
+		} else if (method === "done") {
+			const responsePromise = promisesByID.get(id);
+
+			if (responsePromise) {
+//console.log("------- DONE about to resolve promise", id, "remaining", promisesByID.size);
+				responsePromise.promise.then((data) => {
+					sendResponse(data);
+				});
+				responsePromise.resolve(payload);
+				promisesByID.delete(id);
+			} else {
+				console.error("storage received unknown ID", id, message, payload);
+				asyncResponse = false;
+			}
+		} else {
+			console.error("storage received unknown message", message, id, payload);
+			asyncResponse = false;
+		}
+
+		return asyncResponse;
+	});
+
+
 	chrome.storage.onChanged.addListener((changes, area) => {
 		const changedData = changes?.data?.newValue;
-//		const changedLocation = changes?.lastSavedFrom?.newValue;
+		const changedLocation = changes?.lastSavedFrom?.newValue;
 
-		if (area === "local" && changedData) {
+		if (area === "local" && changedData && (changedLocation || lastSavedFrom) !== storageLocation) {
 			dataPromise = Promise.resolve(changedData);
-//console.log("==== storage.onChanged", changedLocation, storageLocation, dataPromise, changes);
-//			lastSavedFrom = storageLocation;
+console.log("==== storage.onChanged in", changedLocation, storageLocation, dataPromise, changes);
+			lastSavedFrom = changedLocation || lastSavedFrom;
 		}
 	});
 
@@ -88,18 +149,16 @@ console.log(`--- INITIALIZE ${storageLocation}: loaded storage in`, performance.
 
 	function getAll()
 	{
-		if (!dataPromise) {
 const t = performance.now();
-				// pass null to get everything in storage, since the cache is empty
-			dataPromise = cp.storage.local.get(null)
-				.then(storage => {
+			// pass null to get everything in storage, since the cache is empty
+		dataPromise = cp.storage.local.get(null)
+			.then(storage => {
 console.log(`--- ${storageLocation}: loaded storage in`, performance.now() - t, "ms");
 
-					lastSavedFrom = storage.lastSavedFrom;
+				lastSavedFrom = storage.lastSavedFrom;
 
-					return storage.data;
-				});
-		}
+				return storage.data;
+			});
 
 		return dataPromise;
 	}
@@ -192,7 +251,7 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 		thisArg,
 		saveResult)
 	{
-		return storageMutex.lock(() => getAll()
+		return storageMutex.lock(() => (saveResult ? getAll() : dataPromise)
 				// we have to clone the data before passing it to the task function,
 				// so that any changes it makes to the data won't be reflected in
 				// the cached storage.  when can then compare newData to what's
@@ -201,7 +260,7 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 				// bust the cache in the other thread unnecessarily.
 			.then(data => Promise.resolve(task.call(thisArg, structuredClone(data)))
 				.then(newData => {
-					if (saveResult && newData && !isNewDataEqual(newData, data)) {
+					if (saveResult && newData && isNewDataDifferent(newData, data)) {
 							// since all the values are stored on the .data
 							// key of the storage instead of at the topmost
 							// level, we need to update that object with the
@@ -213,7 +272,6 @@ console.log("==== SAVE", storageLocation, newData);
 
 						return save(data);
 					} else {
-//isNewDataEqual(newData, data) && console.log("==== NO CHANGE", storageLocation, newData, data);
 						return newData;
 					}
 				})));
@@ -250,5 +308,58 @@ console.log("==== SAVE", storageLocation, newData);
 		get,
 		set,
 		reset
+	};
+}
+
+
+export function createStorageClient()
+{
+	let currentTaskID = 0;
+
+
+	function promisedResponse(
+		message,
+		id,
+		payload)
+	{
+		const body = {
+			message: `${StoragePrefix}${message}`,
+			id,
+			payload,
+		};
+
+		return new Promise(resolve => chrome.runtime.sendMessage(body, resolve));
+	}
+
+
+	async function doTask(
+		method,
+		task)
+	{
+const t = performance.now();
+
+		const id = currentTaskID++;
+//console.log("======= DO TASK", method, id, String(task).slice(0, 100));
+		const data = await promisedResponse(method, id);
+//console.log("======= DO TASK", method, id, "after promisedResponse", data);
+		const result = await task(data);
+//console.log("======= DO TASK", method, id, "after task", result);
+
+		return promisedResponse("done", id, result)
+			.then((data) => {
+console.log("======= DO TASK", method, id, "after done", performance.now() - t, "ms", data);
+				return data;
+			});
+	}
+
+
+	return {
+		get(task) {
+			return doTask("get", task || returnData, Date.now());
+		},
+
+		set(task) {
+			return doTask("set", task, Date.now());
+		}
 	};
 }

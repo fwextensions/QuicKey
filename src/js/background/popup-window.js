@@ -20,6 +20,7 @@ let lastActiveTab;
 
 storage.get(data => ({popupAdjustmentWidth, popupAdjustmentHeight} = data));
 
+
 async function getPopupID()
 {
 	const contexts = await chrome.runtime.getContexts({ contextTypes: ["TAB"] });
