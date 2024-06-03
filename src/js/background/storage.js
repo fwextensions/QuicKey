@@ -81,8 +81,6 @@ export default function createStorage({
 			methodFunc((data) => {
 //console.log("-------", method, "about to sendResponse", id, data);
 				sendResponse(data);
-// TODO: maybe return Promise.all([data, responsePromise.promise]) so that the full data is sent back
-//  when the done message comes in
 
 				return responsePromise.promise;
 			});
@@ -314,7 +312,23 @@ console.log("==== SAVE", storageLocation, newData);
 
 export function createStorageClient()
 {
+	const storageLocation = globalThis.location.pathname;
+	let dataPromise = cp.storage.local.get(null).then(({ data }) => data);
 	let currentTaskID = 0;
+	let lastSavedFrom;
+
+
+	chrome.storage.onChanged.addListener((changes, area) => {
+		const changedData = changes?.data?.newValue;
+		const changedLocation = changes?.lastSavedFrom?.newValue;
+
+		if (area === "local" && changedData && (changedLocation || lastSavedFrom) !== storageLocation) {
+				// the storage was changed in the background, so update our cache
+			dataPromise = Promise.resolve(changedData);
+//console.log("==== storage.onChanged in", changedLocation, storageLocation, dataPromise, changes);
+			lastSavedFrom = changedLocation || lastSavedFrom;
+		}
+	});
 
 
 	function promisedResponse(
@@ -346,20 +360,35 @@ const t = performance.now();
 //console.log("======= DO TASK", method, id, "after task", result);
 
 		return promisedResponse("done", id, result)
-			.then((data) => {
+			.then((newData) => {
+					// combine the full data with whatever changed in the set()
+					// task and update our dataPromise with that
+				Object.assign(data, newData);
+				dataPromise = Promise.resolve(data);
+
 console.log("======= DO TASK", method, id, "after done", performance.now() - t, "ms", data);
 				return data;
 			});
 	}
 
 
-	return {
-		get(task) {
-			return doTask("get", task || returnData, Date.now());
-		},
+	function get(
+		task = returnData)
+	{
+			// to speed things up, just return the current in-memory copy of the
+			// storage for get() tasks
+		return dataPromise.then(task);
+	}
 
-		set(task) {
-			return doTask("set", task, Date.now());
-		}
+
+	function set(task)
+	{
+		return doTask("set", task);
+	}
+
+
+	return {
+		get,
+		set,
 	};
 }
