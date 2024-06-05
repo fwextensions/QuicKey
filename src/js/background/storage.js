@@ -1,5 +1,7 @@
 import { deepEqual } from "fast-equals";
 import cp from "cp";
+import { call, receive } from "@/lib/ipc";
+import { PromiseWithResolvers } from "@/lib/promise-with-resolvers";
 import Mutex from "./mutex";
 import trackers from "./page-trackers";
 
@@ -65,57 +67,34 @@ export default function createStorage({
 	let lastSavedFrom;
 
 
-	chrome.runtime.onMessage.addListener(({message, payload, id}, sender, sendResponse) => {
-		if (!message.startsWith(StoragePrefix)) {
-			return;
-		}
+	receive("set", (id) => {
+		const donePromise = new PromiseWithResolvers();
+		const returnPromise = new PromiseWithResolvers();
 
-		const method = message.slice(StoragePrefix.length);
-		let asyncResponse = true;
+		promisesByID.set(id, donePromise);
+		set((data) => {
+			returnPromise.resolve(data);
 
-		if (method === "get" || method === "set") {
-			const responsePromise = Promise.withResolvers();
-			const methodFunc = method === "get" ? get : set;
+			return donePromise;
+		});
 
-			promisesByID.set(id, responsePromise);
-			methodFunc((data) => {
-//console.log("-------", method, "about to sendResponse", id, data);
-				sendResponse(data);
-
-				return responsePromise.promise;
-			});
-		} else if (method === "done") {
-			const responsePromise = promisesByID.get(id);
-
-			if (responsePromise) {
-//console.log("------- DONE about to resolve promise", id, "remaining", promisesByID.size);
-				responsePromise.promise.then((data) => {
-					sendResponse(data);
-				});
-				responsePromise.resolve(payload);
-				promisesByID.delete(id);
-			} else {
-				console.error("storage received unknown ID", id, message, payload);
-				asyncResponse = false;
-			}
-		} else {
-			console.error("storage received unknown message", message, id, payload);
-			asyncResponse = false;
-		}
-
-		return asyncResponse;
+		return returnPromise;
 	});
 
 
-	chrome.storage.onChanged.addListener((changes, area) => {
-		const changedData = changes?.data?.newValue;
-		const changedLocation = changes?.lastSavedFrom?.newValue;
+	receive("done", (id, newData) => {
+		const donePromise = promisesByID.get(id);
+		const returnPromise = new PromiseWithResolvers();
 
-		if (area === "local" && changedData && (changedLocation || lastSavedFrom) !== storageLocation) {
-			dataPromise = Promise.resolve(changedData);
-console.log("==== storage.onChanged in", changedLocation, storageLocation, dataPromise, changes);
-			lastSavedFrom = changedLocation || lastSavedFrom;
+		if (donePromise) {
+			donePromise.then((data) => returnPromise.resolve(data));
+			donePromise.resolve(newData);
+			promisesByID.delete(id);
+		} else {
+			throw new Error("done() received unknown ID: " + id);
 		}
+
+		return returnPromise;
 	});
 
 
@@ -315,8 +294,9 @@ export function createStorageClient()
 	const storageLocation = globalThis.location.pathname;
 	let dataPromise = cp.storage.local.get(null).then(({ data }) => data);
 	let currentTaskID = 0;
+	let totalTime = 0;
+	let taskCount = 0;
 	let lastSavedFrom;
-
 
 	chrome.storage.onChanged.addListener((changes, area) => {
 		const changedData = changes?.data?.newValue;
@@ -331,21 +311,6 @@ export function createStorageClient()
 	});
 
 
-	function promisedResponse(
-		message,
-		id,
-		payload)
-	{
-		const body = {
-			message: `${StoragePrefix}${message}`,
-			id,
-			payload,
-		};
-
-		return new Promise(resolve => chrome.runtime.sendMessage(body, resolve));
-	}
-
-
 	async function doTask(
 		method,
 		task)
@@ -353,20 +318,22 @@ export function createStorageClient()
 const t = performance.now();
 
 		const id = currentTaskID++;
-//console.log("======= DO TASK", method, id, String(task).slice(0, 100));
-		const data = await promisedResponse(method, id);
-//console.log("======= DO TASK", method, id, "after promisedResponse", data);
-		const result = await task(data);
-//console.log("======= DO TASK", method, id, "after task", result);
+		const data = await call("set", id);
+		const newData = await task(data);
 
-		return promisedResponse("done", id, result)
+		return call("done", id, newData)
 			.then((newData) => {
 					// combine the full data with whatever changed in the set()
 					// task and update our dataPromise with that
 				Object.assign(data, newData);
 				dataPromise = Promise.resolve(data);
 
-console.log("======= DO TASK", method, id, "after done", performance.now() - t, "ms", data);
+				const taskTime = performance.now() - t;
+				totalTime += taskTime;
+				taskCount++;
+
+console.log("======= DO TASK", method, id, "after done", taskTime, "ms", data);
+console.log("======= DO TASK avg time:", Math.round(totalTime / taskCount), "ms", taskCount, "total");
 				return data;
 			});
 	}
@@ -381,7 +348,8 @@ console.log("======= DO TASK", method, id, "after done", performance.now() - t, 
 	}
 
 
-	function set(task)
+	function set(
+		task)
 	{
 		return doTask("set", task);
 	}
