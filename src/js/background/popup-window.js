@@ -1,5 +1,4 @@
 import cp from "cp";
-import shared from "@/lib/shared";
 import storage from "@/background/quickey-storage";
 import {HidePopupBehavior, IsFirefox, PopupInnerHeight, PopupInnerWidth, PopupURL} from "@/background/constants";
 import {calcBounds} from "@/background/popup-utils";
@@ -356,7 +355,7 @@ async function close()
 }
 
 
-export default shared("popupWindow", () => ({
+export default {
 	create,
 	show,
 	hide,
@@ -404,4 +403,4 @@ export default shared("popupWindow", () => ({
 	get activeTab() {
 		return lastActiveTab;
 	}
-}));
+};

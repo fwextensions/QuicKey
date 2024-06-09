@@ -1,5 +1,4 @@
 import cp from "cp";
-import shared from "@/lib/shared";
 import objectsHaveSameKeys from "@/lib/objects-have-same-keys";
 import decode from "@/lib/decode";
 import {createStorageClient, createStorage} from "./storage";
@@ -7,7 +6,8 @@ import getDefaultSettings from "./get-default-settings";
 import * as k from "./constants";
 
 
-export default shared("quickeyStorage", () => {
+// TODO: don't create this in an IIFE
+export default (() => {
 	if (globalThis.location.pathname.includes("popup.html")) {
 			// create a client that exchanges messages with the service worker
 			// to get/set the storage data
@@ -221,4 +221,4 @@ export default shared("quickeyStorage", () => {
 				objectsHaveSameKeys(defaults.settings, data.settings, true);
 		}
 	});
-});
+})();
