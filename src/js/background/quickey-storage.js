@@ -2,7 +2,7 @@ import cp from "cp";
 import shared from "@/lib/shared";
 import objectsHaveSameKeys from "@/lib/objects-have-same-keys";
 import decode from "@/lib/decode";
-import {createStorageClient, default as createStorage} from "./storage";
+import {createStorageClient, createStorage} from "./storage";
 import getDefaultSettings from "./get-default-settings";
 import * as k from "./constants";
 

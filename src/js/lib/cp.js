@@ -1,8 +1,4 @@
-import { ChromePromise } from "@/lib/chrome-promise";
-import shared from "@/lib/shared";
-
-
-	// store a single ChromePromise instance on the background page, so
-	// that if we used optional permissions, the background and popup
-	// would have the same permissions
-export default shared("cp", () => new ChromePromise());
+	// the ChromePromise library is no longer needed, since manifest V3 returns
+	// promises, so just return the native chrome object for now
+// TODO: remove this file and ChromePromise
+export default chrome;

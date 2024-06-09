@@ -54,7 +54,7 @@ function isNewDataDifferent(
 }
 
 
-export default function createStorage({
+export function createStorage({
 	version = 1,
 	getDefaultData = emptyDefaultData,
 	validateUpdate = alwaysValidate,
@@ -62,34 +62,38 @@ export default function createStorage({
 {
 	const storageMutex = new Mutex();
 	const storageLocation = globalThis.location.pathname;
-	const promisesByID = new Map();
+	const promisesByCallID = new Map();
 	let dataPromise = initialize();
 	let lastSavedFrom;
 
 
 	receive("set", (id) => {
-		const donePromise = new PromiseWithResolvers();
-		const returnPromise = new PromiseWithResolvers();
+		const taskPromise = new PromiseWithResolvers();
 
-		promisesByID.set(id, donePromise);
-		set((data) => {
-			returnPromise.resolve(data);
+		promisesByCallID.set(id, taskPromise);
 
-			return donePromise;
-		});
-
-		return returnPromise;
+			// call set with a promise that will be resolved when we get the
+			// "done" call below
+		set((data) => taskPromise);
 	});
 
 
 	receive("done", (id, newData) => {
-		const donePromise = promisesByID.get(id);
+		const taskPromise = promisesByCallID.get(id);
 		const returnPromise = new PromiseWithResolvers();
 
-		if (donePromise) {
-			donePromise.then((data) => returnPromise.resolve(data));
-			donePromise.resolve(newData);
-			promisesByID.delete(id);
+		if (taskPromise) {
+				// after the newData has been merged with the existing data and
+				// saved to storage, we want to send that updated data back to
+				// our caller, by resolving returnPromise with it.  the doTask()
+				// function in the storage client can then return it to whatever
+				// was awaiting storage.set() in that thread.
+			taskPromise.then((data) => returnPromise.resolve(data));
+
+				// tell the task we created above in set() to complete, which
+				// will clear the storage mutex lock
+			taskPromise.resolve(newData);
+			promisesByCallID.delete(id);
 		} else {
 			throw new Error("done() received unknown ID: " + id);
 		}
@@ -245,7 +249,7 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 							// otherwise, we'd lose any values that weren't
 							// changed and returned by the task function.
 						Object.assign(data, newData);
-console.log("==== SAVE", storageLocation, newData);
+console.log("==== SAVE", newData);
 
 						return save(data);
 					} else {
@@ -298,6 +302,7 @@ export function createStorageClient()
 	let taskCount = 0;
 	let lastSavedFrom;
 
+
 	chrome.storage.onChanged.addListener((changes, area) => {
 		const changedData = changes?.data?.newValue;
 		const changedLocation = changes?.lastSavedFrom?.newValue;
@@ -311,6 +316,23 @@ export function createStorageClient()
 	});
 
 
+	function getAll()
+	{
+const t = performance.now();
+			// pass null to get everything in storage, since the cache is empty
+		dataPromise = cp.storage.local.get(null)
+			.then(storage => {
+console.log(`--- ${storageLocation}: loaded storage in`, performance.now() - t, "ms");
+
+				lastSavedFrom = storage.lastSavedFrom;
+
+				return storage.data;
+			});
+
+		return dataPromise;
+	}
+
+
 	async function doTask(
 		method,
 		task)
@@ -318,11 +340,23 @@ export function createStorageClient()
 const t = performance.now();
 
 		const id = currentTaskID++;
-		const data = await call("set", id);
+
+console.time(`======= DO TASK ${id} get data`);
+			// call set() in the background to lock the storage mutex
+		await call("set", id);
+
+			// get the storage by calling the API directly in this thread, which
+			// seems to be slower than doing in the background, but it's still
+			// about 1/3 faster overall because we don't have the overhead of
+			// marshalling the data to return it via messaging
+		const data = await getAll();
+console.timeEnd(`======= DO TASK ${id} get data`);
+
 		const newData = await task(data);
 
 		return call("done", id, newData)
 			.then((newData) => {
+console.log(`======= DO TASK ${id} data`, isNewDataDifferent(newData, data), newData);
 					// combine the full data with whatever changed in the set()
 					// task and update our dataPromise with that
 				Object.assign(data, newData);
@@ -332,8 +366,8 @@ const t = performance.now();
 				totalTime += taskTime;
 				taskCount++;
 
-console.log("======= DO TASK", method, id, "after done", taskTime, "ms", data);
-console.log("======= DO TASK avg time:", Math.round(totalTime / taskCount), "ms", taskCount, "total");
+console.log("======= DO TASK", id, "after done", taskTime, "ms", data);
+console.log(`======= DO TASK ${id} avg time:`, Math.round(totalTime / taskCount), "ms", taskCount, "total");
 				return data;
 			});
 	}
@@ -351,7 +385,15 @@ console.log("======= DO TASK avg time:", Math.round(totalTime / taskCount), "ms"
 	function set(
 		task)
 	{
-		return doTask("set", task);
+// TODO: could just move doTask into this function
+		const id = currentTaskID;
+console.log("\n\n>>>> SET before SAVE", id, storageLocation, "\n" + String(task).slice(0, 100));
+		return doTask("set", task)
+			.then((data) => {
+console.log("<<<< SET after SAVE", id, storageLocation, data, "\n\n\n");
+				return data;
+			});
+//		return doTask("set", task);
 	}
 
 
