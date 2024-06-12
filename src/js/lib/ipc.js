@@ -1,5 +1,7 @@
 import { PromiseWithResolvers } from "./promise-with-resolvers";
 
+console.log("----------- loading lib/ipc.js");
+
 const PortName = "IPC";
 
 const promisesByID = {};
@@ -27,6 +29,7 @@ export function call(
 {
 	const id = currentID++;
 	const promise = new PromiseWithResolvers();
+console.log("---------- call", name, id);
 
 	promisesByID[id] = promise;
 	post({ type: "call", id, name, data });
@@ -54,6 +57,7 @@ export function receive(
 	fn)
 {
 	receiversByName[name] = fn;
+console.log("---------- receive", name);
 
 		// now that the new receiver has been registered, call it with any messages
 		// that have been queued for it. We do this in a timeout so the code calling
@@ -81,6 +85,7 @@ export function ignore(
 }
 
 chrome.runtime.onConnect.addListener((newPort) => {
+console.log("---------- got onConnect", newPort);
 	if (newPort.name === PortName) {
 		connectPort(newPort)
 		handleConnect();
@@ -88,12 +93,14 @@ chrome.runtime.onConnect.addListener((newPort) => {
 });
 
 if (!port && initialViews.length > 1) {
+console.log("---------- calling connect because views open");
 	connectPort(chrome.runtime.connect({ name: PortName }));
 }
 
 function connectPort(
 	newPort)
 {
+console.log("---------- connectPort", newPort);
 	port = newPort;
 	port.onMessage.addListener(handleMessage);
 	port.onDisconnect.addListener(handleDisconnect);
@@ -119,7 +126,7 @@ function handleConnect() {
 
 function handleDisconnect()
 {
-	port.onMessage.removeListener(handleMessage);
+	port?.onMessage.removeListener(handleMessage);
 	postQueue.length = 0;
 	port = null;
 }
@@ -152,11 +159,14 @@ async function handleCall(
 function handleResponse(
 	message)
 {
+console.log("---------- handleResponse", message?.id, message?.data);
 	if (message?.id in promisesByID) {
 		const { id, data } = message;
 		const promise = promisesByID[id];
 
 		promise.resolve(data);
+	} else {
+		console.error("No matching promise:", message.id, message.data);
 	}
 }
 
@@ -173,12 +183,15 @@ function handleError(
 		const error = new Error(errorMessage, { cause: rest });
 
 		promise.reject(error);
+	} else {
+		console.error("No matching promise for error:", message.id);
 	}
 }
 
 async function handleMessage(
 	message)
 {
+console.log("---------- handleMessage", message);
 	if (!message || typeof message !== "object") {
 		return;
 	}

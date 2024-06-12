@@ -67,8 +67,8 @@ async function setNormalIcon()
 	isNormalIcon = true;
 
 	try {
-		await cp.browserAction.setBadgeBackgroundColor({ color });
-		await cp.browserAction.setIcon(paths);
+		await cp.action.setBadgeBackgroundColor({ color });
+		await cp.action.setIcon(paths);
 	} catch (error) {
 		backgroundTracker.exception(error);
 	}
@@ -87,9 +87,9 @@ async function invertFor(
 
 	try {
 		if (isTabCountVisible) {
-			await cp.browserAction.setBadgeBackgroundColor({ color });
+			await cp.action.setBadgeBackgroundColor({ color });
 		} else {
-			await cp.browserAction.setIcon(paths);
+			await cp.action.setIcon(paths);
 		}
 	} catch (error) {
 		backgroundTracker.exception(error);
@@ -119,6 +119,7 @@ async function updateTabCount(
 
 	tabCount += delta;
 
+
 	if (isTabCountVisible) {
 		text = String(tabCount);
 
@@ -132,8 +133,8 @@ async function updateTabCount(
 	}
 
 	try {
-		await cp.browserAction.setBadgeText({ text }),
-		await cp.browserAction.setTitle({ title })
+		await cp.action.setBadgeText({ text }),
+		await cp.action.setTitle({ title })
 	} catch (error) {
 		backgroundTracker.exception(error);
 	}

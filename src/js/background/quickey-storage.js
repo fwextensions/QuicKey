@@ -8,9 +8,9 @@ import * as k from "./constants";
 
 // TODO: don't create this in an IIFE
 export default (() => {
-	if (globalThis.location.pathname.includes("popup.html")) {
-			// create a client that exchanges messages with the service worker
-			// to get/set the storage data
+	if (typeof ServiceWorkerGlobalScope !== "function") {
+			// we're not running in the background script, so create a client that
+			// exchanges messages with the service worker to get/set the storage data
 		return createStorageClient();
 	}
 

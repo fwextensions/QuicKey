@@ -325,6 +325,11 @@ async function resize(
 	width,
 	height)
 {
+	if (height < 0) {
+console.error("----- resize", windowID, width, height);
+		return;
+	}
+
 	await cp.windows.update(windowID, { width, height });
 }
 

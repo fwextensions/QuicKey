@@ -50,6 +50,7 @@ export function createStorage({
 	let dataPromise = initialize();
 	let lastSavedFrom;
 
+console.log("================================ createStorage", storageLocation);
 
 	receive("set", (id) => {
 		const taskPromise = new PromiseWithResolvers();
@@ -225,6 +226,7 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 				// bust the cache in the other thread unnecessarily.
 			.then(data => Promise.resolve(task.call(thisArg, structuredClone(data)))
 				.then(newData => {
+console.log("---- background doTask", newData);
 					if (saveResult && newData && isNewDataDifferent(newData, data)) {
 							// since all the values are stored on the .data
 							// key of the storage instead of at the topmost
@@ -337,21 +339,22 @@ console.time(`======= DO TASK ${id} get data`);
 console.timeEnd(`======= DO TASK ${id} get data`);
 
 		const newData = await task(data);
+console.log(`======= DO TASK ${id} after task`, newData);
 
 		return call("done", id, newData)
 			.then((newData) => {
-console.log(`======= DO TASK ${id} data`, isNewDataDifferent(newData, data), newData);
+				const taskTime = performance.now() - t;
+				totalTime += taskTime;
+				taskCount++;
+//console.log(`======= DO TASK ${id} data`, isNewDataDifferent(newData, data), newData);
+console.log("======= DO TASK", id, "after done", taskTime, "ms", isNewDataDifferent(newData, data), newData);
+console.log(`======= DO TASK ${id} avg time:`, Math.round(totalTime / taskCount), "ms", taskCount, "total");
+
 					// combine the full data with whatever changed in the set()
 					// task and update our dataPromise with that
 				Object.assign(data, newData);
 				dataPromise = Promise.resolve(data);
 
-				const taskTime = performance.now() - t;
-				totalTime += taskTime;
-				taskCount++;
-
-console.log("======= DO TASK", id, "after done", taskTime, "ms", data);
-console.log(`======= DO TASK ${id} avg time:`, Math.round(totalTime / taskCount), "ms", taskCount, "total");
 				return data;
 			});
 	}
