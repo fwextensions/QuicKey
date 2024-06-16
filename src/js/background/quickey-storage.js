@@ -6,12 +6,19 @@ import getDefaultSettings from "./get-default-settings";
 import * as k from "./constants";
 
 
+	// name the port based on whatever page we're being hosted on.  we have to
+	// prefix it with a string so that we won't conflict with the popup port that's
+	// created the page is first opened.
+const PortName = "storage-" +
+	(location.pathname.match(/\/([^/]+)\.(html|js)/)?.[1] || "unknown");
+
+
 // TODO: don't create this in an IIFE
 export default (() => {
 	if (typeof ServiceWorkerGlobalScope !== "function") {
 			// we're not running in the background script, so create a client that
 			// exchanges messages with the service worker to get/set the storage data
-		return createStorageClient();
+		return createStorageClient(PortName);
 	}
 
 

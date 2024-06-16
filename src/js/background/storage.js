@@ -1,6 +1,6 @@
 import { deepEqual } from "fast-equals";
 import cp from "cp";
-import { call, receive } from "@/lib/ipc";
+import { connect } from "@/lib/ipc";
 import { PromiseWithResolvers } from "@/lib/promise-with-resolvers";
 import Mutex from "./mutex";
 import trackers from "./page-trackers";
@@ -44,13 +44,14 @@ export function createStorage({
 	validateUpdate = alwaysValidate,
 	updaters = {} })
 {
+console.log("================================ createStorage", globalThis.location.pathname);
+
+	const { receive } = connect();
 	const storageMutex = new Mutex();
 	const storageLocation = globalThis.location.pathname;
 	const promisesByCallID = new Map();
 	let dataPromise = initialize();
 	let lastSavedFrom;
-
-console.log("================================ createStorage", storageLocation);
 
 	receive("set", (id) => {
 		const taskPromise = new PromiseWithResolvers();
@@ -279,8 +280,11 @@ console.log("==== SAVE", newData);
 }
 
 
-export function createStorageClient()
+export function createStorageClient(
+	portName)
 {
+console.log("==== createStorageClient", portName);
+	const { call } = connect(portName);
 	const storageLocation = globalThis.location.pathname;
 	let dataPromise = cp.storage.local.get(null).then(({ data }) => data);
 	let currentTaskID = 0;
