@@ -59,7 +59,9 @@ console.log("================================ createStorage", globalThis.locatio
 		promisesByCallID.set(id, taskPromise);
 
 			// call set with a promise that will be resolved when we get the
-			// "done" call below
+			// "done" call below.  we don't return the promise from set() because
+			// we want to hand control back to the caller now, so it can later
+			// call back with "done".
 		set((data) => taskPromise);
 	});
 
