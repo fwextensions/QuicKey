@@ -325,20 +325,29 @@ console.log(`--- ${storageLocation}: loaded storage in`, performance.now() - t, 
 	}
 
 
-	async function doTask(
-		method,
+	function get(
+		task = returnData)
+	{
+			// to speed things up, just return the current in-memory copy of the
+			// storage for get() tasks
+		return dataPromise.then(task);
+	}
+
+
+	async function set(
 		task)
 	{
 const t = performance.now();
 
 		const id = currentTaskID++;
 
+console.log("\n\n>>>> SET before SAVE", id, storageLocation, "\n" + String(task).slice(0, 100));
 console.time(`======= DO TASK ${id} get data`);
 			// call set() in the background to lock the storage mutex
 		await call("set", id);
 
 			// get the storage by calling the API directly in this thread, which
-			// seems to be slower than doing in the background, but it's still
+			// seems to be slower than doing it in the background, but it's still
 			// about 1/3 faster overall because we don't have the overhead of
 			// marshalling the data to return it via messaging
 		const data = await getAll();
@@ -361,32 +370,10 @@ console.log(`======= DO TASK ${id} avg time:`, Math.round(totalTime / taskCount)
 				Object.assign(data, newData);
 				dataPromise = Promise.resolve(data);
 
-				return data;
-			});
-	}
-
-
-	function get(
-		task = returnData)
-	{
-			// to speed things up, just return the current in-memory copy of the
-			// storage for get() tasks
-		return dataPromise.then(task);
-	}
-
-
-	function set(
-		task)
-	{
-// TODO: could just move doTask into this function
-		const id = currentTaskID;
-console.log("\n\n>>>> SET before SAVE", id, storageLocation, "\n" + String(task).slice(0, 100));
-		return doTask("set", task)
-			.then((data) => {
 console.log("<<<< SET after SAVE", id, storageLocation, data, "\n\n\n");
+
 				return data;
 			});
-//		return doTask("set", task);
 	}
 
 

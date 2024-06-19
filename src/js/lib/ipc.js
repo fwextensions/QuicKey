@@ -12,13 +12,16 @@ class Connection {
 	#postQueue = [];
 	#receiveQueue = new Set();
 	#currentCallID = 0;
+	#onDisconnect;
 
 	constructor(
 		port,
-		receiversByName)
+		receiversByName,
+		onDisconnect)
 	{
 		this.#port = port;
 		this.#receiversByName = receiversByName;
+		this.#onDisconnect = onDisconnect;
 
 		this.#port.onMessage.addListener(this.#handleMessage);
 		this.#port.onDisconnect.addListener(this.#handleDisconnect);
@@ -59,6 +62,7 @@ console.log("---------- call in Connection", name, id);
 
 	#handleDisconnect = () =>
 	{
+		this.#onDisconnect?.(this);
 		this.#port?.onMessage.removeListener(this.#handleMessage);
 		this.#postQueue.length = 0;
 		this.#port = null;
@@ -172,9 +176,7 @@ console.log("---------- calling createConnection because views open", ChannelPre
 	function createConnection(
 		newPort)
 	{
-		const connection = new Connection(newPort, receiversByName);
-
-// TODO: also need to know when the port disconnects to remove the connection
+		const connection = new Connection(newPort, receiversByName, handleDisconnect);
 
 		connections.push(connection);
 console.log("---------- createConnection", newPort, connections);
@@ -192,6 +194,18 @@ console.log("---------- calling callQueue", callQueue);
 		...args)
 	{
 		return connections.map((connection) => connection[method](...args));
+	}
+
+	function handleDisconnect(
+		connection)
+	{
+		const index = connections.indexOf(connection);
+
+		if (index > -1) {
+			connections.splice(index, 1);
+		}
+
+console.log("---------- handleDisconnect", index, connections);
 	}
 
 	function call(
