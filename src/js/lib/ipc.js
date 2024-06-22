@@ -19,6 +19,7 @@ class Connection {
 		receiversByName,
 		onDisconnect)
 	{
+console.log("---------- Connection constructor", port.name);
 		this.#port = port;
 		this.#receiversByName = receiversByName;
 		this.#onDisconnect = onDisconnect;
@@ -57,11 +58,13 @@ console.log("---------- call in Connection", name, id);
 	#post(
 		message)
 	{
+!this.#port && console.warn("---------- post NO PORT", message, this.#port, this.#promisesByID);
 		this.#port?.postMessage(message);
 	}
 
 	#handleDisconnect = () =>
 	{
+console.log("---------- handleDisconnect", this.#promisesByID);
 		this.#onDisconnect?.(this);
 		this.#port?.onMessage.removeListener(this.#handleMessage);
 		this.#postQueue.length = 0;
@@ -111,6 +114,7 @@ console.log("---------- handleMessage", message);
 				this.#post({ type: "error", id, name, errorJSON });
 			}
 		} else {
+console.error("---------- #handleCall no receiver", name, id, data);
 				// queue this message until a receiver is registered for it
 			this.#receiveQueue.add(message);
 		}
@@ -125,6 +129,7 @@ console.log("---------- #handleResponse", message?.id, message?.data);
 			const promise = this.#promisesByID[id];
 
 			promise.resolve(data);
+			delete this.#promisesByID[id];
 		} else {
 			console.error("No matching promise:", message.id, message.data);
 		}
@@ -143,6 +148,7 @@ console.log("---------- #handleResponse", message?.id, message?.data);
 			const error = new Error(errorMessage, { cause: rest });
 
 			promise.reject(error);
+			delete this.#promisesByID[id];
 		} else {
 			console.error("No matching promise for error:", message.id);
 		}

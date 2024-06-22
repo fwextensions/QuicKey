@@ -55,7 +55,7 @@ console.log("================================ createStorage", globalThis.locatio
 
 	receive("set", (id) => {
 		const taskPromise = new PromiseWithResolvers();
-
+console.log("========== receive set", id);
 		promisesByCallID.set(id, taskPromise);
 
 			// call set with a promise that will be resolved when we get the
@@ -69,22 +69,23 @@ console.log("================================ createStorage", globalThis.locatio
 	receive("done", (id, newData) => {
 		const taskPromise = promisesByCallID.get(id);
 		const returnPromise = new PromiseWithResolvers();
+console.log("========== receive done", id);
 
-		if (taskPromise) {
-				// after the newData has been merged with the existing data and
-				// saved to storage, we want to send that updated data back to
-				// our caller, by resolving returnPromise with it.  the doTask()
-				// function in the storage client can then return it to whatever
-				// was awaiting storage.set() in that thread.
-			taskPromise.then((data) => returnPromise.resolve(data));
-
-				// tell the task we created above in set() to complete, which
-				// will clear the storage mutex lock
-			taskPromise.resolve(newData);
-			promisesByCallID.delete(id);
-		} else {
+		if (!taskPromise) {
 			throw new Error("done() received unknown ID: " + id);
 		}
+
+			// after the newData has been merged with the existing data and
+			// saved to storage, we want to send that updated data back to
+			// our caller, by resolving returnPromise with it.  the doTask()
+			// function in the storage client can then return it to whatever
+			// was awaiting storage.set() in that thread.
+		taskPromise.then((data) => returnPromise.resolve(data));
+
+			// tell the task we created above in set() to complete, which
+			// will clear the storage mutex lock
+		taskPromise.resolve(newData);
+		promisesByCallID.delete(id);
 
 		return returnPromise;
 	});

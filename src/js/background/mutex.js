@@ -7,13 +7,13 @@ export default class Mutex {
 	}
 
 	lock(
-		task)
+		task,
+		timeLimit = 1000)
 	{
-//(this._queue.length || this._locked) && console.warn("mutex queue", this._queue.length);
-console.log("MUTEX lock", this._locked, this._queue.length);
+console.log("MUTEX lock", this.id, this._locked, this._queue.length);
 
 		return new Promise((resolve, reject) => {
-			this._queue.push([task, resolve, reject, this.id++]);
+			this._queue.push([task, resolve, reject, this.id++, timeLimit]);
 
 			if (!this._locked) {
 				this._dequeue();
@@ -36,19 +36,30 @@ console.log("MUTEX lock", this._locked, this._queue.length);
 	_execute(
 		record)
 	{
-		const [task, resolve, reject, id] = record;
+		const [task, resolve, reject, id, timeLimit] = record;
+		let timeout;
 console.warn("▼▼▼▼ MUTEX _execute", id, this._queue.length);
 
-		Promise.resolve(task())
-//			.then((data) => {
-//console.warn("MUTEX TASK DONE", id, this._queue.length);
-//				return data;
-//			})
+			// execute the task and race it against a timeout, so that if the
+			// task doesn't complete (most likely because the other end of a
+			// message pipe got closed), we can finish this task and move on to
+			// the next one instead of blocking all storage tasks
+		Promise.race([
+			Promise.resolve(task()),
+			new Promise((resolve) => {
+				timeout = setTimeout(
+					() => resolve(new Error("Mutex task timed out")),
+					timeLimit
+				);
+			}),
+		])
 			.then(resolve, reject)
 			.finally(() => {
 console.warn("▲▲▲▲ MUTEX finally", id, this._queue.length);
+
+					// though not strictly necessary, clean up the timeout here
+				clearTimeout(timeout);
 				this._dequeue();
 			});
-//			.finally(() => this._dequeue());
 	}
 }
