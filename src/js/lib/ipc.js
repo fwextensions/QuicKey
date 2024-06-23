@@ -179,9 +179,9 @@ console.log("---------- calling createConnection because views open", ChannelPre
 			? channelName.test(newPortName)
 			: (!channelName || newPortName === channelName);
 
-console.log("---------- got onConnect", channelName, ":", nameMatches, newPortName, newPort.name, location.pathname + location.search.slice(0, 10));
 			// prefix will be empty if it matches ChannelPrefix
 		if (!prefix && nameMatches) {
+console.log("---------- got onConnect", channelName, ":", nameMatches, newPortName, newPort.name, location.pathname + location.search.slice(0, 10));
 			createConnection(newPort);
 		}
 	}
@@ -250,10 +250,16 @@ console.warn("---------- call MULTIPLE CONNECTIONS", name, connections);
 		name,
 		fn)
 	{
-		receiversByName[name] = fn;
 console.log("---------- receive", name);
-
-		callConnections("handleNewReceiver", name);
+		if (typeof name === "string") {
+			receiversByName[name] = fn;
+			callConnections("handleNewReceiver", name);
+		} else if (typeof name === "object" && name) {
+			for (const [fnName, fn] of Object.entries(name)) {
+				receiversByName[fnName] = fn;
+				callConnections("handleNewReceiver", fnName);
+			}
+		}
 	}
 
 	function ignore(

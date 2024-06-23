@@ -48,7 +48,7 @@ export function createStorage({
 {
 console.log("================================ createStorage", globalThis.location.pathname);
 
-	const { receive } = connect(/storage\/.+/);
+	const { receive } = connect(/^storage\/.+/);
 	const storageMutex = new Mutex();
 	const storageLocation = globalThis.location.pathname;
 	const promisesByCallID = new Map();
@@ -57,6 +57,7 @@ console.log("================================ createStorage", globalThis.locatio
 
 	receive("set", (id) => {
 		const taskPromise = new PromiseWithResolvers();
+
 console.log("========== receive set", id);
 		promisesByCallID.set(id, taskPromise);
 
