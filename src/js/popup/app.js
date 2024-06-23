@@ -5,6 +5,7 @@ import ResultsListItem from "./results-list-item";
 import MessageItem from "./message-item";
 import OptionsButton from "./options-button";
 import cp from "cp";
+import { connectPopupWindow } from "./popup-window";
 import scoreItems from "./score/score-items";
 import initTabs from "./data/init-tabs";
 import getBookmarks from "./data/get-bookmarks";
@@ -14,7 +15,6 @@ import {loadPinyin} from "./data/add-pinyin";
 import shortcuts from "./shortcuts/popup-shortcuts";
 import handleRef from "@/lib/handle-ref";
 import copyTextToClipboard from "@/lib/copy-to-clipboard";
-import popupWindow from "@/background/popup-window";
 import recentTabs from "@/background/recent-tabs";
 import storage from "@/background/quickey-storage";
 import settings from "@/background/settings";
@@ -45,6 +45,9 @@ const {
 	PreviousTabCommand,
 	NextTabCommand
 } = k.CommandIDs;
+
+
+let popupWindow;
 
 
 function sortRecents(
@@ -143,6 +146,10 @@ export default class App extends React.Component {
 			this.gotMRUKey = !this.openedForSearch;
 			this.getActiveTab(true)
 				.then(({id}) => this.popupTabID = id);
+
+				// create a messaging channel API for the popupWindow object in
+				// the background script.  we only need this in the popup state.
+			popupWindow = connectPopupWindow();
 		}
 
 		this.state = {

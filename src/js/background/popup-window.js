@@ -3,11 +3,13 @@ import storage from "@/background/quickey-storage";
 import {HidePopupBehavior, IsFirefox, PopupInnerHeight, PopupInnerWidth, PopupURL} from "@/background/constants";
 import {calcBounds} from "@/background/popup-utils";
 import {popupEmitter} from "@/background/popup-emitter";
+import {connect} from "@/lib/ipc";
 
 
 const {Behind, Tab, Minimize} = HidePopupBehavior;
 
 
+const { receive } = connect(/^popup-window/);
 let popupAdjustmentWidth = 0;
 let popupAdjustmentHeight = 0;
 let isVisible = false;
@@ -358,6 +360,15 @@ async function close()
 		popupEmitter.emit("close", { windowID: originalWindowID });
 	}
 }
+
+
+	// listen for calls to these functions from the popup.html page
+receive({
+	show,
+	hide,
+	blur,
+	resize,
+});
 
 
 export default {
