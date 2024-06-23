@@ -46,8 +46,6 @@ export function createStorage({
 	validateUpdate = alwaysValidate,
 	updaters = {} })
 {
-console.log("================================ createStorage", globalThis.location.pathname);
-
 	const { receive } = connect(/^storage\/.+/);
 	const storageMutex = new Mutex();
 	const storageLocation = globalThis.location.pathname;
@@ -58,7 +56,6 @@ console.log("================================ createStorage", globalThis.locatio
 	receive("set", (id) => {
 		const taskPromise = new PromiseWithResolvers();
 
-console.log("========== receive set", id);
 		promisesByCallID.set(id, taskPromise);
 
 			// call set with a promise that will be resolved when we get the
@@ -72,7 +69,6 @@ console.log("========== receive set", id);
 	receive("done", (id, newData) => {
 		const taskPromise = promisesByCallID.get(id);
 		const returnPromise = new PromiseWithResolvers();
-console.log("========== receive done", id);
 
 		if (!taskPromise) {
 			throw new Error("done() received unknown ID: " + id);
@@ -233,7 +229,6 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 				// bust the cache in the other thread unnecessarily.
 			.then(data => Promise.resolve(task.call(thisArg, structuredClone(data)))
 				.then(newData => {
-console.log("---- background doTask", newData);
 					if (saveResult && newData && isNewDataDifferent(newData, data)) {
 							// since all the values are stored on the .data
 							// key of the storage instead of at the topmost
@@ -242,7 +237,6 @@ console.log("---- background doTask", newData);
 							// otherwise, we'd lose any values that weren't
 							// changed and returned by the task function.
 						Object.assign(data, newData);
-console.log("==== SAVE", newData);
 
 						return save(data);
 					} else {
@@ -289,7 +283,6 @@ console.log("==== SAVE", newData);
 export function createStorageClient(
 	clientName)
 {
-console.log("==== createStorageClient", clientName);
   	const { call } = connect("storage/" + clientName);
 	const storageLocation = globalThis.location.pathname;
 	let dataPromise = cp.storage.local.get(null).then(({ data }) => data);
@@ -306,7 +299,6 @@ console.log("==== createStorageClient", clientName);
 		if (area === "local" && changedData && (changedLocation || lastSavedFrom) !== storageLocation) {
 				// the storage was changed in the background, so update our cache
 			dataPromise = Promise.resolve(changedData);
-//console.log("==== storage.onChanged in", changedLocation, storageLocation, dataPromise, changes);
 			lastSavedFrom = changedLocation || lastSavedFrom;
 		}
 	});
@@ -358,14 +350,12 @@ console.time(`======= DO TASK ${id} get data`);
 console.timeEnd(`======= DO TASK ${id} get data`);
 
 		const newData = await task(data);
-console.log(`======= DO TASK ${id} after task`, newData);
 
 		return call("done", id, newData)
 			.then((newData) => {
 				const taskTime = performance.now() - t;
 				totalTime += taskTime;
 				taskCount++;
-//console.log(`======= DO TASK ${id} data`, isNewDataDifferent(newData, data), newData);
 console.log("======= DO TASK", id, "after done", taskTime, "ms", isNewDataDifferent(newData, data), newData);
 console.log(`======= DO TASK ${id} avg time:`, Math.round(totalTime / taskCount), "ms", taskCount, "total");
 

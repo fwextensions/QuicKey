@@ -10,7 +10,7 @@ export default class Mutex {
 		task,
 		timeLimit = 1000)
 	{
-console.log("MUTEX lock", this.id, this._locked, this._queue.length);
+//console.log("MUTEX lock", this.id, this._locked, this._queue.length);
 
 		return new Promise((resolve, reject) => {
 			this._queue.push([task, resolve, reject, this.id++, timeLimit]);
@@ -38,7 +38,7 @@ console.log("MUTEX lock", this.id, this._locked, this._queue.length);
 	{
 		const [task, resolve, reject, id, timeLimit] = record;
 		let timeout;
-console.warn("▼▼▼▼ MUTEX _execute", id, this._queue.length);
+//console.warn("▼▼▼▼ MUTEX _execute", id, this._queue.length);
 
 			// execute the task and race it against a timeout, so that if the
 			// task doesn't complete (most likely because the other end of a
@@ -49,7 +49,7 @@ console.warn("▼▼▼▼ MUTEX _execute", id, this._queue.length);
 			new Promise((resolve) => {
 				timeout = setTimeout(
 					() => {
-console.error("MUTEX timed out", id, "queue:", this._queue.length);
+console.error("MUTEX timed out, id:", id, "queue:", this._queue.length);
 						resolve(new Error("Mutex task timed out")); },
 //					() => resolve(new Error("Mutex task timed out")),
 					timeLimit
@@ -58,7 +58,7 @@ console.error("MUTEX timed out", id, "queue:", this._queue.length);
 		])
 			.then(resolve, reject)
 			.finally(() => {
-console.warn("▲▲▲▲ MUTEX finally", id, this._queue.length);
+//console.warn("▲▲▲▲ MUTEX finally", id, this._queue.length);
 
 					// though not strictly necessary, clean up the timeout here
 				clearTimeout(timeout);

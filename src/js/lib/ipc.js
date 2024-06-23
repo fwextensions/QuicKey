@@ -1,7 +1,5 @@
 import { PromiseWithResolvers } from "./promise-with-resolvers";
 
-console.log("----------- loading lib/ipc.js");
-
 const ChannelPrefix = "ipc://";
 
 class Connection {
@@ -19,7 +17,6 @@ class Connection {
 		onDisconnect,
 		initiatorName)
 	{
-console.log("---------- Connection constructor", port.name);
 		this.#port = port;
 		this.#receiversByName = receiversByName;
 		this.#onDisconnect = onDisconnect;
@@ -35,7 +32,6 @@ console.log("---------- Connection constructor", port.name);
 	{
 		const id = this.#currentCallID++;
 		const promise = new PromiseWithResolvers();
-console.log("---------- call in Connection", name, id);
 
 		this.#promisesByID[id] = promise;
 		this.#post({ type: "call", id, name, data });
@@ -65,7 +61,6 @@ console.log("---------- call in Connection", name, id);
 
 	#handleDisconnect = () =>
 	{
-console.log("---------- handleDisconnect", this.#promisesByID);
 		this.#onDisconnect?.(this);
 		this.#port?.onMessage.removeListener(this.#handleMessage);
 		this.#port = null;
@@ -74,7 +69,6 @@ console.log("---------- handleDisconnect", this.#promisesByID);
 	#handleMessage = async (
 		message) =>
 	{
-console.log("---------- handleMessage", message);
 		if (!message || typeof message !== "object") {
 			return;
 		}
@@ -123,7 +117,6 @@ console.error("---------- #handleCall no receiver", name, id, data);
 	#handleResponse(
 		message)
 	{
-console.log("---------- #handleResponse", message?.id, message?.data);
 		if (message?.id in this.#promisesByID) {
 			const { id, data } = message;
 			const promise = this.#promisesByID[id];
@@ -204,7 +197,6 @@ console.log("---------- handleDisconnect", index, connections);
 		const connection = new Connection(newPort, receiversByName, handleDisconnect, channelName);
 
 		connections.push(connection);
-console.log("---------- createConnection", newPort, connections);
 
 		if (callQueue.length) {
 console.log("---------- calling callQueue", callQueue);
@@ -231,8 +223,6 @@ console.log("---------- calling callQueue", callQueue);
 		name,
 		...data)
 	{
-console.log("---------- call", name, data);
-
 		if (!connections.length) {
 // TODO: we need to generate a promise here to return
 			callQueue.push({ name, data });
@@ -250,7 +240,6 @@ console.warn("---------- call MULTIPLE CONNECTIONS", name, connections);
 		name,
 		fn)
 	{
-console.log("---------- receive", name);
 		if (typeof name === "string") {
 			receiversByName[name] = fn;
 			callConnections("handleNewReceiver", name);
