@@ -48,7 +48,7 @@ export function createStorage({
 {
 console.log("================================ createStorage", globalThis.location.pathname);
 
-	const { receive } = connect();
+	const { receive } = connect(/storage\/.+/);
 	const storageMutex = new Mutex();
 	const storageLocation = globalThis.location.pathname;
 	const promisesByCallID = new Map();

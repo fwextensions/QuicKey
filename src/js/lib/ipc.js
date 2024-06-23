@@ -156,7 +156,7 @@ console.log("---------- #handleResponse", message?.id, message?.data);
 }
 
 export function connect(
-	portName = "")
+	channelName)
 {
 	const receiversByName = {};
 	const callQueue = [];
@@ -166,8 +166,8 @@ export function connect(
 
 	chrome.runtime.getContexts({}).then((initialViews) => {
 		if (connections.length === 0 && initialViews.length > 1) {
-console.log("---------- calling createConnection because views open", ChannelPrefix + portName, location.pathname + location.search.slice(0, 10));
-			createConnection(chrome.runtime.connect({ name: ChannelPrefix + portName }));
+console.log("---------- calling createConnection because views open", ChannelPrefix + channelName, location.pathname + location.search.slice(0, 10));
+			createConnection(chrome.runtime.connect({ name: ChannelPrefix + channelName }));
 		}
 	});
 
@@ -175,10 +175,13 @@ console.log("---------- calling createConnection because views open", ChannelPre
 		newPort)
 	{
 		const [prefix, newPortName] = newPort.name.split(ChannelPrefix);
+		const nameMatches = channelName instanceof RegExp
+			? channelName.test(newPortName)
+			: (!channelName || newPortName === channelName);
 
-console.log("---------- got onConnect", portName, ":", newPortName, newPort.name, location.pathname + location.search.slice(0, 10));
+console.log("---------- got onConnect", channelName, ":", nameMatches, newPortName, newPort.name, location.pathname + location.search.slice(0, 10));
 			// prefix will be empty if it matches ChannelPrefix
-		if (!prefix && (!portName || newPortName === portName)) {
+		if (!prefix && nameMatches) {
 			createConnection(newPort);
 		}
 	}
@@ -198,7 +201,7 @@ console.log("---------- handleDisconnect", index, connections);
 	function createConnection(
 		newPort)
 	{
-		const connection = new Connection(newPort, receiversByName, handleDisconnect, portName);
+		const connection = new Connection(newPort, receiversByName, handleDisconnect, channelName);
 
 		connections.push(connection);
 console.log("---------- createConnection", newPort, connections);
@@ -210,7 +213,7 @@ console.log("---------- calling callQueue", callQueue);
 			callQueue.length = 0;
 		}
 
-		if (portName) {
+		if (channelName && typeof channelName === "string") {
 				// we're intended to connect to a specific port, so now that we've
 				// created a connection, we don't want to connect to future ports
 			chrome.runtime.onConnect.removeListener(handleConnect);
