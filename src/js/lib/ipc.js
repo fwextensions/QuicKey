@@ -2,27 +2,28 @@ import { PromiseWithResolvers } from "./promise-with-resolvers";
 
 console.log("----------- loading lib/ipc.js");
 
-const ChannelPrefix = "//ipc/";
+const ChannelPrefix = "ipc://";
 
 class Connection {
 	#port;
 	#receiversByName;
 	#promisesByID = {};
-// TODO: do we need postQueue?
-	#postQueue = [];
 	#receiveQueue = new Set();
 	#currentCallID = 0;
+	#initiatorName = "unnamed";
 	#onDisconnect;
 
 	constructor(
 		port,
 		receiversByName,
-		onDisconnect)
+		onDisconnect,
+		initiatorName)
 	{
 console.log("---------- Connection constructor", port.name);
 		this.#port = port;
 		this.#receiversByName = receiversByName;
 		this.#onDisconnect = onDisconnect;
+		this.#initiatorName = initiatorName || this.#initiatorName;
 
 		this.#port.onMessage.addListener(this.#handleMessage);
 		this.#port.onDisconnect.addListener(this.#handleDisconnect);
@@ -67,7 +68,6 @@ console.log("---------- call in Connection", name, id);
 console.log("---------- handleDisconnect", this.#promisesByID);
 		this.#onDisconnect?.(this);
 		this.#port?.onMessage.removeListener(this.#handleMessage);
-		this.#postQueue.length = 0;
 		this.#port = null;
 	}
 
@@ -162,44 +162,25 @@ export function connect(
 	const callQueue = [];
 	const connections = [];
 
-	chrome.runtime.onConnect.addListener((newPort) => {
-		const [prefix, newPortName] = newPort.name.split(ChannelPrefix);
-
-console.log("---------- got onConnect", portName, ":", ChannelPrefix, newPortName, newPort.name);
-			// prefix will be empty if it matches ChannelPrefix
-		if (!prefix && (!portName || newPortName === portName)) {
-			createConnection(newPort);
-		}
-	});
+	chrome.runtime.onConnect.addListener(handleConnect);
 
 	chrome.runtime.getContexts({}).then((initialViews) => {
 		if (connections.length === 0 && initialViews.length > 1) {
-console.log("---------- calling createConnection because views open", ChannelPrefix + portName);
+console.log("---------- calling createConnection because views open", ChannelPrefix + portName, location.pathname + location.search.slice(0, 10));
 			createConnection(chrome.runtime.connect({ name: ChannelPrefix + portName }));
 		}
 	});
 
-	function createConnection(
+	function handleConnect(
 		newPort)
 	{
-		const connection = new Connection(newPort, receiversByName, handleDisconnect);
+		const [prefix, newPortName] = newPort.name.split(ChannelPrefix);
 
-		connections.push(connection);
-console.log("---------- createConnection", newPort, connections);
-
-		if (callQueue.length) {
-console.log("---------- calling callQueue", callQueue);
-// TODO: also need to return the call promise from here somehow, or resolve the saved one
-			callQueue.forEach(({ name, data}) => connection.call(name, data));
-			callQueue.length = 0;
+console.log("---------- got onConnect", portName, ":", newPortName, newPort.name, location.pathname + location.search.slice(0, 10));
+			// prefix will be empty if it matches ChannelPrefix
+		if (!prefix && (!portName || newPortName === portName)) {
+			createConnection(newPort);
 		}
-	}
-
-	function callConnections(
-		method,
-		...args)
-	{
-		return connections.map((connection) => connection[method](...args));
 	}
 
 	function handleDisconnect(
@@ -212,6 +193,35 @@ console.log("---------- calling callQueue", callQueue);
 		}
 
 console.log("---------- handleDisconnect", index, connections);
+	}
+
+	function createConnection(
+		newPort)
+	{
+		const connection = new Connection(newPort, receiversByName, handleDisconnect, portName);
+
+		connections.push(connection);
+console.log("---------- createConnection", newPort, connections);
+
+		if (callQueue.length) {
+console.log("---------- calling callQueue", callQueue);
+// TODO: also need to return the call promise from here somehow, or resolve the saved one
+			callQueue.forEach(({ name, data}) => connection.call(name, data));
+			callQueue.length = 0;
+		}
+
+		if (portName) {
+				// we're intended to connect to a specific port, so now that we've
+				// created a connection, we don't want to connect to future ports
+			chrome.runtime.onConnect.removeListener(handleConnect);
+		}
+	}
+
+	function callConnections(
+		method,
+		...args)
+	{
+		return connections.map((connection) => connection[method](...args));
 	}
 
 	function call(
@@ -229,6 +239,7 @@ console.log("---------- call", name, data);
 			return connections[0].call(name, data);
 		}
 
+console.warn("---------- call MULTIPLE CONNECTIONS", name, connections);
 		return Promise.allSettled(callConnections("call", name, data));
 	}
 

@@ -48,7 +48,10 @@ console.warn("▼▼▼▼ MUTEX _execute", id, this._queue.length);
 			Promise.resolve(task()),
 			new Promise((resolve) => {
 				timeout = setTimeout(
-					() => resolve(new Error("Mutex task timed out")),
+					() => {
+console.error("MUTEX timed out", id, "queue:", this._queue.length);
+						resolve(new Error("Mutex task timed out")); },
+//					() => resolve(new Error("Mutex task timed out")),
 					timeLimit
 				);
 			}),

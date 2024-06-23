@@ -29,7 +29,9 @@ function isNewDataDifferent(
 	newData,
 	data)
 {
-		// newData and data should normally be non-null, but check just in case
+		// newData and data should normally be non-null, but check just in case.
+		// we compare the keys of just newData, rather than the whole of newData
+		// vs. data, because newData will usually be a subset.
 	if (typeof newData === "object" && typeof data === "object" && newData && data) {
 		return !Object.keys(newData).every((key) => deepEqual(newData[key], data[key]));
 	}
@@ -284,10 +286,10 @@ console.log("==== SAVE", newData);
 
 
 export function createStorageClient(
-	portName)
+	clientName)
 {
-console.log("==== createStorageClient", portName);
-	const { call } = connect(portName);
+console.log("==== createStorageClient", clientName);
+  	const { call } = connect("storage/" + clientName);
 	const storageLocation = globalThis.location.pathname;
 	let dataPromise = cp.storage.local.get(null).then(({ data }) => data);
 	let currentTaskID = 0;
