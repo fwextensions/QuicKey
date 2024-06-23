@@ -1,13 +1,24 @@
 import cp from "cp";
-import shared from "@/lib/shared";
 import objectsHaveSameKeys from "@/lib/objects-have-same-keys";
 import decode from "@/lib/decode";
-import createStorage from "./storage";
+import {createStorageClient, createStorage} from "./storage";
 import getDefaultSettings from "./get-default-settings";
 import * as k from "./constants";
 
 
-export default shared("quickeyStorage", () => {
+	// name the port based on whatever page we're being hosted on
+const PortName = location.pathname.match(/\/([^/]+)\.(html|js)/)?.[1] || "unknown";
+
+
+// TODO: don't create this in an IIFE
+export default (() => {
+	if (typeof ServiceWorkerGlobalScope !== "function") {
+			// we're not running in the background script, so create a client that
+			// exchanges messages with the service worker to get/set the storage data
+		return createStorageClient(PortName);
+	}
+
+
 	function increment(
 		value)
 	{
@@ -214,4 +225,4 @@ export default shared("quickeyStorage", () => {
 				objectsHaveSameKeys(defaults.settings, data.settings, true);
 		}
 	});
-});
+})();

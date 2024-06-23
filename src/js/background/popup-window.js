@@ -1,5 +1,4 @@
 import cp from "cp";
-import shared from "@/lib/shared";
 import storage from "@/background/quickey-storage";
 import {HidePopupBehavior, IsFirefox, PopupInnerHeight, PopupInnerWidth, PopupURL} from "@/background/constants";
 import {calcBounds} from "@/background/popup-utils";
@@ -19,6 +18,7 @@ let lastActiveTab;
 
 
 storage.get(data => ({popupAdjustmentWidth, popupAdjustmentHeight} = data));
+
 
 async function getPopupID()
 {
@@ -325,6 +325,11 @@ async function resize(
 	width,
 	height)
 {
+	if (height < 0) {
+console.error("----- resize", windowID, width, height);
+		return;
+	}
+
 	await cp.windows.update(windowID, { width, height });
 }
 
@@ -355,7 +360,7 @@ async function close()
 }
 
 
-export default shared("popupWindow", () => ({
+export default {
 	create,
 	show,
 	hide,
@@ -403,4 +408,4 @@ export default shared("popupWindow", () => ({
 	get activeTab() {
 		return lastActiveTab;
 	}
-}));
+};

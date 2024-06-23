@@ -1,4 +1,4 @@
- import React from "react";
+import React from "react";
 
 
 export function Checkbox({
@@ -16,7 +16,7 @@ export function Checkbox({
 	function handleChange(
 		event)
 	{
-		onChange(event.target.checked, id);
+		onChange?.(event.target.checked, id);
 	}
 
 
@@ -127,7 +127,7 @@ export function RadioGroup({
 	function handleChange(
 		event)
 	{
-		onChange(event.target.value, id);
+		onChange?.(event.target.value, id);
 	}
 
 
@@ -143,14 +143,3 @@ export function RadioGroup({
 		</Group>
 	);
 }
-
-
-function noop() {}
-
-
-Checkbox.defaultProps = {
-	onChange: noop
-};
-RadioGroup.defaultProps = {
-	onChange: noop
-};
