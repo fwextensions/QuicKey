@@ -1,5 +1,4 @@
 import cp from "cp";
-import shared from "@/lib/shared";
 import addURLs from "@/popup/data/add-urls";
 import storage from "./quickey-storage";
 import pageTrackers from "./page-trackers";
@@ -534,7 +533,7 @@ function print(
 }
 
 
-export default shared("recentTabs", {
+export default {
 	add,
 	remove,
 	replace,
@@ -543,4 +542,4 @@ export default shared("recentTabs", {
 	navigate,
 	toggle,
 	print
-});
+};

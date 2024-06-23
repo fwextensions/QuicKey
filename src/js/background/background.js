@@ -455,6 +455,10 @@ chrome.windows.onFocusChanged.addListener(windowID => {
 
 
 chrome.runtime.onConnect.addListener(port => {
+	if (port.name !== "popup" && port.name !== "menu") {
+		return;
+	}
+
 	const connectTime = Date.now();
 	let closedByEsc = false;
 
@@ -476,8 +480,10 @@ chrome.runtime.onConnect.addListener(port => {
 	port.onDisconnect.addListener(port => {
 		ports[port.name] = null;
 		activeTab = null;
+console.log("----- background onDisconnect", port.name);
 
 		if (port.name == "popup") {
+// TODO: remove popupWindow.isOpen?
 //			if (popupWindow.isOpen) {
 				popupWindow.close();
 //			}

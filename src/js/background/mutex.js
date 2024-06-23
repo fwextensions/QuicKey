@@ -1,27 +1,27 @@
-function Mutex(
-	promiseConstructor = Promise)
-{
-	this._locked = false;
-	this._queue = [];
-	this._promiseConstructor = promiseConstructor;
-}
-
-
-Object.assign(Mutex.prototype, {
-	lock: function(
-		task)
+export default class Mutex {
+	constructor()
 	{
-		return new this._promiseConstructor(function(resolve, reject) {
-			this._queue.push([task, resolve, reject]);
+		this._queue = [];
+		this._locked = false;
+		this.id = 0;
+	}
+
+	lock(
+		task,
+		timeLimit = 1000)
+	{
+console.log("MUTEX lock", this.id, this._locked, this._queue.length);
+
+		return new Promise((resolve, reject) => {
+			this._queue.push([task, resolve, reject, this.id++, timeLimit]);
 
 			if (!this._locked) {
 				this._dequeue();
 			}
-		}.bind(this));
-	},
+		});
+	}
 
-
-	_dequeue: function()
+	_dequeue()
 	{
 		const next = this._queue.shift();
 
@@ -31,19 +31,38 @@ Object.assign(Mutex.prototype, {
 		} else {
 			this._locked = false;
 		}
-	},
+	}
 
-
-	_execute: function(
+	_execute(
 		record)
 	{
-		const [task, resolve, reject] = record;
+		const [task, resolve, reject, id, timeLimit] = record;
+		let timeout;
+console.warn("▼▼▼▼ MUTEX _execute", id, this._queue.length);
 
-		task().then(resolve, reject).then(function() {
-			this._dequeue();
-		}.bind(this));
+			// execute the task and race it against a timeout, so that if the
+			// task doesn't complete (most likely because the other end of a
+			// message pipe got closed), we can finish this task and move on to
+			// the next one instead of blocking all storage tasks
+		Promise.race([
+			Promise.resolve(task()),
+			new Promise((resolve) => {
+				timeout = setTimeout(
+					() => {
+console.error("MUTEX timed out", id, "queue:", this._queue.length);
+						resolve(new Error("Mutex task timed out")); },
+//					() => resolve(new Error("Mutex task timed out")),
+					timeLimit
+				);
+			}),
+		])
+			.then(resolve, reject)
+			.finally(() => {
+console.warn("▲▲▲▲ MUTEX finally", id, this._queue.length);
+
+					// though not strictly necessary, clean up the timeout here
+				clearTimeout(timeout);
+				this._dequeue();
+			});
 	}
-});
-
-
-export default Mutex;
+}

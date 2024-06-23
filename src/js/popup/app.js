@@ -248,6 +248,8 @@ export default class App extends React.Component {
 		if (this.props.isPopup && this[this.mode].length) {
 			const bodyHeight = document.body.offsetHeight;
 			const windowPadding = outerHeight - innerHeight;
+//console.log("==== componentDidUpdate", bodyHeight, windowPadding, outerHeight, innerHeight);
+// TODO: if the window is already small, the outerHeight could be smaller than innerHeight
 
 			if (notEqual(innerHeight, bodyHeight)) {
 					// don't fight with the onResize handler, and use the Chrome
@@ -779,7 +781,10 @@ export default class App extends React.Component {
 		blurred = false)
 	{
 		if (!this.props.isPopup || blurred) {
-			return cp.tabs.query({ active: true, currentWindow: true })
+// TODO: currentWindow used to work with manifest V2, but now that returns the popup when
+//  the user manually focuses another window.  lastFocusedWindow returns the correct window.
+			return cp.tabs.query({ active: true, lastFocusedWindow: true })
+//			return cp.tabs.query({ active: true, currentWindow: true })
 				.then(([activeTab]) => activeTab);
 		} else {
 				// since we're in a popup, get the active tab from the

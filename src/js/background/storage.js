@@ -1,5 +1,7 @@
 import { deepEqual } from "fast-equals";
 import cp from "cp";
+import { connect } from "@/lib/ipc";
+import { PromiseWithResolvers } from "@/lib/promise-with-resolvers";
 import Mutex from "./mutex";
 import trackers from "./page-trackers";
 
@@ -19,44 +21,75 @@ function alwaysValidate()
 function returnData(
 	data)
 {
-	return data;
+	return Promise.resolve(data);
 }
 
 
-function isNewDataEqual(
+function isNewDataDifferent(
 	newData,
 	data)
 {
-		// newData and data should normally be non-null, but check just in case
+		// newData and data should normally be non-null, but check just in case.
+		// we compare the keys of just newData, rather than the whole of newData
+		// vs. data, because newData will usually be a subset.
 	if (typeof newData === "object" && typeof data === "object" && newData && data) {
-		return Object.keys(newData).every((key) => deepEqual(newData[key], data[key]));
+		return !Object.keys(newData).every((key) => deepEqual(newData[key], data[key]));
 	}
 
 	return false;
 }
 
 
-export default function createStorage({
+export function createStorage({
 	version = 1,
 	getDefaultData = emptyDefaultData,
 	validateUpdate = alwaysValidate,
 	updaters = {} })
 {
+console.log("================================ createStorage", globalThis.location.pathname);
+
+	const { receive } = connect(/storage\/.+/);
 	const storageMutex = new Mutex();
 	const storageLocation = globalThis.location.pathname;
+	const promisesByCallID = new Map();
 	let dataPromise = initialize();
 	let lastSavedFrom;
 
+	receive("set", (id) => {
+		const taskPromise = new PromiseWithResolvers();
+console.log("========== receive set", id);
+		promisesByCallID.set(id, taskPromise);
 
-	chrome.storage.onChanged.addListener((changes, area) => {
-		const changedData = changes?.data?.newValue;
-//		const changedLocation = changes?.lastSavedFrom?.newValue;
+			// call set with a promise that will be resolved when we get the
+			// "done" call below.  we don't return the promise from set() because
+			// we want to hand control back to the caller now, so it can later
+			// call back with "done".
+		set((data) => taskPromise);
+	});
 
-		if (area === "local" && changedData) {
-			dataPromise = Promise.resolve(changedData);
-//console.log("==== storage.onChanged", changedLocation, storageLocation, dataPromise, changes);
-//			lastSavedFrom = storageLocation;
+
+	receive("done", (id, newData) => {
+		const taskPromise = promisesByCallID.get(id);
+		const returnPromise = new PromiseWithResolvers();
+console.log("========== receive done", id);
+
+		if (!taskPromise) {
+			throw new Error("done() received unknown ID: " + id);
 		}
+
+			// after the newData has been merged with the existing data and
+			// saved to storage, we want to send that updated data back to
+			// our caller, by resolving returnPromise with it.  the doTask()
+			// function in the storage client can then return it to whatever
+			// was awaiting storage.set() in that thread.
+		taskPromise.then((data) => returnPromise.resolve(data));
+
+			// tell the task we created above in set() to complete, which
+			// will clear the storage mutex lock
+		taskPromise.resolve(newData);
+		promisesByCallID.delete(id);
+
+		return returnPromise;
 	});
 
 
@@ -88,18 +121,16 @@ console.log(`--- INITIALIZE ${storageLocation}: loaded storage in`, performance.
 
 	function getAll()
 	{
-		if (!dataPromise) {
 const t = performance.now();
-				// pass null to get everything in storage, since the cache is empty
-			dataPromise = cp.storage.local.get(null)
-				.then(storage => {
+			// pass null to get everything in storage, since the cache is empty
+		dataPromise = cp.storage.local.get(null)
+			.then(storage => {
 console.log(`--- ${storageLocation}: loaded storage in`, performance.now() - t, "ms");
 
-					lastSavedFrom = storage.lastSavedFrom;
+				lastSavedFrom = storage.lastSavedFrom;
 
-					return storage.data;
-				});
-		}
+				return storage.data;
+			});
 
 		return dataPromise;
 	}
@@ -192,7 +223,7 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 		thisArg,
 		saveResult)
 	{
-		return storageMutex.lock(() => getAll()
+		return storageMutex.lock(() => (saveResult ? getAll() : dataPromise)
 				// we have to clone the data before passing it to the task function,
 				// so that any changes it makes to the data won't be reflected in
 				// the cached storage.  when can then compare newData to what's
@@ -201,7 +232,8 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 				// bust the cache in the other thread unnecessarily.
 			.then(data => Promise.resolve(task.call(thisArg, structuredClone(data)))
 				.then(newData => {
-					if (saveResult && newData && !isNewDataEqual(newData, data)) {
+console.log("---- background doTask", newData);
+					if (saveResult && newData && isNewDataDifferent(newData, data)) {
 							// since all the values are stored on the .data
 							// key of the storage instead of at the topmost
 							// level, we need to update that object with the
@@ -209,11 +241,10 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 							// otherwise, we'd lose any values that weren't
 							// changed and returned by the task function.
 						Object.assign(data, newData);
-console.log("==== SAVE", storageLocation, newData);
+console.log("==== SAVE", newData);
 
 						return save(data);
 					} else {
-//isNewDataEqual(newData, data) && console.log("==== NO CHANGE", storageLocation, newData, data);
 						return newData;
 					}
 				})));
@@ -250,5 +281,107 @@ console.log("==== SAVE", storageLocation, newData);
 		get,
 		set,
 		reset
+	};
+}
+
+
+export function createStorageClient(
+	clientName)
+{
+console.log("==== createStorageClient", clientName);
+  	const { call } = connect("storage/" + clientName);
+	const storageLocation = globalThis.location.pathname;
+	let dataPromise = cp.storage.local.get(null).then(({ data }) => data);
+	let currentTaskID = 0;
+	let totalTime = 0;
+	let taskCount = 0;
+	let lastSavedFrom;
+
+
+	chrome.storage.onChanged.addListener((changes, area) => {
+		const changedData = changes?.data?.newValue;
+		const changedLocation = changes?.lastSavedFrom?.newValue;
+
+		if (area === "local" && changedData && (changedLocation || lastSavedFrom) !== storageLocation) {
+				// the storage was changed in the background, so update our cache
+			dataPromise = Promise.resolve(changedData);
+//console.log("==== storage.onChanged in", changedLocation, storageLocation, dataPromise, changes);
+			lastSavedFrom = changedLocation || lastSavedFrom;
+		}
+	});
+
+
+	function getAll()
+	{
+const t = performance.now();
+			// pass null to get everything in storage, since the cache is empty
+		dataPromise = cp.storage.local.get(null)
+			.then(storage => {
+console.log(`--- ${storageLocation}: loaded storage in`, performance.now() - t, "ms");
+
+				lastSavedFrom = storage.lastSavedFrom;
+
+				return storage.data;
+			});
+
+		return dataPromise;
+	}
+
+
+	function get(
+		task = returnData)
+	{
+			// to speed things up, just return the current in-memory copy of the
+			// storage for get() tasks
+		return dataPromise.then(task);
+	}
+
+
+	async function set(
+		task)
+	{
+const t = performance.now();
+
+		const id = currentTaskID++;
+
+console.log("\n\n>>>> SET before SAVE", id, storageLocation, "\n" + String(task).slice(0, 100));
+console.time(`======= DO TASK ${id} get data`);
+			// call set() in the background to lock the storage mutex
+		await call("set", id);
+
+			// get the storage by calling the API directly in this thread, which
+			// seems to be slower than doing it in the background, but it's still
+			// about 1/3 faster overall because we don't have the overhead of
+			// marshalling the data to return it via messaging
+		const data = await getAll();
+console.timeEnd(`======= DO TASK ${id} get data`);
+
+		const newData = await task(data);
+console.log(`======= DO TASK ${id} after task`, newData);
+
+		return call("done", id, newData)
+			.then((newData) => {
+				const taskTime = performance.now() - t;
+				totalTime += taskTime;
+				taskCount++;
+//console.log(`======= DO TASK ${id} data`, isNewDataDifferent(newData, data), newData);
+console.log("======= DO TASK", id, "after done", taskTime, "ms", isNewDataDifferent(newData, data), newData);
+console.log(`======= DO TASK ${id} avg time:`, Math.round(totalTime / taskCount), "ms", taskCount, "total");
+
+					// combine the full data with whatever changed in the set()
+					// task and update our dataPromise with that
+				Object.assign(data, newData);
+				dataPromise = Promise.resolve(data);
+
+console.log("<<<< SET after SAVE", id, storageLocation, data, "\n\n\n");
+
+				return data;
+			});
+	}
+
+
+	return {
+		get,
+		set,
 	};
 }

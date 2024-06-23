@@ -14,7 +14,8 @@
 			location.href = reloadURL;
 		}
 	} else if (params.has(reloadedParam)) {
-		chrome.extension.getBackgroundPage().warn("BAD API: Popup reloaded");
+// TODO: figure out where to warn about this
+//		chrome.extension.getBackgroundPage().warn("BAD API: Popup reloaded");
 	}
 }
 
