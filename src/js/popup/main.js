@@ -2,6 +2,7 @@ import React from "react";
 import { hydrateRoot } from "react-dom/client";
 import App from "./app";
 import trackers from "@/background/page-trackers";
+import "@/background/log";
 
 
 const initialQuery = gKeyCache.join("");
@@ -21,7 +22,7 @@ if (gClose) {
 	window.close();
 }
 
-DEBUG && console.log("=== popup startup time", now - gInitTime, now);
+DEBUG && log("=== popup startup time", now - gInitTime, now);
 
 if (tracker) {
 		// send a pageview event after a delay, in case the user is toggling
