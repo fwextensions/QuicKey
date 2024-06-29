@@ -53,8 +53,8 @@ export function createStorage({
 	let dataPromise = initialize();
 	let lastSavedFrom;
 
-	receive("set", (id) => {
-		const taskPromise = new PromiseWithResolvers();
+	receive("set", (id, channel) => {
+		const taskPromise = channel.createPromise();
 
 		promisesByCallID.set(id, taskPromise);
 

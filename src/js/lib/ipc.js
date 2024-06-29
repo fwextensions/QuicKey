@@ -1,14 +1,15 @@
-import { PromiseWithResolvers } from "./promise-with-resolvers";
+import { AbortablePromise } from "@/lib/abortable-promise";
 
 const ChannelPrefix = "ipc://";
 
-class Connection {
+class Channel {
 	#port;
 	#receiversByName;
 	#promisesByID = {};
 	#receiveQueue = new Set();
 	#currentCallID = 0;
 	#initiatorName = "unnamed";
+	#controller = new AbortController();
 	#onDisconnect;
 
 	constructor(
@@ -31,7 +32,7 @@ class Connection {
 		data)
 	{
 		const id = this.#currentCallID++;
-		const promise = new PromiseWithResolvers();
+		const promise = this.createPromise();
 
 		this.#promisesByID[id] = promise;
 		this.#post({ type: "call", id, name, data });
@@ -52,6 +53,17 @@ class Connection {
 		});
 	}
 
+	createPromise()
+	{
+		return new AbortablePromise(this.#controller);
+	}
+
+	get name()
+	{
+// TODO: should this be the port name, or the initiator name?
+		return this.#port.name;
+	}
+
 	#post(
 		message)
 	{
@@ -64,6 +76,7 @@ class Connection {
 		this.#onDisconnect?.(this);
 		this.#port?.onMessage.removeListener(this.#handleMessage);
 		this.#port = null;
+		this.#controller.abort(new Error("ChannelDisconnected"));
 	}
 
 	#handleMessage = async (
@@ -96,7 +109,7 @@ class Connection {
 
 		if (receiver) {
 			try {
-				const result = await receiver(...data);
+				const result = await receiver(...data, this);
 
 				this.#post({ type: "response", id, name, data: result });
 			} catch (error) {
@@ -153,14 +166,14 @@ export function connect(
 {
 	const receiversByName = {};
 	const callQueue = [];
-	const connections = [];
+	const channels = [];
 
 	chrome.runtime.onConnect.addListener(handleConnect);
 
 	chrome.runtime.getContexts({}).then((initialViews) => {
-		if (connections.length === 0 && initialViews.length > 1) {
-console.log("---------- calling createConnection because views open", ChannelPrefix + channelName, location.pathname + location.search.slice(0, 10));
-			createConnection(chrome.runtime.connect({ name: ChannelPrefix + channelName }));
+		if (channels.length === 0 && initialViews.length > 1) {
+console.log("---------- calling createChannel because views open", ChannelPrefix + channelName, location.pathname + location.search.slice(0, 10));
+			createChannel(chrome.runtime.connect({ name: ChannelPrefix + channelName }));
 		}
 	});
 
@@ -175,65 +188,65 @@ console.log("---------- calling createConnection because views open", ChannelPre
 			// prefix will be empty if it matches ChannelPrefix
 		if (!prefix && nameMatches) {
 console.log("---------- got onConnect", channelName, ":", nameMatches, newPortName, newPort.name, location.pathname + location.search.slice(0, 10));
-			createConnection(newPort);
+			createChannel(newPort);
 		}
 	}
 
 	function handleDisconnect(
-		connection)
+		channel)
 	{
-		const index = connections.indexOf(connection);
+		const index = channels.indexOf(channel);
 
 		if (index > -1) {
-			connections.splice(index, 1);
+			channels.splice(index, 1);
 		}
 
-console.log("---------- handleDisconnect", index, connections);
+console.log("---------- handleDisconnect", channelName, index, channels);
 	}
 
-	function createConnection(
+	function createChannel(
 		newPort)
 	{
-		const connection = new Connection(newPort, receiversByName, handleDisconnect, channelName);
+		const channel = new Channel(newPort, receiversByName, handleDisconnect, channelName);
 
-		connections.push(connection);
+		channels.push(channel);
 
 		if (callQueue.length) {
 console.log("---------- calling callQueue", callQueue);
 // TODO: also need to return the call promise from here somehow, or resolve the saved one
-			callQueue.forEach(({ name, data}) => connection.call(name, data));
+			callQueue.forEach(({ name, data}) => channel.call(name, data));
 			callQueue.length = 0;
 		}
 
 		if (channelName && typeof channelName === "string") {
 				// we're intended to connect to a specific port, so now that we've
-				// created a connection, we don't want to connect to future ports
+				// created a channel, we don't want to connect to future ports
 			chrome.runtime.onConnect.removeListener(handleConnect);
 		}
 	}
 
-	function callConnections(
+	function callChannels(
 		method,
 		...args)
 	{
-		return connections.map((connection) => connection[method](...args));
+		return channels.map((channel) => channel[method](...args));
 	}
 
 	function call(
 		name,
 		...data)
 	{
-		if (!connections.length) {
+		if (!channels.length) {
 // TODO: we need to generate a promise here to return
 			callQueue.push({ name, data });
 
 			return;
-		} else if (connections.length === 1) {
-			return connections[0].call(name, data);
+		} else if (channels.length === 1) {
+			return channels[0].call(name, data);
 		}
 
-console.warn("---------- call MULTIPLE CONNECTIONS", name, connections);
-		return Promise.allSettled(callConnections("call", name, data));
+console.warn("---------- call MULTIPLE CHANNELS", name, channels);
+		return Promise.allSettled(callChannels("call", name, data));
 	}
 
 	function receive(
@@ -242,11 +255,11 @@ console.warn("---------- call MULTIPLE CONNECTIONS", name, connections);
 	{
 		if (typeof name === "string") {
 			receiversByName[name] = fn;
-			callConnections("handleNewReceiver", name);
+			callChannels("handleNewReceiver", name);
 		} else if (typeof name === "object" && name) {
 			for (const [fnName, fn] of Object.entries(name)) {
 				receiversByName[fnName] = fn;
-				callConnections("handleNewReceiver", fnName);
+				callChannels("handleNewReceiver", fnName);
 			}
 		}
 	}
