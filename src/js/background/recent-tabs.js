@@ -1,5 +1,6 @@
 import cp from "cp";
 import addURLs from "@/popup/data/add-urls";
+import {getRelativeTime} from "@/lib/get-relative-time";
 import storage from "./quickey-storage";
 import pageTrackers from "./page-trackers";
 import {MinTabDwellTime, PopupURL} from "./constants";
@@ -11,12 +12,12 @@ const TabKeys = ["id", "url", "windowId"];
 
 function titleOrURL(
 	tab,
-	length)
+	length = 75)
 {
 	if (!tab) {
 		return "NO TAB";
 	} else {
-		return (tab.title || tab.url).slice(0, length || 75);
+		return (tab.title || tab.url).slice(0, length);
 	}
 }
 
@@ -282,6 +283,7 @@ const t = performance.now();
 				const tabsByURL = {};
 				let {tabsByID} = data;
 				let newData = { tabsByID };
+// TODO: should use startsWith
 				let tabs = freshTabs.filter(({url}) => !url.includes(PopupURL));
 
 					// lastUpdateTime shouldn't be undefined, but just in case
@@ -511,25 +513,24 @@ function toggle(
 function print(
 	count = 20)
 {
-	return cp.storage.local.get(null)
-		.then(({data}) => {
-			const {tabsByID, tabIDs} = data;
-
-			Promise.all(
-				tabIDs.slice(-count).reverse().map(tabID =>
-					cp.tabs.get(tabID).catch(() => tabID)
-				)
+	return storage.get(({tabsByID, tabIDs}) =>
+		Promise.all(
+			tabIDs.slice(-count).reverse().map(tabID =>
+				cp.tabs.get(tabID).catch(() => tabID)
 			)
-				.then(tabs => tabs.forEach(tab => {
-					if (isNaN(tab)) {
-						console.log("%c   ",
-							`font-size: 14px; background: url(${tab.favIconUrl}) top center / contain no-repeat`,
-							`${tab.id}|${tab.windowId}: ${tabsByID[tab.id].lastVisit}: ${titleOrURL(tab)}`);
+		)
+			.then(tabs => {
+				const rows = tabs.map(tab => {
+					if (tab?.id) {
+						return `${tab.id}|${tab.windowId}: ${getRelativeTime(tabsByID[tab.id].lastVisit)}: ${titleOrURL(tab)}`;
 					} else {
-						console.log("MISSING", tab);
+						return "MISSING: " + tab;
 					}
-				}));
-		});
+				});
+
+				log("\n" + rows.join("\n"));
+			})
+	);
 }
 
 

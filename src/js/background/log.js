@@ -21,7 +21,12 @@ if (typeof ServiceWorkerGlobalScope === "function") {
 		}
 	]);
 
-	receive(Object.fromEntries(methodEntries))
+	receive(Object.fromEntries(methodEntries));
+
+		// map a global log() function to console.log() in the background
+	Methods.forEach((name) => {
+		globalThis[name] = (...args) => DEBUG && console[name].apply(console, args);
+	});
 } else if (typeof globalThis[Methods[0]] !== "function") {
 	const pageName = location.pathname.match(/\/([^/]+)\.(html|js)/)?.[1] || "unknown";
 	const callerName = pageName === "popup"

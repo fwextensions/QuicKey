@@ -123,6 +123,8 @@ no time limit for switchinng from one previous tab to the next.  just keep press
 when using switch to previous/next tab shortcuts, option to show popup while navigating, so you can see each tab without any time limit.  release alt when you've found the right tab
 can use alt-A to switch back and forth between the two most recent tabs without any waiting in between
 
+press space to change selection and search with multiple terms
+
 
  • Support pinyin when searching for bookmarks and history items
  • Limit recent tab navigation to the current browser window
