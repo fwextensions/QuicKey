@@ -73,18 +73,18 @@ function init()
 	errors.forEach(handleError);
 	errors = null;
 
-	window.removeEventListener("error", queueError);
-	window.removeEventListener("unhandledrejection", queueError);
+	removeEventListener("error", queueError);
+	removeEventListener("unhandledrejection", queueError);
 
-	window.addEventListener("error", handleError);
-	window.addEventListener("unhandledrejection", handleError);
+	addEventListener("error", handleError);
+	addEventListener("unhandledrejection", handleError);
 
 }
 
 
 	// until the page has fully loaded, just catch and queue any exceptions
-window.addEventListener("error", queueError);
-window.addEventListener("unhandledrejection", queueError);
+addEventListener("error", queueError);
+addEventListener("unhandledrejection", queueError);
 
 	// wait for the trackers to finish initializing, and then fire off the
 	// queued exceptions

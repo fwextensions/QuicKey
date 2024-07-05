@@ -788,10 +788,7 @@ export default class App extends React.Component {
 		blurred = false)
 	{
 		if (!this.props.isPopup || blurred) {
-// TODO: currentWindow used to work with manifest V2, but now that returns the popup when
-//  the user manually focuses another window.  lastFocusedWindow returns the correct window.
-			return cp.tabs.query({ active: true, lastFocusedWindow: true })
-//			return cp.tabs.query({ active: true, currentWindow: true })
+			return cp.tabs.query({ active: true, currentWindow: true })
 				.then(([activeTab]) => activeTab);
 		} else {
 				// since we're in a popup, get the active tab from the
@@ -1136,6 +1133,7 @@ export default class App extends React.Component {
 							// selected state to -1
 						await this.showWindow({ focusSearch: false, activeTab: null });
 
+
 							// set selected based on the direction so that
 							// when modifySelected() is called below, the
 							// direction delta will end up selecting the
@@ -1162,7 +1160,6 @@ export default class App extends React.Component {
 				if (!this.navigatingRecents) {
 						// loadTabs() calls loadPromisedItems() with a forced
 						// reload, so it'll trigger a render with the new items
-console.log("==== calling loadTabs from tabActivated");
 					this.loadTabs();
 				}
 				break;
@@ -1209,7 +1206,7 @@ console.log("==== calling loadTabs from tabActivated");
 				// Windows.  on macOS, the inner and outer widths are
 				// always the same.
 			this.reopenWindow();
-			log("=== borders collapsed");
+warn("=== borders collapsed");
 		} else if (!this.ignoreNextResize &&
 				(notEqual(outerWidth, this.popupW) || notEqual(outerHeight, this.popupH))) {
 				// prevent the window from resizing, but only if the width

@@ -162,7 +162,7 @@ function handleTabActivated({
 					// reactivated after the popup was hidden, so we don't
 					// need to tell the popup to re-render in that case
 				if (tabId !== tabIDs.slice(-1)[0]) {
-console.log("--- sending tabActivated", tabId, "old", tabIDs.slice(-1)[0]);
+//console.log("--- sending tabActivated", tabId, "old", tabIDs.slice(-1)[0]);
 					sendPopupMessage("tabActivated");
 				} else {
 //console.log("--- NOT sending tabActivated");
@@ -223,8 +223,7 @@ async function openPopupWindow(
 		lastFocusedWindow: true
 	});
 
-	if (!ports.popup) {
-//	if (!popupWindow.isOpen || !ports.popup) {
+	if (!(await popupWindow.isOpen()) || !ports.popup) {
 			// the popup window isn't open, so create a new one.  tell it whether
 			// to focus the search box or navigate recents.
 		await popupWindow.create(
@@ -279,8 +278,7 @@ async function navigateRecents(
 			if (direction == -1 || popupWindow.isVisible) {
 				navigatingRecents = true;
 
-				if (!ports.popup) {
-//				if (!popupWindow.isOpen || !ports.popup) {
+				if (!(await popupWindow.isOpen()) || !ports.popup) {
 						// execute any pending tab activation event so the recents
 						// list is up-to-date before we start navigating
 					await addTab.execute();

@@ -387,6 +387,12 @@ export default {
 		popupEmitter.removeListener(type, callback);
 	},
 
+	async isOpen() {
+		const popupWindowTab = await chrome.runtime.getContexts({ tabIds: [tabID] });
+
+		return popupWindowTab.length > 0;
+	},
+
 	get hideBehavior() {
 		return hideBehavior;
 	},
@@ -406,10 +412,6 @@ export default {
 
 	get tabID() {
 		return tabID;
-	},
-
-	get isOpen() {
-		throw new Error("popupWindow.isOpen: Not implemented");
 	},
 
 	get isVisible() {
