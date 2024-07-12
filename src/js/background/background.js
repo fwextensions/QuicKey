@@ -73,7 +73,7 @@ let lastUsedVersion;
 let usePinyin;
 
 
-const isPopupWindow = (tab) => tab?.url.includes(k.PopupURL);
+const isPopupWindow = (tab) => tab?.url.startsWith(k.PopupURL);
 
 
 chrome.runtime.onStartup.addListener(() => {
@@ -216,40 +216,47 @@ function sendPopupMessage(
 async function openPopupWindow(
 	focusSearch = false)
 {
-	const currentActiveTab = activeTab;
-
-	[activeTab] = await cp.tabs.query({
+		// we used to set activeTab directly here, and then change it back to the
+		// previous value in the last branch below.  that caused issues when we
+		// were also awaiting popupWindow.isOpen().  if the user pressed alt-Q
+		// quickly, a second command event could get handled while we were
+		// awaiting isOpen().  the second invocation would then cache the previous
+		// tab as the popup as well, causing it to send showWindow, which would
+		// then reset the selection, making it impossible to move down quickly.
+	const [currentActiveTab] = await cp.tabs.query({
 		active: true,
 		lastFocusedWindow: true
 	});
 
-	if (!(await popupWindow.isOpen()) || !ports.popup) {
+	if (!ports.popup) {
+		activeTab = currentActiveTab;
+
 			// the popup window isn't open, so create a new one.  tell it whether
 			// to focus the search box or navigate recents.
-		await popupWindow.create(
+		return popupWindow.create(
 			activeTab,
 			{ focusSearch, navigatingRecents },
 			navigatingRecents ? "right-center" : "center-center"
 		);
-	} else if (!activeTab || !isPopupWindow(activeTab)) {
+	}
+
+	if (!isPopupWindow(currentActiveTab)) {
+		activeTab = currentActiveTab;
+
 			// the popup window is open but not focused, so tell it to show
 			// itself centered on the current browser window, and whether to
 			// select the first item.  if there's no activeTab (such as when
 			// the shortcut is pressed and a devtools window is in the
 			// foreground), the popup will appear aligned to the screen.
-		sendPopupMessage("showWindow", { focusSearch, activeTab });
-	} else {
-			// change activeTab back to what it was before, since we don't want
-			// to treat the popup window as the active tab
-		activeTab = currentActiveTab;
+		return sendPopupMessage("showWindow", { focusSearch, activeTab });
+	}
 
-			// it's open and focused, so use the shortcut to move the
-			// selection DOWN
-		if (sendPopupMessage("modifySelected", { direction: 1 })) {
-				// an error was returned from sending the message, so close
-				// the popup
-			await popupWindow.close();
-		}
+		// the popup is open and focused, so use the shortcut to move the
+		// selection DOWN
+	if (sendPopupMessage("modifySelected", { direction: 1 })) {
+			// an error was returned from sending the message, so close
+			// the popup
+		return popupWindow.close();
 	}
 }
 
@@ -278,7 +285,7 @@ async function navigateRecents(
 			if (direction == -1 || popupWindow.isVisible) {
 				navigatingRecents = true;
 
-				if (!(await popupWindow.isOpen()) || !ports.popup) {
+				if (!ports.popup) {
 						// execute any pending tab activation event so the recents
 						// list is up-to-date before we start navigating
 					await addTab.execute();
