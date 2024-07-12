@@ -81,10 +81,12 @@ function notEqual(
 	const diff = Math.abs(a - b);
 
 		// because of rounding issues in Chrome when the UI is not scaled to a
-		// whole number, we want to ignore differences <= 2 in that case
+		// whole number, we want to ignore differences <= 6 in that case.  even
+		// in normal situations, ignore small differences to avoid extraneous
+		// shifts in the window size.
 	return Number.isInteger(devicePixelRatio)
-		? diff > 0
-		: diff > 2;
+		? diff > 2
+		: diff > 6;
 }
 
 
@@ -111,6 +113,7 @@ export default class App extends React.Component {
 	popupTabID = -1;
 	popupW = 0;
 	popupH = 0;
+	nextFrameRequestID = 0;
 
 
 	constructor(props, context)
@@ -210,6 +213,8 @@ export default class App extends React.Component {
 				// hide the window if it loses focus
 			window.addEventListener("blur", this.onWindowBlur);
 
+// TODO: sometimes the resolution change doesn't get noticed and we don't resize the popup correctly
+
 				// listen for resolution changes so we can resize the popup, in
 				// case it changes based on the new DPI
 			matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`).addListener(event => {
@@ -253,20 +258,27 @@ export default class App extends React.Component {
 			// this automatically.  and only if the current mode's promise is
 			// loaded, so that the window doesn't flicker while loading items.
 		if (this.props.isPopup && this[this.mode].length) {
-			const bodyHeight = document.body.offsetHeight;
-			const windowPadding = outerHeight - innerHeight;
-//console.log("==== componentDidUpdate", bodyHeight, windowPadding, outerHeight, innerHeight);
+				// since we want to measure the body and window heights only after
+				// the browser paints, do the check in a requestAnimationFrame.
+				// cancel any pending requests first, since we sometimes get
+				// multiple React updates in one frame.
+			cancelAnimationFrame(this.nextFrameRequestID);
+			this.nextFrameRequestID = requestAnimationFrame(() => {
+				const bodyHeight = document.body.offsetHeight;
+				const windowPadding = outerHeight - innerHeight;
 // TODO: if the window is already small, the outerHeight could be smaller than innerHeight
 
-			if (notEqual(innerHeight, bodyHeight)) {
-					// don't fight with the onResize handler, and use the Chrome
-					// API to resize the popup, since it can make the window
-					// shorter than window.resizeTo() can.  pass the saved
-					// outerWidth in this.popupW, in case the actual outerWidth
-					// has changed for some reason.
-				this.ignoreNextResize = true;
-				popupWindow.resize(this.popupW, bodyHeight + windowPadding);
-			}
+				if (notEqual(innerHeight, bodyHeight)) {
+						// don't fight with the onResize handler, and use the Chrome
+						// API to resize the popup, since it can make the window
+						// shorter than window.resizeTo() can.  pass the saved
+						// outerWidth in this.popupW, in case the actual outerWidth
+						// has changed for some reason.
+					this.ignoreNextResize = true;
+					this.popupH = bodyHeight + windowPadding;
+					popupWindow.resize(this.popupW, this.popupH);
+				}
+			});
 		}
 	}
 
@@ -1206,17 +1218,19 @@ export default class App extends React.Component {
 				// Windows.  on macOS, the inner and outer widths are
 				// always the same.
 			this.reopenWindow();
-warn("=== borders collapsed");
+			warn("=== borders collapsed");
 		} else if (!this.ignoreNextResize &&
 				(notEqual(outerWidth, this.popupW) || notEqual(outerHeight, this.popupH))) {
 				// prevent the window from resizing, but only if the width
 				// or height have actually changed, since we sometimes
 				// get resize events when the size is the same
+			this.ignoreNextResize = true;
 			popupWindow.resize(this.popupW, this.popupH);
+
+			return;
 		}
 
 		this.ignoreNextResize = false;
-
 	}, 250);
 
 

@@ -12,6 +12,8 @@ const {Behind, Tab, Minimize} = HidePopupBehavior;
 const { receive } = connect(/^popup-window/);
 let popupAdjustmentWidth = 0;
 let popupAdjustmentHeight = 0;
+let currentWidth = PopupInnerWidth;
+let currentHeight = PopupInnerHeight;
 let isVisible = false;
 let isHiddenInTab = false;
 let hideBehavior = Behind;
@@ -19,7 +21,11 @@ let { windowID, tabID } = await getPopupID();
 let lastActiveTab;
 
 
-storage.get(data => ({popupAdjustmentWidth, popupAdjustmentHeight} = data));
+storage.get(data => ({popupAdjustmentWidth, popupAdjustmentHeight} = data))
+	.then(() => {
+		currentWidth = PopupInnerWidth + popupAdjustmentWidth;
+		currentHeight = PopupInnerHeight + popupAdjustmentHeight;
+	});
 
 
 async function getPopupID()
@@ -99,8 +105,8 @@ async function create(
 		props.navigatingRecents ? null : targetWindow,
 		{
 			alignment,
-			popupAdjustmentWidth,
-			popupAdjustmentHeight
+			width: currentWidth,
+			height: currentHeight,
 		}
 	);
 	let window;
@@ -139,6 +145,8 @@ async function create(
 		popupAdjustmentHeight += heightDelta;
 		bounds.width += widthDelta;
 		bounds.height += heightDelta;
+		currentWidth = bounds.width;
+		currentHeight = bounds.height;
 
 			// shift the position by half a negative delta to keep the
 			// window centered in the target area
@@ -171,8 +179,8 @@ async function show(
 		targetWindow,
 		{
 			alignment,
-			popupAdjustmentWidth,
-			popupAdjustmentHeight
+			width: currentWidth,
+			height: currentHeight,
 		}
 	);
 	let window;
@@ -263,8 +271,8 @@ async function hide(
 			const bounds = calcBounds(
 				targetWindow,
 				{
-					popupAdjustmentWidth,
-					popupAdjustmentHeight
+					width: currentWidth,
+					height: currentHeight,
 				}
 			);
 
@@ -328,9 +336,11 @@ async function resize(
 	height)
 {
 	if (height < 0) {
-console.error("----- resize", windowID, width, height);
 		return;
 	}
+
+	currentWidth = width;
+	currentHeight = height;
 
 	await cp.windows.update(windowID, { width, height });
 }
