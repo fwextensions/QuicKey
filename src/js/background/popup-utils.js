@@ -1,4 +1,4 @@
-import {PopupInnerWidth, PopupInnerHeight, PopupPadding} from "@/background/constants";
+import {PopupPadding} from "@/background/constants";
 import {getScreenFromWindow} from "@/background/screen";
 
 function getAlignedPosition(
@@ -26,12 +26,10 @@ export function calcBounds(
 	targetWindow,
 	{
 		alignment = "center-center",
-		popupAdjustmentWidth = 0,
-		popupAdjustmentHeight = 0
+		width,
+		height,
 	} = {})
 {
-	const width = PopupInnerWidth + popupAdjustmentWidth;
-	const height = PopupInnerHeight + popupAdjustmentHeight;
 	const [horizontal, vertical] = alignment.split("-");
 	const screen = getScreenFromWindow(targetWindow);
 	const { left: targetX, top: targetY, width: targetW, height: targetH } =
