@@ -112,8 +112,9 @@ class OptionsAppContainer extends React.Component {
 			})
 			.then(this.setSettingsState);
 
-			// convert the value to a string before trying to do the
-			// replacement, since some values are booleans
+			// first convert the value to a string, since some values are
+			// booleans, before trying to replace `+` in keyboard shortcuts
+			// with `-`
 		this.tracker.event("setting", key, String(value).replace(PlusPattern, "-"));
 	};
 

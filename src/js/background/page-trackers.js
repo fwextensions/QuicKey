@@ -1,54 +1,44 @@
-import cp from "cp";
 import Tracker from "./tracker";
-import {IsEdge} from "./constants";
+import { IsEdge } from "./constants";
 
 
-const TrackerID = `UA-108153491-${IsEdge ? "4" : "3"}`;
+const TrackerID = IsEdge
+	? "G-C4JVSJ09QQ"
+	: "G-Y6PNZ406H1";
+const ClientIDKey = "clientID";
 
 
-const trackers = {
-	background: new Tracker({
+	// use an IIFE to init a function to create trackers with standard settings
+const createTracker = await (async () => {
+	const { version: dimension1, installType} = await chrome.management.getSelf();
+	const dimension2 = installType === "development" ? "D" : "P";
+	let { [ClientIDKey]: client_id } = await chrome.storage.local.get(ClientIDKey);
+
+	if (!client_id) {
+			// create a default client ID and then save it to storage
+		client_id = crypto.randomUUID();
+		await chrome.storage.local.set({ [ClientIDKey]: client_id });
+	}
+
+	return (name) => new Tracker({
 		id: TrackerID,
-		name: "background",
+		name,
 		settings: {
-			location: "/background.html",
-			page: "/background",
-			transport: "beacon"
+			client_id,
+			persistentEventParameters: {
+				page_location: `/${name}.html`,
+				page_title: `/${name}`,
+				dimension1,
+				dimension2
+			}
 		},
 		sendPageview: false
-	}),
-	popup: new Tracker({
-		id: TrackerID,
-		name: "popup",
-		settings: {
-			location: "/popup.html",
-			page: "/popup",
-			transport: "beacon"
-		},
-		sendPageview: false
-	}),
-	options: new Tracker({
-		id: TrackerID,
-		name: "options",
-		settings: {
-			location: "/options.html",
-			page: "/options",
-			transport: "beacon"
-		},
-		sendPageview: false
-	}),
-	ready: cp.management.getSelf().then(info => {
-		const dimensions = {
-			"dimension1": info.version,
-			"dimension2": info.installType == "development" ? "D" : "P"
-		};
+	});
+})();
 
-			// just loop over the trackers, not this promise handler
-		Object.values(trackers).slice(0, 3)
-			.forEach(tracker => tracker.set(dimensions));
 
-		return trackers;
-	})
+export default {
+	background: createTracker("background"),
+	popup: createTracker("popup"),
+	options: createTracker("options"),
 };
-
-export default trackers;

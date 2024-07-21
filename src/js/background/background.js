@@ -2,9 +2,9 @@ import cp from "cp";
 import popupWindow from "@/background/popup-window";
 import toolbarIcon from "@/background/toolbar-icon";
 import recentTabs from "@/background/recent-tabs";
-//import trackers from "@/background/page-trackers";
 import storage from "@/background/quickey-storage";
 import settings from "@/background/settings";
+import trackers from "@/background/page-trackers";
 import { debounce } from "@/background/debounce";
 import * as k from "@/background/constants";
 import "@/background/log";
@@ -25,13 +25,7 @@ const {
 	ToggleTabsCommand,
 	FocusPopupCommand
 } = k.CommandIDs;
-const tracker = {
-	exception() {},
-	event() {},
-	pageview() {},
-	timing() {}
-};
-//const tracker = trackers.background;
+const tracker = trackers.background;
 const MessageHandlers = {
 	focusTab: ({tab: {id, windowId}, options = {}, stopNavigatingRecents}) => {
 		if (stopNavigatingRecents) {
@@ -620,7 +614,7 @@ storage.set(data => {
 })
 	.then(() => {
 		tracker.pageview();
-		tracker.timing("loading", "background", performance.now());
+		tracker.timing("loading", "background-loaded", performance.now());
 DEBUG && console.log("=== startup done", performance.now());
 	})
 		// pause the chain to wait for the installed promise to resolve,

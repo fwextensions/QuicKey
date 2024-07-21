@@ -187,7 +187,7 @@ export default class App extends React.Component {
 					}
 				});
 
-				this.props.tracker.set("metric1", tabs.length);
+				this.props.tracker.set("tabCount", tabs.length);
 
 				if (this.navigatingRecents) {
 						// since the popup has just been opened and we're navigating

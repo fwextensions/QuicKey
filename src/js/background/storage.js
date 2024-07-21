@@ -6,6 +6,13 @@ import Mutex from "./mutex";
 import trackers from "./page-trackers";
 
 
+const StorageKeys = [
+	"version",
+	"data",
+	"lastSavedFrom"
+];
+
+
 function emptyDefaultData()
 {
 	return Promise.resolve({});
@@ -226,7 +233,8 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 
 	function resetWithoutLocking()
 	{
-		return cp.storage.local.clear()
+			// remove just the storage keys we actually use, rather than clearing everything
+		return cp.storage.local.remove(StorageKeys)
 			.then(getDefaultData)
 			.then(saveWithVersion)
 				// normally, dataPromise points to the resolved promise from
