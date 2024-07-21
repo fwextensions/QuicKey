@@ -30,7 +30,7 @@ if (tracker) {
 		// so don't want to count a pageview
 	setTimeout(() => {
 		tracker.pageview();
-		tracker.timing("loading", "popup", now);
+		tracker.timing("loading", "popup-loaded", now);
 	}, 750);
 }
 

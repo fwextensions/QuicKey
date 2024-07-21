@@ -130,9 +130,9 @@ DEBUG && console.log("=== newTabIDs", newTabIDs.length);
 
 		// use timing() instead of event() so that we can get a histogram in
 		// GA of the different values, which is hard with events
-	tracker.timing("update", "old-recents", tabIDs.length);
-	tracker.timing("update", "new-tabs", freshTabs.length);
-	tracker.timing("update", "missing-recents", missingCount);
+	tracker.event("update", "old-recents", tabIDs.length);
+	tracker.event("update", "new-tabs", freshTabs.length);
+	tracker.event("update", "missing-recents", missingCount);
 
 	var result = {
 		tabIDs: newTabIDs,

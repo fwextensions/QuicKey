@@ -96,7 +96,6 @@ module.exports = (env, argv) => {
 				}),
 				new HtmlWebpackPlugin(htmlOptions("popup")),
 				new HtmlWebpackPlugin(htmlOptions("options")),
-				new HtmlWebpackPlugin(htmlOptions("background")),
 				new CleanWebpackPlugin({
 					cleanOnceBeforeBuildPatterns: removeEmpty([
 						ifProduction(join(__dirname, "build/out/**")),
