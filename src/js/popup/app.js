@@ -800,7 +800,10 @@ export default class App extends React.Component {
 		blurred = false)
 	{
 		if (!this.props.isPopup || blurred) {
-			return cp.tabs.query({ active: true, currentWindow: true })
+				// currentWindow used to work with manifest V2, but now that
+				// returns the popup when the user manually focuses another
+				// window.  lastFocusedWindow returns the correct window.
+			return cp.tabs.query({ active: true, lastFocusedWindow: true })
 				.then(([activeTab]) => activeTab);
 		} else {
 				// since we're in a popup, get the active tab from the
