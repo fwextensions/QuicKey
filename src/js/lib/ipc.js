@@ -174,6 +174,7 @@ export function connect(
 		if (channels.length === 0 && initialViews.length > 1) {
 console.log("---------- calling createChannel because views open", ChannelPrefix + channelName, location.pathname + location.search.slice(0, 10));
 			createChannel(chrome.runtime.connect({ name: ChannelPrefix + channelName }));
+// TODO: create a single shared port for all channels.  then a single handler would call handleMessage() on the associated channel.
 		}
 	});
 
@@ -218,6 +219,8 @@ console.log("---------- calling callQueue", callQueue);
 			callQueue.length = 0;
 		}
 
+// TODO: it's not clear that this is very useful for anything that receives calls in the background.  we always want to
+//  reconnect when the popup reopens, so every time we've had to use a regex for the channel name.
 		if (channelName && typeof channelName === "string") {
 				// we're intended to connect to a specific port, so now that we've
 				// created a channel, we don't want to connect to future ports

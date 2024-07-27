@@ -1,6 +1,7 @@
-import cp from "cp";
 import trackers from "@/background/page-trackers";
-import {IsEdge, IsFirefox} from "@/background/constants";
+import { IsEdge, IsFirefox } from "@/background/constants";
+import storage from "@/background/quickey-storage";
+import { connect } from "@/lib/ipc";
 
 
 const backgroundTracker = trackers.background;
@@ -17,18 +18,20 @@ const BadgeColors = {
 		inverted: "#3367d6"
 	}
 };
+	// with manifest V3, the icon paths are relative to the background JS file,
+	// so start them with a / to make them absolute
 const IconPaths = {
 	light: {
 		normal: {
 			path: {
-				"19": "img/icon-19.png",
-				"38": "img/icon-38.png"
+				"19": "/img/icon-19.png",
+				"38": "/img/icon-38.png"
 			}
 		},
 		inverted: {
 			path: {
-				"19": "img/icon-19-inverted.png",
-				"38": "img/icon-38-inverted.png"
+				"19": "/img/icon-19-inverted.png",
+				"38": "/img/icon-38-inverted.png"
 			}
 		}
 	}
@@ -44,17 +47,15 @@ let isNormalIcon = true;
 let isTabCountVisible = false;
 let tabCount = 0;
 let inversionTimer;
+let colorScheme = "light";
 
 
 function getIconsAndBadgeColor(
 	inverted)
 {
-	const osMode = "light";
-//	const osMode = matchMedia("(prefers-color-scheme: dark)").matches ?
-//		"dark" : "light";
 	const iconMode = inverted ? "inverted" : "normal";
-	const paths = IconPaths[osMode][iconMode];
-	const color = BadgeColors[osMode][iconMode];
+	const paths = IconPaths[colorScheme][iconMode];
+	const color = BadgeColors[colorScheme][iconMode];
 
 	return { paths, color };
 }
@@ -67,11 +68,19 @@ async function setNormalIcon()
 	isNormalIcon = true;
 
 	try {
-		await cp.action.setBadgeBackgroundColor({ color });
-		await cp.action.setIcon(paths);
+		await chrome.action.setBadgeBackgroundColor({ color });
+		await chrome.action.setIcon(paths);
 	} catch (error) {
 		backgroundTracker.exception(error);
 	}
+}
+
+
+async function setColorScheme(
+	name)
+{
+	colorScheme = name;
+	await setNormalIcon();
 }
 
 
@@ -87,9 +96,9 @@ async function invertFor(
 
 	try {
 		if (isTabCountVisible) {
-			await cp.action.setBadgeBackgroundColor({ color });
+			await chrome.action.setBadgeBackgroundColor({ color });
 		} else {
-			await cp.action.setIcon(paths);
+			await chrome.action.setIcon(paths);
 		}
 	} catch (error) {
 		backgroundTracker.exception(error);
@@ -102,7 +111,7 @@ async function showTabCount(
 {
 	if (isTabCountVisible !== value) {
 		isTabCountVisible = value;
-		tabCount = (await cp.tabs.query({})).length;
+		tabCount = (await chrome.tabs.query({})).length;
 
 		await setNormalIcon();
 		await updateTabCount();
@@ -133,15 +142,30 @@ async function updateTabCount(
 	}
 
 	try {
-		await cp.action.setBadgeText({ text }),
-		await cp.action.setTitle({ title })
+		await chrome.action.setBadgeText({ text }),
+		await chrome.action.setTitle({ title })
 	} catch (error) {
 		backgroundTracker.exception(error);
 	}
 }
 
 
+	// use a regex for the channel name so it'll keep listening for the port to
+	// reconnect after it closes
+connect(/^colorScheme/).receive({
+	async setColorScheme(
+		name)
+	{
+		if (name !== colorScheme) {
+			await setColorScheme(name);
+			await storage.set(() => ({ colorScheme: name }));
+		}
+	}
+});
+
+
 export default {
+	setColorScheme,
 	invertFor,
 	showTabCount,
 	updateTabCount,
