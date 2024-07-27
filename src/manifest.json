@@ -51,7 +51,7 @@
 			}
 		},
 		"010-open-popup-window": {
-			"description": "Open in alt-tab-style popup"
+			"description": "Open alt-tab-style popup"
 		},
 		"020-focus-search": {
 			"description": "Search in alt-tab-style popup"

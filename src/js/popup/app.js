@@ -4,14 +4,13 @@ import ResultsList from "./results-list";
 import ResultsListItem from "./results-list-item";
 import MessageItem from "./message-item";
 import OptionsButton from "./options-button";
-import cp from "cp";
 import { connectPopupWindow } from "./popup-window";
 import scoreItems from "./score/score-items";
 import initTabs from "./data/init-tabs";
 import getBookmarks from "./data/get-bookmarks";
 import getHistory from "./data/get-history";
 import addURLs from "./data/add-urls";
-import {loadPinyin} from "./data/add-pinyin";
+import { loadPinyin } from "./data/add-pinyin";
 import shortcuts from "./shortcuts/popup-shortcuts";
 import handleRef from "@/lib/handle-ref";
 import copyTextToClipboard from "@/lib/copy-to-clipboard";
@@ -34,6 +33,11 @@ const CommandQueryPattern = /^\/[bh]?$/i;
 const NoRecentTabsMessage = [{
 	message: "Recently used tabs will appear here as you continue browsing",
 	faviconURL: "img/alert.svg",
+	component: MessageItem
+}];
+const NoRecentTabsInWindowMessage = [{
+	message: "There are no other recently used tabs in this window",
+	faviconURL: "img/default-favicon.svg",
 	component: MessageItem
 }];
 const DeleteBookmarkConfirmation = "Are you sure you want to permanently delete this bookmark?";
@@ -343,7 +347,9 @@ export default class App extends React.Component {
 				.sort(sortRecents)
 
 			if (!this.recents.length) {
-				this.recents = NoRecentTabsMessage;
+				this.recents = this.settings[k.CurrentWindowLimitRecents.Key]
+					? NoRecentTabsInWindowMessage
+					: NoRecentTabsMessage;
 			}
 
 			if (this.settings[k.CurrentWindowLimitSearch.Key]) {
@@ -521,7 +527,9 @@ export default class App extends React.Component {
 		shiftKey,
 		modKey) =>
 	{
-		if (item) {
+			// check for a URL on the selected item, so we can ignore the special
+			// items that just show a message
+		if (item && item.url) {
 			const {url} = item;
 			let tabOrWindow;
 
@@ -576,7 +584,9 @@ export default class App extends React.Component {
 		unsuspend,
 		stopNavigatingRecents)
 	{
-		if (tab) {
+			// check for a URL on the selected item, so we can ignore the special
+			// items that just show a message
+		if (tab && tab.url) {
 			const queryLength = this.state.query.length;
 			const category = queryLength ? "tabs" : "recents";
 			let event = (category == "recents" && this.gotMRUKey)
@@ -713,7 +723,7 @@ export default class App extends React.Component {
 					index = activeTab.index;
 				}
 
-				return cp.tabs.move(tab.id, {
+				return chrome.tabs.move(tab.id, {
 					windowId: activeTab.windowId,
 					index: index
 				});
@@ -803,7 +813,7 @@ export default class App extends React.Component {
 				// currentWindow used to work with manifest V2, but now that
 				// returns the popup when the user manually focuses another
 				// window.  lastFocusedWindow returns the correct window.
-			return cp.tabs.query({ active: true, lastFocusedWindow: true })
+			return chrome.tabs.query({ active: true, lastFocusedWindow: true })
 				.then(([activeTab]) => activeTab);
 		} else {
 				// since we're in a popup, get the active tab from the
@@ -1010,7 +1020,7 @@ export default class App extends React.Component {
 		const messageBody = { message, ...payload };
 
 		if (awaitResponse) {
-				// we can't use cp.runtime.sendMessage() because it's a
+				// we can't use chrome.runtime.sendMessage() because it's a
 				// shared instance that's on the background page, so calling
 				// sendMessage() from there would be going from the
 				// background to this window, but we want the opposite
@@ -1111,7 +1121,7 @@ export default class App extends React.Component {
 	onOptionsClick = async () =>
 	{
 		const url = chrome.runtime.getURL("options.html");
-		const [tab] = await cp.tabs.query({ url });
+		const [tab] = await chrome.tabs.query({ url });
 		let optionsTab;
 
 		this.searchBox.focus();
