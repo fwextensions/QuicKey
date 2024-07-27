@@ -217,7 +217,7 @@ export default class App extends React.Component {
 
 				// listen for resolution changes so we can resize the popup, in
 				// case it changes based on the new DPI
-			matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`).addListener(event => {
+			matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`).addEventListener("change", event => {
 				if (!event.matches) {
 					popupWindow.resize(this.popupW, this.popupH);
 				}

@@ -120,6 +120,10 @@ export default (() => {
 		{
 			data.settings[k.SpaceBehavior.Key] = k.SpaceBehavior.Both;
 		}),
+		13: update(async data =>
+		{
+			data.colorScheme = "light";
+		}),
 	};
 		// calculate the version by incrementing the highest key in the
 		// Updaters hash, so that the version is automatically increased
@@ -176,6 +180,7 @@ export default (() => {
 				previousTabIndex: -1,
 				popupAdjustmentWidth: 0,
 				popupAdjustmentHeight: 0,
+				colorScheme: "light",
 				settings: DefaultSettings,
 				tabIDs: [],
 				tabsByID: {}

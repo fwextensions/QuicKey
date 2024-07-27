@@ -1,6 +1,6 @@
 import React from "react";
 import { styled } from "goober";
-import { IsMac, HidePopupBehavior } from "@/background/constants";
+import { IsMac, HidePopupBehavior, PopupInnerWidth, PopupInnerHeight } from "@/background/constants";
 import { calcBounds } from "@/background/popup-utils";
 import { Window } from "./Window";
 
@@ -153,7 +153,7 @@ export default function Popup({
 		// and targetWindow will be the screen bounds, so the popup will be positioned
 		// relative to the screen
 	if (visible || hideBehavior === HidePopupBehavior.Behind || hideBehavior === "closed") {
-		bounds = calcBounds(targetWindow, { alignment });
+		bounds = calcBounds(targetWindow, { alignment, width: PopupInnerWidth, height: PopupInnerHeight });
 	} else if (hideBehavior === HidePopupBehavior.Minimize) {
 		bounds = getMinimizedBounds();
 	} else {

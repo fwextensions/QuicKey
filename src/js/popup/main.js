@@ -3,6 +3,7 @@ import { hydrateRoot } from "react-dom/client";
 import App from "./app";
 import trackers from "@/background/page-trackers";
 import "@/background/log";
+import "./monitor-color-scheme";
 
 
 const initialQuery = gKeyCache.join("");

@@ -605,6 +605,8 @@ storage.set(data => {
 		// below would always think it was being updated.
 	({lastUsedVersion, settings: {usePinyin}} = data);
 
+	toolbarIcon.setColorScheme(data.colorScheme);
+
 		// save the current time and version in settings so recentTabs.getAll()
 		// knows whether it needs to update the stored data
 	return {
