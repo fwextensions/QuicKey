@@ -8,9 +8,11 @@ const backgroundTracker = trackers.background;
 
 const BadgeColors = {
 	light: {
-			// make the count background slightly darker in FF so the text is
-			// rendered in white instead of black on dark grey
-		normal: IsFirefox ? "#666" : "#777",
+			// make the count background slightly darker in FF and Edge so the
+			// text is rendered in white instead of black on dark grey
+		normal: (IsFirefox || IsEdge)
+			? "#666"
+			: "#777",
 		inverted: "#3367d6"
 	},
 	dark: {
@@ -18,27 +20,25 @@ const BadgeColors = {
 		inverted: "#3367d6"
 	}
 };
-	// with manifest V3, the icon paths are relative to the background JS file,
-	// so start them with a / to make them absolute
+const IconSizes = [16, 19, 24, 32, 38].reduce((result, size) => {
+		// with manifest V3, the icon paths are relative to the background JS
+		// file, so start with a / to make them absolute to the install folder
+	result.normal.path[size] = `/img/icon-${size}.png`;
+	result.inverted.path[size] = `/img/icon-${size}-inverted.png`;
+
+	return result;
+}, {
+	normal: { path: {} },
+	inverted: { path: {} }
+});
 const IconPaths = {
 	light: {
-		normal: {
-			path: {
-				"19": "/img/icon-19.png",
-				"38": "/img/icon-38.png"
-			}
-		},
-		inverted: {
-			path: {
-				"19": "/img/icon-19-inverted.png",
-				"38": "/img/icon-38-inverted.png"
-			}
-		}
+		...IconSizes
+	},
+	dark: {
+		normal: IconSizes.inverted,
+		inverted: IconSizes.normal
 	}
-};
-IconPaths.dark = {
-	normal: IconPaths.light.inverted,
-	inverted: IconPaths.light.normal
 };
 const ExtensionName = chrome.runtime.getManifest().short_name;
 
