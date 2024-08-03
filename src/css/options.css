@@ -413,23 +413,32 @@ main {
 	color: var(--color, #333);
 	background: var(--background, #efefef);
 	padding: 2em 2em;
-	margin: -7em 0 7em 0;
-	border-radius: .25em;
+	margin: -7em 7em 7em 7em;
+	border-radius: .5em;
 }
 
 .update-message h3 {
 	font-size: 1.2em;
-	font-weight: normal;
 	padding: 0;
 	margin: 0;
 }
 
 .update-message h4 {
 	color: var(--color, #777);
-	font-size: .9em;
+	font-size: 1em;
 	font-weight: normal;
-	padding: 0 6em;
+	line-height: 1.4;
+	padding: 0 3em;
 	margin: 1em 0 0 0;
+}
+
+.update-message.pinyin h3 {
+	font-weight: normal;
+}
+
+.update-message.pinyin h4 {
+	font-weight: normal;
+	font-size: .9em;
 }
 
 
