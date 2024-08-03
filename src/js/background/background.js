@@ -279,11 +279,12 @@ async function navigateRecents(
 			if (direction == -1 || popupWindow.isVisible) {
 				navigatingRecents = true;
 
-				if (!ports.popup) {
-						// execute any pending tab activation event so the recents
-						// list is up-to-date before we start navigating
-					await addTab.execute();
+					// execute any pending tab activation event so the recents
+					// list is up-to-date before we start navigating.  we have to
+					// do this regardless of whether the popup is open or not.
+				await addTab.execute();
 
+				if (!ports.popup) {
 						// since the popup isn't currently open, we rely on it
 						// to detect that it's being opened to navigate recents
 						// and then change the selection instead of sending it
@@ -479,7 +480,6 @@ chrome.runtime.onConnect.addListener(port => {
 	port.onDisconnect.addListener(port => {
 		ports[port.name] = null;
 		activeTab = null;
-console.log("----- background onDisconnect", port.name);
 
 		if (port.name == "popup") {
 // TODO: remove popupWindow.isOpen?
@@ -627,7 +627,18 @@ DEBUG && console.log("=== startup done", performance.now());
 	.then(({reason, previousVersion}) => {
 		tracker.event("extension", reason, previousVersion);
 
-		if (reason == "update" && lastUsedVersion == "1.4.0" && usePinyin) {
+		if (reason !== "update") {
+			return;
+		}
+
+		if (lastUsedVersion.startsWith("1.8")) {
+				// open the options page with an update message about the new
+				// popup window options
+			chrome.tabs.create({
+				url: chrome.runtime.getURL("options.html#/popup?welcome-v2")
+			});
+			tracker.event("extension", "open-options");
+		} else if (lastUsedVersion === "1.4.0" && usePinyin) {
 				// open the options page with an update message for people
 				// who had previously installed QuicKey and have their
 				// language set to Chinese or who have open tabs with

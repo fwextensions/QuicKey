@@ -30,6 +30,7 @@ class OptionsAppContainer extends React.Component {
 			// the params props are passed in via the withSearchParams HOC, which
 			// takes the params after the hash, like #shortcuts?pinyin
 		const {params} = this.props;
+		const showWelcomeV2Message = params.has("welcome-v2");
 		const showPinyinUpdateMessage = params.has("pinyin");
 		const paramLastSeenOptionsVersion = parseInt(params.get("lastSeenOptionsVersion"));
 
@@ -44,6 +45,7 @@ class OptionsAppContainer extends React.Component {
 			// pinyin support may also be passed in when updating from 1.4.0.
 		storage.set(({lastSeenOptionsVersion}) => {
 			this.setState({
+				showWelcomeV2Message,
 				showPinyinUpdateMessage,
 				lastSeenOptionsVersion: Number.isInteger(paramLastSeenOptionsVersion)
 					? paramLastSeenOptionsVersion

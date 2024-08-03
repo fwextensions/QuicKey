@@ -5,11 +5,18 @@ import GeneralSection from "./general-section";
 import PopupSection from "./popup-section";
 import ShortcutsSection from "./shortcuts-section";
 import AboutSection from "./about-section";
+import Shortcut from "./shortcut";
 import {OptionsContext} from "./options-provider";
 import * as k from "@/background/constants";
 
 
-const UpdateMessage = <div className="update-message"
+const WelcomeV2Message = <div className="update-message">
+	<h3>Welcome to QuicKey 2.0!</h3>
+	<h4>Now you can press a single shortcut key to navigate recent
+		tabs in a popup window, just like the <Shortcut keys="alt+tab" /> menu.</h4>
+	<h4>See below for more new options.</h4>
+</div>;
+const PinyinUpdateMessage = <div className="update-message pinyin"
 	title="Now you can use pinyin to search for Chinese characters in web page titles and URLs. You can always reopen this page by clicking the gear icon in the QuicKey menu."
 >
 	<h3>现在，您可以使用拼音在网页标题和URL中搜索中文字符。</h3>
@@ -24,7 +31,7 @@ const BrowserClassName = k.IsFirefox
 
 export default function OptionsApp()
 {
-	const {openTab, showPinyinUpdateMessage} = useContext(OptionsContext);
+	const {openTab, showWelcomeV2Message, showPinyinUpdateMessage} = useContext(OptionsContext);
 	const navigate = useNavigate();
 	const location = useLocation();
 	const selectedSection = location.pathname.slice(1) || "general";
@@ -36,7 +43,11 @@ export default function OptionsApp()
 	return (
 		<main className={BrowserClassName}>
 			{
-				showPinyinUpdateMessage && UpdateMessage
+				showWelcomeV2Message && WelcomeV2Message
+			}
+
+			{
+				showPinyinUpdateMessage && PinyinUpdateMessage
 			}
 
 			<h1 className="quickey">QuicKey options
