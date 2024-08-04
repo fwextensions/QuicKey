@@ -80,14 +80,10 @@ export default function NavigateRecents({
 		shortcutRef,
 		recents,
 		setRecentIndex,
+		setRecents,
+		setActiveTab() {},
 		setPopupVisible,
 		setNavigating,
-		updateRecents() {
-				// move the current tab to the front of the recents stack
-			recents.unshift(...recents.splice(recentIndex, 1));
-			setRecents(recents);
-			setRecentIndex(0);
-		},
 	});
 	const { start, stop, active } = useStepper(handleStep, navigateWithPopup ? PopupRecentsOptions : KeyboardRecentsOptions);
 	const recentTabs = recents.map((index) => tabs[index]);
@@ -140,7 +136,7 @@ export default function NavigateRecents({
 			<ShortcutContainer>
 				<AnimShortcut
 					ref={shortcutRef}
-					shortcut={shortcut}
+					shortcut={shortcut.shortcut}
 				/>
 			</ShortcutContainer>
 		</Container>
