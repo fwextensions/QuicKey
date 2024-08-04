@@ -64,8 +64,7 @@ export default class PopupSection extends React.Component {
 	getShortcut(
 		shortcutID)
 	{
-		return this.context.settings.chrome.shortcuts
-			.find(({id}) => id == shortcutID);
+		return this.context.settings.chrome.shortcutsByID[shortcutID];
 	}
 
 
@@ -164,7 +163,7 @@ export default class PopupSection extends React.Component {
 				/>
 
 				<HidePopup
-					shortcut={openPopupShortcut.shortcut}
+					shortcut={openPopupShortcut}
 					hidePopupBehavior={settings[k.HidePopupBehavior.Key]}
 					autoStart={true}
 					tabs={tabs}
@@ -239,7 +238,7 @@ export default class PopupSection extends React.Component {
 				</NewSetting>
 
 				<NavigateRecents
-					shortcut={previousShortcut.shortcut}
+					shortcut={previousShortcut}
 					navigateWithPopup={settings[k.NavigateRecentsWithPopup.Key]}
 					tabs={tabs}
 					recents={recents}

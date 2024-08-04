@@ -1,31 +1,29 @@
-import { getKeysFromShortcut } from "@/options/shortcut-utils";
-
 const StepFunctions = {
-	reset({ setPopupVisible, setRecentIndex, setNavigating, shortcut, key }) {
+	reset({ setPopupVisible, setNavigating, moveSelection, shortcut, key }) {
 		key("reset", ...shortcut.keys);
 		setPopupVisible(false);
 		setNavigating(false);
-		setRecentIndex(0);
+		moveSelection(0, true);
 	},
-	start({ setPopupVisible, setRecentIndex, shortcut, key, recents }) {
+	start({ setPopupVisible, moveSelection, shortcut, key }) {
 		key("down", ...shortcut.modifiers);
 		key("press", shortcut.baseKey);
 		setPopupVisible(true);
-		setRecentIndex((recentIndex) => (recentIndex + 1) % recents.length);
+		moveSelection(1);
 	},
-	down({ setRecentIndex, shortcut, key, recents }) {
+	down({ moveSelection, shortcut, key }) {
 		key("press", shortcut.baseKey);
-		setRecentIndex((recentIndex) => (recentIndex + 1) % recents.length);
+		moveSelection(1);
 	},
 	end({ setPopupVisible, updateRecents, shortcut, key }) {
 		key("up", ...shortcut.modifiers);
 		setPopupVisible(false);
 		updateRecents();
 	},
-	pressDown({ setPopupVisible, setRecentIndex, shortcut, key }) {
+	pressDown({ setPopupVisible, moveSelection, shortcut, key }) {
 		key("down", ...shortcut.keys);
 		setPopupVisible(true);
-		setRecentIndex(1);
+		moveSelection(1, true);
 	},
 	pressUp({ setPopupVisible, updateRecents, shortcut, key }) {
 		key("up", ...shortcut.keys);
@@ -35,9 +33,9 @@ const StepFunctions = {
 	startPreviousTab({ setNavigating }) {
 		setNavigating(true);
 	},
-	pressPreviousTab({ setRecentIndex, shortcut, key, recents }) {
+	pressPreviousTab({  moveSelection, shortcut, key }) {
 		key("press", ...shortcut.keys);
-		setRecentIndex((recentIndex) => (recentIndex + 1) % recents.length);
+		moveSelection(1);
 	},
 	endPreviousTab({ setNavigating, updateRecents }) {
 		setNavigating(false);
@@ -49,6 +47,7 @@ const DefaultFunctions = [
 	"setRecentIndex",
 	"setPopupVisible",
 	"setNavigating",
+	"moveSelection",
 	"updateRecents",
 ].reduce((result, method) => ({
 	...result,
@@ -91,10 +90,40 @@ export function createStepHandler(
 			// pass in local versions of those
 		...DefaultFunctions,
 		...locals,
-			// convert the shortcut string into an info object
-		shortcut: getKeysFromShortcut(locals.shortcut),
+		moveSelection(
+			value,
+			absolute)
+		{
+			const { recents, setRecentIndex } = locals;
+
+			if (absolute) {
+				setRecentIndex(value);
+			} else {
+				setRecentIndex((recentIndex) => (recentIndex + value) % recents.length);
+			}
+		},
+		updateRecents()
+		{
+			const { setRecentIndex, setRecents, setActiveTab } = locals;
+
+				// we have to call the setters to get the current recentIndex
+				// and recents, which is a little clunky, but oh well
+			setRecentIndex((recentIndex) => {
+				setRecents((recents) => {
+						// move the current tab to the front of the recents stack
+					recents.unshift(...recents.splice(recentIndex, 1));
+					setActiveTab(recents[0]);
+
+					return recents;
+				});
+
+				return 0;
+			});
+		},
 			// add a function that simplifies calling the <Shortcut> methods
-		key(action, ...keys)
+		key(
+			action,
+			...keys)
 		{
 			const method = `key${action[0].toUpperCase() + action.slice(1)}`;
 

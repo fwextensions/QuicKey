@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { styled } from "goober";
 import { HidePopupBehavior } from "@/background/constants";
+import { ShortcutSeparator } from "@/options/key-constants";
 import { getWindowBounds } from "./utils";
 import { createAnimOptions, createStepHandler } from "./anim";
 import useStepper from "./useStepper";
@@ -10,13 +11,37 @@ import Popup from "./Popup";
 import AnimShortcut from "./AnimShortcut";
 import PlayButton from "./PlayButton";
 
+function shiftPress({
+	key,
+	shortcut,
+	moveSelection })
+{
+	key("press", shortcut.baseKey);
+	moveSelection(-1);
+}
+
+function shiftEnd({ setPopupVisible, updateRecents, shortcut, key })
+{
+	key("up", "shift", ...shortcut.modifiers);
+	setPopupVisible(false);
+	updateRecents();
+}
+
 const HidePopupOptions = createAnimOptions(
 	[
 		["reset", 0],
 		"start",
 		"down",
-		"down",
-		["end", 1000],
+		["down", 800],
+		["down", 600],
+		["down", 300],
+		"noop",
+		[(context) => context.setIncludeShift(true), 300],
+		(context) => context.key("down", "shift"),
+		shiftPress,
+		shiftPress,
+		[shiftEnd, 750],
+		[(context) => context.setIncludeShift(false), 1500],
 		["pressDown", 350],
 		["pressUp", 1500],
 		["pressDown", 350],
@@ -57,6 +82,7 @@ export default function HidePopup({
 	const [activeTab, setActiveTab] = useState(recents[recentIndex]);
 	const [popupVisible, setPopupVisible] = useState(false);
 	const [startAnim, setStartAnim] = useState(null);
+	const [includeShift, setIncludeShift] = useState(false);
 	const isMounted = useRef(false);
 	const shortcutRef = useRef();
 	const handleStep = createStepHandler({
@@ -64,19 +90,17 @@ export default function HidePopup({
 		shortcutRef,
 		recents,
 		setRecentIndex,
+		setRecents,
 		setActiveTab,
 		setPopupVisible,
-		updateRecents() {
-				// move the current tab to the front of the recents stack
-			recents.unshift(...recents.splice(recentIndex, 1));
-			setRecents(recents);
-			setRecentIndex(0);
-			setActiveTab(recents[0])
-		},
+		setIncludeShift,
 	});
 	const { start, stop, active } = useStepper(handleStep, HidePopupOptions);
 	const recentTabs = recents.map((index) => tabs[index]);
 	const playButtonEnabled = !active && (isMounted.current || !autoStart);
+	const currentShortcutString = includeShift
+		? [...shortcut.modifiers, "shift", shortcut.baseKey].join(ShortcutSeparator)
+		: shortcut.shortcut;
 
 	useEffect(() => {
 			// the "restart" state should force the anim to restart even if it's
@@ -152,7 +176,7 @@ export default function HidePopup({
 			<ShortcutContainer>
 				<AnimShortcut
 					ref={shortcutRef}
-					shortcut={shortcut}
+					shortcut={currentShortcutString}
 				/>
 			</ShortcutContainer>
 		</Container>
