@@ -8,7 +8,7 @@ export default class Mutex {
 
 	lock(
 		task,
-		timeLimit = 1000)
+		timeLimit = 2000)
 	{
 //console.log("MUTEX lock", this.id, this._locked, this._queue.length);
 

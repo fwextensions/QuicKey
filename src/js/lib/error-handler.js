@@ -37,7 +37,7 @@ function handleError(
 			: "exception";
 		const errorMessage = `Caught unhandled ${type} at ${timestamp}:\n${stack}`;
 
-		console.error(errorMessage);
+		DEBUG && console.error(errorMessage);
 		tracker.exception(errorMessage, true);
 
 		if (event.preventDefault) {

@@ -315,8 +315,8 @@ export function createStorageClient(
 	const storageLocation = globalThis.location.pathname;
 	let dataPromise = cp.storage.local.get(null).then(({ data }) => data);
 	let currentTaskID = 0;
-	let totalTime = 0;
-	let taskCount = 0;
+//	let totalTime = 0;
+//	let taskCount = 0;
 	let lastSavedFrom;
 
 
@@ -381,12 +381,12 @@ export function createStorageClient(
 	async function set(
 		task)
 	{
-const t = performance.now();
+//const t = performance.now();
 
 		const id = currentTaskID++;
 
-console.log("\n\n>>>> SET before SAVE", id, storageLocation, "\n" + String(task).slice(0, 100));
-console.time(`======= DO TASK ${id} get data`);
+//console.log("\n\n>>>> SET before SAVE", id, storageLocation, "\n" + String(task).slice(0, 100));
+//console.time(`======= DO TASK ${id} get data`);
 			// call set() in the background to lock the storage mutex
 		await call("set", id);
 
@@ -395,24 +395,24 @@ console.time(`======= DO TASK ${id} get data`);
 			// about 1/3 faster overall because we don't have the overhead of
 			// marshalling the data to return it via messaging
 		const data = await getAll();
-console.timeEnd(`======= DO TASK ${id} get data`);
+//console.timeEnd(`======= DO TASK ${id} get data`);
 
 		const newData = await task(data);
 
 		return call("done", id, newData)
 			.then((newData) => {
-				const taskTime = performance.now() - t;
-				totalTime += taskTime;
-				taskCount++;
-console.log("======= DO TASK", id, "after done", taskTime, "ms", isNewDataDifferent(newData, data), newData);
-console.log(`======= DO TASK ${id} avg time:`, Math.round(totalTime / taskCount), "ms", taskCount, "total");
+//				const taskTime = performance.now() - t;
+//				totalTime += taskTime;
+//				taskCount++;
+//console.log("======= DO TASK", id, "after done", taskTime, "ms", isNewDataDifferent(newData, data), newData);
+//console.log(`======= DO TASK ${id} avg time:`, Math.round(totalTime / taskCount), "ms", taskCount, "total");
 
 					// combine the full data with whatever changed in the set()
 					// task and update our dataPromise with that
 				Object.assign(data, newData);
 				dataPromise = Promise.resolve(data);
 
-console.log("<<<< SET after SAVE", id, storageLocation, data, "\n\n\n");
+//console.log("<<<< SET after SAVE", id, storageLocation, data, "\n\n\n");
 
 				return data;
 			});

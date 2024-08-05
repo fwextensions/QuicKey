@@ -1,4 +1,5 @@
 import loadScript from "@/lib/load-script";
+import trackers from "@/background/page-trackers";
 
 
 let pinyinLoaded = false;
@@ -22,7 +23,8 @@ async function loadPinyin()
 			pinyinLoaded = typeof pinyin == "function";
 		} catch (error) {
 			pinyinError = error;
-			console.error(error);
+			trackers.popup.exception(error);
+			DEBUG && console.error(error);
 		}
 	}
 

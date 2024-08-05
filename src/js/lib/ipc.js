@@ -67,7 +67,7 @@ class Channel {
 	#post(
 		message)
 	{
-!this.#port && console.warn("---------- post NO PORT", message, this.#port, this.#promisesByID);
+//!this.#port && console.warn("---------- post NO PORT", message, this.#port, this.#promisesByID);
 		this.#port?.postMessage(message);
 	}
 
@@ -121,7 +121,7 @@ class Channel {
 				this.#post({ type: "error", id, name, errorJSON });
 			}
 		} else {
-console.error("---------- #handleCall no receiver", name, id, data);
+//console.error("---------- #handleCall no receiver", name, id, data);
 				// queue this message until a receiver is registered for it
 			this.#receiveQueue.add(message);
 		}
@@ -137,7 +137,7 @@ console.error("---------- #handleCall no receiver", name, id, data);
 			promise.resolve(data);
 			delete this.#promisesByID[id];
 		} else {
-			console.error("No matching promise:", message.id, message.data);
+			DEBUG && console.error("No matching promise:", message.id, message.data);
 		}
 	}
 
@@ -156,7 +156,7 @@ console.error("---------- #handleCall no receiver", name, id, data);
 			promise.reject(error);
 			delete this.#promisesByID[id];
 		} else {
-			console.error("No matching promise for error:", message.id);
+			DEBUG && console.error("No matching promise for error:", message.id);
 		}
 	}
 }
@@ -172,7 +172,7 @@ export function connect(
 
 	chrome.runtime.getContexts({}).then((initialViews) => {
 		if (channels.length === 0 && initialViews.length > 1) {
-console.log("---------- calling createChannel because views open", ChannelPrefix + channelName, location.pathname + location.search.slice(0, 10));
+//console.log("---------- calling createChannel because views open", ChannelPrefix + channelName, location.pathname + location.search.slice(0, 10));
 			createChannel(chrome.runtime.connect({ name: ChannelPrefix + channelName }));
 // TODO: create a single shared port for all channels.  then a single handler would call handleMessage() on the associated channel.
 		}
@@ -188,7 +188,7 @@ console.log("---------- calling createChannel because views open", ChannelPrefix
 
 			// prefix will be empty if it matches ChannelPrefix
 		if (!prefix && nameMatches) {
-console.log("---------- got onConnect", channelName, ":", nameMatches, newPortName, newPort.name, location.pathname + location.search.slice(0, 10));
+//console.log("---------- got onConnect", channelName, ":", nameMatches, newPortName, newPort.name, location.pathname + location.search.slice(0, 10));
 			createChannel(newPort);
 		}
 	}
@@ -202,7 +202,7 @@ console.log("---------- got onConnect", channelName, ":", nameMatches, newPortNa
 			channels.splice(index, 1);
 		}
 
-console.log("---------- handleDisconnect", channelName, index, channels);
+//console.log("---------- handleDisconnect", channelName, index, channels);
 	}
 
 	function createChannel(
@@ -213,7 +213,7 @@ console.log("---------- handleDisconnect", channelName, index, channels);
 		channels.push(channel);
 
 		if (callQueue.length) {
-console.log("---------- calling callQueue", callQueue);
+//console.log("---------- calling callQueue", callQueue);
 // TODO: also need to return the call promise from here somehow, or resolve the saved one
 			callQueue.forEach(({ name, data}) => channel.call(name, data));
 			callQueue.length = 0;
@@ -248,7 +248,7 @@ console.log("---------- calling callQueue", callQueue);
 			return channels[0].call(name, data);
 		}
 
-console.warn("---------- call MULTIPLE CHANNELS", name, channels);
+//console.warn("---------- call MULTIPLE CHANNELS", name, channels);
 		return Promise.allSettled(callChannels("call", name, data));
 	}
 

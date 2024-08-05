@@ -49,34 +49,34 @@
 	"commands": {
 		"_execute_action": {
 			"suggested_key": {
-				"default": "Alt+Q",
-				"mac": "MacCtrl+Q"
+				"default": "Alt+Shift+Q",
+				"mac": "MacCtrl+Shift+Q"
 			}
 		},
 		"010-open-popup-window": {
+			"suggested_key": {
+				"default": "Alt+Q",
+				"mac": "MacCtrl+Q"
+			},
 			"description": "Open alt-tab-style popup"
 		},
 		"020-focus-search": {
+			"suggested_key": {
+				"default": "Alt+W",
+				"mac": "MacCtrl+W"
+			},
 			"description": "Search in alt-tab-style popup"
 		},
 		"1-previous-tab": {
-			"suggested_key": {
-				"default": "Alt+A",
-				"mac": "MacCtrl+A"
-			},
 			"description": "Switch to the previous tab"
 		},
 		"2-next-tab": {
-			"suggested_key": {
-				"default": "Alt+S",
-				"mac": "MacCtrl+S"
-			},
 			"description": "Switch to the next tab"
 		},
 		"30-toggle-recent-tabs": {
 			"suggested_key": {
 				"default": "Alt+Z",
-				"mac": "MacCtrl+Z"
+				"mac": "MacCtrl+S"
 			},
 			"description": "Switch instantly between the two most recent tabs"
 		}
