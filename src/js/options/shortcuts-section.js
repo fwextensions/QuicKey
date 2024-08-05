@@ -12,19 +12,19 @@ export default class ShortcutSection extends React.Component {
 	static contextType = OptionsContext;
 
 
-    handleChangeShortcutsClick = () =>
+	handleChangeShortcutsClick = () =>
 	{
 		this.context.openTab("chrome://extensions/shortcuts", "shortcuts");
 	};
 
 
-    handleCtrlTabClick = () =>
+	handleCtrlTabClick = () =>
 	{
 		this.context.openTab("https://fwextensions.github.io/QuicKey/ctrl-tab/", "ctrl-tab");
 	};
 
 
-    renderShortcutSetting = (
+	renderShortcutSetting = (
 		shortcut,
 		i) =>
 	{
@@ -62,7 +62,7 @@ export default class ShortcutSection extends React.Component {
 	};
 
 
-    renderShortcutList = (
+	renderShortcutList = (
 		shortcuts) =>
 	{
 		return <ul>
@@ -71,7 +71,7 @@ export default class ShortcutSection extends React.Component {
 	};
 
 
-    render()
+	render()
 	{
 		const {
 			settings,

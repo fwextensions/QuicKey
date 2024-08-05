@@ -9,6 +9,7 @@ const primaryLanguage = languages[0];
 const languageMatch = primaryLanguage.match(languagePattern);
 
 
+export const { version: Version } = chrome.runtime.getManifest();
 export const IsMac = /Mac/i.test(platform);
 export const IsLinux = /Linux/i.test(platform);
 export const IsWin = !IsMac && !IsLinux;
@@ -29,6 +30,7 @@ export const IncognitoNameLC = IsEdge
 export const IncognitoPermission = IsFirefox
 	? "Run in Private Windows"
 	: `Allow in ${IncognitoNameLC}`;
+export const Homepage = "https://fwextensions.github.io/QuicKey/";
 export const MinTabDwellTime = 1250;
 export const PopupURL = chrome.runtime.getURL("popup.html");
 export const PopupInnerWidth = 500;

@@ -611,7 +611,7 @@ storage.set(data => {
 		// knows whether it needs to update the stored data
 	return {
 		lastStartupTime: Date.now(),
-		lastUsedVersion: chrome.runtime.getManifest().version
+		lastUsedVersion: k.Version,
 	};
 })
 	.then(() => {

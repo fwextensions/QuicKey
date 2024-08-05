@@ -1,12 +1,13 @@
 import React from "react";
-import {HashRouter} from "react-router-dom";
+import { HashRouter } from "react-router-dom";
 import OptionsApp from "./app";
 import trackers from "@/background/page-trackers";
 import storage from "@/background/quickey-storage";
 import settings from "@/background/settings";
-import {Platform, ShowTabCount, HidePopupBehavior, NavigateRecentsWithPopup} from "@/background/constants";
-import {OptionsProvider} from "./options-provider";
-import {withSearchParams} from "./with-search-params";
+import { Platform, ShowTabCount, HidePopupBehavior, NavigateRecentsWithPopup } from "@/background/constants";
+import { OptionsProvider } from "./options-provider";
+import { withSearchParams } from "./with-search-params";
+import { utm } from "./utils";
 
 
 const PlusPattern = /\+/g;
@@ -29,7 +30,7 @@ class OptionsAppContainer extends React.Component {
 	{
 			// the params props are passed in via the withSearchParams HOC, which
 			// takes the params after the hash, like #shortcuts?pinyin
-		const {params} = this.props;
+		const { params } = this.props;
 		const showWelcomeV2Message = params.has("welcome-v2");
 		const showPinyinUpdateMessage = params.has("pinyin");
 		const paramLastSeenOptionsVersion = parseInt(params.get("lastSeenOptionsVersion"));
@@ -43,7 +44,7 @@ class OptionsAppContainer extends React.Component {
 			// get the lastSeenOptionsVersion from storage, or from a URL
 			// param for testing purposes.  a flag to show a message about
 			// pinyin support may also be passed in when updating from 1.4.0.
-		storage.set(({lastSeenOptionsVersion}) => {
+		storage.set(({ lastSeenOptionsVersion }) => {
 			this.setState({
 				showWelcomeV2Message,
 				showPinyinUpdateMessage,
@@ -90,7 +91,9 @@ class OptionsAppContainer extends React.Component {
 		url,
 		eventName) =>
 	{
-		chrome.tabs.create({ url });
+			// add utm params that we can track in GA, but only if this URL is
+			// on the QuicKey homepage
+		chrome.tabs.create({ url: utm(url, eventName) });
 		this.tracker.event("extension", `options-${eventName}`);
 	}
 

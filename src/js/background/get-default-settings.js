@@ -31,7 +31,7 @@ const DefaultSettings = {
 	[k.ShowBookmarkPaths.Key]: true,
 	[k.CurrentWindowLimitRecents.Key]: false,
 	[k.CurrentWindowLimitSearch.Key]: false,
-	[k.NavigateRecentsWithPopup.Key]: false,
+	[k.NavigateRecentsWithPopup.Key]: true,
 	[k.Shortcuts.Key]: {
 		mac: MacDefaults,
 		win: DefaultShortcuts
