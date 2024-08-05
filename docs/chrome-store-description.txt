@@ -114,8 +114,15 @@ No mouse needed!
  • Press ENTER to switch to the selected tab
 
 
-★ New options in v1.7.x
 ★ New options in v2.0
+
+
+TODO: update macOS shortcuts
+ update ctrl-tab instructions for popup shortcut
+
+Now you can press a single shortcut key (ALT-Q by default) to navigate recent tabs in a popup window, just like the ALT-TAB menu!
+
+If you've used QuicKey before, you'll need to change the shortcut
 
 new keyboard shortcuts to open the tab list in a popup window
 this lets you use the same shortcut to open the window, move the selection, and release to select a tab, much like alt-tab
@@ -126,10 +133,6 @@ can use alt-A to switch back and forth between the two most recent tabs without 
 press space to change selection and search with multiple terms
 
 
- • Support pinyin when searching for bookmarks and history items
- • Limit recent tab navigation to the current browser window
- • Limit tab search results to the current browser window
-
 
 ★ Use CTRL-TAB to switch between recent tabs
 
@@ -137,7 +140,7 @@ With a little extra work, you can make QuicKey respond to the Holy Grail of keyb
 
 Learn how at https://fwextensions.github.io/QuicKey/ctrl-tab/
 
-You can customize the shortcut keys (other than CTRL-TAB) by right-clicking the QuicKey icon and selecting Options.
+You can also customize the shortcut keys (other than CTRL-TAB) by right-clicking the QuicKey icon and selecting Options.
 
 
 ★ Switch between the most recently used tabs
@@ -152,6 +155,10 @@ Opening QuicKey displays a list of the last 50 tabs you've visited, in order of 
     • Press ALT-Z (CTRL-Z on macOS).
         OR:
     • Quickly double-press ALT-Q (CTRL-Q on macOS).
+
+TODO: note that the icon has to be pinned for double alt-Q to work, make sure the pushpin icon next to QuicKey is blue
+
+TODO: update to talk about holding alt until you're ready to commit
 
  ➤ To navigate farther back in the MRU list:
     • Press ALT-A (CTRL-A on macOS) once to switch to the previous tab.
@@ -170,13 +177,15 @@ Opening QuicKey displays a list of the last 50 tabs you've visited, in order of 
     • You can also highlight an item with the mouse, then release ALT to
       go to that tab.
 
+TODO: update this section to mention popup window
+
 Which shortcuts to use is up to you. Double-pressing ALT-Q is nice because there's just one shortcut to remember, while ALT-Z lets you switch between the two most recently used tabs very rapidly. (You can also double-click the QuicKey icon to toggle between the most recent tabs.)
 
 ALT-A lets you navigate to even older tabs, though the timing can sometimes be finicky.
 
 Selecting from the MRU menu by holding down the ALT key provides the closest experience to a typical ALT-TAB menu, but you need to use W instead of TAB to navigate while the menu is open.
 
-You can change any of these shortcuts by clicking the gear icon in the menu or by right-clicking the QuicKey icon and selecting Options. Then scroll down and click "Change browser shortcuts". Look for the "Switch to the previous/next tab" shortcuts.
+You can change any of these shortcuts by clicking the gear icon in the menu or by right-clicking the QuicKey icon and selecting Options. Then click "Keyboard shortcuts", scroll down, and click "Change browser shortcuts". Look for the "Switch to the previous/next tab" shortcuts.
 
 If you enable the option to show the number of open tabs on the QuicKey icon, the badge containing that number will change color while you navigate to older tabs, rather than the icon inverting.
 
@@ -208,10 +217,12 @@ If you type more than 25 letters, which should be plenty to find the right tab, 
 To customize how QuicKey behaves, click the gear icon in the menu, or right-click its icon on the toolbar and select Options. There you can:
 
  • Customize keyboard shortcuts
+ • Change the popup window's behavior
  • Hide closed tabs from the search results
  • Limit navigating recent tabs or searching to the current browser window
  • Mark tabs in other browser windows with an icon
  • Show the number of open tabs
+ • Restore the last search query when reopening the menu
  • Use pinyin to search for Chinese characters
 
 If you change the keyboard shortcut for showing the QuicKey menu to something other than the default ALT-Q or if you have a non-US keyboard, you'll probably want to also change the key that's used to navigate down the list of recently used tabs (which defaults to W). For instance, if you change the menu shortcut to ALT-Z, you might want to change the navigation key to X, which is right next door. To change it, go to the Options page, click the "Select the next tab" keyboard shortcut picker, and press X.
@@ -221,7 +232,7 @@ When new settings have been added to QuicKey, the gear icon will display a red d
 
 ★ Limit navigation to the current browser window
 
-If you have multiple browser windows open, you may want to navigate among only the recent tabs that are in the current window. To enable this behavior, open the Options page and select "Limit recent tabs to the current browser window". Pressing the shortcuts for "Switch instantly between the two most recent tabs" or "Switch to the previous tab" will then switch only between recent tabs in the current window.
+If you have multiple browser windows open, you may want to navigate among only the recent tabs that are in the current window. To enable this behavior, open the Options page to the General tab and select "Limit recent tabs to the current browser window". Pressing the shortcuts for "Switch instantly between the two most recent tabs" or "Switch to the previous tab" will then switch only between recent tabs in the current window.
 
 You can also limit searching for tabs to the current browser window.
 
@@ -316,6 +327,8 @@ If you right-click the QuicKey icon on the toolbar, there's a message saying "Ca
 
 
 ★ Support and source code
+
+Open the Options page and click the About section to get quick access to these links:
 
 Get more information at https://fwextensions.github.io/QuicKey/
 

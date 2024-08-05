@@ -122,12 +122,12 @@ export function createStorage({
 
 	function initialize()
 	{
-const t = performance.now();
+//const t = performance.now();
 
 			// pass null to get everything in storage
 		return cp.storage.local.get(null)
 			.then(storage => {
-console.log(`--- INITIALIZE ${storageLocation}: loaded storage in`, performance.now() - t, "ms");
+//console.log(`--- INITIALIZE ${storageLocation}: loaded storage in`, performance.now() - t, "ms");
 				lastSavedFrom = storage?.lastSavedFrom;
 
 				if (!storage || !storage.data) {
@@ -251,7 +251,6 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 		saveResult)
 	{
 		return storageMutex.lock(() => getAll()
-//		return storageMutex.lock(() => (saveResult ? getAll() : dataPromise)
 				// we have to clone the data before passing it to the task function,
 				// so that any changes it makes to the data won't be reflected in
 				// the cached storage.  when can then compare newData to what's

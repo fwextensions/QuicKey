@@ -51,7 +51,7 @@ Chrome's *Keyboard shortcuts* screen normally blocks you from using <b><kbd>ctrl
 
        chrome.developerPrivate.updateExtensionCommand({
            extensionId: "ldlghkoiihaelfnggonhjnfiabmaficg",
-           commandName: "30-toggle-recent-tabs",
+           commandName: "010-open-popup-window",
            keybinding: "Ctrl+Tab"
        });
 
@@ -67,7 +67,13 @@ Chrome's *Keyboard shortcuts* screen normally blocks you from using <b><kbd>ctrl
 
 That's it!
 
-Now you can press <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to the previously used tab, and press it again to switch back.  Unlike [Option 2](#option-2) below, you can toggle between *only* the two most recent tabs, but the advantage is you can switch back and forth as quickly as you like. 
+### TODO: update descriptions to refer to popup window 
+
+Now you can press <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to open the <em>QuicKey</em> popoup window.  Keep holding <kbd>ctrl</kbd> to leave the window open as long as you like.  Press <kbd>tab</kbd> to move the selection down the list, or <b><kbd>shift</kbd><kbd>tab</kbd></b> to move the selection up.  Release <kbd>ctrl</kbd> to switch to the selected tab.
+
+You can move the focus up into the search box
+
+switch to the previously used tab, and press it again to switch back.  Unlike [Option 2](#option-2) below, you can toggle between *only* the two most recent tabs, but the advantage is you can switch back and forth as quickly as you like. 
 
 <p class="edge">Note that if you're using Microsoft Edge and installed <em>QuicKey</em> from the Chrome Web Store, you'll need to replace the <code>mcjciddpjefdpndgllejgcekmajmehnd</code> string in the code above with <code>ldlghkoiihaelfnggonhjnfiabmaficg</code>, which is <em>QuicKey</em>'s extension ID in that store.</p>
 
@@ -105,7 +111,7 @@ Now you can press <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to the previous
 
 <p class="edge">Note that if you're using Microsoft Edge and installed <em>QuicKey</em> from the Chrome Web Store, you'll need to replace the <code>mcjciddpjefdpndgllejgcekmajmehnd</code> string in the code above with <code>ldlghkoiihaelfnggonhjnfiabmaficg</code>, which is <em>QuicKey</em>'s extension ID in that store.</p>
 
-(You should always be cautious about copying code from a website and running it in DevTools, but even if you don't know JavaScript, it's hopefully clear what the snippet above is doing.  It's calling a private `updateExtensionCommand()` function twice to set <b><kbd>ctrl</kbd><kbd>tab</kbd></b> and <b><kbd>ctrl</kbd><kbd>shift</kbd><kbd>tab</kbd></b> keyboard shortcuts.  The `"ldlgh..."` string is *QuicKey*'s extension ID, which you can see in its [Chrome Web Store link](https://chrome.google.com/webstore/detail/quickey-%E2%80%93-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg), so this code won't affect any other extensions you may have installed.)
+(You should always be cautious about copying code from a website and running it in DevTools, but even if you don't know JavaScript, it's hopefully relatively clear what the snippet above is doing.  It's calling a private `updateExtensionCommand()` function twice to set <b><kbd>ctrl</kbd><kbd>tab</kbd></b> and <b><kbd>ctrl</kbd><kbd>shift</kbd><kbd>tab</kbd></b> keyboard shortcuts.  The `"ldlgh..."` string is *QuicKey*'s extension ID, which you can see in its [Chrome Web Store link](https://chrome.google.com/webstore/detail/quickey-%E2%80%93-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg), so this code won't affect any other extensions you may have installed.)
 
 
 ## <a name="option-3"></a>Option 3: Use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch to a recent tab via a menu (Windows only)

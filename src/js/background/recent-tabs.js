@@ -358,7 +358,7 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 					// returned, to make the recents menu render faster.
 				storage.set(() => newData);
 
-console.log("getAll took", performance.now() - t, "ms");
+DEBUG && console.log("getAll took", performance.now() - t, "ms");
 				return tabs;
 			});
 	});

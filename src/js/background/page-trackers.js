@@ -10,7 +10,7 @@ const ClientIDKey = "clientID";
 
 	// use an IIFE to init a function to create trackers with standard settings
 const createTracker = await (async () => {
-	const { version: dimension1, installType} = await chrome.management.getSelf();
+	const { version: dimension1, installType } = await chrome.management.getSelf();
 	const dimension2 = installType === "development" ? "D" : "P";
 	let { [ClientIDKey]: client_id } = await chrome.storage.local.get(ClientIDKey);
 

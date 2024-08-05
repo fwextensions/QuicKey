@@ -1,11 +1,12 @@
 import React, { useContext } from "react";
-import {OptionsContext} from "./options-provider";
-import {Section} from "./sections";
+import { Version } from "@/background/constants";
+import { OptionsContext } from "./options-provider";
+import { Section } from "./sections";
+import { utm } from "./utils";
 
 export default function AboutSection()
 {
-	const {openTab} = useContext(OptionsContext);
-	const {version} = chrome.runtime.getManifest();
+	const { openTab } = useContext(OptionsContext);
 
     const handleSupportClick = () => openTab("https://fwextensions.github.io/QuicKey/support/", "support");
 
@@ -17,13 +18,13 @@ export default function AboutSection()
 				Quicksilver-style search or a most recently used menu.
 			</p>
 			<p>
-				<a href="https://chrome.google.com/webstore/detail/quickey-%E2%80%93-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg" target="_blank">Version {version}</a>
+				<a href="https://chrome.google.com/webstore/detail/quickey-%E2%80%93-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg" target="_blank">Version {Version}</a>
 			</p>
 			<p>
-				<a href="https://fwextensions.github.io/QuicKey/" target="_blank">Help page</a>
+				<a href={utm("https://fwextensions.github.io/QuicKey/", "about")} target="_blank">Help page</a>
 			</p>
 			<p>
-				<a href="https://fwextensions.github.io/QuicKey/privacy/" target="_blank">Privacy policy</a>
+				<a href={utm("https://fwextensions.github.io/QuicKey/privacy/", "about")} target="_blank">Privacy policy</a>
 			</p>
 			<p>
 				<a href="https://github.com/fwextensions/QuicKey" target="_blank">Source code</a>
