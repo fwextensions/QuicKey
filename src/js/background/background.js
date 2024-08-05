@@ -9,8 +9,9 @@ import { debounce } from "@/background/debounce";
 import * as k from "@/background/constants";
 import "@/background/log";
 
-globalThis.DEBUG = true;
-globalThis.printTabs = recentTabs.print;
+globalThis.DEBUG = false;
+//globalThis.DEBUG = true;
+//globalThis.printTabs = recentTabs.print;
 
 	// if the popup is opened and closed within this time, switch to the
 	// previous tab
@@ -118,7 +119,7 @@ const addTab = debounce(
 				// closing a window with multiple tabs.  since addTab()
 				// is debounced and will fire after the window is closed,
 				// the tab no longer exists at that point.
-			if (error && error.message && error.message.indexOf("No tab") != 0) {
+			if (error?.message?.indexOf("No tab") !== 0) {
 				tracker.exception(error);
 				console.error(`ERROR: tabId: ${tabId}.`, error);
 			}
@@ -585,7 +586,7 @@ cp.tabs.query({
 	url: `${chrome.runtime.getURL("")}*`
 })
 	.then(tabs => cp.tabs.remove(tabs.map(({id}) => id)))
-	.catch(console.error);
+	.catch(error => DEBUG && console.error(error));
 
 	// show the tab count, if necessary, and set the popup window type
 settings.get()
@@ -605,6 +606,9 @@ storage.set(data => {
 		// below would always think it was being updated.
 	({lastUsedVersion, settings: {usePinyin}} = data);
 
+		// set which icon to show in the toolbar based on the color scheme that
+		// we saw the last time we were run.  if it's changed since then, we'll
+		// need to wait for the popup or menu to open to update the icon.
 	toolbarIcon.setColorScheme(data.colorScheme);
 
 		// save the current time and version in settings so recentTabs.getAll()
@@ -627,24 +631,11 @@ DEBUG && console.log("=== startup done", performance.now());
 	.then(({reason, previousVersion}) => {
 		tracker.event("extension", reason, previousVersion);
 
-		if (reason !== "update") {
-			return;
-		}
-
-		if (lastUsedVersion.startsWith("1.8")) {
+		if (reason === "update" && lastUsedVersion.startsWith("1.8")) {
 				// open the options page with an update message about the new
 				// popup window options
 			chrome.tabs.create({
 				url: chrome.runtime.getURL("options.html#/popup?welcome-v2")
-			});
-			tracker.event("extension", "open-options");
-		} else if (lastUsedVersion === "1.4.0" && usePinyin) {
-				// open the options page with an update message for people
-				// who had previously installed QuicKey and have their
-				// language set to Chinese or who have open tabs with
-				// Chinese characters
-			chrome.tabs.create({
-				url: chrome.runtime.getURL("options.html?pinyin")
 			});
 			tracker.event("extension", "open-options");
 		}

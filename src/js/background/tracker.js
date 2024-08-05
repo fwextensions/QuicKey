@@ -136,7 +136,7 @@ export default class Tracker {
 				fatal: Boolean(fatal)
 			});
 		} catch (e) {
-			console.error("Calling tracker.exception() failed.", e);
+			DEBUG && console.error("Calling tracker.exception() failed.", e);
 		}
 	}
 }
