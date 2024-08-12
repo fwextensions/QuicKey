@@ -39,8 +39,7 @@
 		"default_popup": "popup.html"
 	},
 	"background": {
-		"service_worker": "js/background.js",
-		"type": "module"
+		"service_worker": "js/sw.js"
 	},
 	"options_ui": {
 		"open_in_tab": true,

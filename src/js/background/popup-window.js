@@ -9,7 +9,7 @@ import {connect} from "@/lib/ipc";
 const {Behind, Tab, Minimize} = HidePopupBehavior;
 
 
-const { receive } = connect(/^popup-window/);
+const { receive } = connect("popup-window");
 let popupAdjustmentWidth = 0;
 let popupAdjustmentHeight = 0;
 let currentWidth = PopupInnerWidth;
@@ -17,7 +17,7 @@ let currentHeight = PopupInnerHeight;
 let isVisible = false;
 let isHiddenInTab = false;
 let hideBehavior = Behind;
-let { windowID, tabID } = await getPopupID();
+let { windowID, tabID } = await getExistingPopupID();
 let lastActiveTab;
 
 
@@ -28,7 +28,7 @@ storage.get(data => ({popupAdjustmentWidth, popupAdjustmentHeight} = data))
 	});
 
 
-async function getPopupID()
+async function getExistingPopupID()
 {
 	const contexts = await chrome.runtime.getContexts({ contextTypes: ["TAB"] });
 	const [popup] = contexts.filter(({ documentUrl }) => documentUrl.includes("popup.html"));

@@ -1,4 +1,7 @@
-import cp from "cp";
+if (typeof globalThis.DEBUG !== "boolean") {
+	globalThis.DEBUG = (await chrome.management.getSelf()).installType === "development";
+}
+
 import popupWindow from "@/background/popup-window";
 import toolbarIcon from "@/background/toolbar-icon";
 import recentTabs from "@/background/recent-tabs";
@@ -9,9 +12,9 @@ import { debounce } from "@/background/debounce";
 import * as k from "@/background/constants";
 import "@/background/log";
 
-globalThis.DEBUG = false;
-//globalThis.DEBUG = true;
-//globalThis.printTabs = recentTabs.print;
+if (globalThis.DEBUG) {
+	globalThis.printTabs = recentTabs.print;
+}
 
 	// if the popup is opened and closed within this time, switch to the
 	// previous tab
@@ -39,17 +42,17 @@ const MessageHandlers = {
 			// activating the window can sometimes put keyboard focus on the
 			// very first tab button on macOS 10.14 (could never repro on
 			// 10.12).  then focus the tab, which should fix any focus issues.
-		return cp.windows.update(windowId, { focused: true })
-			.then(() => cp.tabs.update(id, { active: true, ...options }))
+		return chrome.windows.update(windowId, { focused: true })
+			.then(() => chrome.tabs.update(id, { active: true, ...options }))
 			.catch(error => {
 				tracker.exception(error);
 				console.error(error);
 			});
 	},
-	restoreSession: ({sessionID}) => cp.sessions.restore(sessionID),
-	createWindow: ({url}) => cp.windows.create({ url }),
-	createTab: ({url}) => cp.tabs.create({ url }),
-	setURL: ({tabID, url}) => cp.tabs.update(tabID, { url })
+	restoreSession: ({sessionID}) => chrome.sessions.restore(sessionID),
+	createWindow: ({url}) => chrome.windows.create({ url }),
+	createTab: ({url}) => chrome.tabs.create({ url }),
+	setURL: ({tabID, url}) => chrome.tabs.update(tabID, { url })
 };
 
 
@@ -102,7 +105,7 @@ DEBUG && console.log("== onStartup");
 const addTab = debounce(
 		// make sure tabId is valid, as calling tabs.get() with undefined will
 		// throw an exception that isn't caught by the .catch() below
-	tabId => Number.isInteger(tabId) && cp.tabs.get(tabId)
+	tabId => Number.isInteger(tabId) && chrome.tabs.get(tabId)
 		.then(tab => {
 				// update activeTab to be the one we're pushing onto recents, but
 				// only if it's not the popup window.  though handleTabActivated()
@@ -218,7 +221,7 @@ async function openPopupWindow(
 		// awaiting isOpen().  the second invocation would then cache the previous
 		// tab as the popup as well, causing it to send showWindow, which would
 		// then reset the selection, making it impossible to move down quickly.
-	const [currentActiveTab] = await cp.tabs.query({
+	const [currentActiveTab] = await chrome.tabs.query({
 		active: true,
 		lastFocusedWindow: true
 	});
@@ -442,7 +445,7 @@ chrome.windows.onFocusChanged.addListener(windowID => {
 	if (!startingUp && windowID != chrome.windows.WINDOW_ID_NONE &&
 			windowID != lastWindowID) {
 		lastWindowID = windowID;
-		cp.tabs.query({ active: true, windowId: windowID })
+		chrome.tabs.query({ active: true, windowId: windowID })
 				// if this window doesn't have an active tab, it's likely in a
 				// different profile, so this instance of QuicKey can't access
 				// any info about it.  we'll just pass undefined to addTab(),
@@ -471,6 +474,7 @@ chrome.runtime.onConnect.addListener(port => {
 	ports[port.name] = port;
 
 	if (port.name == "menu") {
+console.error("---- port menu");
 		disableCommands();
 	}
 
@@ -580,13 +584,16 @@ DEBUG && console.log(e);
 
 enableCommands();
 
-	// if any of our tabs were already open when we're getting reloaded,
-	// close them so they're not left in a weird state
-cp.tabs.query({
-	url: `${chrome.runtime.getURL("")}*`
-})
-	.then(tabs => cp.tabs.remove(tabs.map(({id}) => id)))
-	.catch(error => DEBUG && console.error(error));
+chrome.runtime.getContexts({ contextTypes: ["TAB"] }).then((initialViews) => {
+	if (initialViews.length) {
+		const popupPort = chrome.runtime.connect({ name: "popup" });
+console.error("------ initialViews", initialViews.length);
+
+		if (popupPort) {
+			ports.popup = popupPort;
+		}
+	}
+});
 
 	// show the tab count, if necessary, and set the popup window type
 settings.get()
@@ -641,3 +648,5 @@ DEBUG && console.log("=== startup done", performance.now());
 		}
 	})
 	.catch(error => tracker.exception(error));
+
+globalThis.dispatchCachedEvents();

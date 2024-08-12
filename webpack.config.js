@@ -82,13 +82,13 @@ module.exports = (env, argv) => {
 				popup: "./src/js/popup/main.js",
 				options: "./src/js/options/main.js",
 				background: "./src/js/background/background.js",
+				sw: "./src/js/background/sw.js",
 			},
 			plugins: removeEmpty([
 				new CopyWebpackPlugin({
 					patterns: removeEmpty([
 						{ from: "src/css/", to: "css" },
 						{ from: "src/img/", to: "img" },
-						{ from: `src/js/defines-${mode}.js`, to: "js/defines.js" },
 						{ from: "src/js/lib/pinyin.js", to: "js/lib" },
 						{ from: "src/js/popup/init.js", to: "js/popup" },
 						ifNotProduction("src/manifest.json"),

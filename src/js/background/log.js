@@ -1,7 +1,6 @@
 import { connect } from "@/lib/ipc";
 
 const ChannelName = "log";
-const ChannelPattern = new RegExp(`^${ChannelName}`);
 const Methods = [
 	"log",
 	"warn",
@@ -9,7 +8,7 @@ const Methods = [
 ];
 
 if (typeof ServiceWorkerGlobalScope === "function") {
-	const { receive } = connect(ChannelPattern);
+	const { receive } = connect(ChannelName);
 	const methodEntries = Methods.map((name) => [
 		name,
 		(...args) => {

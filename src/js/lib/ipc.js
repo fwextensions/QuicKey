@@ -184,11 +184,12 @@ export function connect(
 		const [prefix, newPortName] = newPort.name.split(ChannelPrefix);
 		const nameMatches = channelName instanceof RegExp
 			? channelName.test(newPortName)
-			: (!channelName || newPortName === channelName);
+			: (!channelName || !newPortName || newPortName.startsWith(channelName) || channelName.startsWith(newPortName));
 
-			// prefix will be empty if it matches ChannelPrefix
-		if (!prefix && nameMatches) {
-//console.log("---------- got onConnect", channelName, ":", nameMatches, newPortName, newPort.name, location.pathname + location.search.slice(0, 10));
+			// prefix will be empty if it matches ChannelPrefix.  don't create a
+			// new channel with the same name as an existing one.
+		if (!prefix && nameMatches && !channels.some((channel) => channel.name === newPortName)) {
+console.error("---------- got onConnect", channelName, ":", nameMatches, newPortName, newPort.name, location.pathname + location.search.slice(0, 10));
 			createChannel(newPort);
 		}
 	}
@@ -217,14 +218,6 @@ export function connect(
 // TODO: also need to return the call promise from here somehow, or resolve the saved one
 			callQueue.forEach(({ name, data}) => channel.call(name, data));
 			callQueue.length = 0;
-		}
-
-// TODO: it's not clear that this is very useful for anything that receives calls in the background.  we always want to
-//  reconnect when the popup reopens, so every time we've had to use a regex for the channel name.
-		if (channelName && typeof channelName === "string") {
-				// we're intended to connect to a specific port, so now that we've
-				// created a channel, we don't want to connect to future ports
-			chrome.runtime.onConnect.removeListener(handleConnect);
 		}
 	}
 

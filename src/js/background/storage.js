@@ -53,7 +53,7 @@ export function createStorage({
 	validateUpdate = alwaysValidate,
 	updaters = {} })
 {
-	const { receive } = connect(/^storage\/.+/);
+	const { receive } = connect("storage");
 	const storageMutex = new Mutex();
 	const storageLocation = globalThis.location.pathname;
 	const promisesByCallID = new Map();
@@ -385,6 +385,7 @@ export function createStorageClient(
 
 		const id = currentTaskID++;
 
+console.error("\n\n>>>> SET before SAVE", id, storageLocation, "\n" + String(task).slice(0, 100));
 //console.log("\n\n>>>> SET before SAVE", id, storageLocation, "\n" + String(task).slice(0, 100));
 //console.time(`======= DO TASK ${id} get data`);
 			// call set() in the background to lock the storage mutex
@@ -413,6 +414,7 @@ export function createStorageClient(
 				dataPromise = Promise.resolve(data);
 
 //console.log("<<<< SET after SAVE", id, storageLocation, data, "\n\n\n");
+console.error("<<<< SET after SAVE", id, storageLocation, data, "\n\n\n");
 
 				return data;
 			});

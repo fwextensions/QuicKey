@@ -150,9 +150,7 @@ async function updateTabCount(
 }
 
 
-	// use a regex for the channel name so it'll keep listening for the port to
-	// reconnect after it closes
-connect(/^colorScheme/).receive({
+connect("colorScheme").receive({
 	async setColorScheme(
 		name)
 	{

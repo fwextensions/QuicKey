@@ -118,6 +118,7 @@ export default class App extends React.Component {
 	popupW = 0;
 	popupH = 0;
 	nextFrameRequestID = 0;
+	port = null;
 
 
 	constructor(props, context)
@@ -238,8 +239,17 @@ export default class App extends React.Component {
 			storage.set(() => ({ lastQuery }));
 		});
 
-		this.props.port.onMessage.addListener(this.onMessage);
 		this.visible = true;
+		this.port = this.props.port;
+		this.port.onMessage.addListener(this.onMessage);
+
+		chrome.runtime.onConnect.addListener((port) => {
+			if (port.name === "popup") {
+				this.port.onMessage.removeListener(this.onMessage);
+				this.port = port;
+				this.port.onMessage.addListener(this.onMessage);
+			}
+		});
 
 			// annoyingly, there seems to be a bug in Chrome where the
 			// closed tab is still around when the callback passed to
@@ -933,7 +943,7 @@ export default class App extends React.Component {
 
 		if (closedByEsc) {
 				// send this message regardless of menu or popup mode
-			this.props.port.postMessage("closedByEsc");
+			this.port.postMessage("closedByEsc");
 		}
 
 		if (!this.props.isPopup) {
