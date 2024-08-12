@@ -9,9 +9,9 @@
 				// reloaded once, so we don't get in a loop
 			const reloadURL = new URL(location.href);
 
-			reloadURL.searchParams.set(reloadedParam, true);
+			reloadURL.searchParams.set(reloadedParam, "true");
 			history.replaceState(null, null, reloadURL);
-			location.href = reloadURL;
+			location.href = reloadURL.href;
 		}
 	} else if (params.has(reloadedParam)) {
 // TODO: figure out where to warn about this
