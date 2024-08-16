@@ -32,11 +32,24 @@ async function getExistingPopupID()
 {
 	const contexts = await chrome.runtime.getContexts({ contextTypes: ["TAB"] });
 	const [popup] = contexts.filter(({ documentUrl }) => documentUrl.includes("popup.html"));
+	let tabID = 0;
+	let windowID = 0;
 
-	return {
-		tabID: popup?.tabId || 0,
-		windowID: popup?.windowId || 0
-	};
+	if (popup) {
+		tabID = popup.tabId;
+		windowID = popup.windowId;
+
+		if (popup.type !== "popup") {
+				// this means the popup was hidden in a tab, rather than hiding
+				// behind the focused window in its own popup window.  so when
+				// show() is called, it'll need to create a new popup window in
+				// which to display the popup tab.
+			isHiddenInTab = true;
+			windowID = 0;
+		}
+	}
+
+	return { tabID, windowID };
 }
 
 

@@ -385,7 +385,7 @@ export function createStorageClient(
 
 		const id = currentTaskID++;
 
-console.error("\n\n>>>> SET before SAVE", id, storageLocation, "\n" + String(task).slice(0, 100));
+//console.error("\n\n>>>> SET before SAVE", id, storageLocation, "\n" + String(task).slice(0, 100));
 //console.log("\n\n>>>> SET before SAVE", id, storageLocation, "\n" + String(task).slice(0, 100));
 //console.time(`======= DO TASK ${id} get data`);
 			// call set() in the background to lock the storage mutex
@@ -414,7 +414,7 @@ console.error("\n\n>>>> SET before SAVE", id, storageLocation, "\n" + String(tas
 				dataPromise = Promise.resolve(data);
 
 //console.log("<<<< SET after SAVE", id, storageLocation, data, "\n\n\n");
-console.error("<<<< SET after SAVE", id, storageLocation, data, "\n\n\n");
+//console.error("<<<< SET after SAVE", id, storageLocation, data, "\n\n\n");
 
 				return data;
 			});

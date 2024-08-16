@@ -528,7 +528,7 @@ function print(
 					}
 				});
 
-				log("\n" + rows.join("\n"));
+				console.log("\n" + rows.join("\n"));
 			})
 	);
 }

@@ -71,7 +71,8 @@ let lastUsedVersion;
 let usePinyin;
 
 
-const isPopupWindow = (tab) => tab?.url.startsWith(k.PopupURL);
+	// get the URL from either a tab object or what's returned from getContexts()
+const isPopupWindow = (tab) => (tab?.url || tab?.documentUrl)?.startsWith(k.PopupURL);
 
 
 chrome.runtime.onStartup.addListener(() => {
@@ -585,13 +586,13 @@ DEBUG && console.log(e);
 enableCommands();
 
 chrome.runtime.getContexts({ contextTypes: ["TAB"] }).then((initialViews) => {
-	if (initialViews.length) {
+		// check that the popup window is open, and not just the Options tab
+	if (initialViews.some((view) => isPopupWindow(view))) {
 		const popupPort = chrome.runtime.connect({ name: "popup" });
-console.error("------ initialViews", initialViews.length);
 
-		if (popupPort) {
-			ports.popup = popupPort;
-		}
+			// generate a connect event with this new port.  if there's no popup
+			// window for it connect to, it'll immediately close.
+		chrome.runtime.onConnect.dispatch(popupPort);
 	}
 });
 
