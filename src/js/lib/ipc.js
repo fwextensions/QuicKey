@@ -1,3 +1,4 @@
+import { PromiseWithResolvers } from "@/lib/promise-with-resolvers";
 import { AbortablePromise } from "@/lib/abortable-promise";
 
 const ChannelPrefix = "ipc://";
@@ -137,7 +138,7 @@ class Channel {
 			promise.resolve(data);
 			delete this.#promisesByID[id];
 		} else {
-			DEBUG && console.error("No matching promise:", message.id, message.data);
+//			DEBUG && console.error("No matching promise:", message.id, message.data, Object.keys(this.#promisesByID));
 		}
 	}
 
@@ -156,7 +157,7 @@ class Channel {
 			promise.reject(error);
 			delete this.#promisesByID[id];
 		} else {
-			DEBUG && console.error("No matching promise for error:", message.id);
+			DEBUG && console.error("No matching promise for error:", message.id, message.errorJSON, Object.keys(this.#promisesByID));
 		}
 	}
 }
@@ -189,7 +190,7 @@ export function connect(
 			// prefix will be empty if it matches ChannelPrefix.  don't create a
 			// new channel with the same name as an existing one.
 		if (!prefix && nameMatches && !channels.some((channel) => channel.name === newPortName)) {
-console.error("---------- got onConnect", channelName, ":", nameMatches, newPortName, newPort.name, location.pathname + location.search.slice(0, 10));
+//console.error("---------- got onConnect", channelName, ":", nameMatches, newPortName, newPort.name, location.pathname + location.search.slice(0, 10));
 			createChannel(newPort);
 		}
 	}
@@ -214,9 +215,7 @@ console.error("---------- got onConnect", channelName, ":", nameMatches, newPort
 		channels.push(channel);
 
 		if (callQueue.length) {
-//console.log("---------- calling callQueue", callQueue);
-// TODO: also need to return the call promise from here somehow, or resolve the saved one
-			callQueue.forEach(({ name, data}) => channel.call(name, data));
+			callQueue.forEach(({ name, data, promise }) => promise.resolve(channel.call(name, data)));
 			callQueue.length = 0;
 		}
 	}
@@ -233,10 +232,11 @@ console.error("---------- got onConnect", channelName, ":", nameMatches, newPort
 		...data)
 	{
 		if (!channels.length) {
-// TODO: we need to generate a promise here to return
-			callQueue.push({ name, data });
+			const promise = new PromiseWithResolvers();
 
-			return;
+			callQueue.push({ name, data, promise });
+
+			return promise;
 		} else if (channels.length === 1) {
 			return channels[0].call(name, data);
 		}
