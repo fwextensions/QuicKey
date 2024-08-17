@@ -30,16 +30,21 @@ storage.get(data => ({popupAdjustmentWidth, popupAdjustmentHeight} = data))
 
 async function getExistingPopupID()
 {
-	const contexts = await chrome.runtime.getContexts({ contextTypes: ["TAB"] });
+	const contexts = await chrome.runtime.getContexts({ contextTypes: [chrome.runtime.ContextType.TAB] });
 	const [popup] = contexts.filter(({ documentUrl }) => documentUrl.includes("popup.html"));
 	let tabID = 0;
 	let windowID = 0;
 
 	if (popup) {
+			// to check the type of the window containing the popup tab, we have
+			// to get the actual window, since the window type is not returned
+			// in the response from getContexts()
+		const popupWindow = await chrome.windows.get(popup.windowId);
+
 		tabID = popup.tabId;
 		windowID = popup.windowId;
 
-		if (popup.type !== "popup") {
+		if (popupWindow.type !== "popup") {
 				// this means the popup was hidden in a tab, rather than hiding
 				// behind the focused window in its own popup window.  so when
 				// show() is called, it'll need to create a new popup window in
@@ -338,6 +343,7 @@ DEBUG && console.error("Failed to hide popup", e);
 
 async function blur()
 {
+!windowID && console.error("----- blur called without a window ID");
 	isVisible = false;
 	await cp.windows.update(windowID, { focused: false });
 	popupEmitter.emit("blur", { windowID });

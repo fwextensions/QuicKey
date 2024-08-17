@@ -146,13 +146,13 @@ class Channel {
 		message)
 	{
 		if (message?.id in this.#promisesByID) {
-			const { id, errorJSON } = message;
+			const { id, name, errorJSON } = message;
 			const promise = this.#promisesByID[id];
 				// parse the stringified error, turn it back into an Error, and reject the
 				// promise with it
 			const { message: errorMessage, ...rest } = JSON.parse(errorJSON);
 				// passing a cause to the constructor is available in Chrome 93+
-			const error = new Error(errorMessage, { cause: rest });
+			const error = new Error(`Error calling ${name}(): ${errorMessage}`, { cause: rest });
 
 			promise.reject(error);
 			delete this.#promisesByID[id];
@@ -173,7 +173,7 @@ export function connect(
 
 	chrome.runtime.getContexts({}).then((initialViews) => {
 		if (channels.length === 0 && initialViews.length > 1) {
-//console.log("---------- calling createChannel because views open", ChannelPrefix + channelName, location.pathname + location.search.slice(0, 10));
+//console.error("---------- calling createChannel because views open", ChannelPrefix + channelName, location.pathname + location.search.slice(0, 10));
 			createChannel(chrome.runtime.connect({ name: ChannelPrefix + channelName }));
 // TODO: create a single shared port for all channels.  then a single handler would call handleMessage() on the associated channel.
 		}
@@ -185,12 +185,14 @@ export function connect(
 		const [prefix, newPortName] = newPort.name.split(ChannelPrefix);
 		const nameMatches = channelName instanceof RegExp
 			? channelName.test(newPortName)
-			: (!channelName || !newPortName || newPortName.startsWith(channelName) || channelName.startsWith(newPortName));
+			: newPortName && (!channelName || newPortName.startsWith(channelName) || channelName.startsWith(newPortName));
+
+//console.error("---------- got onConnect", channelName, ":", nameMatches, `newPortName="${newPortName}"`, `newPort.name="${newPort.name}"`, location.pathname + location.search.slice(0, 10));
 
 			// prefix will be empty if it matches ChannelPrefix.  don't create a
 			// new channel with the same name as an existing one.
 		if (!prefix && nameMatches && !channels.some((channel) => channel.name === newPortName)) {
-//console.error("---------- got onConnect", channelName, ":", nameMatches, newPortName, newPort.name, location.pathname + location.search.slice(0, 10));
+//console.error("---------- got onConnect", channelName, ":", nameMatches, `newPortName="${newPortName}"`, `newPort.name="${newPort.name}"`, location.pathname + location.search.slice(0, 10));
 			createChannel(newPort);
 		}
 	}
@@ -213,8 +215,10 @@ export function connect(
 		const channel = new Channel(newPort, receiversByName, handleDisconnect, channelName);
 
 		channels.push(channel);
+//console.error("---------- createChannel", channelName);
 
 		if (callQueue.length) {
+//console.error("---------- clearing queue", callQueue.length);
 			callQueue.forEach(({ name, data, promise }) => promise.resolve(channel.call(name, data)));
 			callQueue.length = 0;
 		}
@@ -236,12 +240,21 @@ export function connect(
 
 			callQueue.push({ name, data, promise });
 
+				// there's no existing channel, so call runtime.connect() to
+				// cause the background script to reload, which should then call
+				// ipc.connect() from there and trigger our onConnect() above.
+				// if the port name matches, then we'll set up the new channel
+				// and forward all the queued calls.
+			chrome.runtime.connect({ name: "__WAKEUP__" });
+//console.error("---------- call QUEUE", name, callQueue.length);
+
 			return promise;
 		} else if (channels.length === 1) {
+//console.error("---------- call", name);
 			return channels[0].call(name, data);
 		}
 
-//console.warn("---------- call MULTIPLE CHANNELS", name, channels);
+console.error("---------- call MULTIPLE CHANNELS", name, channels);
 		return Promise.allSettled(callChannels("call", name, data));
 	}
 
