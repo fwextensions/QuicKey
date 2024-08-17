@@ -153,7 +153,7 @@ export default class App extends React.Component {
 				// to the first result.
 			this.gotMRUKey = !this.openedForSearch;
 			this.getActiveTab(true)
-				.then(({id}) => this.popupTabID = id);
+				.then((activeTab) => this.popupTabID = activeTab?.id);
 
 				// create a messaging channel API for the popupWindow object in
 				// the background script.  we only need this in the popup state.
@@ -584,7 +584,7 @@ export default class App extends React.Component {
 				this.props.tracker.event(this.mode, "open");
 			}
 
-			this.closeWindow(false, tabOrWindow);
+			await this.closeWindow(false, tabOrWindow);
 		}
 	};
 
@@ -1039,7 +1039,7 @@ export default class App extends React.Component {
 		} else {
 				// no response is required, so don't send a callback.
 				// otherwise, we'll get runtime errors about the port closing.
-			chrome.runtime.sendMessage(messageBody);
+			return chrome.runtime.sendMessage(messageBody);
 		}
 	}
 

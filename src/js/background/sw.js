@@ -35,15 +35,16 @@ console.error("---- dispatchCachedEvents", performance.now(), events.length, lis
 globalThis.dispatchCachedEvents = cacheEvents([
 	chrome.commands.onCommand,
 	chrome.runtime.onConnect,
-	chrome.runtime.onMessage,
 	chrome.runtime.onInstalled,
+	chrome.runtime.onMessage,
 	chrome.runtime.onStartup,
+	chrome.runtime.onUpdateAvailable,
+	chrome.storage.onChanged,
 	chrome.tabs.onActivated,
 	chrome.tabs.onCreated,
 	chrome.tabs.onRemoved,
 	chrome.tabs.onReplaced,
 	chrome.windows.onFocusChanged,
-	chrome.runtime.onUpdateAvailable,
 ]);
 
 importScripts("./background.js");
