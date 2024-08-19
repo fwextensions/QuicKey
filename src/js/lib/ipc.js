@@ -59,6 +59,14 @@ class Channel {
 		return new AbortablePromise(this.#controller);
 	}
 
+	disconnect()
+	{
+			// calling disconnect() doesn't trigger the onDisconnect event on
+			// this side, so call our handler directly
+		this.#port.disconnect();
+		this.#handleDisconnect();
+	}
+
 	get name()
 	{
 // TODO: should this be the port name, or the initiator name?
@@ -187,12 +195,16 @@ export function connect(
 			? channelName.test(newPortName)
 			: newPortName && (!channelName || newPortName.startsWith(channelName) || channelName.startsWith(newPortName));
 
-//console.error("---------- got onConnect", channelName, ":", nameMatches, `newPortName="${newPortName}"`, `newPort.name="${newPort.name}"`, location.pathname + location.search.slice(0, 10));
+//nameMatches && console.error("---------- got onConnect", channelName, ":", nameMatches, `newPortName="${newPortName}"`, `newPort.name="${newPort.name}"`, location.pathname + location.search.slice(0, 10), channels.some((channel) => channel.name.startsWith(newPort.name)));
 
-			// prefix will be empty if it matches ChannelPrefix.  don't create a
-			// new channel with the same name as an existing one.
-		if (!prefix && nameMatches && !channels.some((channel) => channel.name === newPortName)) {
-//console.error("---------- got onConnect", channelName, ":", nameMatches, `newPortName="${newPortName}"`, `newPort.name="${newPort.name}"`, location.pathname + location.search.slice(0, 10));
+			// prefix will be empty if it matches ChannelPrefix
+		if (!prefix && nameMatches) {
+				// if there's an existing channel with the same name as the new
+				// one, disconnect it
+			const existingChannel = channels.find((channel) => channel.name.startsWith(newPort.name));
+
+//existingChannel && console.error("---------- about to disconnect", existingChannel.name);
+			existingChannel?.disconnect();
 			createChannel(newPort);
 		}
 	}
@@ -204,9 +216,9 @@ export function connect(
 
 		if (index > -1) {
 			channels.splice(index, 1);
-		}
 
-//console.log("---------- handleDisconnect", channelName, index, channels);
+//console.error("---------- handleDisconnect", channelName, index, channel.name, channels.length);
+		}
 	}
 
 	function createChannel(
