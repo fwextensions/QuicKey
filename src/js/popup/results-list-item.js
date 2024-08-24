@@ -6,6 +6,7 @@ import {
 	ClearIcon
 } from "@/common/icons";
 import copyTextToClipboard from "@/lib/copy-to-clipboard";
+import {getRelativeTime} from "@/lib/get-relative-time";
 import {ModKeyBoolean} from "@/options/key-constants";
 import {IsDev, IncognitoNameLC} from "@/background/constants";
 import React from "react";
@@ -116,7 +117,12 @@ export default class ResultsListItem extends React.Component {
 
 		if (IsDev) {
 			tooltip = _.toPairs(scores)
-				.concat([["recentBoost", item.recentBoost], ["id", item.id], ["score", item.score]])
+				.concat([
+					["recentBoost", item.recentBoost],
+					["id", item.id],
+					["score", item.score],
+					["lastVisit", getRelativeTime(item.lastVisit)],
+				])
 				.map(keyValue => keyValue.join(": "))
 				.concat([title != pinyinTitle && pinyinTitle, displayURL != pinyinDisplayURL && pinyinDisplayURL])
 				.filter(string => string)
