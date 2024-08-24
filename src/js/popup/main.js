@@ -6,9 +6,12 @@ import React from "react";
 import { hydrateRoot } from "react-dom/client";
 import App from "./app";
 import trackers from "@/background/page-trackers";
-import "@/background/log";
+import stdout from "@/lib/stdout";
 import "./monitor-color-scheme";
 
+if (globalThis.DEBUG) {
+	stdout("diohkfkdnhkijfjdjcmdbpemmapfgpgg");
+}
 
 const initialQuery = gKeyCache.join("");
 const initialShortcuts = gShortcutCache;
@@ -27,7 +30,7 @@ if (gClose) {
 	window.close();
 }
 
-DEBUG && log("=== popup startup time", now - gInitTime, now);
+DEBUG && console.log("=== popup startup time", now - gInitTime, now);
 
 if (tracker) {
 		// send a pageview event after a delay, in case the user is toggling

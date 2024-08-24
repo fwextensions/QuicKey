@@ -17,8 +17,6 @@ function cacheEvents(
 
 	return function dispatchCachedEvents()
 	{
-console.error("---- dispatchCachedEvents", performance.now(), events.length, listeners.length);
-
 		for (const [eventType, listener] of listeners) {
 			eventType.removeListener(listener);
 		}

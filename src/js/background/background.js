@@ -10,9 +10,10 @@ import settings from "@/background/settings";
 import trackers from "@/background/page-trackers";
 import { debounce } from "@/background/debounce";
 import * as k from "@/background/constants";
-import "@/background/log";
+import stdout from "@/lib/stdout";
 
 if (globalThis.DEBUG) {
+	stdout("diohkfkdnhkijfjdjcmdbpemmapfgpgg");
 	globalThis.printTabs = recentTabs.print;
 }
 
@@ -227,7 +228,7 @@ async function openPopupWindow(
 		lastFocusedWindow: true
 	});
 
-	if (!ports.popup) {
+	if (!(await popupWindow.isOpen())) {
 		activeTab = currentActiveTab;
 
 			// the popup window isn't open, so create a new one.  tell it whether
@@ -629,7 +630,10 @@ storage.set(data => {
 	.then(() => {
 		tracker.pageview();
 		tracker.timing("loading", "background-loaded", performance.now());
-DEBUG && console.log("=== startup done", performance.now());
+
+			// now that everything is set up, fire all the cached events
+		globalThis.dispatchCachedEvents();
+DEBUG && console.log("%c%s", "background: darkgreen; color: white;", "====== startup done ======", performance.now());
 	})
 		// pause the chain to wait for the installed promise to resolve,
 		// which it will never do if the event doesn't fire.  if it does,
@@ -649,5 +653,3 @@ DEBUG && console.log("=== startup done", performance.now());
 		}
 	})
 	.catch(error => tracker.exception(error));
-
-globalThis.dispatchCachedEvents();
