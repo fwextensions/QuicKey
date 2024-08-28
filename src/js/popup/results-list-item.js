@@ -121,7 +121,7 @@ export default class ResultsListItem extends React.Component {
 					["recentBoost", item.recentBoost],
 					["id", item.id],
 					["score", item.score],
-					["lastVisit", getRelativeTime(item.lastVisit)],
+					item.lastVisit ? ["lastVisit", getRelativeTime(item.lastVisit)] : [],
 				])
 				.map(keyValue => keyValue.join(": "))
 				.concat([title != pinyinTitle && pinyinTitle, displayURL != pinyinDisplayURL && pinyinDisplayURL])
