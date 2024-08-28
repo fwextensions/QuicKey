@@ -49,7 +49,7 @@ export default class Mutex {
 			new Promise((resolve) => {
 				timeout = setTimeout(
 					() => {
-DEBUG && console.error("MUTEX timed out, id:", id, "queue:", this._queue.length, String(task).slice(0, 100));
+DEBUG && console.error("MUTEX timed out, id:", id, "queue:", this._queue.length, new Date().toLocaleString(), String(task).slice(0, 100));
 						resolve(new Error("Mutex task timed out")); },
 //					() => resolve(new Error("Mutex task timed out")),
 					timeLimit

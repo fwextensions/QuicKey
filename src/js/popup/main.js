@@ -4,9 +4,9 @@ if (typeof globalThis.DEBUG !== "boolean") {
 
 import React from "react";
 import { hydrateRoot } from "react-dom/client";
-import App from "./app";
 import trackers from "@/background/page-trackers";
 import stdout from "@/lib/stdout";
+import App from "./app";
 import "./monitor-color-scheme";
 
 if (globalThis.DEBUG) {

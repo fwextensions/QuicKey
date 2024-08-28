@@ -20,6 +20,10 @@ const relativeTime = new Intl.RelativeTimeFormat(
 export function getRelativeTime(
 	date)
 {
+	if (!date) {
+		return "";
+	}
+
 		// allow dates or times to be passed
 	const timeMs = typeof date === "number" ? date : date.getTime();
 	const delta = Math.ceil((timeMs - Date.now()) / 1000);

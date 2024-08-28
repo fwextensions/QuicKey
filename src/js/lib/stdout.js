@@ -1,9 +1,13 @@
+const _console = console;
+
 export default function stdout(
 	id)
 {
 	if (!id || typeof id !== "string") {
 		return;
 	}
+
+_console.error("======= loading stdout ======", id);
 
 		// provide a noop handler for the response from the stdout extension
 	const noop = () => {};
@@ -16,7 +20,13 @@ export default function stdout(
 			[method](...args) {
 				const payload = { method, filename, args };
 
-				chrome.runtime.sendMessage(id, payload, noop);
+				chrome.runtime.sendMessage(id, payload)
+						// suppress any runtime.lastError messages, such as when
+						// the stdout extension is not installed
+					.then(noop, noop)
+
+					// log the message locally as well
+				_console[method](...args);
 			}
 		}), {});
 }

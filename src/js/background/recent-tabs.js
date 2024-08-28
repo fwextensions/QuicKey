@@ -279,20 +279,11 @@ const t = performance.now();
 			includeClosedTabs ? cp.sessions.getRecentlyClosed() : []
 		])
 			.then(([freshTabs, closedTabs]) => {
-				const {tabIDs, lastUpdateTime, lastStartupTime} = data;
+				const {tabIDs} = data;
 				const tabsByURL = {};
-				let {tabsByID} = data;
-				let newData = { tabsByID };
+				const {tabsByID} = data;
 // TODO: should use startsWith
 				let tabs = freshTabs.filter(({url}) => !url.includes(PopupURL));
-
-					// lastUpdateTime shouldn't be undefined, but just in case
-				if (isNaN(lastUpdateTime) || lastStartupTime > lastUpdateTime) {
-DEBUG && console.log("====== calling updateFromFreshTabs");
-
-					newData = updateFromFreshTabs(data, tabs);
-					tabsByID = newData.tabsByID;
-				}
 
 					// update the fresh tabs with any recent data we have
 				tabs = tabs.map(tab => {
@@ -356,7 +347,7 @@ DEBUG && console.log("====== calling updateFromFreshTabs");
 					// storage.set() for getAll() so that the popup doesn't
 					// have to wait for the data to get stored before it's
 					// returned, to make the recents menu render faster.
-				storage.set(() => newData);
+				storage.set(() => { tabsByID });
 
 DEBUG && console.log("getAll took", performance.now() - t, "ms");
 				return tabs;
@@ -370,7 +361,10 @@ function updateAll()
 	return storage.set(data => cp.tabs.query({})
 		.then(freshTabs => {
 DEBUG && console.log("=== updateAll");
-			return updateFromFreshTabs(data, freshTabs);
+			return {
+				lastStartupTime: Date.now(),
+				...updateFromFreshTabs(data, freshTabs),
+			};
 		}), "updateAll");
 }
 

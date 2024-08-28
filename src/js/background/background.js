@@ -476,7 +476,6 @@ chrome.runtime.onConnect.addListener(port => {
 	ports[port.name] = port;
 
 	if (port.name == "menu") {
-console.error("---- port menu");
 		disableCommands();
 	}
 
@@ -620,10 +619,7 @@ storage.set(data => {
 		// need to wait for the popup or menu to open to update the icon.
 	toolbarIcon.setColorScheme(data.colorScheme);
 
-		// save the current time and version in settings so recentTabs.getAll()
-		// knows whether it needs to update the stored data
 	return {
-		lastStartupTime: Date.now(),
 		lastUsedVersion: k.Version,
 	};
 })

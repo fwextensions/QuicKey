@@ -17,7 +17,8 @@ export default function loadScript(
 			script.type = "text/javascript";
 			script.charset = "utf-8";
 			script.async = false;
-			script.src = url;
+				// only load scripts from within the extension
+			script.src = chrome.runtime.getURL(url);
 
 			document.head.appendChild(script);
 		});
