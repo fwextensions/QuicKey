@@ -149,7 +149,7 @@ export default class PopupSection extends React.Component {
 					In addition to the toolbar menu, QuicKey can be shown as a
 					popup window.  The popup appears nearly instantly, since the
 					window is never unloaded.  And it lets you use a single
-					shortcut to show the window and then choose a tab to focus,
+					shortcut key to show the window and then select a tab to focus,
 					providing the closest experience to the {SwitchAppShortcut} menu.
 				</p>
 

@@ -1,5 +1,6 @@
 import React, {useContext} from "react";
 import {Route, Routes, useLocation, useNavigate} from "react-router-dom";
+import {styled} from "goober";
 import {Sections, SectionList, SectionLabel} from "./sections";
 import GeneralSection from "./general-section";
 import PopupSection from "./popup-section";
@@ -10,12 +11,6 @@ import {OptionsContext} from "./options-provider";
 import * as k from "@/background/constants";
 
 
-const WelcomeV2Message = <div className="update-message">
-	<h3>Welcome to QuicKey 2.0!</h3>
-	<h4>Now you can press a single shortcut key to navigate recent
-		tabs in a popup window, just like the <Shortcut keys="alt+tab" /> menu.</h4>
-	<h4>See below for more new options.</h4>
-</div>;
 const PinyinUpdateMessage = <div className="update-message pinyin"
 	title="Now you can use pinyin to search for Chinese characters in web page titles and URLs. You can always reopen this page by clicking the gear icon in the QuicKey menu."
 >
@@ -29,9 +24,50 @@ const BrowserClassName = k.IsFirefox
 		: "chrome";
 
 
-export default function OptionsApp()
+const Link = styled.span`
+	font-weight: bold;
+	text-decoration: underline;
+	
+	&:hover {
+		filter: brightness(1.3);
+	}
+	
+	&:hover:active {
+		filter: brightness(1.5);
+	}
+`;
+
+
+function WelcomeV2Message({
+	openSettings })
 {
-	const {openTab, showWelcomeV2Message, showPinyinUpdateMessage} = useContext(OptionsContext);
+	const Settings = ({ children }) => (
+		<Link
+			title="Open the browser's keyboard shortcuts page"
+			onClick={openSettings}
+		>
+			{children}
+		</Link>
+	);
+
+	const switchAppShortcut = k.IsMac ? "cmd+tab" : "alt+tab";
+
+	return (
+		<div className="update-message">
+			<h3>Welcome to QuicKey 2.0</h3>
+			<h4>Now you can press
+				a <Settings>single shortcut key</Settings> to navigate
+				recent tabs in a popup window, just like
+				the <Settings><Shortcut keys={switchAppShortcut} style={{ fontSize: ".8rem", verticalAlign: "bottom" }} /></Settings> menu.
+			</h4>
+			<h4>See below for more new options.</h4>
+		</div>
+	);
+}
+
+
+export default function OptionsApp() {
+	const { openTab, showWelcomeV2Message, showPinyinUpdateMessage } = useContext(OptionsContext);
 	const navigate = useNavigate();
 	const location = useLocation();
 	const selectedSection = location.pathname.slice(1) || "general";
@@ -40,15 +76,13 @@ export default function OptionsApp()
 
     const handleHelpButtonClick = () => openTab("https://fwextensions.github.io/QuicKey/", "help");
 
+	const handleShortcutsClick = () => openTab("chrome://extensions/shortcuts", "shortcuts");
+
 	return (
 		<main className={BrowserClassName}>
-			{
-				showWelcomeV2Message && WelcomeV2Message
-			}
+			{showWelcomeV2Message && <WelcomeV2Message openSettings={handleShortcutsClick} />}
 
-			{
-				showPinyinUpdateMessage && PinyinUpdateMessage
-			}
+			{showPinyinUpdateMessage && PinyinUpdateMessage}
 
 			<h1 className="quickey">QuicKey options
 				<div className="help-button"
