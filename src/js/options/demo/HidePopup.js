@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { styled } from "goober";
-import { HidePopupBehavior } from "@/background/constants";
+import { IsMac, HidePopupBehavior, CommandIDs } from "@/background/constants";
 import { ShortcutSeparator } from "@/options/key-constants";
+import { getKeysFromShortcut } from "@/options/shortcut-utils";
 import { getWindowBounds } from "./utils";
 import { createAnimOptions, createStepHandler } from "./anim";
 import useStepper from "./useStepper";
@@ -34,8 +35,7 @@ const HidePopupOptions = createAnimOptions(
 		"down",
 		["down", 800],
 		["down", 600],
-		["down", 300],
-		"noop",
+		["down", 1000],
 		[(context) => context.setIncludeShift(true), 300],
 		(context) => context.key("down", "shift"),
 		shiftPress,
@@ -55,6 +55,20 @@ const HidePopupOptions = createAnimOptions(
 	}
 );
 const AutoStartDelay = 1500;
+	// get the suggested key for the open popup command from the manifest based
+	// on the OS, and then generate the same info object that will be passed in
+	// from the PopupSection.  we'll use that shortcut when showing the HidePopup
+	// demo below and there's no default shortcut set, so that the animation has
+	// some keys to show getting pressed.
+const SuggestedOpenPopupCommand = chrome.runtime.getManifest()
+	.commands[CommandIDs.OpenPopupCommand]
+	.suggested_key[IsMac ? "mac" : "default"]
+	.replace("MacCtrl", "Ctrl")
+	.toLowerCase();
+const DefaultOpenPopupShortcut = {
+	shortcut: SuggestedOpenPopupCommand,
+	...getKeysFromShortcut(SuggestedOpenPopupCommand)
+};
 
 const Container = styled.div`
 	margin-top: 2em;
@@ -85,8 +99,12 @@ export default function HidePopup({
 	const [includeShift, setIncludeShift] = useState(false);
 	const isMounted = useRef(false);
 	const shortcutRef = useRef();
+		// when animating and there's no shortcut set, fall back to the default
+	const animShortcut = !shortcut.shortcut
+		? DefaultOpenPopupShortcut
+		: shortcut;
 	const handleStep = createStepHandler({
-		shortcut,
+		shortcut: animShortcut,
 		shortcutRef,
 		recents,
 		setRecentIndex,
@@ -98,9 +116,12 @@ export default function HidePopup({
 	const { start, stop, active } = useStepper(handleStep, HidePopupOptions);
 	const recentTabs = recents.map((index) => tabs[index]);
 	const playButtonEnabled = !active && (isMounted.current || !autoStart);
-	const currentShortcutString = includeShift
-		? [...shortcut.modifiers, "shift", shortcut.baseKey].join(ShortcutSeparator)
-		: shortcut.shortcut;
+		// always use the real shortcut string when not animating (i.e., !active)
+	const currentShortcutString = !active
+		? shortcut.shortcut
+		: includeShift
+			? [...animShortcut.modifiers, "shift", animShortcut.baseKey].join(ShortcutSeparator)
+			: animShortcut.shortcut;
 
 	useEffect(() => {
 			// the "restart" state should force the anim to restart even if it's
