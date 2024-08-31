@@ -12,7 +12,7 @@
     "build:pinyin": "webpack",
     "build:popup": "webpack --env production --env buildPopup",
     "build:prod": "webpack --env production",
-    "build": "webpack",
+    "build": "npm run build:prod",
     "dev": "webpack --watch"
   },
   "dependencies": {

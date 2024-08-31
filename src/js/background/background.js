@@ -1,7 +1,6 @@
-if (typeof globalThis.DEBUG !== "boolean") {
-	globalThis.DEBUG = (await chrome.management.getSelf()).installType === "development";
-}
-
+	// this triggers warnings about having to add a listener for error on the
+	// initial evaluation of the worker script, but it still seems to work
+import "@/lib/error-handler";
 import popupWindow from "@/background/popup-window";
 import toolbarIcon from "@/background/toolbar-icon";
 import recentTabs from "@/background/recent-tabs";

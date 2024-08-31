@@ -57,7 +57,7 @@ module.exports = (env, argv) => {
 	const htmlOptions = (name) => ({
 		template: `./src/${name}.html`,
 		filename: `${name}.html`,
-		chunks: ["error-handler", name],
+		chunks: ["error-queue", name],
 		minify: false,
 			// create a timestamp that's injected into an HTML comment via the plugins
 		buildTime
@@ -78,7 +78,7 @@ module.exports = (env, argv) => {
 			entry: {
 					// put this entry point first, so it gets loaded before the
 					// main module on each page
-				"error-handler": "./src/js/lib/error-handler.js",
+				"error-queue": "./src/js/lib/error-queue.js",
 				popup: "./src/js/popup/main.js",
 				options: "./src/js/options/main.js",
 				background: "./src/js/background/background.js",
