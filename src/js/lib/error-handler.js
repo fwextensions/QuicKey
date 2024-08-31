@@ -1,20 +1,16 @@
-import trackers from "../background/page-trackers";
+import trackers from "@/background/page-trackers";
+import { IsDev } from "@/background/constants";
 
+	// default DEBUG to true when we're running as an unpacked extension
+globalThis.DEBUG = typeof globalThis.DEBUG !== "boolean"
+	? IsDev
+	: globalThis.DEBUG;
 
 function getStack(
 	error)
 {
-	return (error && error.stack && error.stack.replace(PathPattern, "")) || "";
+	return (error?.stack?.replace(PathPattern, "")) || "";
 }
-
-
-const PathPattern = /chrome-extension:\/\/[^\n]+\//g;
-
-
-const match = location.pathname.match(/\/(\w+)\.html/);
-const pageName = match?.[1] || "background";
-const tracker = trackers[pageName] || trackers.background;
-
 
 function handleError(
 	event)
@@ -37,7 +33,7 @@ function handleError(
 			: "exception";
 		const errorMessage = `Caught unhandled ${type} at ${timestamp}:\n${stack}`;
 
-		DEBUG && console.error(errorMessage);
+		globalThis.DEBUG && console.error(errorMessage);
 		tracker.exception(errorMessage, true);
 
 		if (event.preventDefault) {
@@ -48,5 +44,21 @@ function handleError(
 	}
 }
 
-addEventListener("error", handleError);
-addEventListener("unhandledrejection", handleError);
+const PathPattern = /chrome-extension:\/\/[^\n]+\//g;
+
+const match = location.pathname.match(/\/(\w+)\.html/);
+const pageName = match?.[1] || "background";
+const tracker = trackers[pageName] || trackers.background;
+const queuedErrors = globalThis.getQueuedErrors?.();
+let loaded = false;
+
+	// only add the event listeners once, even if we get imported multiple times
+if (!loaded) {
+	loaded = true;
+	addEventListener("error", handleError);
+	addEventListener("unhandledrejection", handleError);
+
+	if (queuedErrors?.length) {
+		queuedErrors.forEach(handleError);
+	}
+}

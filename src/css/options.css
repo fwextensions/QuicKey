@@ -413,7 +413,7 @@ main {
 	color: var(--color, #333);
 	background: var(--background, #efefef);
 	padding: 2em 2em;
-	margin: -7em 7em 7em 7em;
+	margin: -5em 7em 3em 7em;
 	border-radius: .5em;
 }
 

@@ -181,28 +181,31 @@ const sendRequest = (endpoint, payload, mode = 'browser', opts = {}) => {
 				.catch((error) => DEBUG && console.log(error));
 		}
 	} else {
-		const scheme = endpoint.split('://')[0];
-		const req = require(`${scheme}`);
-		const options = {
-			headers: {
-				'User-Agent': opts.user_agent
-			},
-			timeout: 500,
-		};
-		const request = req
-			.get(url, options, (resp) => {
-				resp.on('data', (chunk) => {
-				});
-				resp.on('end', () => {
-					// TO-DO Handle Server Side Responses
-				});
-			})
-			.on('error', (err) => {
-				console.log('Error: ' + err.message);
-			});
-		request.on('timeout', () => {
-			request.destroy();
-		});
+// this branch is only for node, and it includes a call to require(), which
+// causes webpack to include the entire js/lib directory in every bundle, even
+// in entrypoints that don't import ga4mp.js.  ffs.
+//		const scheme = endpoint.split('://')[0];
+//		const req = require(`${scheme}`);
+//		const options = {
+//			headers: {
+//				'User-Agent': opts.user_agent
+//			},
+//			timeout: 500,
+//		};
+//		const request = req
+//			.get(url, options, (resp) => {
+//				resp.on('data', (chunk) => {
+//				});
+//				resp.on('end', () => {
+//					// TO-DO Handle Server Side Responses
+//				});
+//			})
+//			.on('error', (err) => {
+//				console.log('Error: ' + err.message);
+//			});
+//		request.on('timeout', () => {
+//			request.destroy();
+//		});
 	}
 };
 

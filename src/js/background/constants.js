@@ -1,6 +1,3 @@
-import cp from "@/lib/cp";
-
-
 	// use navigator values instead of chrome.runtime.getPlatformInfo() so
 	// we don't have to await the response everywhere constants are used
 const {userAgent, platform, languages} = navigator;
@@ -17,8 +14,7 @@ export const IsEdge = /Edg\//i.test(userAgent);
 export const IsFirefox = /Firefox\//i.test(userAgent);
 export const Platform = IsMac ? "mac" : "win";
 export const Language = languageMatch && languageMatch.groups.lang || primaryLanguage;
-			// this will get changed below if we're in dev mode
-export let IsDev = false;
+export const IsDev = (await chrome.management.getSelf()).installType === "development";
 export const IncognitoNameUC = IsFirefox
 	? "Private"
 	: IsEdge
@@ -103,5 +99,3 @@ export const Shortcuts = {
 	CopyURL: "copyURL",
 	CopyTitleURL: "copyTitleURL"
 };
-
-cp.management.getSelf().then(({ installType }) => IsDev = installType === "development");

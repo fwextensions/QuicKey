@@ -1,5 +1,5 @@
 import React from "react";
-import {List} from "react-virtualized";
+import {List} from "react-virtualized/dist/es/List";
 import handleRef from "@/lib/handle-ref";
 import {IsFirefox, ResultsListRowHeight} from "@/background/constants";
 

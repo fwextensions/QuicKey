@@ -1,7 +1,4 @@
-if (typeof globalThis.DEBUG !== "boolean") {
-	globalThis.DEBUG = (await chrome.management.getSelf()).installType === "development";
-}
-
+import "@/lib/error-handler";
 import React from "react";
 import {createRoot} from "react-dom/client";
 import {setup} from "goober";
