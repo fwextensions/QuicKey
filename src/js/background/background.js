@@ -9,10 +9,8 @@ import settings from "@/background/settings";
 import trackers from "@/background/page-trackers";
 import { debounce } from "@/background/debounce";
 import * as k from "@/background/constants";
-import stdout from "@/lib/stdout";
 
 if (globalThis.DEBUG) {
-	stdout("diohkfkdnhkijfjdjcmdbpemmapfgpgg");
 	globalThis.printTabs = recentTabs.print;
 }
 

@@ -2,13 +2,8 @@ import "@/lib/error-handler";
 import React from "react";
 import { hydrateRoot } from "react-dom/client";
 import trackers from "@/background/page-trackers";
-import stdout from "@/lib/stdout";
 import App from "./app";
 import "./monitor-color-scheme";
-
-if (globalThis.DEBUG) {
-	stdout("diohkfkdnhkijfjdjcmdbpemmapfgpgg");
-}
 
 const initialQuery = gKeyCache.join("");
 const initialShortcuts = gShortcutCache;
