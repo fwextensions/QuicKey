@@ -1,6 +1,5 @@
 import addURLs from "./add-urls";
 import {addPinyin} from "./add-pinyin";
-import cp from "cp";
 
 
 const PathSeparator = " / ";
@@ -62,7 +61,7 @@ export default function getBookmarks(
 	showPaths = showBookmarkPaths;
 	addPinyinStrings = usePinyin;
 
-	return cp.bookmarks.getTree()
+	return chrome.bookmarks.getTree()
 		.then(bookmarkNodes => {
 			processNodes(bookmarkNodes);
 			urls = null;

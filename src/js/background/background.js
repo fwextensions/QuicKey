@@ -206,6 +206,8 @@ function sendPopupMessage(
 	try {
 			// default to sending the message to the menu if it's open
 		(ports.menu || ports.popup).postMessage({ message, ...payload });
+
+		return chrome.runtime.lastError;
 	} catch (error) {
 		return error;
 	}
@@ -463,6 +465,7 @@ chrome.runtime.onConnect.addListener(port => {
 	if (port.name !== "popup" && port.name !== "menu") {
 		return;
 	}
+//console.log("---- background: onConnect", port.name);
 
 	const connectTime = Date.now();
 	let closedByEsc = false;
@@ -478,13 +481,16 @@ chrome.runtime.onConnect.addListener(port => {
 		disableCommands();
 	}
 
+// TODO: this only needs to be done for the menu case
 	port.onMessage.addListener(message => {
+//console.log("---- background: onMessage", port.name, message);
 		closedByEsc = (message == "closedByEsc");
 	});
 
 	port.onDisconnect.addListener(port => {
 		ports[port.name] = null;
 		activeTab = null;
+//console.log("---- background: onDisconnect", port.name);
 
 		if (port.name == "popup") {
 // TODO: remove popupWindow.isOpen?
@@ -595,15 +601,6 @@ chrome.runtime.getContexts({ contextTypes: ["TAB"] }).then((initialViews) => {
 	}
 });
 
-	// show the tab count, if necessary, and set the popup window type
-settings.get()
-	.then(settings => {
-		toolbarIcon.showTabCount(settings[k.ShowTabCount.Key]);
-		currentWindowLimitRecents = settings[k.CurrentWindowLimitRecents.Key];
-		popupWindow.hideBehavior = settings[k.HidePopupBehavior.Key];
-		navigateRecentsWithPopup = settings[k.NavigateRecentsWithPopup.Key];
-	});
-
 storage.set(data => {
 		// save the lastUsedVersion in a global before we return the current
 		// version below, so the onInstalled promise handler knows whether
@@ -615,8 +612,18 @@ storage.set(data => {
 
 		// set which icon to show in the toolbar based on the color scheme that
 		// we saw the last time we were run.  if it's changed since then, we'll
-		// need to wait for the popup or menu to open to update the icon.
+		// need to wait for the popup or menu to open to update the icon, but
+		// most of the time the last seen scheme is a reasonable default.
 	toolbarIcon.setColorScheme(data.colorScheme);
+
+		// pass the data we got to settings so it doesn't have to get it itself
+	settings.get(data)
+		.then(settings => {
+			toolbarIcon.showTabCount(settings[k.ShowTabCount.Key]);
+			currentWindowLimitRecents = settings[k.CurrentWindowLimitRecents.Key];
+			popupWindow.hideBehavior = settings[k.HidePopupBehavior.Key];
+			navigateRecentsWithPopup = settings[k.NavigateRecentsWithPopup.Key];
+		});
 
 	return {
 		lastUsedVersion: k.Version,

@@ -2,7 +2,6 @@
 // characters still get mangled in Chrome store versions
 /* @preserve ⌃⇧⌥⌘ */
 
-import cp from "cp";
 import { getKeysFromShortcut } from "@/options/shortcut-utils";
 import { ModifierEventNames } from "@/options/key-constants";
 
@@ -62,7 +61,7 @@ KeyAliases["\u2318"] = "Cmd";
 
 export default function getShortcuts()
 {
-	return cp.commands.getAll()
+	return chrome.commands.getAll()
 		.then(commands => commands.map(chromeShortcut => {
 			const shortcutText = (chromeShortcut.shortcut || "");
 			let shortcutKeys;

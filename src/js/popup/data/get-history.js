@@ -1,4 +1,3 @@
-import cp from "cp";
 import decode from "@/lib/decode";
 import addURLs from "./add-urls";
 import {addPinyin} from "./add-pinyin";
@@ -23,7 +22,7 @@ export default function getHistory(
 	return loop(() => {
 		const endTime = (lastItem && lastItem.lastVisitTime) || Date.now();
 
-		return cp.history.search({
+		return chrome.history.search({
 			text: "",
 			startTime: 0,
 			endTime: endTime,
