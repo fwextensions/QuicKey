@@ -1,4 +1,3 @@
-import cp from "cp";
 import storage from "@/background/quickey-storage";
 import {HidePopupBehavior, IsFirefox, PopupInnerHeight, PopupInnerWidth, PopupURL} from "@/background/constants";
 import {calcBounds} from "@/background/popup-utils";
@@ -66,7 +65,7 @@ async function createPopup(
 		focused: true
 	};
 
-	const window = await cp.windows.create({
+	const window = await chrome.windows.create({
 		...defaultOptions,
 		...options,
 	});
@@ -81,7 +80,7 @@ async function createPopup(
 
 async function getLastWindow()
 {
-	const windows = await cp.windows.getAll({
+	const windows = await chrome.windows.getAll({
 		windowTypes: ["normal"],
 		populate: true
 	});
@@ -97,7 +96,7 @@ async function getWindow(
 	tabOrWindow)
 {
 	if (tabOrWindow?.windowId) {
-		return await cp.windows.get(tabOrWindow.windowId);
+		return await chrome.windows.get(tabOrWindow.windowId);
 	} else {
 		return tabOrWindow;
 	}
@@ -118,7 +117,7 @@ async function create(
 	const url = `${PopupURL}?${new URLSearchParams({ props: propsJSON })}`;
 		// we won't have an activeTab if the user is opening the popup with
 		// a devtools window in the foreground
-	const targetWindow = activeTab && await cp.windows.get(activeTab.windowId);
+	const targetWindow = activeTab && await chrome.windows.get(activeTab.windowId);
 	const bounds = calcBounds(
 		props.navigatingRecents ? null : targetWindow,
 		{
@@ -134,7 +133,7 @@ async function create(
 	} else {
 			// first create a tab in the last unfocused window
 		const lastWindow = await getLastWindow();
-		const tab = await cp.tabs.create({
+		const tab = await chrome.tabs.create({
 			url,
 			active: false,
 			windowId: lastWindow.id,
@@ -171,7 +170,7 @@ async function create(
 		bounds.left += -Math.floor(widthDelta / 2);
 		bounds.top += -Math.floor(heightDelta / 2);
 
-		await cp.windows.update(window.id, bounds);
+		await chrome.windows.update(window.id, bounds);
 		await storage.set(() => ({ popupAdjustmentWidth, popupAdjustmentHeight }));
 	}
 
@@ -182,7 +181,7 @@ async function create(
 		// history, since it's not a real webpage.  doing this in a timeout
 		// is kludgy, but the history doesn't seem to have been updated by
 		// this point, so wait a second and then delete it.
-	setTimeout(() => cp.history.deleteUrl({ url }), 1000);
+	setTimeout(() => chrome.history.deleteUrl({ url }), 1000);
 
 	return window;
 }
@@ -192,7 +191,7 @@ async function show(
 	activeTab,
 	alignment)
 {
-	const targetWindow = activeTab && await cp.windows.get(activeTab.windowId);
+	const targetWindow = activeTab && await chrome.windows.get(activeTab.windowId);
 	const bounds = calcBounds(
 		targetWindow,
 		{
@@ -213,12 +212,12 @@ async function show(
 			// won't move back to the focused window after it's shown while
 			// navigating recents.
 		if (hideBehavior == "minimize" && !isVisible) {
-			await cp.windows.update(windowID, { focused: true, left: bounds.left, top: bounds.top });
+			await chrome.windows.update(windowID, { focused: true, left: bounds.left, top: bounds.top });
 		}
 
 			// we seem to have to pass width and height here, even if they
 			// haven't changed, to keep the window from shifting size
-		window = await cp.windows.update(windowID, { focused: true, ...bounds });
+		window = await chrome.windows.update(windowID, { focused: true, ...bounds });
 	} else {
 			// create a popup window with the tab that's hiding in another
 			// window, instead of passing in a URL.  that will move the
@@ -242,7 +241,7 @@ async function hideInTab()
 
 	if (lastWindow) {
 		try {
-			await cp.tabs.move(tabID, {
+			await chrome.tabs.move(tabID, {
 				windowId: lastWindow.id,
 				index: -1
 			});
@@ -309,7 +308,7 @@ async function hide(
 DEBUG && hideBehavior == Behind && (!Number.isInteger(options.left) || !Number.isInteger(options.top)) && console.error("==== bad popup options", options, targetWindow);
 
 		try {
-			const {state} = await cp.windows.update(windowID, options);
+			const {state} = await chrome.windows.update(windowID, options);
 
 			if (hideBehavior == Minimize && state !== "minimized") {
 					// for some irritating reason, minimizing the popup after it
@@ -317,7 +316,7 @@ DEBUG && hideBehavior == Behind && (!Number.isInteger(options.left) || !Number.i
 					// work reliably.  and just trying it again immediately also
 					// doesn't work.  waiting even 100ms wasn't reliable, so wait
 					// a whole quarter second to minimize it again.  ffs
-				setTimeout(() => cp.windows.update(windowID, options), 250);
+				setTimeout(() => chrome.windows.update(windowID, options), 250);
 			}
 
 				// get the target window's current state after updating the popup
@@ -327,7 +326,7 @@ DEBUG && hideBehavior == Behind && (!Number.isInteger(options.left) || !Number.i
 					// we just unfocused the popup, but the targetWindow
 					// didn't become focused, probably because we're on
 					// macOS, so force it into focus
-				await cp.windows.update(targetWindow.id, { focused: true });
+				await chrome.windows.update(targetWindow.id, { focused: true });
 			}
 
 			popupEmitter.emit("hide", { hideBehavior });
@@ -345,7 +344,7 @@ async function blur()
 {
 !windowID && console.error("----- blur called without a window ID");
 	isVisible = false;
-	await cp.windows.update(windowID, { focused: false });
+	await chrome.windows.update(windowID, { focused: false });
 	popupEmitter.emit("blur", { windowID });
 }
 
@@ -361,7 +360,7 @@ async function resize(
 	currentWidth = width;
 	currentHeight = height;
 
-	await cp.windows.update(windowID, { width, height });
+	await chrome.windows.update(windowID, { width, height });
 }
 
 
@@ -369,7 +368,7 @@ async function close()
 {
 		// look for any open popup tabs.  there should only ever be one, but
 		// at least one time, two got opened, so get them all to be safe.
-	const openTabs = await cp.tabs.query({ url: `${PopupURL}*` });
+	const openTabs = await chrome.tabs.query({ url: `${PopupURL}*` });
 	const originalWindowID = windowID;
 
 		// set the IDs to 0 before calling remove(), so that if someone
@@ -380,7 +379,7 @@ async function close()
 	isVisible = false;
 
 	try {
-		await cp.tabs.remove(openTabs.map(({id}) => id));
+		await chrome.tabs.remove(openTabs.map(({id}) => id));
 	} catch (e) {}
 
 	if (originalWindowID) {

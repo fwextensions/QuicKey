@@ -1,5 +1,4 @@
 import { deepEqual } from "fast-equals";
-import cp from "cp";
 import { connect } from "@/lib/ipc";
 import { PromiseWithResolvers } from "@/lib/promise-with-resolvers";
 import Mutex from "./mutex";
@@ -125,7 +124,7 @@ export function createStorage({
 //const t = performance.now();
 
 			// pass null to get everything in storage
-		return cp.storage.local.get(null)
+		return chrome.storage.local.get(null)
 			.then(storage => {
 //console.log(`--- INITIALIZE ${storageLocation}: loaded storage in`, performance.now() - t, "ms");
 				lastSavedFrom = storage?.lastSavedFrom;
@@ -150,7 +149,7 @@ export function createStorage({
 	{
 //const t = performance.now();
 			// pass null to get everything in storage, since the cache is empty
-		dataPromise = cp.storage.local.get(null)
+		dataPromise = chrome.storage.local.get(null)
 			.then(storage => {
 //console.log(`--- ${storageLocation}: loaded storage in`, performance.now() - t, "ms");
 
@@ -212,7 +211,7 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 		dataPromise = Promise.resolve(data);
 		lastSavedFrom = storageLocation;
 
-		return cp.storage.local.set({ version, data, lastSavedFrom: storageLocation })
+		return chrome.storage.local.set({ version, data, lastSavedFrom: storageLocation })
 			.then(() => structuredClone(data));
 	}
 
@@ -224,7 +223,7 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 		dataPromise = Promise.resolve(data);
 		lastSavedFrom = storageLocation;
 
-		return cp.storage.local.set({ data, lastSavedFrom: storageLocation })
+		return chrome.storage.local.set({ data, lastSavedFrom: storageLocation })
 				// return a clone of the changed data so that whatever's next in
 				// the chain can use it without affecting the cache
 			.then(() => structuredClone(data));
@@ -234,7 +233,7 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 	function resetWithoutLocking()
 	{
 			// remove just the storage keys we actually use, rather than clearing everything
-		return cp.storage.local.remove(StorageKeys)
+		return chrome.storage.local.remove(StorageKeys)
 			.then(getDefaultData)
 			.then(saveWithVersion)
 				// normally, dataPromise points to the resolved promise from
@@ -313,7 +312,7 @@ export function createStorageClient(
 {
   	const { call } = connect("storage/" + clientName);
 	const storageLocation = globalThis.location.pathname;
-	let dataPromise = cp.storage.local.get(null).then(({ data }) => data);
+	let dataPromise = chrome.storage.local.get(null).then(({ data }) => data);
 	let currentTaskID = 0;
 //	let totalTime = 0;
 //	let taskCount = 0;
@@ -336,7 +335,7 @@ export function createStorageClient(
 	{
 //const t = performance.now();
 			// pass null to get everything in storage, since the cache is empty
-		dataPromise = cp.storage.local.get(null)
+		dataPromise = chrome.storage.local.get(null)
 			.then(storage => {
 //console.log(`--- ${storageLocation}: loaded storage in`, performance.now() - t, "ms");
 

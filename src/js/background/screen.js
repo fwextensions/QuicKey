@@ -1,5 +1,3 @@
-import cp from "cp";
-
 let screens;
 
 if (chrome.system) {
@@ -10,7 +8,7 @@ if (chrome.system) {
 
 function updateScreenInfo()
 {
-	cp.system.display.getInfo().then((screenInfo) => {
+	chrome.system.display.getInfo().then((screenInfo) => {
 		screens = screenInfo.map(({ workArea }) => ({
 			...workArea,
 			right: workArea.left + workArea.width,

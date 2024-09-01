@@ -1,4 +1,3 @@
-import cp from "cp";
 import objectsHaveSameKeys from "@/lib/objects-have-same-keys";
 import decode from "@/lib/decode";
 import {createStorageClient, createStorage} from "./storage";
@@ -132,8 +131,8 @@ export default (() => {
 	const CurrentVersion = increment(Object.keys(Updaters).sort((a, b) => a - b).pop());
 	const DefaultSettings = getDefaultSettings();
 	const DefaultData = Promise.all([
-			cp.windows.getAll(),
-			cp.tabs.query({})
+			chrome.windows.getAll(),
+			chrome.tabs.query({})
 		])
 		.then(([windows, tabs]) => {
 			let hanPattern;
@@ -197,7 +196,7 @@ export default (() => {
 		{
 				// we only want to get the tabs in the current window because
 				// only the currently active tab is "recent" as far as we know
-			const tabs = await cp.tabs.query({ active: true, currentWindow: true, windowType: "normal" });
+			const tabs = await chrome.tabs.query({ active: true, currentWindow: true, windowType: "normal" });
 			const tab = tabs && tabs[0];
 			const data = JSON.parse(JSON.stringify(await DefaultData));
 

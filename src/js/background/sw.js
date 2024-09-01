@@ -4,45 +4,49 @@ globalThis.oninstall = () => skipWaiting();
 globalThis.onactivate = () => clients.claim();
 
 function cacheEvents(
-	eventTypes)
+	eventNames)
 {
-	let events = [];
-	let listeners = eventTypes.map((eventType) => {
-		const listener = (...eventArgs) => events.push([eventType, eventArgs]);
+		// walk down the dot path specified in name, starting from chrome
+	const getEvent = (name) => name.split(".").reduce((res, key) => res[key], chrome);
 
-		eventType.addListener(listener);
+	let cache = [];
+	let listeners = eventNames.map((eventName) => {
+		const listener = (...eventArgs) => cache.push([eventName, eventArgs]);
 
-		return [eventType, listener];
+		getEvent(eventName).addListener(listener);
+
+		return [eventName, listener];
 	});
 
 	return function dispatchCachedEvents()
 	{
-		for (const [eventType, listener] of listeners) {
-			eventType.removeListener(listener);
+		for (const [eventName, listener] of listeners) {
+			getEvent(eventName).removeListener(listener);
 		}
 
-		for (const [eventType, eventArgs] of events) {
-			eventType.dispatch(...eventArgs);
+		for (const [eventName, eventArgs] of cache) {
+			globalThis.DEBUG && console.log("◆ dispatching", eventName, eventArgs);
+			getEvent(eventName).dispatch(...eventArgs);
 		}
 
-		events = null;
+		cache = null;
 		listeners = null;
 	}
 }
 
 globalThis.dispatchCachedEvents = cacheEvents([
-	chrome.commands.onCommand,
-	chrome.runtime.onConnect,
-	chrome.runtime.onInstalled,
-	chrome.runtime.onMessage,
-	chrome.runtime.onStartup,
-	chrome.runtime.onUpdateAvailable,
-	chrome.storage.onChanged,
-	chrome.tabs.onActivated,
-	chrome.tabs.onCreated,
-	chrome.tabs.onRemoved,
-	chrome.tabs.onReplaced,
-	chrome.windows.onFocusChanged,
+	"commands.onCommand",
+	"runtime.onConnect",
+	"runtime.onInstalled",
+	"runtime.onMessage",
+	"runtime.onStartup",
+	"runtime.onUpdateAvailable",
+	"storage.onChanged",
+	"tabs.onActivated",
+	"tabs.onCreated",
+	"tabs.onRemoved",
+	"tabs.onReplaced",
+	"windows.onFocusChanged",
 ]);
 
 importScripts("./background.js");

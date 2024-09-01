@@ -1,4 +1,3 @@
-import cp from "cp";
 import addURLs from "@/popup/data/add-urls";
 import {getRelativeTime} from "@/lib/get-relative-time";
 import storage from "./quickey-storage";
@@ -275,8 +274,8 @@ const t = performance.now();
 
 	return storage.get(data => {
 		return Promise.all([
-			cp.tabs.query({}),
-			includeClosedTabs ? cp.sessions.getRecentlyClosed() : []
+			chrome.tabs.query({}),
+			includeClosedTabs ? chrome.sessions.getRecentlyClosed() : []
 		])
 			.then(([freshTabs, closedTabs]) => {
 				const {tabIDs} = data;
@@ -358,7 +357,7 @@ DEBUG && console.log("getAll took", performance.now() - t, "ms");
 
 function updateAll()
 {
-	return storage.set(data => cp.tabs.query({})
+	return storage.set(data => chrome.tabs.query({})
 		.then(freshTabs => {
 DEBUG && console.log("=== updateAll");
 			return {
@@ -462,9 +461,9 @@ DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabInde
 					// if the previous tab's data is not in tabsByID,
 					// this will throw an exception that will be caught
 					// below and the bad tab ID will be removed
-				.then(() => cp.windows.update(tabsByID[previousTabID].windowId,
+				.then(() => chrome.windows.update(tabsByID[previousTabID].windowId,
 					{ focused: true }))
-				.then(() => cp.tabs.update(previousTabID, { active: true }))
+				.then(() => chrome.tabs.update(previousTabID, { active: true }))
 				.catch(error => {
 						// we got an error either because the previous
 						// tab is no longer around or its data is not in
@@ -510,7 +509,7 @@ function print(
 	return storage.get(({tabsByID, tabIDs}) =>
 		Promise.all(
 			tabIDs.slice(-count).reverse().map(tabID =>
-				cp.tabs.get(tabID).catch(() => tabID)
+				chrome.tabs.get(tabID).catch(() => tabID)
 			)
 		)
 			.then(tabs => {
