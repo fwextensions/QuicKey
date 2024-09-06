@@ -1,6 +1,5 @@
 import React, {useContext} from "react";
 import {Route, Routes, useLocation, useNavigate} from "react-router-dom";
-import {styled} from "goober";
 import {Sections, SectionList, SectionLabel} from "./sections";
 import GeneralSection from "./general-section";
 import PopupSection from "./popup-section";
@@ -24,30 +23,16 @@ const BrowserClassName = k.IsFirefox
 		: "chrome";
 
 
-const Link = styled.span`
-	font-weight: bold;
-	text-decoration: underline;
-	
-	&:hover {
-		filter: brightness(1.3);
-	}
-	
-	&:hover:active {
-		filter: brightness(1.5);
-	}
-`;
-
-
 function WelcomeV2Message({
 	openSettings })
 {
 	const Settings = ({ children }) => (
-		<Link
+		<span className="link"
 			title="Open the browser's keyboard shortcuts page"
 			onClick={openSettings}
 		>
 			{children}
-		</Link>
+		</span>
 	);
 
 	const switchAppShortcut = k.IsMac ? "cmd+tab" : "alt+tab";
