@@ -15,7 +15,7 @@ export default function AboutSection()
 			<h2>About</h2>
 
 			<p>QuicKey adds keyboard shortcuts to switch tabs with a
-				Quicksilver-style search or a most recently used menu.
+				Quicksilver-style search or a most recently used list.
 			</p>
 			<p>
 				<a href="https://chrome.google.com/webstore/detail/quickey-%E2%80%93-the-quick-tab-s/ldlghkoiihaelfnggonhjnfiabmaficg" target="_blank">Version {Version}</a>
