@@ -98,6 +98,13 @@ QuicKey needs the storage permission so that it can persist the user's settings 
 sessions
 QuicKey needs the sessions permission so that it can restore recently closed tabs with their full history.  It lists the closed tabs below the recently used tabs, and also lets the user access them via search.
 
+system.display
+QuicKey needs the system.display permission so that it can position its tab-selection popup window in relation to the bounds of the screen containing the current window, without overlapping the taskbar or dock. It also helps QuicKey handle the case where the user has multiple monitors connected.
+
+favicon
+QuicKey needs the favicon permission so that it can display the favicons of open tabs in the QuicKey UI. In the manifest v2 version of the extension, it used the chrome://favicon/ path to display the favicons.
+
+
 
 
 ⚠️ NOTE: When first installed, QuicKey doesn't know which tabs have been recently used, but
