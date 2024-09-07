@@ -18,7 +18,7 @@
 
 	.inprivate.icon {
 		filter: none !important;
-		opacity: .8 !important;
+		opacity: 1 !important;
 	}
 
 	.search-box, .command-placeholder {
@@ -216,8 +216,8 @@ img {
 
 	/* maddeningly, FF will ignore the entire rule set when it contains both a
 	   prefixed pseudo element it doesn't support AND a pseudo class.  so we have
-	   to repeat these rules for hover when we don't have to repeat them for the
-	   basic styling above. */
+	   to repeat these rules for :hover and :active when we don't have to repeat
+	   them for the basic styling above. */
 .firefox .search-box .cancel-button:hover {
 	background-color: var(--background, #dcdcdc);
 }
@@ -259,6 +259,7 @@ img {
 	padding: 3px;
 	border-radius: 50%;
 	text-align: center;
+	background-color: transparent;
 	position: absolute;
 	display: inline-block;
 }
@@ -277,7 +278,7 @@ img {
 	background-color: var(--background, #dcdcdc);
 }
 
-.options-button:hover:active {
+.options-button:active {
 	background-color: var(--background, #bbb);
 }
 

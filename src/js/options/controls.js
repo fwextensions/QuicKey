@@ -1,120 +1,145 @@
- define([
-	"react"
-], function(
-	React
-) {
-	const Controls = {
-		Checkbox: function(
-			props)
-		{
-			function onChange(
-				event)
-			{
-				props.onChange(event.target.checked, props.id);
-			}
+import React from "react";
 
 
-			return <div className="control">
-				<label
-					title={
-						props.disabled
-							? props.tooltipDisabled
-							: props.tooltip
-					}
-				>
-					<input type="checkbox"
-						checked={props.value}
-						disabled={props.disabled}
-						tabIndex="0"
-						onChange={onChange}
-					/>
-					<div className="indicator" />
-					<span>{props.label}</span>
-					{props.children}
-				</label>
-			</div>
-		},
+export function Checkbox({
+	id,
+	label,
+	value,
+	disabled,
+	tooltip,
+	tooltipDisabled,
+	className,
+	onChange,
+	children,
+	...props})
+{
+	function handleChange(
+		event)
+	{
+		onChange?.(event.target.checked, id);
+	}
 
 
-		RadioButton: function(
-			props)
-		{
-			return <li className="control">
-				<label
-					title={
-						props.disabled
-							? props.tooltipDisabled
-							: props.tooltip
-					}
-				>
-					<input type="radio"
-						checked={props.checked}
-						disabled={props.disabled}
-						name={props.name}
-						value={props.value}
-						tabIndex="0"
-						onChange={props.onChange}
-					/>
-					<div className="indicator" />
-					<span>{props.label}</span>
-					{props.children}
-				</label>
-			</li>
-		},
+	const classes = ["control", disabled ? "disabled" : "", className].join(" ");
 
-
-		Group: function(
-			props)
-		{
-			return <div className="control-group">
-				<div className="label">{props.label}</div>
-				{props.children}
-			</div>
-		},
-
-
-		RadioGroup: function(
-			props)
-		{
-			const id = props.id;
-			const value = props.value;
-			const radioButtons = props.children.map(function(child) {
-				return React.cloneElement(child, {
-					name: id,
-					checked: child.props.value == value,
-					onChange: onChange
-				});
-			});
-
-
-			function onChange(
-				event)
-			{
-				props.onChange(event.target.value, props.id);
-			}
-
-
-			return <Controls.Group
-				label={props.label}
+	return (
+		<div className={classes} {...props}>
+			<label
+				title={
+					disabled
+						? tooltipDisabled
+						: tooltip
+				}
 			>
-				<ul>
-					{radioButtons}
-				</ul>
-			</Controls.Group>
-		}
-	};
+				<input type="checkbox"
+					checked={value}
+					disabled={disabled}
+					tabIndex="0"
+					onChange={handleChange}
+				/>
+				<div className="indicator" />
+				<span>{label}</span>
+				{children}
+			</label>
+		</div>
+	);
+}
 
 
-	function noop() {}
+export function RadioButton({
+	name,
+	label,
+	value,
+	checked,
+	disabled,
+	tooltip,
+	tooltipDisabled,
+	className,
+	onChange,
+	children,
+	...props})
+{
+	const classes = ["control", disabled ? "disabled" : "", className].join(" ");
+
+	return (
+		<li className={classes} {...props}>
+			<label
+				title={
+					disabled
+						? tooltipDisabled
+						: tooltip
+				}
+			>
+				<input type="radio"
+					checked={checked}
+					disabled={disabled}
+					name={name}
+					value={value}
+					tabIndex="0"
+					onChange={onChange}
+				/>
+				<div className="indicator" />
+				<span>{label}</span>
+				{children}
+			</label>
+		</li>
+	);
+}
 
 
-	Controls.Checkbox.defaultProps = {
-		onChange: noop
-	};
-	Controls.RadioGroup.defaultProps = {
-		onChange: noop
-	};
+export function Group({
+	id,
+	label,
+	children,
+	...props})
+{
+	return (
+		<div
+			id={id}
+			className="control-group"
+			{...props}
+		>
+			<div className="label">{label}</div>
+			{children}
+		</div>
+	);
+}
 
 
-	return Controls;
-});
+export function RadioGroup({
+	id,
+	label,
+	value,
+	onChange,
+	children,
+	...props})
+{
+	const radioButtons = children.map(function(child) {
+		return React.cloneElement(child, {
+			key: child.props.value,
+			name: id,
+			checked: child.props.value == value,
+			onChange: handleChange
+		});
+	});
+
+
+	function handleChange(
+		event)
+	{
+		onChange?.(event.target.value, id);
+	}
+
+
+	return (
+		<Group
+			id={id}
+			label={label}
+			{...props}
+		>
+			<ul className="radio-list">
+				{radioButtons}
+			</ul>
+		</Group>
+	);
+}

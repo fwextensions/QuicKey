@@ -30,19 +30,6 @@ comments: true
 
 #### *QuicKey* lets you navigate all of your Chrome tabs by typing just part of a page's title or URL.  No mouse needed!
 
-  * Press <b><kbd>alt</kbd><kbd>Q</kbd></b> (<b><kbd>ctrl</kbd><kbd>Q</kbd></b> on macOS).
-  * Type a few letters.
-  * Press <kbd>enter</kbd> to switch to the selected tab.
-
-To toggle between the two most recently used tabs, quickly press the keyboard shortcut twice.  Or pick a tab from the most recently used (MRU) list as [shown below](#mru).
-
-
-## Use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch between recent tabs
-
-With a little extra work, you can even make *QuicKey* respond to the Holy Grail of keyboard shortcuts: <b><kbd>ctrl</kbd><kbd>tab</kbd></b>.  
-
-[Learn how](ctrl-tab).
-
 
 ## Installation
 
@@ -55,98 +42,103 @@ You can customize the shortcut key by right-clicking the *QuicKey* icon and sele
 
 ## <a name="mru"></a>Switch between the most recently used tabs
 
-> **Note:** When first installed, *QuicKey* doesn't know which tabs have been recently used, but as you use Chrome, tabs will get added to the most recently used (MRU) list.
+> **Note:** If you've been using *QuicKey* before 2.0, you'll need to set keyboard shortcuts for the new commands that show the popup window, as they won't be set by default. 
 
-Opening *QuicKey* displays a list of the last 50 tabs you've visited, in order of recency.  Click a tab to switch to it, or use one of the keyboard shortcuts below to navigate the recently used tab history:
-
-<p style="margin-bottom: 0;">&nbsp;</p>
-
-  * **To switch between the two most recent tabs:**
-      * Press <b><kbd>alt</kbd><kbd>Z</kbd></b> (<b><kbd>ctrl</kbd><kbd>Z</kbd></b> on macOS). 
-          * **OR**      
-      * Quickly double-press <b><kbd>alt</kbd><kbd>Q</kbd></b> (<b><kbd>ctrl</kbd><kbd>Q</kbd></b> on macOS).
+Opening *QuicKey* displays a list of the last 50 tabs you've visited, in order of recency.  (When you first start using *QuicKey*, though, it won't know what's recent, so the list will be empty.)  Click a tab to switch to it, or use one of the keyboard shortcuts below to navigate the recently used tab history:
 
 <p style="margin-bottom: 0;">&nbsp;</p>
 
-  * **To navigate farther back in the MRU list:**
-    * Press <b><kbd>alt</kbd><kbd>A</kbd></b> (<b><kbd>ctrl</kbd><kbd>A</kbd></b> on macOS) once to switch to the previous tab.  The *QuicKey* icon will invert for .75 seconds: <b><img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> ➤ <img src="img/icon-38-inverted.png" style="height: 19px; vertical-align: text-bottom;"></b>.
-    * Press <b><kbd>alt</kbd><kbd>A</kbd></b> again while the icon is inverted to switch to older tabs, once for each tab.
-    * Press <b><kbd>alt</kbd><kbd>S</kbd></b> to move to newer tabs.
-    * Pause to let the icon revert to normal: <b><img src="img/icon-38-inverted.png" style="height: 19px; vertical-align: text-bottom;"> ➤ <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"></b>.
+  * <a name="mru-gif"></a>**To pick a recent tab from the MRU list in the popup window:**
+    * Press <b><kbd>alt</kbd><kbd>Q</kbd></b> (<b><kbd>ctrl</kbd><kbd>Q</kbd></b> on macOS) but keep holding the modifier key.
+    * Press <kbd>Q</kbd> or <kbd>↓</kbd> to move down through the list of recent tabs.
+    * Press <b><kbd>shift</kbd><kbd>Q</kbd></b> or <kbd>↑</kbd> to move up.
+    * Release <kbd>alt</kbd> (or <kbd>ctrl</kbd>) to switch to the selected tab.
+    * You can also highlight an item with the mouse, then release <kbd>alt</kbd>/<kbd>ctrl</kbd> to go to that tab.
+
+<p style="margin-bottom: 0;">&nbsp;</p>
+
+  * **To quickly switch between the two most recent tabs:**
+      * Press <b><kbd>alt</kbd><kbd>Z</kbd></b> (<b><kbd>ctrl</kbd><kbd>S</kbd></b> on macOS). 
+
+<p style="margin-bottom: 0;">&nbsp;</p>
+
+You can also view each tab as you navigate through the recents list, taking as long as you want on each, and then release the modifier key to stay on that tab. Make sure the shortcuts are set by right-clicking the *QuicKey* icon and selecting *Options*. Then click *Keyboard shortcuts*, scroll down, and click *Change browser shortcuts*. Look for the *Switch to the previous/next tab* commands and set these suggested shortcuts: <b><kbd>alt</kbd><kbd>A</kbd></b> and <b><kbd>alt</kbd><kbd>S</kbd></b>, respectively (<b><kbd>ctrl</kbd><kbd>S</kbd></b> and <b><kbd>ctrl</kbd><kbd>D</kbd></b> on macOS).
+
+<p style="margin-bottom: 0;">&nbsp;</p>
+
+  * **To navigate while viewing each recent tab:**
+    * Press <b><kbd>alt</kbd><kbd>A</kbd></b> (<b><kbd>ctrl</kbd><kbd>S</kbd></b> on macOS) to display the previous tab, but keep holding the modifier key. The popup window will stay open on the right side of the screen. 
+    * Press <kbd>A</kbd> to move down the list, displaying each tab in turn.
+    * Press <kbd>S</kbd> to move back up.
+    * Release <kbd>alt</kbd> (or <kbd>ctrl</kbd>) to stay on the current tab.
     * Press <b><kbd>alt</kbd><kbd>A</kbd></b> again to switch back to the tab you initially started on.
 
-<p style="margin-bottom: 0;">&nbsp;</p>
 
-  * <a name="mru-gif"></a>**To pick a recent tab from the MRU menu:**
-    * Press the shortcut but keep holding the <kbd>alt</kbd> key (<kbd>ctrl</kbd> key on macOS).
-    * Press <kbd>W</kbd> or <kbd>↓</kbd> to move down through the list of recent tabs.
-    * Press <b><kbd>shift</kbd><kbd>W</kbd></b> or <kbd>↑</kbd> to move up.
-    * Release <kbd>alt</kbd> (or <kbd>ctrl</kbd>) to switch to the selected tab.
-    * You can also highlight an item with the mouse, then release <kbd>alt</kbd> to go to that tab.
+## Use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch between recent tabs
 
-![MRU tab list](img/mru-menu.gif)
+With a little extra work, you can even make *QuicKey* respond to the Holy Grail of keyboard shortcuts: <b><kbd>ctrl</kbd><kbd>tab</kbd></b>.  
 
-Which shortcuts to use is up to you.  Double-pressing <b><kbd>alt</kbd><kbd>Q</kbd></b> is nice because there's just one shortcut to remember, while <b><kbd>alt</kbd><kbd>Z</kbd></b> lets you switch between the two most recently used tabs very rapidly.  (You can also double-click the *QuicKey* icon to toggle between the most recent tabs.)
-
-<b><kbd>alt</kbd><kbd>A</kbd></b> lets you navigate to even older tabs, though the timing can sometimes be finicky.
-
-Selecting from the MRU menu by holding down the <kbd>alt</kbd> key provides the closest experience to a typical <b><kbd>alt</kbd><kbd>tab</kbd></b> menu, but you need to use <kbd>W</kbd> instead of <kbd>tab</kbd> to navigate while the menu is open (due to limitations in the Chrome platform).
-
-You can change any of these shortcuts by clicking the <img src="img/gear.svg" style="height: 1em"> icon in the menu or by right-clicking the *QuicKey* icon and selecting *Options*.  Then scroll down and click *Change browser shortcuts*. Look for the *Switch to the previous/next tab* shortcuts.
-
-If you enable the option to show the number of open tabs on the *QuicKey* icon, the badge containing that number will change color while you navigate to older tabs, rather than the icon inverting.
+[Learn how](ctrl-tab).
 
 
 ## Search for a tab quickly
 
 Unlike other tab switchers, *QuicKey* uses a [Quicksilver](https://qsapp.com/)-style search algorithm to rank the results, where contiguous matches at the beginning of words are higher in the list, as are matches against capital letters.  So you only have to type a few letters to quickly find the right tab.
 
-Use keyboard shortcuts to navigate the list of matching tabs:
+  * **To search for a recent tab in the popup window:**
+    * Press and release <b><kbd>alt</kbd><kbd>W</kbd></b> (<b><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS). 
+    * Type one or more search terms, separated by spaces.
+    * Use one of the shortcuts below to navigate the list.
+    * Press <kbd>enter</kbd> to switch to the selected tab.
 
-  * <kbd>enter</kbd>&nbsp;: switch to the selected tab
+List navigation shortcuts:
+
   * <kbd>↓</kbd>, <kbd>space</kbd>, <b><kbd>ctrl</kbd><kbd>N</kbd></b> or <b><kbd>ctrl</kbd><kbd>J</kbd></b>&nbsp;: move down the list
   * <kbd>↑</kbd>, <b><kbd>shift</kbd><kbd>space</kbd></b>, <b><kbd>ctrl</kbd><kbd>P</kbd></b> or <b><kbd>ctrl</kbd><kbd>K</kbd></b>&nbsp;: move up the list
   * <kbd>pg dn</kbd>&nbsp;: page down the list
   * <kbd>pg up</kbd>&nbsp;: page up the list
   * <kbd>end</kbd>&nbsp;: go to the bottom of the list
   * <kbd>home</kbd>&nbsp;: go to the top of the list
-  * <kbd>esc</kbd>&nbsp;: clear the search or close the menu
-
-If you type more than 25 letters, which should be plenty to find the right tab, *QuicKey* switches to an exact string search to stay fast.
+  * <kbd>enter</kbd>&nbsp;: switch to the selected tab
+  * <kbd>esc</kbd>&nbsp;: clear the search or close the popup window or menu
 
 Recently used tabs get a slight boost in the search results ranking, so getting back to a tab you were just using should require typing fewer letters.
+
+Typing a space lets you enter multiple tokens in the query, all of which must match either the tab's title or URL, in any order.
+
+If you type more than 25 letters, which should be plenty to find the right tab, *QuicKey* switches to an exact string search to stay fast.
 
 
 ## Customize shortcuts and other options
 
-To customize how *QuicKey* behaves, click the <img src="img/gear.svg" style="height: 1em"> icon in the menu, or right-click its toolbar icon <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> and select *Options* from the menu:
+To customize how *QuicKey* behaves, click the <img src="img/gear.svg" style="height: 1em"> icon in the popup window or menu, or right-click its toolbar icon <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> and select *Options*:
 
 <img src="img/options-in-menu.png" style="width: 208px;">
 
 There you can:
 
   * Customize keyboard shortcuts
+  * Change the popup window's behavior
   * Hide closed tabs from the search results
-  * Limit navigating recent tabs or searching to the current browser window
+  * Limit tab navigation or search to the current browser window
   * Mark tabs in other browser windows with an icon
   * Show the number of open tabs
+  * Restore the last search query when reopening the popup window or menu
   * Use pinyin to search for Chinese characters
 
-If you change the keyboard shortcut for showing the *QuicKey* menu to something other than the default <b><kbd>alt</kbd><kbd>Q</kbd></b> or if you have a non-US keyboard, you'll probably want to also change the key that's used to navigate down the list of recently used tabs (which defaults to <kbd>W</kbd>).  For instance, if you change the menu shortcut to <b><kbd>alt</kbd><kbd>Z</kbd></b>, you might want to change the navigation key to <kbd>X</kbd>, which is right next door.  To change it, go to the *Options* page, click the *Select the next tab* keyboard shortcut picker, and press <kbd>X</kbd>.
-
-When new settings have been added to *QuicKey*, the <img src="img/gear.svg" style="height: 1em"> icon will display a red dot to let you know.
+When a *QuicKey* update adds new settings, the <img src="img/gear.svg" style="height: 1em"> icon will display a red dot to let you know.
 
 
 ## Limit navigation to the current browser window
 
-If you have multiple browser windows open, you may want to navigate among only the recent tabs that are in the current window. To enable this behavior, open the *Options* page and select *Limit recent tabs to the current browser window*. Pressing the shortcuts for *Switch instantly between the two most recent tabs* or *Switch to the previous tab* will then switch only between recent tabs in the current window.
+If you have multiple browser windows open, you may want to navigate among only the recent tabs that are in the current window. To enable this behavior, open the *Options* page to the *General* tab and select *Limit recent tabs to the current browser window*. Pressing the shortcuts for *Switch instantly between the two most recent tabs* or *Switch to the previous tab* will then switch only between recent tabs in the current window.
 
 You can also limit searching for tabs to the current browser window.
 
 
 ## Close and reopen tabs
 
-To close the selected tab, press <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd</kbd><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS, <b><kbd>ctrl</kbd><kbd>alt</kbd><kbd>W</kbd></b> on Linux).  Or hover over a tab and click the close button on the right side of the menu:
+To close the selected tab, press <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd</kbd><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS, <b><kbd>ctrl</kbd><kbd>alt</kbd><kbd>W</kbd></b> on Linux).  Or hover over a tab and click the close button on the right side of the list:
 
 ![Close button](img/close-button.png)
 
@@ -156,7 +148,7 @@ When you open *QuicKey*, the 25 most recently closed tabs are listed below the r
 
 They are also returned when you type a query, though their rank in the list of results is lower than open tabs.  Click a closed tab to reopen it in its original location and with all of its browsing history intact.
 
-If you don't want any closed tabs to be shown, open the *QuicKey options* page and uncheck *Include recently closed tabs in the search results*.  You can also remove the selected closed tab from the browser's history by pressing <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd</kbd><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS) or by clicking its <img src="img/clear.svg" style="height: 1em; vertical-align: middle;"> button on the right side of the menu. 
+If you don't want any closed tabs to be shown, open the *QuicKey options* page and uncheck *Include recently closed tabs in the search results* in the *General* section.  You can also remove the selected closed tab from the browser's history by pressing <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd</kbd><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS) or by clicking its <img src="img/clear.svg" style="height: 1em; vertical-align: middle;"> button on the right side of the list. 
 
 
 ## Move tabs
@@ -171,7 +163,7 @@ The <kbd>ctrl</kbd> key should be used on both Windows and macOS.  Note that you
 
 ## Distinguish tabs with identical titles
 
-A tab that has the same title as other open tabs will display a number to indicate its left-to-right position among those other tabs.  For instance, if you open tabs for two different Google Drive accounts, they'll both be titled *My Drive - Google Drive*.  But the one on the left will show a **1** next to its title in the menu and the one on the right will show a **2**.  This makes it easier for you to select the tab you want when you know how they're organized in your window.   
+A tab that has the same title as other open tabs will display a number to indicate its left-to-right position among those other tabs.  For instance, if you open tabs for two different Google Drive accounts, they'll both be titled *My Drive - Google Drive*.  But the one on the left will show a **1** next to its title in the list and the one on the right will show a **2**.  This makes it easier for you to select the tab you want when you know how they're organized in your window.   
 
 
 ## <a name="bookmarks"></a>Search bookmarks
@@ -200,16 +192,16 @@ As soon as you type <b><kbd>/</kbd><kbd>h</kbd><kbd>space</kbd></b>, the pages f
 
 ## Delete bookmarks and history items
 
-To delete the selected bookmark or history item, press <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd</kbd><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS). Or hover over an item and click the <img src="img/clear.svg" style="height: 1em; vertical-align: middle;"> button on the right side of the menu. You'll be asked to confirm the deletion of bookmarks.
+To delete the selected bookmark or history item, press <b><kbd>ctrl</kbd><kbd>W</kbd></b> (<b><kbd>cmd</kbd><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS). Or hover over an item and click the <img src="img/clear.svg" style="height: 1em; vertical-align: middle;"> button on the right side of the list. You'll be asked to confirm the deletion of bookmarks.
 
 
 ## Incognito mode
 
-To switch to incognito tabs as well as normal ones, click the <img src="img/gear.svg" style="height: 1em"> icon in the menu, or right-click the *QuicKey* icon <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> and select *Options* from the menu:
+To switch to incognito tabs as well as normal ones, right-click the *QuicKey* icon <img src="img/icon-38.png" style="height: 19px; vertical-align: text-bottom;"> and select *Options* from the menu:
 
 <img src="img/options-in-menu.png" style="width: 208px;">
 
-Scroll to the very bottom of the *QuicKey options* page and then click the *Change incognito settings* button.  On the extensions page that opens, scroll down to the *Allow in incognito* option and click the toggle button:
+Scroll to the very bottom of the *General* section and then click the *Change incognito settings* button.  On the extensions page that opens, scroll down to the *Allow in incognito* option and click the toggle button:
 
 ![Incognito option](img/incognito-option.png)
 
@@ -237,17 +229,15 @@ You can also copy the URL and title of the selected tab, bookmark or history ite
 
 When first installed, *QuicKey* asks for these permissions:
 
-- *Read and change your browsing history on all signed-in devices*
+- *Read and change your browsing history on all your signed-in devices*
 
-    *QuicKey* uses this permission to let you search the titles and URLs of the open tabs, as well as pages from your history. The *"all signed-in devices"* part is there only so that recently closed tabs can be restored with their full history. The only time *QuicKey* changes your browsing history is when you choose to delete a history item. 
+    *QuicKey* uses this permission to let you search the titles and URLs of the open tabs, as well as pages from your history. The *"all your signed-in devices"* part is there only so that recently closed tabs can be restored with their full history. The only time *QuicKey* changes your browsing history is when you choose to delete a history item. 
 
 - *Read and change your bookmarks*
 
     *QuicKey* uses this permission to let you search the titles and URLs of your bookmarked pages. The only time it changes your bookmarks is when you choose to delete one.
 
-*QuicKey* can't access or manipulate the content of any pages you visit and doesn't transmit any information other than some anonymized diagnostic data.
-
-If you right-click the *QuicKey* icon on the toolbar, there's a message saying *Can't read or change site's data*, which is a bit misleading, since it can't read or change *any* site's data, not just the current one.
+*QuicKey* can't access or manipulate the content of any pages you visit and doesn't transmit any information other than some anonymized diagnostic data. It never sends anything about the pages you visit.
 
 For the technically-minded, you can inspect *QuicKey*'s code on [GitHub](https://github.com/fwextensions/QuicKey).
 

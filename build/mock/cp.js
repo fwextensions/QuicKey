@@ -10,6 +10,9 @@ define([
 
 
 	global.chrome = {
+		runtime: {
+			id: "ldlghkoiihaelfnggonhjnfiabmaficg"
+		},
 		extension: {
 			getBackgroundPage: () => ({})
 		}
@@ -33,7 +36,7 @@ define([
 			getRecentlyClosed: promiseNoop
 		},
 		commands: {
-			getAll: () => Promise.resolve([{ name: "_execute_browser_action" }])
+			getAll: () => Promise.resolve([{ name: "_execute_action" }])
 		},
 		storage: {
 			local: {

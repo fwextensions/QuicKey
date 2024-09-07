@@ -34,13 +34,25 @@
 		--background: #eee;
 	}
 
+	p {
+		--color: #bfbfbf;
+	}
+
+	.section-label {
+		--color: #ccc;
+	}
+
+	.section-label:hover {
+		--background: #333;
+	}
+
 	.history.icon, .window.icon, .clear.icon {
 		--fill: #aaa;
 	}
 
 	.inprivate.icon {
 		filter: none !important;
-		opacity: .8 !important;
+		opacity: 1 !important;
 	}
 
 	.help-button {
@@ -59,25 +71,25 @@
 	}
 
 	.update-message h4 {
-		--color: #aaa;
+		--color: #ccc;
 	}
 
 	.control .indicator {
 		--background: #555;
 	}
 
-	.control label:hover input:not([disabled]) ~ .indicator {
+	.control label:hover input:not(:disabled) ~ .indicator {
 		--background: #666;
 	}
 
 	.control input:checked ~ .indicator,
 	.control input:checked:focus ~ .indicator,
-	.control label:hover input:not([disabled]):checked ~ .indicator {
+	.control label:hover input:not(:disabled):checked ~ .indicator {
 		--background: #e6e6e7;
 	}
 
 	.control input:disabled ~ .indicator {
-		--background: #333;
+		--background: #555;
 	}
 
 	.control input[type="checkbox"] ~ .indicator:after {
@@ -104,7 +116,23 @@
 		--color: #aaa;
 	}
 
-	.shortcut-setting .label b {
+	.control.current-popup-option {
+		--background: #2a2a2a;
+	}
+
+	.pro, .con {
+		--color: #ccc;
+	}
+
+	.pro::before {
+		--color: hsl(120, 100%, 30%);
+	}
+
+	.con::before {
+		--color: hsl(0, 80%, 40%);
+	}
+
+	label b, .label b {
 		--opacity: .8;
 	}
 
@@ -162,6 +190,11 @@
 	font-size: 16px;
 }
 
+html {
+	width: 100vw;
+	overflow-x: hidden;
+}
+
 body {
 	background: var(--background, #fff);
 	color: var(--color, #000);
@@ -170,7 +203,7 @@ body {
 	cursor: default;
 	position: relative;
 	margin: 0;
-	padding: 10em 0;
+	padding: 8em 0;
 	display: flex;
 	justify-content: center;
 	flex-flow: column;
@@ -189,7 +222,7 @@ section {
 h1 {
 	font-size: 2em;
 	color: var(--color, #333);
-	margin: 0 0 1.5em 0;
+	margin: 0 0 1.75em 0;
 	position: relative;
 }
 
@@ -209,7 +242,7 @@ h2 {
 	font-size: 1.3em;
 	line-height: 2;
 	color: var(--color, #666);
-	margin: 2.75em 0 1.2em 0;
+	margin: 2.5em 0 1.2em 0;
 	border-bottom: 1px solid var(--border-color, #ddd);
 }
 
@@ -229,7 +262,8 @@ kbd, button {
 	font-weight: bold;
 	color: var(--color, #ccc);
 	padding: 0.2em 0.5em 0.35em 0.5em;
-	vertical-align: baseline;
+	vertical-align: middle;
+	line-height: normal;
 	box-shadow:
 		0.07em 0.07em 0.125em var(--shadow-color-1, rgba(0, 0, 0, 0.25)),
 		0 0 0 0.04em var(--shadow-color-2, rgba(0, 0, 0, 0.3)),
@@ -254,8 +288,21 @@ button.key:active {
 	opacity: .5;
 }
 
+a {
+	color: inherit;
+}
+
+a:hover {
+	opacity: .8;
+}
+
+p {
+	color: var(--color, #666);
+	margin-bottom: 1.5em;
+}
+
 main {
-	width: 35em;
+	width: 52em;
 	position: relative;
 }
 
@@ -287,6 +334,47 @@ main {
 .help-button:hover {
 	color: var(--color, #fff);
 	background: var(--background, #000);
+}
+
+
+/* ===========================================================================
+	Section List
+   =========================================================================== */
+
+.sections-container {
+	display: grid;
+	grid-template-columns: 26% 68%;
+	grid-column-gap: 6%;
+}
+
+.section-list {
+	font-size: 1.3em;
+	margin-left: -.75em;
+	top: 2em;
+	position: sticky;
+    align-self: flex-start;
+}
+
+.section-label {
+	line-height: 2;
+	color: var(--color, #666);
+	padding: 0 .75em .15em;
+	margin: 0;
+	transition: background-color .15s ease-out;
+	border-radius: 0.25em;
+}
+
+.section-label:hover {
+	background-color: var(--background, #efefef);
+}
+
+.section-label.selected {
+	font-weight: bold;
+	color: inherit;
+}
+
+.section > h2:first-of-type {
+	margin-top: 0;
 }
 
 
@@ -326,23 +414,45 @@ main {
 	color: var(--color, #333);
 	background: var(--background, #efefef);
 	padding: 2em 2em;
-	margin: -7em 0 7em 0;
-	border-radius: .25em;
+	margin: -5em 7em 3em 7em;
+	border-radius: .5em;
 }
 
 .update-message h3 {
 	font-size: 1.2em;
-	font-weight: normal;
 	padding: 0;
 	margin: 0;
 }
 
 .update-message h4 {
-	color: var(--color, #777);
-	font-size: .9em;
+	color: var(--color, #555);
+	font-size: 1em;
 	font-weight: normal;
-	padding: 0 6em;
+	line-height: 1.4;
+	padding: 0 3em;
 	margin: 1em 0 0 0;
+}
+
+.update-message h4 .link {
+	font-weight: bold;
+	text-decoration: underline;
+}
+
+.update-message h4 .link:hover {
+	filter: brightness(1.6);
+}
+
+.update-message h4 .link:hover:active {
+	filter: brightness(1);
+}
+
+.update-message.pinyin h3 {
+	font-weight: normal;
+}
+
+.update-message.pinyin h4 {
+	font-weight: normal;
+	font-size: .9em;
 }
 
 
@@ -389,19 +499,19 @@ main {
 	display: none;
 }
 
-.control label:hover input:not([disabled]) ~ .indicator {
+.control label:hover input:not(:disabled) ~ .indicator {
 	background: var(--background, #ebebeb);
 }
 
 .control input:checked ~ .indicator,
 .control input:checked:focus ~ .indicator,
-.control label:hover input:not([disabled]):checked ~ .indicator {
+.control label:hover input:not(:disabled):checked ~ .indicator {
 	background: var(--background, #313536);
 }
 
 .control input:disabled ~ .indicator {
 	background: var(--background, #e6e6e6);
-	opacity: 0.4;
+	opacity: 0.3;
 	pointer-events: none;
 }
 
@@ -441,7 +551,7 @@ main {
 }
 
 .control input:disabled ~ span {
-	opacity: var(--opacity, .6);
+	opacity: var(--opacity, .5);
 }
 
 .control .subtitle {
@@ -457,17 +567,18 @@ main {
 	margin: 1em 0 2em 0;
 }
 
-.control-group label {
-	margin-left: 1.25em;
-}
-
 .control-group .label {
 	line-height: 1.5;
-	margin-bottom: .5em;
+	margin-bottom: .25em;
 }
 
-.control-group .label kbd {
-	line-height: 1.2;
+.radio-list {
+	padding: 0 0 0 1em;
+}
+
+.radio-list .control {
+	padding: .25em;
+	margin-bottom: 0;
 }
 
 .chrome-shortcuts {
@@ -476,7 +587,7 @@ main {
 
 .incognito-screenshot {
 	width: 100%;
-	margin: 0;
+	margin: 0 0 .5em 0;
 	cursor: pointer;
 }
 
@@ -499,8 +610,94 @@ main {
 }
 
 @keyframes red-fade {
-    0% { color: #f33; }
-    100% { color: #d70000; }
+	0% { color: #f33; }
+	100% { color: #d70000; }
+}
+
+.control.hide-popup label {
+	width: 100%;
+}
+
+.control.current-popup-option {
+	background: var(--background, #fafafa);
+}
+
+.pro, .con {
+	color: var(--color, #666);
+	font-size: .9em;
+	line-height: 1.3;
+	margin: 0 0 .5em 1em;
+	text-indent: -2.5em;
+	padding-left: 2.5em;
+}
+
+.pro::before, .con::before {
+	font-weight: bold;
+	width: 2.5em;
+	text-indent: 0;
+	display: inline-block;
+}
+
+.pro::before {
+	content: 'PRO';
+	color: var(--color, hsl(120, 100%, 17%));
+}
+
+.con::before {
+	content: 'CON';
+	color: var(--color, hsl(0, 80%, 33%));
+}
+
+.proscons {
+	width: 15em;
+	margin-top: 1.75em;
+	float: left;
+}
+
+.proscons div#behind {
+	margin-top: .5em;
+}
+
+.proscons div#tab {
+	margin-top: 2.5em;
+}
+
+.proscons div#minimize {
+	margin-top: 4.5em;
+}
+
+
+/* ===========================================================================
+	Keyboard shortcuts
+   =========================================================================== */
+
+.shortcut {
+	display: inline-block;
+}
+
+.shortcut kbd {
+	margin-right: .25em;
+	text-align: center;
+}
+
+.shortcut kbd.width1 {
+	width: 2.15em;
+}
+
+.shortcut kbd.width2 {
+	width: 3.1em;
+}
+
+.shortcut kbd.width3 {
+	width: 3.65em;
+}
+
+.shortcut kbd.width4 {
+	width: 5.625em;
+}
+
+.shortcut kbd:last-child {
+	margin-right: 0;
 }
 
 
@@ -517,10 +714,10 @@ main {
 	padding: .35em 0;
 	margin-right: 1em;
 	line-height: 1.1em;
-	flex: 1;
+	width: 53%;
 }
 
-.shortcut-setting .label b {
+label b, .label b {
 	opacity: var(--opacity, .65);
 }
 
@@ -529,8 +726,8 @@ main {
 	Shortcut picker
    =========================================================================== */
 
-.shortcut-picker {
-	flex: 0.85;
+.shortcut-setting > .shortcut-picker {
+	width: 45%;
 }
 
 .shortcut-display {
@@ -566,6 +763,53 @@ main {
 	padding-left: .5em;
 	line-height: 3em;
 	position: absolute;
+}
+
+.shortcut-display .shortcut {
+	font-size: 30px;
+	height: 1em;
+	display: block;
+}
+
+.shortcut-display kbd, .key {
+	height: inherit;
+	border: 0;
+	border-radius: 0.125em;
+	font-size: inherit;
+	text-align: center;
+	outline: 0;
+	position: relative;
+	vertical-align: top;
+	margin-right: .25em;
+	-webkit-appearance: none;
+	-webkit-tap-highlight-color: transparent;
+	user-select: none;
+}
+
+.shortcut-display kbd > span, .key > span {
+	display: inline-block;
+	position: absolute;
+	top: 0;
+	left: 0;
+	font-size: 0.5em;
+	line-height: 2;
+	width: 100%;
+}
+
+.shortcut-display kbd.width1 {
+	width: 1.15em;
+}
+
+.shortcut-display kbd.width2 {
+	width: 1.65em;
+}
+
+.shortcut-display kbd.width3 {
+	width: 1.95em;
+}
+
+.shortcut-display kbd.width4 {
+	width: 3em;
 }
 
 .clear-button {
@@ -625,51 +869,23 @@ main {
 
 
 /* ===========================================================================
-	Keyboard shortcuts
+	Shortcut picker
    =========================================================================== */
 
-.shortcut {
-	font-size: 30px;
-	height: 1em;
+.labeled-shortcut {
+	height: 2.5em;
+	margin-bottom: .25em;
+	display: flex;
+	flex-direction: row;
+	gap: .5em;
+	align-items: center;
 }
 
-.shortcut kbd, .key {
-	height: inherit;
-	border: 0;
-	border-radius: 0.125em;
-	font-size: inherit;
-	text-align: center;
-	outline: 0;
-	position: relative;
-	vertical-align: top;
-	margin-right: .25em;
-	-webkit-appearance: none;
-	-webkit-tap-highlight-color: transparent;
-	user-select: none;
+.labeled-shortcut > div:first-of-type {
+	width: 40%;
 }
 
-.shortcut kbd > span, .key > span {
-	display: inline-block;
-	position: absolute;
-	top: 0;
-	left: 0;
-	font-size: 0.5em;
-	line-height: 2;
-	width: 100%;
-}
-
-.width1 {
-	width: 1.15em;
-}
-
-.width2 {
-	width: 1.65em;
-}
-
-.width3 {
-	width: 1.95em;
-}
-
-.width4 {
-	width: 3em;
+.labeled-shortcut > .shortcut {
+	margin-top: .25em;
+	cursor: pointer;
 }

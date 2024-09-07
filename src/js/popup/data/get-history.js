@@ -1,85 +1,78 @@
-define([
-	"cp",
-	"lib/decode",
-	"./add-urls",
-	"./add-pinyin"
-], function(
-	cp,
-	decode,
-	addURLs,
-	{addPinyin}
-) {
-	const RequestedItemCount = 2000;
-	const LoopItemCount = 1000;
-	const FilenamePattern = /([^/]*)\/([^/]+)?$/;
+import decode from "@/lib/decode";
+import addURLs from "./add-urls";
+import {addPinyin} from "./add-pinyin";
 
 
-	const loop = fn => fn().then(val => (val === true && loop(fn)) || val);
+const RequestedItemCount = 2000;
+const LoopItemCount = 1000;
+const FilenamePattern = /([^/]*)\/([^/]+)?$/;
 
 
-	return function getHistory(
-		usePinyin)
-	{
-		const ids = {};
-		const urls = {};
-		let count = 0;
-		let lastItem = null;
+const loop = fn => fn().then(val => (val === true && loop(fn)) || val);
 
-		return loop(() => {
-			const endTime = (lastItem && lastItem.lastVisitTime) || Date.now();
 
-			return cp.history.search({
-				text: "",
-				startTime: 0,
-				endTime: endTime,
-				maxResults: LoopItemCount
-			})
-				.then(historyItems => {
-					const initialCount = count;
+export default function getHistory(
+	usePinyin)
+{
+	const ids = {};
+	const urls = {};
+	let count = 0;
+	let lastItem = null;
 
-					historyItems.forEach(item => {
-						const {id} = item;
+	return loop(() => {
+		const endTime = (lastItem && lastItem.lastVisitTime) || Date.now();
 
-							// history will often return duplicate items
-						if (!ids[id] && count < RequestedItemCount) {
-							addURLs(item, true);
+		return chrome.history.search({
+			text: "",
+			startTime: 0,
+			endTime: endTime,
+			maxResults: LoopItemCount
+		})
+			.then(historyItems => {
+				const initialCount = count;
 
-								// get the url after addURLs(), since that will
-								// convert suspended URLs to unsuspended
-							const {url, title} = item;
+				historyItems.forEach(item => {
+					const {id} = item;
 
-							if (!(url in urls)) {
-								if (!title) {
-									const match = url.match(FilenamePattern);
+						// history will often return duplicate items
+					if (!ids[id] && count < RequestedItemCount) {
+						addURLs(item, true);
 
-										// if there's no title on the history
-										// item, it's probably a locally loaded
-										// raw file.  so try to pull out the
-										// filename or last folder in the URL,
-										// and if that doesn't work, default to
-										// the full URL as a title.
-									item.title = decode((match && (match[2] || match[1])) || url);
-								}
+							// get the url after addURLs(), since that will
+							// convert suspended URLs to unsuspended
+						const {url, title} = item;
 
-								if (usePinyin) {
-									addPinyin(item);
-								}
+						if (!(url in urls)) {
+							if (!title) {
+								const match = url.match(FilenamePattern);
 
-								lastItem = urls[url] = item;
-								ids[id] = true;
-								count++;
+									// if there's no title on the history
+									// item, it's probably a locally loaded
+									// raw file.  so try to pull out the
+									// filename or last folder in the URL,
+									// and if that doesn't work, default to
+									// the full URL as a title.
+								item.title = decode((match && (match[2] || match[1])) || url);
 							}
-						}
-					});
 
-						// only loop if we found some new items in the last call
-						// and we haven't reached the limit yet
-					if (count > initialCount && count < RequestedItemCount) {
-						return true;
-					} else {
-						return Object.values(urls);
+							if (usePinyin) {
+								addPinyin(item);
+							}
+
+							lastItem = urls[url] = item;
+							ids[id] = true;
+							count++;
+						}
 					}
 				});
-		});
-	}
-});
+
+					// only loop if we found some new items in the last call
+					// and we haven't reached the limit yet
+				if (count > initialCount && count < RequestedItemCount) {
+					return true;
+				} else {
+					return Object.values(urls);
+				}
+			});
+	});
+}

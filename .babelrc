@@ -1,27 +1,20 @@
 {
-	"generatorOpts": {
-		"jsescOption": {
-			"minimal": true
-		}
-	},
 	"presets": [
+		"@babel/preset-react",
 		[
 			"@babel/preset-env",
 			{
 				"targets": {
-					"chrome": 55
+					"chrome": 60
 				},
 				"loose": true,
 				"corejs": 3,
 				"useBuiltIns": "entry",
 				"modules": false
 			}
-		],
-		[
-			"minify",
-			{
-				"builtIns": false
-			}
 		]
+	],
+	"plugins": [
+		"babel-plugin-transform-goober"
 	]
 }

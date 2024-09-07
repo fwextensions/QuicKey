@@ -1,49 +1,44 @@
-define([
-	"shared",
-	"./tracker",
-	"./constants"
-], function(
-	shared,
-	Tracker,
-	{IsEdge}
-) {
-	const TrackerID = `UA-108153491-${IsEdge ? "4" : "3"}`;
+import Tracker from "./tracker";
+import { IsEdge } from "./constants";
 
 
-	return shared("trackers", function() {
-			// create a separate tracker for the background, popup and options
-			// pages, so the events get tracked with the right URL
-		return {
-			background: new Tracker({
-				id: TrackerID,
-				name: "background",
-				settings: {
-					location: "/background.html",
-					page: "/background",
-					transport: "beacon"
-				},
-				sendPageview: false
-			}),
-			popup: new Tracker({
-				id: TrackerID,
-				name: "popup",
-				settings: {
-					location: "/popup.html",
-					page: "/popup",
-					transport: "beacon"
-				},
-				sendPageview: false
-			}),
-			options: new Tracker({
-				id: TrackerID,
-				name: "options",
-				settings: {
-					location: "/options.html",
-					page: "/options",
-					transport: "beacon"
-				},
-				sendPageview: false
-			})
-		};
+const TrackerID = IsEdge
+	? "G-C4JVSJ09QQ"
+	: "G-Y6PNZ406H1";
+const ClientIDKey = "clientID";
+
+
+	// use an IIFE to init a function to create trackers with standard settings
+const createTracker = await (async () => {
+	const { version: dimension1, installType } = await chrome.management.getSelf();
+	const dimension2 = installType === "development" ? "D" : "P";
+	let { [ClientIDKey]: client_id } = await chrome.storage.local.get(ClientIDKey);
+
+	if (!client_id) {
+			// create a default client ID and then save it to storage
+		client_id = crypto.randomUUID();
+		await chrome.storage.local.set({ [ClientIDKey]: client_id });
+	}
+
+	return (name) => new Tracker({
+		id: TrackerID,
+		name,
+		settings: {
+			client_id,
+			persistentEventParameters: {
+				page_location: `/${name}.html`,
+				page_title: `/${name}`,
+				dimension1,
+				dimension2
+			}
+		},
+		sendPageview: false
 	});
-});
+})();
+
+
+export default {
+	background: createTracker("background"),
+	popup: createTracker("popup"),
+	options: createTracker("options"),
+};

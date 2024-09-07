@@ -1,5 +1,8 @@
 /build/build.txt
 /build/rjs
 /build/out
+/build/temp
 /node_modules
 /release
+/dist*
+/.idea

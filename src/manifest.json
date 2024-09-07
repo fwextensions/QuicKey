@@ -1,66 +1,81 @@
 {
-	"manifest_version": 2,
+	"manifest_version": 3,
 	"name": "QuicKey DEV",
 	"short_name": "QuicKey DEV",
-	"version": "1.8.0",
-	"description": "Add keyboard shortcuts to switch tabs with a Quicksilver-style search or a most recently used menu",
+	"version": "2.0.0",
+	"description": "Add keyboard shortcuts to switch tabs via Quicksilver-style search or a most recently used list",
 	"author": "John Dunning",
-	"content_security_policy": "script-src 'self' 'unsafe-eval' https://www.google-analytics.com; object-src 'self'",
-	"minimum_chrome_version": "60",
+	"minimum_chrome_version": "115",
 	"permissions": [
 		"tabs",
 		"bookmarks",
 		"history",
 		"storage",
 		"sessions",
-		"chrome://favicon/"
+		"system.display",
+		"favicon"
+	],
+	"web_accessible_resources": [
+		{
+			"resources": ["_favicon/*"],
+			"matches": ["<all_urls>"],
+			"extension_ids": ["*"]
+		}
 	],
 	"icons": {
 		"16": "img/icon-16.png",
 		"48": "img/icon-48.png",
 		"128": "img/icon-128.png"
 	},
-	"browser_action": {
+	"action": {
 		"default_icon": {
+			"16": "img/icon-16.png",
 			"19": "img/icon-19.png",
+			"24": "img/icon-24.png",
+			"32": "img/icon-32.png",
 			"38": "img/icon-38.png"
 		},
 		"default_title": "QuicKey DEV",
 		"default_popup": "popup.html"
 	},
 	"background": {
-		"page": "background.html",
-		"persistent": true
+		"service_worker": "js/sw.js"
 	},
 	"options_ui": {
 		"open_in_tab": true,
 		"page": "options.html"
 	},
 	"commands": {
-		"_execute_browser_action": {
+		"_execute_action": {
+			"suggested_key": {
+				"default": "Alt+E",
+				"mac": "MacCtrl+E"
+			}
+		},
+		"010-open-popup-window": {
 			"suggested_key": {
 				"default": "Alt+Q",
 				"mac": "MacCtrl+Q"
-			}
+			},
+			"description": "Open alt-tab-style popup"
+		},
+		"020-focus-search": {
+			"suggested_key": {
+				"default": "Alt+W",
+				"mac": "MacCtrl+W"
+			},
+			"description": "Search in alt-tab-style popup"
 		},
 		"1-previous-tab": {
-			"suggested_key": {
-				"default": "Alt+A",
-				"mac": "MacCtrl+A"
-			},
 			"description": "Switch to the previous tab"
 		},
 		"2-next-tab": {
-			"suggested_key": {
-				"default": "Alt+S",
-				"mac": "MacCtrl+S"
-			},
 			"description": "Switch to the next tab"
 		},
 		"30-toggle-recent-tabs": {
 			"suggested_key": {
 				"default": "Alt+Z",
-				"mac": "MacCtrl+Z"
+				"mac": "MacCtrl+S"
 			},
 			"description": "Switch instantly between the two most recent tabs"
 		}

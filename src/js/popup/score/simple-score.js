@@ -1,25 +1,26 @@
-define(function() {
-	function simpleScore(
-		string,
-		query,
-		hitMask)
-	{
-		var index = string.toLocaleLowerCase().indexOf(query.toLocaleLowerCase()),
-			stringLength = string.length,
-			queryLength = query.length,
-			score = 0;
+import { search } from "@/popup/score/search";
 
-		if (index > -1) {
-			score = ((stringLength - index) / stringLength) * (queryLength / stringLength);
 
-			for (var i = index; i < index + queryLength; i++) {
-				hitMask.push(i);
-			}
+function simpleScore(
+	string,
+	query,
+	hitMask)
+{
+	const index = search(string, query);
+	const stringLength = string.length;
+	const queryLength = query.length;
+	let score = 0;
+
+	if (index > -1) {
+		score = ((stringLength - index) / stringLength) * (queryLength / stringLength);
+
+		for (let i = index, len = index + queryLength; i < len; i++) {
+			hitMask.push(i);
 		}
-
-		return score;
 	}
 
+	return score;
+}
 
-	return simpleScore;
-});
+
+export default simpleScore;

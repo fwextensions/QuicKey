@@ -1,11 +1,10 @@
-define(function() {
-	return function handleRef(
-			refName)
-		{
-			return function(
-				ref)
-			{
-				this[refName] = ref;
-			};
-		};
-});
+export default function handleRef(
+	refName,
+	self)
+{
+	return function(
+		ref)
+	{
+		self[refName] = ref;
+	};
+};

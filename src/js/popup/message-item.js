@@ -1,22 +1,19 @@
-define([
-	"react"
-], function(
-	React
-) {
-	return function MessageItem(
-		props)
-	{
-		const item = props.item;
+import React from "react";
 
-		return <div className="results-list-item message"
-			style={props.style}
-			title={item.tooltip}
+
+export default function MessageItem(
+	props)
+{
+	const item = props.item;
+
+	return <div className="results-list-item message"
+		style={props.style}
+		title={item.tooltip}
+	>
+		<div className="title"
+			style={{ backgroundImage: "url(" + item.faviconURL + ")" }}
 		>
-			<div className="title"
-				style={{ backgroundImage: "url(" + item.faviconURL + ")" }}
-			>
-				{item.message}
-			</div>
+			{item.message}
 		</div>
-	}
-});
+	</div>
+}
