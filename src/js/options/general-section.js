@@ -60,7 +60,7 @@ export default function GeneralSection()
 			<NewSetting addedVersion={10}>
 				<Checkbox
 					id={k.RestoreLastQuery.Key}
-					label="Restore the last search query when the menu is reopened"
+					label="Restore the last search query when QuicKey is reopened"
 					value={settings[k.RestoreLastQuery.Key]}
 					onChange={onChange}
 				/>

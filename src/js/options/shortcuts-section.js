@@ -112,12 +112,12 @@ export default class ShortcutSection extends React.Component {
 					onChange={onChange}
 				>
 					<RadioButton
-						label="Clear the search query, or close the menu if the query is empty"
+						label="Clear the search query, or close QuicKey if the query is empty"
 						value={k.EscBehavior.Clear}
 						disabled={k.IsFirefox}
 					/>
 					<RadioButton
-						label="Close the menu immediately"
+						label="Close QuicKey immediately"
 						value={k.EscBehavior.Close}
 						disabled={k.IsFirefox}
 					>
