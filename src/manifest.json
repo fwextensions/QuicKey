@@ -3,7 +3,7 @@
 	"name": "QuicKey DEV",
 	"short_name": "QuicKey DEV",
 	"version": "2.0.0",
-	"description": "Add keyboard shortcuts to switch tabs with a Quicksilver-style search or a most recently used menu",
+	"description": "Add keyboard shortcuts to switch tabs via Quicksilver-style search or a most recently used list",
 	"author": "John Dunning",
 	"minimum_chrome_version": "115",
 	"permissions": [
