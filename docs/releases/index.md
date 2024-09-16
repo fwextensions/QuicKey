@@ -8,6 +8,24 @@ comments: true
 # Release history
 
 
+## 2.0.0 - 2024-09-09
+
+### Added
+
+* Added support for showing the *QuicKey* UI in a popup window, which lets you use a single shortcut key to open the list of recent tabs, move the selection, and then activate the selected tab.  It's the closest thing to Firefox's <b><kbd>ctrl</kbd><kbd>tab</kbd></b> behavior that can be built in Chrome.
+* Added support for showing each recent tab while navigating through the list without having to deal with any time limit.
+* Added support for searching with multiple terms, separated by spaces.
+* Added support for Chrome [manifest V3](https://developer.chrome.com/docs/extensions/develop/migrate), which required re-architecting much of the extension. 
+* Reorganized the Options page into sub-pages.
+
+
+## 1.8.1 - 2023-06-06
+
+### Fixed
+
+* Sometimes the <b><kbd>ctrl</kbd><kbd>W</kbd></b> shortcut for moving the selection in the menu would not work on macOS.
+
+
 ## 1.8.0 - 2022-10-26
 
 ### Added
