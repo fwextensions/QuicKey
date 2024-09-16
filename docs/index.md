@@ -30,19 +30,6 @@ comments: true
 
 #### *QuicKey* lets you navigate all of your Chrome tabs by typing just part of a page's title or URL.  No mouse needed!
 
-  * Press <b><kbd>alt</kbd><kbd>Q</kbd></b> (<b><kbd>ctrl</kbd><kbd>Q</kbd></b> on macOS).
-  * Type a few letters.
-  * Press <kbd>enter</kbd> to switch to the selected tab.
-
-To toggle between the two most recently used tabs, quickly press the keyboard shortcut twice.  Or pick a tab from the most recently used (MRU) list as [shown below](#mru).
-
-
-## Use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch between recent tabs
-
-With a little extra work, you can even make *QuicKey* respond to the Holy Grail of keyboard shortcuts: <b><kbd>ctrl</kbd><kbd>tab</kbd></b>.  
-
-[Learn how](ctrl-tab).
-
 
 ## Installation
 
@@ -85,6 +72,13 @@ You can also view each tab as you navigate through the recents list, taking as l
     * Press <kbd>S</kbd> to move back up.
     * Release <kbd>alt</kbd> (or <kbd>ctrl</kbd>) to stay on the current tab.
     * Press <b><kbd>alt</kbd><kbd>A</kbd></b> again to switch back to the tab you initially started on.
+
+
+## Use <b><kbd>ctrl</kbd><kbd>tab</kbd></b> to switch between recent tabs
+
+With a little extra work, you can even make *QuicKey* respond to the Holy Grail of keyboard shortcuts: <b><kbd>ctrl</kbd><kbd>tab</kbd></b>.  
+
+[Learn how](ctrl-tab).
 
 
 ## Search for a tab quickly
