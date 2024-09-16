@@ -160,7 +160,7 @@ Now you can press a single shortcut key (ALT-Q by default) to navigate recent ta
 Opening QuicKey displays a list of the last 50 tabs you've visited, in order of recency. (When you first start using QuicKey, though, it won't know what's recent, so the list will be empty.) Click a tab to switch to it, or use one of the keyboard shortcuts below to navigate the recently used tab history.
 
 🔶 To pick a recent tab from the MRU list in the popup window:
-    • Press ALT-Q (CTRL-W on macOS) but keep holding the modifier key.
+    • Press ALT-Q (CTRL-Q on macOS) but keep holding the modifier key.
     • Press Q or ↓ to move down through the list of recent tabs.
     • Press SHIFT-Q or ↑ to move up.
     • Release ALT (or CTRL) to switch to the selected tab.
@@ -169,10 +169,10 @@ Opening QuicKey displays a list of the last 50 tabs you've visited, in order of 
 🔶 To quickly switch between the two most recent tabs:
     • Press ALT-Z (CTRL-S on macOS).
 
-You can also view each tab as you navigate through the recents list, taking as long as you want on each, and then release the modifier key to stay on that tab. Make sure the shortcuts are set by right-clicking the QuicKey icon and selecting Options. Then click "Keyboard shortcuts", scroll down, and click "Change browser shortcuts". Look for the "Switch to the previous/next tab" commands and set these suggested shortcuts: ALT-A and ALT-S, respectively (CTRL-D and CTRL-S on macOS).
+You can also view each tab as you navigate through the recents list, taking as long as you want on each, and then release the modifier key to stay on that tab. Make sure the shortcuts are set by right-clicking the QuicKey icon and selecting Options. Then click "Keyboard shortcuts", scroll down, and click "Change browser shortcuts". Look for the "Switch to the previous/next tab" commands and set these suggested shortcuts: ALT-A and ALT-S, respectively (CTRL-S and CTRL-D on macOS).
 
 🔶 To navigate while viewing each recent tab:
-    • Press ALT-A (CTRL-D on macOS) to display the previous tab, but keep holding the
+    • Press ALT-A (CTRL-S on macOS) to display the previous tab, but keep holding the
        modifier key. The popup window will stay open on the right side of the screen.
     • Press A again to move down the list, displaying each tab in turn.
     • Press S to move back up.
@@ -315,9 +315,7 @@ When first installed, QuicKey asks for these permissions:
       your bookmarked pages. The only time it changes your bookmarks is
       when you choose to delete one.
 
-QuicKey can't access or manipulate the content of any pages you visit and doesn't transmit any information other than some anonymized diagnostic data.
-
-If you right-click the QuicKey icon on the toolbar, there's a message saying "Can't read or change site's data", which is a bit misleading, since it can't read or change *any* site's data, not just the current one.
+QuicKey can't access or manipulate the content of any pages you visit and doesn't transmit any information other than some anonymized diagnostic data. It never sends anything about the pages you visit.
 
 
 *️⃣  Support and source code
