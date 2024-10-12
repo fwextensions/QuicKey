@@ -60,6 +60,7 @@ let installedPromise = new Promise(resolve => {
 	chrome.runtime.onInstalled.addListener(details => resolve(details));
 });
 let lastTogglePromise = Promise.resolve();
+let lastOpenPromise = Promise.resolve();
 let currentWindowLimitRecents = false;
 let navigateRecentsWithPopup = false;
 let navigatingRecents = false;
@@ -175,11 +176,15 @@ function handleCommand(
 {
 	switch (command) {
 		case OpenPopupCommand:
-			openPopupWindow();
-			break;
-
 		case FocusPopupCommand:
-			openPopupWindow(true);
+				// call openPopupWindow() in a finally() method so that the promise
+				// chain won't stop if there's an uncaught exception at some point.
+				// we need to wait for the previous call to openPopupWindow() to
+				// settle before calling it again in case the user is spamming
+				// alt-Q.  without waiting, the second key press would find the
+				// first one hadn't finished opening yet and tell the partially
+				// loaded popup to close and open a new one.  rinse and repeat.
+			lastOpenPromise = lastOpenPromise.finally(() => openPopupWindow(command === FocusPopupCommand));
 			break;
 
 		case PreviousTabCommand:
@@ -588,16 +593,17 @@ DEBUG && console.log(e);
 
 enableCommands();
 
-chrome.runtime.getContexts({ contextTypes: ["TAB"] }).then((initialViews) => {
-		// check that the popup window is open, and not just the Options tab
-	if (initialViews.some((view) => isPopupWindow(view))) {
-		const popupPort = chrome.runtime.connect({ name: "popup" });
+chrome.runtime.getContexts({ contextTypes: [chrome.runtime.ContextType.TAB] })
+	.then((initialViews) => {
+			// check that the popup window is open, and not just the Options tab
+		if (initialViews.some(isPopupWindow)) {
+			const popupPort = chrome.runtime.connect({ name: "popup" });
 
-			// generate a connect event with this new port.  if there's no popup
-			// window for it connect to, it'll immediately close.
-		chrome.runtime.onConnect.dispatch(popupPort);
-	}
-});
+				// generate a connect event with this new port.  if there's no popup
+				// window for it connect to, it'll immediately close.
+			chrome.runtime.onConnect.dispatch(popupPort);
+		}
+	});
 
 storage.set(data => {
 		// save the lastUsedVersion in a global before we return the current
