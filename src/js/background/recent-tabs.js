@@ -408,7 +408,9 @@ function navigate(
 		const maxIndex = tabIDCount - 1;
 		let previousTabIndex;
 
-		if (now - data.lastShortcutTime < MinTabDwellTime && data.previousTabIndex > -1) {
+		if (direction == "toggle") {
+			previousTabIndex = maxIndex - 1;
+		} else if (now - data.lastShortcutTime < MinTabDwellTime && data.previousTabIndex > -1) {
 			if (direction == -1) {
 					// when going backwards, wrap around if necessary
 				previousTabIndex = (data.previousTabIndex - 1 + tabIDCount) % tabIDCount;
@@ -416,7 +418,7 @@ function navigate(
 					// don't let the user go past the most recently used tab
 				previousTabIndex = Math.min(data.previousTabIndex + 1, maxIndex);
 			}
-		} else if (direction == -1 || direction == "toggle") {
+		} else if (direction == -1) {
 				// if the user is not actively navigating, we want to ignore
 				// alt-S keypresses so the icon doesn't invert for no reason,
 				// so we only set previousTabIndex when going backwards
@@ -450,7 +452,12 @@ DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabInde
 				}
 			}
 
-			newData.previousTabIndex = previousTabIndex;
+			if (direction === "toggle") {
+					// toggling recents shouldn't affect the navigation stack
+				newData.previousTabIndex = -1;
+			} else {
+				newData.previousTabIndex = previousTabIndex;
+			}
 
 				// we don't start the promise chain with windows.update
 				// because we want to call it in a function so that if the
@@ -504,26 +511,29 @@ function toggle(
 
 
 function print(
-	count = 20)
+	count = 20,
+	data)
 {
-	return storage.get(({tabsByID, tabIDs}) =>
-		Promise.all(
-			tabIDs.slice(-count).reverse().map(tabID =>
-				chrome.tabs.get(tabID).catch(() => tabID)
+		// use the data passed in by the caller, or else get it from storage
+	return Promise.resolve(data || storage.get())
+		.then(({tabsByID, tabIDs}) =>
+			Promise.all(
+				tabIDs.slice(-count).reverse().map(tabID =>
+					chrome.tabs.get(tabID).catch(() => tabID)
+				)
 			)
-		)
-			.then(tabs => {
-				const rows = tabs.map(tab => {
-					if (tab?.id) {
-						return `${tab.id}|${tab.windowId}: ${getRelativeTime(tabsByID[tab.id].lastVisit)}: ${titleOrURL(tab)}`;
-					} else {
-						return "MISSING: " + tab;
-					}
-				});
+				.then(tabs => {
+					const rows = tabs.map(tab => {
+						if (tab?.id) {
+							return `${tab.id}|${tab.windowId}: ${getRelativeTime(tabsByID[tab.id].lastVisit)}: ${titleOrURL(tab)}`;
+						} else {
+							return "MISSING: " + tab;
+						}
+					});
 
-				console.log("\n" + rows.join("\n"));
-			})
-	);
+					console.log("\n" + rows.join("\n"));
+				})
+		);
 }
 
 

@@ -65,6 +65,9 @@ async function setNormalIcon()
 {
 	const {paths, color} = getIconsAndBadgeColor();
 
+		// in case we were called directly and not by the inversion timer, we
+		// want to clear any existing timer
+	clearTimeout(inversionTimer);
 	isNormalIcon = true;
 
 	try {
@@ -90,9 +93,9 @@ async function invertFor(
 		// pass true to get the inverted colors
 	const {paths, color} = getIconsAndBadgeColor(true);
 
-	isNormalIcon = false;
 	clearTimeout(inversionTimer);
 	inversionTimer = setTimeout(setNormalIcon, ms);
+	isNormalIcon = false;
 
 	try {
 		if (isTabCountVisible) {
@@ -164,6 +167,7 @@ connect("colorScheme").receive({
 
 export default {
 	setColorScheme,
+	setNormalIcon,
 	invertFor,
 	showTabCount,
 	updateTabCount,
