@@ -60,6 +60,7 @@ let installedPromise = new Promise(resolve => {
 	chrome.runtime.onInstalled.addListener(details => resolve(details));
 });
 let lastTogglePromise = Promise.resolve();
+let lastOpenPromise = Promise.resolve();
 let currentWindowLimitRecents = false;
 let navigateRecentsWithPopup = false;
 let navigatingRecents = false;
@@ -175,19 +176,25 @@ function handleCommand(
 {
 	switch (command) {
 		case OpenPopupCommand:
-			openPopupWindow();
-			break;
-
 		case FocusPopupCommand:
-			openPopupWindow(true);
+				// call openPopupWindow() in a finally() method so that the promise
+				// chain won't stop if there's an uncaught exception at some point.
+				// we need to wait for the previous call to openPopupWindow() to
+				// settle before calling it again in case the user is spamming
+				// alt-Q.  without waiting, the second key press would find the
+				// first one hadn't finished opening yet and tell the partially
+				// loaded popup to close and open a new one.  rinse and repeat.
+			lastOpenPromise = lastOpenPromise
+				.finally(() => openPopupWindow(command === FocusPopupCommand));
 			break;
 
 		case PreviousTabCommand:
-			navigateRecents(-1, currentWindowLimitRecents);
-			break;
-
 		case NextTabCommand:
-			navigateRecents(1, currentWindowLimitRecents);
+			lastTogglePromise = lastTogglePromise
+				.finally(() => navigateRecents(
+					command === PreviousTabCommand ? -1 : 1,
+					currentWindowLimitRecents
+				));
 			break;
 
 		case ToggleTabsCommand:
@@ -306,8 +313,8 @@ async function navigateRecents(
 				// we only want to invert the icon and start navigating if
 				// the user is going backwards or is going forwards before
 				// the cooldown ends
-			toolbarIcon.invertFor(k.MinTabDwellTime);
-			recentTabs.navigate(direction, limitToCurrentWindow);
+			await toolbarIcon.invertFor(k.MinTabDwellTime);
+			await recentTabs.navigate(direction, limitToCurrentWindow);
 		}
 
 			// this will record an event if the user hits alt-S when they're
@@ -333,7 +340,7 @@ function toggleRecentTabs(
 			// if the user navigated to a tab but hasn't waited for the min
 			// dwell time before toggling back, add the current tab before
 			// toggling so it becomes the most recent
-		.then(addTab.execute)
+		.then(() => addTab.execute())
 		.then(() => {
 			if (navigatingRecents) {
 					// tell the popup that the user's no longer navigating
@@ -343,14 +350,20 @@ function toggleRecentTabs(
 			}
 
 			navigatingRecents = false;
+
+				// in case the user was navigating recents during a cooldown and
+				// then hit the toggle command, reset the icon back to normal
+			return toolbarIcon.setNormalIcon();
 		})
 		.then(() => recentTabs.toggle(currentWindowLimitRecents))
 			// fire the debounced addTab() so the tab we just toggled to will
 			// be the most recent, in case the user quickly toggles again.
 			// otherwise, the debounced add would fire after we navigate,
 			// putting that tab on the top of the stack, even though a
-			// different tab was now active.
-		.then(addTab.execute)
+			// different tab was now active.  pass true to tell execute() we want
+			// to wait for the next addTab event if there isn't one pending.
+			// that will also cause the next addTab to be executed immediately.
+		.then(() => addTab.execute(true))
 		.then(() => tracker.event("recents",
 			fromShortcut ? "toggle-shortcut" : "toggle"));
 }
@@ -588,16 +601,17 @@ DEBUG && console.log(e);
 
 enableCommands();
 
-chrome.runtime.getContexts({ contextTypes: ["TAB"] }).then((initialViews) => {
-		// check that the popup window is open, and not just the Options tab
-	if (initialViews.some((view) => isPopupWindow(view))) {
-		const popupPort = chrome.runtime.connect({ name: "popup" });
+chrome.runtime.getContexts({ contextTypes: [chrome.runtime.ContextType.TAB] })
+	.then((initialViews) => {
+			// check that the popup window is open, and not just the Options tab
+		if (initialViews.some(isPopupWindow)) {
+			const popupPort = chrome.runtime.connect({ name: "popup" });
 
-			// generate a connect event with this new port.  if there's no popup
-			// window for it connect to, it'll immediately close.
-		chrome.runtime.onConnect.dispatch(popupPort);
-	}
-});
+				// generate a connect event with this new port.  if there's no popup
+				// window for it connect to, it'll immediately close.
+			chrome.runtime.onConnect.dispatch(popupPort);
+		}
+	});
 
 storage.set(data => {
 		// save the lastUsedVersion in a global before we return the current

@@ -20,11 +20,41 @@ let { windowID, tabID } = await getExistingPopupID();
 let lastActiveTab;
 
 
-storage.get(data => ({popupAdjustmentWidth, popupAdjustmentHeight} = data))
-	.then(() => {
-		currentWidth = PopupInnerWidth + popupAdjustmentWidth;
-		currentHeight = PopupInnerHeight + popupAdjustmentHeight;
+await storage.get((data = {}) => {
+	({ popupAdjustmentWidth = 0, popupAdjustmentHeight = 0 } = data);
+	currentWidth = PopupInnerWidth + popupAdjustmentWidth;
+	currentHeight = PopupInnerHeight + popupAdjustmentHeight;
+});
+
+
+async function getWindow(
+	tabOrWindow)
+{
+	let result = tabOrWindow;
+
+	if (tabOrWindow?.windowId) {
+		try {
+				// windows.get() throws if the ID doesn't exist
+			result = await chrome.windows.get(tabOrWindow.windowId);
+		} catch (e) {}
+	}
+
+	return result;
+}
+
+
+async function getLastWindow()
+{
+	const windows = await chrome.windows.getAll({
+		windowTypes: ["normal"],
+		populate: true
 	});
+
+		// return the last unfocused window, or just the last one, if
+		// there's only one open and it's focused
+	return windows.filter(({focused, incognito}) => !focused && !incognito).pop()
+		|| windows.pop();
+}
 
 
 async function getExistingPopupID()
@@ -38,7 +68,7 @@ async function getExistingPopupID()
 			// to check the type of the window containing the popup tab, we have
 			// to get the actual window, since the window type is not returned
 			// in the response from getContexts()
-		const popupWindow = await chrome.windows.get(popup.windowId);
+		const popupWindow = await getWindow(popup);
 
 		tabID = popup.tabId;
 		windowID = popup.windowId;
@@ -78,31 +108,6 @@ async function createPopup(
 }
 
 
-async function getLastWindow()
-{
-	const windows = await chrome.windows.getAll({
-		windowTypes: ["normal"],
-		populate: true
-	});
-
-		// return the last unfocused window, or just the last one, if
-		// there's only one open and it's focused
-	return windows.filter(({focused, incognito}) => !focused && !incognito).pop()
-		|| windows.pop();
-}
-
-
-async function getWindow(
-	tabOrWindow)
-{
-	if (tabOrWindow?.windowId) {
-		return await chrome.windows.get(tabOrWindow.windowId);
-	} else {
-		return tabOrWindow;
-	}
-}
-
-
 async function create(
 	activeTab,
 	props = {},
@@ -117,7 +122,7 @@ async function create(
 	const url = `${PopupURL}?${new URLSearchParams({ props: propsJSON })}`;
 		// we won't have an activeTab if the user is opening the popup with
 		// a devtools window in the foreground
-	const targetWindow = activeTab && await chrome.windows.get(activeTab.windowId);
+	const targetWindow = await getWindow(activeTab);
 	const bounds = calcBounds(
 		props.navigatingRecents ? null : targetWindow,
 		{
@@ -191,7 +196,7 @@ async function show(
 	activeTab,
 	alignment)
 {
-	const targetWindow = activeTab && await chrome.windows.get(activeTab.windowId);
+	const targetWindow = await getWindow(activeTab);
 	const bounds = calcBounds(
 		targetWindow,
 		{
@@ -202,28 +207,30 @@ async function show(
 	);
 	let window;
 
-		// if we're already visible and show() is being called again, that
-		// means the user is navigating recent tabs while keeping the popup
-		// open, so focus the existing window even if it's in tab mode
-	if (isVisible || !isHiddenInTab) {
-			// to get a minimized window to change position, we seem to have
-			// to make an additional update() call with the position, but
-			// only if the window is currently not visible.  otherwise, it
-			// won't move back to the focused window after it's shown while
-			// navigating recents.
-		if (hideBehavior == "minimize" && !isVisible) {
-			await chrome.windows.update(windowID, { focused: true, left: bounds.left, top: bounds.top });
-		}
+	try {
+			// if we're already visible and show() is being called again, that
+			// means the user is navigating recent tabs while keeping the popup
+			// open, so focus the existing window even if it's in tab mode
+		if (isVisible || !isHiddenInTab) {
+				// to get a minimized window to change position, we seem to have
+				// to make an additional update() call with the position, but
+				// only if the window is currently not visible.  otherwise, it
+				// won't move back to the focused window after it's shown while
+				// navigating recents.
+			if (hideBehavior == "minimize" && !isVisible) {
+				await chrome.windows.update(windowID, { focused: true, left: bounds.left, top: bounds.top });
+			}
 
-			// we seem to have to pass width and height here, even if they
-			// haven't changed, to keep the window from shifting size
-		window = await chrome.windows.update(windowID, { focused: true, ...bounds });
-	} else {
-			// create a popup window with the tab that's hiding in another
-			// window, instead of passing in a URL.  that will move the
-			// existing tab into the new popup.
-		window = await createPopup({ tabId: tabID, ...bounds });
-	}
+				// we seem to have to pass width and height here, even if they
+				// haven't changed, to keep the window from shifting size
+			window = await chrome.windows.update(windowID, { focused: true, ...bounds });
+		} else {
+				// create a popup window with the tab that's hiding in another
+				// window, instead of passing in a URL.  that will move the
+				// existing tab into the new popup.
+			window = await createPopup({ tabId: tabID, ...bounds });
+		}
+	} catch (e) {}
 
 	lastActiveTab = activeTab;
 	isVisible = true;
@@ -344,7 +351,11 @@ async function blur()
 {
 !windowID && console.error("----- blur called without a window ID");
 	isVisible = false;
-	await chrome.windows.update(windowID, { focused: false });
+
+	try {
+		await chrome.windows.update(windowID, { focused: false });
+	} catch (e) {}
+
 	popupEmitter.emit("blur", { windowID });
 }
 
@@ -360,7 +371,9 @@ async function resize(
 	currentWidth = width;
 	currentHeight = height;
 
-	await chrome.windows.update(windowID, { width, height });
+	try {
+		await chrome.windows.update(windowID, { width, height });
+	} catch (e) {}
 }
 
 
@@ -416,9 +429,9 @@ export default {
 	},
 
 	async isOpen() {
-		const popupWindowTab = await chrome.runtime.getContexts({ tabIds: [tabID] });
+		const [popupWindowTab] = await chrome.runtime.getContexts({ tabIds: [tabID] });
 
-		return popupWindowTab.length > 0;
+		return !!popupWindowTab;
 	},
 
 	get hideBehavior() {
