@@ -8,6 +8,14 @@ comments: true
 # Release history
 
 
+## 2.0.1 - 2024-10-14
+
+### Fixed
+
+* Fixed an issue that could cause the popup window to get into a bad state when the keyboard shortcut was pressed extremely rapidly.
+* Improved the behavior when quickly switching between the toggle and navigate to recent tab shortcuts. 
+
+
 ## 2.0.0 - 2024-09-09
 
 ### Added
