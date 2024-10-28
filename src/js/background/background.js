@@ -28,30 +28,6 @@ const {
 	FocusPopupCommand
 } = k.CommandIDs;
 const tracker = trackers.background;
-const MessageHandlers = {
-	focusTab: ({tab: {id, windowId}, options = {}, stopNavigatingRecents}) => {
-		if (stopNavigatingRecents) {
-				// change the flag before focusing the tab, so that its
-				// activation event will get tracked
-			navigatingRecents = false;
-		}
-
-			// bring the tab's window forward *before* focusing the tab, since
-			// activating the window can sometimes put keyboard focus on the
-			// very first tab button on macOS 10.14 (could never repro on
-			// 10.12).  then focus the tab, which should fix any focus issues.
-		return chrome.windows.update(windowId, { focused: true })
-			.then(() => chrome.tabs.update(id, { active: true, ...options }))
-			.catch(error => {
-				tracker.exception(error);
-				console.error(error);
-			});
-	},
-	restoreSession: ({sessionID}) => chrome.sessions.restore(sessionID),
-	createWindow: ({url}) => chrome.windows.create({ url }),
-	createTab: ({url}) => chrome.tabs.create({ url }),
-	setURL: ({tabID, url}) => chrome.tabs.update(tabID, { url })
-};
 
 
 const ports = {};
@@ -525,20 +501,7 @@ chrome.runtime.onConnect.addListener(port => {
 
 
 chrome.runtime.onMessage.addListener(({message, ...payload}, sender, sendResponse) => {
-	const handler = MessageHandlers[message];
-	let asyncResponse = false;
-
-	if (handler) {
-			// all of the messages from the popup with a handler expect a
-			// response, even if there isn't any actual data, so call
-			// sendResponse() to avoid "The message port closed before a
-			// response was received" errors
-		(async () => {
-			sendResponse(await handler(payload));
-			await addTab.execute();
-		})();
-		asyncResponse = true;
-	} else if (message === "executeAddTab") {
+	if (message === "executeAddTab") {
 		addTab.execute();
 	} else if (message === "stopNavigatingRecents") {
 		navigatingRecents = false;
@@ -573,8 +536,6 @@ chrome.runtime.onMessage.addListener(({message, ...payload}, sender, sendRespons
 			navigateRecentsWithPopup = value;
 		}
 	}
-
-	return asyncResponse;
 });
 
 

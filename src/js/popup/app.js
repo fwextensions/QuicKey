@@ -539,7 +539,7 @@ export default class App extends React.Component {
 	{
 			// check for a URL on the selected item, so we can ignore the special
 			// items that just show a message
-		if (item && item.url) {
+		if (item?.url) {
 			const {url} = item;
 			let tabOrWindow;
 
@@ -553,8 +553,7 @@ export default class App extends React.Component {
 			if (this.mode == "tabs") {
 				if (item.sessionId) {
 						// this is a closed tab, so restore it
-					tabOrWindow = await this.sendMessage("restoreSession",
-						{ sessionID: item.sessionId });
+					tabOrWindow = await chrome.sessions.restore(item.sessionId);
 					this.props.tracker.event("tabs", "restore");
 				} else {
 						// switch to the tab.  pass navigatingRecents so that if
@@ -569,18 +568,18 @@ export default class App extends React.Component {
 				}
 			} else if (shiftKey) {
 					// open in a new window
-				tabOrWindow = await this.sendMessage("createWindow", { url });
+				tabOrWindow = await chrome.windows.create({ url });
 				this.props.tracker.event(this.mode, "open-new-win");
 			} else if (modKey) {
 					// open in a new tab
-				tabOrWindow = await this.sendMessage("createTab", { url });
+				tabOrWindow = await chrome.tabs.create({ url });
 				this.props.tracker.event(this.mode, "open-new-tab");
 			} else {
 					// open in the active tab, which, in the case of a popup,
 					// is not in the current window (since that's the popup)
 				const {id} = await this.getActiveTab();
 
-				tabOrWindow = await this.sendMessage("setURL", { tabID: id, url });
+				tabOrWindow = await chrome.tabs.update(id, { url })
 				this.props.tracker.event(this.mode, "open");
 			}
 
@@ -596,7 +595,7 @@ export default class App extends React.Component {
 	{
 			// check for a URL on the selected item, so we can ignore the special
 			// items that just show a message
-		if (tab && tab.url) {
+		if (tab?.url) {
 			const queryLength = this.state.query.length;
 			const category = queryLength ? "tabs" : "recents";
 			let event = (category == "recents" && this.gotMRUKey)
@@ -613,9 +612,22 @@ export default class App extends React.Component {
 			this.props.tracker.event(category, event,
 				queryLength ? queryLength : this.state.selected);
 
-			return this.sendMessage("focusTab", { tab, options, stopNavigatingRecents });
-		} else {
-			return null;
+			if (stopNavigatingRecents) {
+					// change the flag before focusing the tab, so that its
+					// activation event will get tracked
+				await this.sendMessage("stopNavigatingRecents", undefined, false);
+			}
+
+				// bring the tab's window forward *before* focusing the tab, since
+				// activating the window can sometimes put keyboard focus on the
+				// very first tab button on macOS 10.14 (could never repro on
+				// 10.12).  then focus the tab, which should fix any focus issues.
+			return chrome.windows.update(tab.windowId, { focused: true })
+				.then(() => chrome.tabs.update(tab.id, { active: true, ...options }))
+				.catch(error => {
+					this.props.tracker.exception(error);
+					console.error(error);
+				});
 		}
 	}
 
@@ -1030,10 +1042,7 @@ export default class App extends React.Component {
 		const messageBody = { message, ...payload };
 
 		if (awaitResponse) {
-				// we can't use chrome.runtime.sendMessage() because it's a
-				// shared instance that's on the background page, so calling
-				// sendMessage() from there would be going from the
-				// background to this window, but we want the opposite
+				// return a promise so that we can wait for the response
 			return new Promise(resolve =>
 				chrome.runtime.sendMessage(messageBody, resolve));
 		} else {
@@ -1137,9 +1146,9 @@ export default class App extends React.Component {
 		this.searchBox.focus();
 
 		if (tab) {
-			optionsTab = await this.sendMessage("focusTab", { tab });
+			optionsTab = await this.focusTab(tab);
 		} else {
-			optionsTab = await this.sendMessage("createTab", { url });
+			optionsTab = await chrome.tabs.create({ url });
 		}
 
 			// force the popup to close, since focusing or opening the
