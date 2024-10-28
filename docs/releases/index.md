@@ -8,6 +8,13 @@ comments: true
 # Release history
 
 
+## 2.0.2 - 2024-10-27
+
+### Fixed
+
+* Improved the handling of multi-threaded storage access.
+
+
 ## 2.0.1 - 2024-10-14
 
 ### Fixed
