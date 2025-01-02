@@ -1,5 +1,7 @@
 const _console = console;
 
+globalThis._console = _console;
+
 export default function stdout(
 	id)
 {
@@ -29,4 +31,6 @@ _console.error("======= loading stdout ======", id);
 				_console[method](...args);
 			}
 		}), {});
+
+	globalThis.stdout = globalThis.console;
 }

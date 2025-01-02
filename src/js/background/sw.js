@@ -41,7 +41,6 @@ globalThis.dispatchCachedEvents = cacheEvents([
 	"runtime.onMessage",
 	"runtime.onStartup",
 	"runtime.onUpdateAvailable",
-	"storage.onChanged",
 	"tabs.onActivated",
 	"tabs.onCreated",
 	"tabs.onRemoved",

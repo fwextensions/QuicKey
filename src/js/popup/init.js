@@ -26,6 +26,7 @@
 const gPort = chrome.runtime.connect({ name: location.search.includes("props") ? "popup" : "menu" });
 const gInitTime = performance.now();
 
+
 let gKeyCache = [];
 let gShortcutCache = [];
 let gClose = false;

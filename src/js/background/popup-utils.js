@@ -1,5 +1,5 @@
-import {PopupPadding} from "@/background/constants";
-import {getScreenFromWindow} from "@/background/screen";
+import { PopupPadding, PopupURL } from "@/background/constants";
+import { getScreenFromWindow } from "@/background/screen";
 
 function getAlignedPosition(
 	alignment,
@@ -57,4 +57,11 @@ export function calcBounds(
 	);
 
 	return { left, top, width, height };
+}
+
+	// get the URL from either a tab object or what's returned from getContexts()
+export function isPopupWindow(
+	tab)
+{
+	return (tab?.url || tab?.documentUrl)?.startsWith(PopupURL);
 }

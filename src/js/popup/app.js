@@ -14,6 +14,7 @@ import { loadPinyin } from "./data/add-pinyin";
 import shortcuts from "./shortcuts/popup-shortcuts";
 import handleRef from "@/lib/handle-ref";
 import copyTextToClipboard from "@/lib/copy-to-clipboard";
+import initEventController from "@/shared/eventController";
 import recentTabs from "@/background/recent-tabs";
 import storage from "@/background/quickey-storage";
 import settings from "@/background/settings";
@@ -226,7 +227,16 @@ export default class App extends React.Component {
 				if (!event.matches) {
 					popupWindow.resize(this.popupW, this.popupH);
 				}
-			})
+			});
+
+			initEventController(
+					// this is used in eventController.js to send messages to the
+					// popup.  we don't return the promise from this.onMessage()
+					// because in the background, any return value from this
+					// function means there was an error.
+				(message, payload = {}) => { this.onMessage({ message, ...payload }); },
+				{ popup: true }
+			);
 		}
 
 		window.addEventListener("unload", () => {
@@ -1034,6 +1044,7 @@ export default class App extends React.Component {
 	}
 
 
+// TODO: when the popup has control, this should call into commandHandlers.js, not the background.  otherwise, it'll load the background.
 	sendMessage(
 		message,
 		payload = {},

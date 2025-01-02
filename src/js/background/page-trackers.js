@@ -8,7 +8,9 @@ const TrackerID = IsEdge
 const ClientIDKey = "clientID";
 
 
-	// use an IIFE to init a function to create trackers with standard settings
+	// await an IIFE to make some async calls that we then use to init a function
+	// that then returns a function that creates trackers with standard settings.
+	// this is a workaround so that createTracker() doesn't have to be async.
 const createTracker = await (async () => {
 	const { version: dimension1, installType } = await chrome.management.getSelf();
 	const dimension2 = installType === "development" ? "D" : "P";
