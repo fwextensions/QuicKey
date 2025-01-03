@@ -73,7 +73,6 @@ async function openPopupWindow(
 
 	if (!(await popupWindow.isOpen())) {
 		activeTab = currentActiveTab;
-console.log("===== openPopupWindow popup not open", globalThis.location.pathname, activeTab);
 
 			// the popup window isn't open, so create a new one.  tell it whether
 			// to focus the search box or navigate recents.
@@ -86,7 +85,6 @@ console.log("===== openPopupWindow popup not open", globalThis.location.pathname
 
 	if (!isPopupWindow(currentActiveTab)) {
 		activeTab = currentActiveTab;
-console.log("===== openPopupWindow sendPopupMessage", globalThis.location.pathname, activeTab);
 
 			// the popup window is open but not focused, so tell it to show
 			// itself centered on the current browser window, and whether to
@@ -98,7 +96,6 @@ console.log("===== openPopupWindow sendPopupMessage", globalThis.location.pathna
 
 		// the popup is open and focused, so use the shortcut to move the
 		// selection DOWN
-console.log("===== about to openPopupWindow modifySelected", globalThis.location.pathname);
 	if (sendPopupMessage("modifySelected", { direction: 1 })) {
 console.error("===== openPopupWindow modifySelected", globalThis.location.pathname);
 			// an error was returned from sending the message, so close
@@ -207,13 +204,10 @@ function toggleRecentTabs(
 			fromShortcut ? "toggle-shortcut" : "toggle"));
 }
 
-export function addCommandHandlers(
-	sendPopupMessageFunc,
-	portsFromBackground)
+export default function init(
+	context)
 {
-	sendPopupMessage = sendPopupMessageFunc;
-// TODO: this isn't really just from the background
-	ports = portsFromBackground;
+	({ sendPopupMessage, ports } = context);
 
 	chrome.commands.onCommand.addListener(handleCommand);
 
@@ -235,4 +229,16 @@ export function addCommandHandlers(
 //				.then(() => handleCommand(command));
 //		}
 //	}
+}
+
+export function processMessage({
+	message })
+{
+	if (message === "executeAddTab") {
+		addTab.execute();
+	} else if (message === "stopNavigatingRecents") {
+		navigatingRecents = false;
+	} else if (message === "getActiveTab") {
+		return activeTab;
+	}
 }

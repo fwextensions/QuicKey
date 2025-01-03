@@ -39,13 +39,17 @@ let usePinyin;
 
 	// this returns a promise, but we don't want to await on it, as it will
 	// never resolve
-initEventController(
-	(message, payload = {}) => {
+initEventController({
+	sendPopupMessage(
+		message,
+		payload = {})
+	{
 		try {
-				// default to sending the message to the menu if it's open
+			// default to sending the message to the menu if it's open
 			(ports.menu || ports.popup).postMessage({ message, ...payload });
 
-chrome.runtime.lastError && console.log ("==== sendPopupMessage after postMessage", chrome.runtime.lastError);
+chrome.runtime.lastError && console.log("==== sendPopupMessage after postMessage", chrome.runtime.lastError);
+
 			return chrome.runtime.lastError;
 		} catch (error) {
 console.error("==== sendPopupMessage", error.message);
@@ -53,7 +57,7 @@ console.error("==== sendPopupMessage", error.message);
 		}
 	},
 	ports
-);
+});
 
 
 chrome.runtime.onStartup.addListener(() => {

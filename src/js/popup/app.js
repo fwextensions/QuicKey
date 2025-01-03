@@ -15,6 +15,8 @@ import shortcuts from "./shortcuts/popup-shortcuts";
 import handleRef from "@/lib/handle-ref";
 import copyTextToClipboard from "@/lib/copy-to-clipboard";
 import initEventController from "@/shared/eventController";
+import { processMessage } from "@/shared/commandHandlers";
+import control from "@/shared/control";
 import recentTabs from "@/background/recent-tabs";
 import storage from "@/background/quickey-storage";
 import settings from "@/background/settings";
@@ -229,14 +231,14 @@ export default class App extends React.Component {
 				}
 			});
 
-			initEventController(
+			initEventController({
 					// this is used in eventController.js to send messages to the
 					// popup.  we don't return the promise from this.onMessage()
-					// because in the background, any return value from this
-					// function means there was an error.
-				(message, payload = {}) => { this.onMessage({ message, ...payload }); },
-				{ popup: true }
-			);
+					// because any return value from this function is interpreted
+					// by openPopupWindow() as meaning there was an error.
+				sendPopupMessage: (message, payload = {}) => { this.onMessage({ message, ...payload }); },
+				ports: { popup: {} }
+			});
 		}
 
 		window.addEventListener("unload", () => {
@@ -963,7 +965,9 @@ export default class App extends React.Component {
 	{
 		this.ignoreNextBlur = true;
 
-		if (closedByEsc) {
+// TODO: if the popup has control but the background is loaded, do we still need to send the message?
+		if (closedByEsc && !control.isHeld() && this.port) {
+//		if (closedByEsc) {
 				// send this message regardless of menu or popup mode
 			this.port.postMessage("closedByEsc");
 		}
@@ -1044,7 +1048,6 @@ export default class App extends React.Component {
 	}
 
 
-// TODO: when the popup has control, this should call into commandHandlers.js, not the background.  otherwise, it'll load the background.
 	sendMessage(
 		message,
 		payload = {},
@@ -1052,14 +1055,20 @@ export default class App extends React.Component {
 	{
 		const messageBody = { message, ...payload };
 
-		if (awaitResponse) {
-				// return a promise so that we can wait for the response
-			return new Promise(resolve =>
-				chrome.runtime.sendMessage(messageBody, resolve));
+		if (control.isHeld()) {
+				// since the popup has control, call the command handler module
+				// directly instead of sending a runtime message
+			return processMessage(messageBody);
 		} else {
-				// no response is required, so don't send a callback.
-				// otherwise, we'll get runtime errors about the port closing.
-			return chrome.runtime.sendMessage(messageBody);
+			if (awaitResponse) {
+					// return a promise so that we can wait for the response
+				return new Promise(resolve =>
+					chrome.runtime.sendMessage(messageBody, resolve));
+			} else {
+					// no response is required, so don't send a callback.
+					// otherwise, we'll get runtime errors about the port closing.
+				return chrome.runtime.sendMessage(messageBody);
+			}
 		}
 	}
 

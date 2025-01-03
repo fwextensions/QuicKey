@@ -53,12 +53,11 @@ function handleTabActivated({
 	}
 }
 
-export function addTabHandlers(
-	sendPopupMessageFunc,
-	portsFromBackground)
+export default function init(
+	context)
 {
-	sendPopupMessage = sendPopupMessageFunc;
-	ports = portsFromBackground;
+	({ sendPopupMessage, ports } = context);
+
 
 	chrome.tabs.onActivated.addListener(event => {
 		if (!startingUp) {

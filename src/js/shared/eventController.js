@@ -1,14 +1,13 @@
 import control from "@/shared/control";
-import { addTabHandlers } from "@/shared/tabEventHandlers";
-import { addCommandHandlers } from "@/shared/commandHandlers";
+import initTabEvents from "@/shared/tabEventHandlers";
+import initCommandEvents from "@/shared/commandHandlers";
 
 export default function initEventController(
-	sendPopupMessage,
-	ports)
+	context)
 {
 	return control.claimWhenAvailable(() => {
-		addTabHandlers(sendPopupMessage, ports);
-		addCommandHandlers(sendPopupMessage, ports);
+		initTabEvents(context);
+		initCommandEvents(context);
 console.log("===== eventController", globalThis.location.pathname);
 	});
 }

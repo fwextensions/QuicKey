@@ -4,6 +4,7 @@ const logColor = (color) => (highlight, ...rest) => console.log("%c" + highlight
 const orange = logColor("orange");
 const locked = logColor("pink");
 const unlocked = logColor("lightgreen");
+let isHeld = false;
 
 async function isLockHeld(
 	lockName)
@@ -22,6 +23,7 @@ async function claimWhenAvailable(
 		task = name;
 		name = LockName;
 	}
+
 	const lockHeld = await isLockHeld(LockName);
 
 	lockHeld
@@ -29,6 +31,10 @@ async function claimWhenAvailable(
 		: unlocked("--------- LOCK NOT HELD", globalThis.location.pathname);
 
 	return navigator.locks.request(name, async (lock) => {
+			// make sure this is set before calling the task, in that checks
+			// whether the lock is held
+		isHeld = true;
+
 orange("--------- GOT LOCK", globalThis.location.pathname, lock?.mode, lock?.name);
 			// don't put try/catch around this, since we want to release the lock
 			// if something goes wrong
@@ -44,5 +50,6 @@ orange("--------- GOT LOCK", globalThis.location.pathname, lock?.mode, lock?.nam
 }
 
 export default {
-	claimWhenAvailable
+	claimWhenAvailable,
+	isHeld: () => isHeld
 }
