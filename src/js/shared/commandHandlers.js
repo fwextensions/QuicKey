@@ -211,6 +211,17 @@ export default function init(
 
 	chrome.commands.onCommand.addListener(handleCommand);
 
+	context.addMessageListener(({ message, ...payload }, sender, sendResponse) => {
+		if (message === "executeAddTab") {
+// TODO: this seems to not get called when quickly switching between tabs without waiting for the dwell time to expire and then hitting alt-Q.  the wrong tab is at the top of the list.
+			addTab.execute();
+		} else if (message === "stopNavigatingRecents") {
+			navigatingRecents = false;
+		} else if (message === "getActiveTab") {
+			sendResponse(activeTab);
+		}
+	});
+
 // TODO: get this to work so the startup case is handled
 //	function onCommandListener(
 //		command)
@@ -229,16 +240,4 @@ export default function init(
 //				.then(() => handleCommand(command));
 //		}
 //	}
-}
-
-export function processMessage({
-	message })
-{
-	if (message === "executeAddTab") {
-		addTab.execute();
-	} else if (message === "stopNavigatingRecents") {
-		navigatingRecents = false;
-	} else if (message === "getActiveTab") {
-		return activeTab;
-	}
 }

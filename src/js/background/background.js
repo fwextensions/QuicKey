@@ -37,8 +37,8 @@ let lastUsedVersion;
 let usePinyin;
 
 
-	// this returns a promise, but we don't want to await on it, as it will
-	// never resolve
+	// this returns a function for sending messages *from* the popup, which we
+	// don't need
 initEventController({
 	sendPopupMessage(
 		message,
@@ -163,13 +163,8 @@ chrome.runtime.onConnect.addListener(port => {
 
 
 chrome.runtime.onMessage.addListener(({message, ...payload}, sender, sendResponse) => {
-	if (message === "executeAddTab") {
-		addTab.execute();
-	} else if (message === "stopNavigatingRecents") {
-		navigatingRecents = false;
-	} else if (message === "getActiveTab") {
-		sendResponse(activeTab);
-	} else if (message === "reopenPopup") {
+// TODO: this won't work when the popup has control and the background isn't loaded
+	if (message === "reopenPopup") {
 		(async () => {
 			const currentActiveTab = activeTab;
 

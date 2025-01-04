@@ -5,7 +5,7 @@
 	"version": "2.0.2",
 	"description": "Add keyboard shortcuts to switch tabs via Quicksilver-style search or a most recently used list",
 	"author": "John Dunning",
-	"minimum_chrome_version": "115",
+	"minimum_chrome_version": "119",
 	"permissions": [
 		"tabs",
 		"bookmarks",

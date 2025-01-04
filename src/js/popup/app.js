@@ -15,7 +15,6 @@ import shortcuts from "./shortcuts/popup-shortcuts";
 import handleRef from "@/lib/handle-ref";
 import copyTextToClipboard from "@/lib/copy-to-clipboard";
 import initEventController from "@/shared/eventController";
-import { processMessage } from "@/shared/commandHandlers";
 import control from "@/shared/control";
 import recentTabs from "@/background/recent-tabs";
 import storage from "@/background/quickey-storage";
@@ -231,13 +230,18 @@ export default class App extends React.Component {
 				}
 			});
 
-			initEventController({
+				// this sendMessage function will trigger a local event when the
+				// popup has control or call runtime.sendMessage() when the
+				// background has control, since we're setting useLocalMessaging
+				// to true
+			this.sendMessage = initEventController({
 					// this is used in eventController.js to send messages to the
 					// popup.  we don't return the promise from this.onMessage()
 					// because any return value from this function is interpreted
 					// by openPopupWindow() as meaning there was an error.
 				sendPopupMessage: (message, payload = {}) => { this.onMessage({ message, ...payload }); },
-				ports: { popup: {} }
+				ports: { popup: {} },
+				useLocalMessaging: true,
 			});
 		}
 
@@ -1049,27 +1053,9 @@ export default class App extends React.Component {
 
 
 	sendMessage(
-		message,
-		payload = {},
-		awaitResponse = true)
+		...args)
 	{
-		const messageBody = { message, ...payload };
-
-		if (control.isHeld()) {
-				// since the popup has control, call the command handler module
-				// directly instead of sending a runtime message
-			return processMessage(messageBody);
-		} else {
-			if (awaitResponse) {
-					// return a promise so that we can wait for the response
-				return new Promise(resolve =>
-					chrome.runtime.sendMessage(messageBody, resolve));
-			} else {
-					// no response is required, so don't send a callback.
-					// otherwise, we'll get runtime errors about the port closing.
-				return chrome.runtime.sendMessage(messageBody);
-			}
-		}
+		console.error("ERROR: default sendMessage() called", args);
 	}
 
 
