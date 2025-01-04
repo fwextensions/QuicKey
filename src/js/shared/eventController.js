@@ -19,8 +19,20 @@ class MessageTarget extends EventTarget {
 		if (this.useLocalMessaging && control.isHeld()) {
 			this.addEventListener(
 				MessageTarget.Name,
-					// mimic the signature of the runtime.onMessage event listener
-				(event) => callback(event.detail.message, null, event.detail.sendResponse)
+				(event) => {
+					const { detail: { message, sendResponse } } = event;
+						// mimic the signature of the runtime.onMessage event listener
+					const result = callback(message, null, sendResponse);
+
+						// the callback can return true to keep the async
+						// sendResponse call alive.  otherwise, resolve the
+						// promise now, in case it wasn't resolved in the callback,
+						// so that the sendMessage() call that triggered this
+						// event will be resolved.
+					if (result !== true) {
+						sendResponse(result);
+					}
+				}
 			);
 		} else {
 			chrome.runtime.onMessage.addListener(callback);
@@ -29,28 +41,22 @@ class MessageTarget extends EventTarget {
 
 	sendMessage = (
 		message,
-		payload = {},
-		sendResponse = true) =>
+		payload = {}) =>
 	{
 		const messageBody = { message, ...payload };
 
 		if (this.useLocalMessaging && control.isHeld()) {
 				// when the popup has control and it calls this function, we need
 				// to trigger an event that mimics the runtime.onMessage event
-			const detail = { message: messageBody };
-			let result = Promise.resolve();
-
-// TODO: always include the sendResponse resolver and then call it in the listener above if the callback doesn't return true.  that better mimics the behavior of the runtime.onMessage handler.
-			if (sendResponse) {
-				const { promise, resolve } = Promise.withResolvers();
-
-				result = promise;
-				detail.sendResponse = resolve;
-			}
+			const { promise, resolve } = Promise.withResolvers();
+			const detail = {
+				message: messageBody,
+				sendResponse: resolve,
+			};
 
 			this.dispatchEvent(new CustomEvent(MessageTarget.Name, { detail }));
 
-			return result;
+			return promise;
 		} else {
 			return chrome.runtime.sendMessage(messageBody);
 		}

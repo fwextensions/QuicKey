@@ -631,7 +631,7 @@ export default class App extends React.Component {
 			if (stopNavigatingRecents) {
 					// change the flag before focusing the tab, so that its
 					// activation event will get tracked
-				await this.sendMessage("stopNavigatingRecents", undefined, false);
+				await this.sendMessage("stopNavigatingRecents");
 			}
 
 				// bring the tab's window forward *before* focusing the tab, since
@@ -1024,7 +1024,7 @@ export default class App extends React.Component {
 	{
 			// ignore the blur event triggered by closing the popup
 		this.ignoreNextBlur = true;
-		this.sendMessage("reopenPopup", { focusSearch: this.openedForSearch }, false);
+		this.sendMessage("reopenPopup", { focusSearch: this.openedForSearch });
 	}
 
 
@@ -1120,7 +1120,7 @@ export default class App extends React.Component {
 						// so tell the background to change its state so that
 						// when the popup closes, the current tab's activation
 						// will be detected
-					this.sendMessage("stopNavigatingRecents", undefined, false);
+					this.sendMessage("stopNavigatingRecents");
 
 						// pass true for closedByEsc so that the background
 						// doesn't interpret a quick open and close as a
@@ -1131,7 +1131,7 @@ export default class App extends React.Component {
 						// tell the background to add the newly focused tab
 						// to recents immediately so the user could quickly
 						// switch to another tab while keeping recents correct
-					this.sendMessage("executeAddTab", undefined, false);
+					this.sendMessage("executeAddTab");
 				} else {
 					await this.openItem(selectedItem);
 				}
