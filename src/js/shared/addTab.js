@@ -3,9 +3,9 @@ import recentTabs from "@/background/recent-tabs";
 import trackers from "@/background/page-trackers";
 import { MinTabDwellTime } from "@/background/constants";
 import { isPopupWindow } from "@/background/popup-utils";
+import { activeTab } from "@/shared/state";
 
 const tracker = trackers.background;
-let activeTab;
 
 export const addTab = debounce(
 		// make sure tabId is valid, as calling tabs.get() with undefined will
@@ -34,12 +34,3 @@ export const addTab = debounce(
 		}),
 	MinTabDwellTime
 );
-
-	// make activeTab settable directly from the outside, without having to
-	// export a function
-Object.defineProperty(module.exports, "activeTab", {
-	get: () => activeTab,
-	set: tab => (activeTab = tab),
-	enumerable: true,
-	configurable: true
-});

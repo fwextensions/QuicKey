@@ -1,16 +1,16 @@
+import { addTab } from "@/shared/addTab";
+import { navigatingRecents } from "@/shared/state";
 import toolbarIcon from "@/background/toolbar-icon";
 import recentTabs from "@/background/recent-tabs";
 import { debounce } from "@/background/debounce";
 import popupWindow from "@/background/popup-window";
 import { isPopupWindow } from "@/background/popup-utils";
 import storage from "@/background/quickey-storage";
-import { addTab } from "@/shared/addTab";
 
 const TabRemovedDelay = 1000;
 
-// TODO: handle the startup event so this is set correctly
+// TODO: handle the startup event so this is set correctly, add to state.js
 let startingUp = false;
-let navigatingRecents = false;
 let ports = {};
 let lastWindowID;
 let sendPopupMessage;

@@ -9,7 +9,7 @@ const Methods = [
 	"resize",
 ];
 
-// TODO: add this to the event controller somehow
+// TODO: add this to the event controller somehow, maybe just send messages instead of calling the popup API directly
 export function connectPopupWindow()
 {
 	const { call } = connect("popup-window");

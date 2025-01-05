@@ -16,27 +16,28 @@ class MessageTarget extends EventTarget {
 	addListener = (
 		callback) =>
 	{
-		if (this.useLocalMessaging && control.isHeld()) {
-			this.addEventListener(
-				MessageTarget.Name,
-				(event) => {
-					const { detail: { message, sendResponse } } = event;
-						// mimic the signature of the runtime.onMessage event listener
-					const result = callback(message, null, sendResponse);
+			// add the listener to both the runtime.onMessage event and our custom
+			// event.  that way, if the popup has control, we'll still be listening
+			// to the runtime.sendMessage() call from the options page when a
+			// setting changes.
+		chrome.runtime.onMessage.addListener(callback);
+		this.addEventListener(
+			MessageTarget.Name,
+			(event) => {
+				const { detail: { message, sendResponse } } = event;
+					// mimic the signature of the runtime.onMessage event listener
+				const result = callback(message, null, sendResponse);
 
-						// the callback can return true to keep the async
-						// sendResponse call alive.  otherwise, resolve the
-						// promise now, in case it wasn't resolved in the callback,
-						// so that the sendMessage() call that triggered this
-						// event will be resolved.
-					if (result !== true) {
-						sendResponse(result);
-					}
+					// the callback can return true to keep the async
+					// sendResponse call alive.  otherwise, resolve the
+					// promise now, in case it wasn't resolved in the callback,
+					// so that the sendMessage() call that triggered this
+					// event will be resolved.
+				if (result !== true) {
+					sendResponse(result);
 				}
-			);
-		} else {
-			chrome.runtime.onMessage.addListener(callback);
-		}
+			}
+		);
 	}
 
 	sendMessage = (

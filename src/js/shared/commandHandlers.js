@@ -1,10 +1,12 @@
+import { addTab } from "@/shared/addTab";
+import { activeTab, navigateRecentsWithPopup, navigatingRecents } from "@/shared/state";
 import popupWindow from "@/background/popup-window";
 import toolbarIcon from "@/background/toolbar-icon";
 import recentTabs from "@/background/recent-tabs";
+import settings from "@/background/settings";
 import trackers from "@/background/page-trackers";
 import { isPopupWindow } from "@/background/popup-utils";
-import { CommandIDs, MinTabDwellTime } from "@/background/constants";
-import { addTab, activeTab } from "@/shared/addTab";
+import * as k from "@/background/constants";
 
 const {
 	OpenPopupCommand,
@@ -12,13 +14,11 @@ const {
 	NextTabCommand,
 	ToggleTabsCommand,
 	FocusPopupCommand
-} = CommandIDs;
+} = k.CommandIDs;
 
 const tracker = trackers.background;
 let lastTogglePromise = Promise.resolve();
 let lastOpenPromise = Promise.resolve();
-let navigateRecentsWithPopup = false;
-let navigatingRecents = false;
 let currentWindowLimitRecents = false;
 let ports = {};
 let sendPopupMessage;
@@ -150,7 +150,7 @@ async function navigateRecents(
 				// we only want to invert the icon and start navigating if
 				// the user is going backwards or is going forwards before
 				// the cooldown ends
-			await toolbarIcon.invertFor(MinTabDwellTime);
+			await toolbarIcon.invertFor(k.MinTabDwellTime);
 			await recentTabs.navigate(direction, limitToCurrentWindow);
 		}
 
@@ -219,8 +219,33 @@ export default function init(
 			navigatingRecents = false;
 		} else if (message === "getActiveTab") {
 			sendResponse(activeTab);
+		} else if (message === "settingChanged") {
+			const {key, value} = payload;
+
+			if (key == k.ShowTabCount.Key) {
+				toolbarIcon.showTabCount(value);
+			} else if (key == k.HidePopupBehavior.Key) {
+				popupWindow.hideBehavior = value;
+			} else if (key == k.CurrentWindowLimitRecents.Key) {
+				currentWindowLimitRecents = value;
+			} else if (key == k.NavigateRecentsWithPopup.Key) {
+				navigateRecentsWithPopup = value;
+			}
 		}
 	});
+
+		// update this flag in case the popup gets hidden or closed while the user
+		// is navigating recents by some mechanism other than releasing the modifier
+		// to select the currently focused tab
+	popupWindow.on(["hide", "close"], () => navigatingRecents = false);
+
+	settings.get()
+		.then(settings => {
+			toolbarIcon.showTabCount(settings[k.ShowTabCount.Key]);
+			popupWindow.hideBehavior = settings[k.HidePopupBehavior.Key];
+			currentWindowLimitRecents = settings[k.CurrentWindowLimitRecents.Key];
+			navigateRecentsWithPopup = settings[k.NavigateRecentsWithPopup.Key];
+		});
 
 // TODO: get this to work so the startup case is handled
 //	function onCommandListener(

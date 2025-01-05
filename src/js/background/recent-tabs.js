@@ -537,6 +537,11 @@ function print(
 }
 
 
+if (DEBUG) {
+	globalThis.printTabs = print;
+}
+
+
 export default {
 	add,
 	remove,

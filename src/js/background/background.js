@@ -5,13 +5,12 @@ import popupWindow from "@/background/popup-window";
 import toolbarIcon from "@/background/toolbar-icon";
 import recentTabs from "@/background/recent-tabs";
 import storage from "@/background/quickey-storage";
-import settings from "@/background/settings";
 import trackers from "@/background/page-trackers";
 import { debounce } from "@/background/debounce";
 import * as k from "@/background/constants";
 import { isPopupWindow } from "@/background/popup-utils";
 import initEventController from "@/shared/eventController";
-import { addTab, activeTab } from "@/shared/addTab";
+import { activeTab } from "@/shared/state";
 
 if (globalThis.DEBUG) {
 	globalThis.printTabs = recentTabs.print;
@@ -30,11 +29,7 @@ let startingUp = false;
 let installedPromise = new Promise(resolve => {
 	chrome.runtime.onInstalled.addListener(details => resolve(details));
 });
-let currentWindowLimitRecents = false;
-let navigateRecentsWithPopup = false;
-let navigatingRecents = false;
 let lastUsedVersion;
-let usePinyin;
 
 
 	// this returns a function for sending messages *from* the popup, which we
@@ -102,12 +97,6 @@ function disableCommands()
 {
 //	chrome.commands.onCommand.removeListener(onCommandListener);
 }
-
-
-	// update this flag in case the popup gets hidden or closed while the user
-	// is navigating recents by some mechanism other than releasing the modifier
-	// to select the currently focused tab
-popupWindow.on(["hide", "close"], () => navigatingRecents = false);
 
 
 chrome.runtime.onConnect.addListener(port => {
@@ -180,18 +169,6 @@ chrome.runtime.onMessage.addListener(({message, ...payload}, sender, sendRespons
 				// the popup is closed
 			activeTab = currentActiveTab;
 		})();
-	} else if (message === "settingChanged") {
-		const {key, value} = payload;
-
-		if (key == k.ShowTabCount.Key) {
-			toolbarIcon.showTabCount(value);
-		} else if (key == k.CurrentWindowLimitRecents.Key) {
-			currentWindowLimitRecents = value;
-		} else if (key == k.HidePopupBehavior.Key) {
-			popupWindow.hideBehavior = value;
-		} else if (key == k.NavigateRecentsWithPopup.Key) {
-			navigateRecentsWithPopup = value;
-		}
 	}
 });
 
@@ -238,22 +215,13 @@ storage.set(data => {
 		// sure that promise is handled as part of the chain started from
 		// getting the lastUsedVersion.  otherwise, the onInstalled promise
 		// below would always think it was being updated.
-	({lastUsedVersion, settings: {usePinyin}} = data);
+	({lastUsedVersion} = data);
 
 		// set which icon to show in the toolbar based on the color scheme that
 		// we saw the last time we were run.  if it's changed since then, we'll
 		// need to wait for the popup or menu to open to update the icon, but
 		// most of the time the last seen scheme is a reasonable default.
 	toolbarIcon.setColorScheme(data.colorScheme);
-
-		// pass the data we got to settings so it doesn't have to get it itself
-	settings.get(data)
-		.then(settings => {
-			toolbarIcon.showTabCount(settings[k.ShowTabCount.Key]);
-			currentWindowLimitRecents = settings[k.CurrentWindowLimitRecents.Key];
-			popupWindow.hideBehavior = settings[k.HidePopupBehavior.Key];
-			navigateRecentsWithPopup = settings[k.NavigateRecentsWithPopup.Key];
-		});
 
 	return {
 		lastUsedVersion: k.Version,
