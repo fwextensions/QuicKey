@@ -5,7 +5,7 @@ const state = {
 };
 
 // TODO: this will only work when built with webpack, since ESM modules don't
-//  allow directly setting an imported variable
+//  allow directly setting an imported variable.  but it works well enough for now.
 for (const key of Object.keys(state)) {
 	Object.defineProperty(module.exports, key, {
 		get: () => state[key],

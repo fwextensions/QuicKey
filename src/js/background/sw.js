@@ -48,4 +48,8 @@ globalThis.dispatchCachedEvents = cacheEvents([
 	"windows.onFocusChanged",
 ]);
 
-importScripts("./background.js");
+try {
+	importScripts("./background.js");
+} catch (err) {
+	console.error(err);
+}

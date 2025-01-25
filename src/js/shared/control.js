@@ -31,7 +31,7 @@ async function claimWhenAvailable(
 		: unlocked("--------- LOCK AVAILABLE", globalThis.location.pathname);
 
 	return navigator.locks.request(name, async (lock) => {
-			// make sure this is set before calling the task, in that checks
+			// make sure this is set before calling the task, in case that checks
 			// whether the lock is held
 		isHeld = true;
 

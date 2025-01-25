@@ -204,35 +204,40 @@ function toggleRecentTabs(
 			fromShortcut ? "toggle-shortcut" : "toggle"));
 }
 
+function handlePopupMessage(
+	{ message, ...payload },
+	sender,
+	sendResponse)
+{
+	if (message === "executeAddTab") {
+// TODO: this seems to not get called when quickly switching between tabs without waiting for the dwell time to expire and then hitting alt-Q.  the wrong tab is at the top of the list.
+		addTab.execute();
+	} else if (message === "stopNavigatingRecents") {
+		navigatingRecents = false;
+	} else if (message === "getActiveTab") {
+		sendResponse(activeTab);
+	} else if (message === "settingChanged") {
+		const { key, value } = payload;
+
+		if (key == k.ShowTabCount.Key) {
+			toolbarIcon.showTabCount(value);
+		} else if (key == k.HidePopupBehavior.Key) {
+			popupWindow.hideBehavior = value;
+		} else if (key == k.CurrentWindowLimitRecents.Key) {
+			currentWindowLimitRecents = value;
+		} else if (key == k.NavigateRecentsWithPopup.Key) {
+			navigateRecentsWithPopup = value;
+		}
+	}
+}
+
 export default function init(
 	context)
 {
 	({ sendPopupMessage, ports } = context);
 
 	chrome.commands.onCommand.addListener(handleCommand);
-
-	context.addMessageListener(({ message, ...payload }, sender, sendResponse) => {
-		if (message === "executeAddTab") {
-// TODO: this seems to not get called when quickly switching between tabs without waiting for the dwell time to expire and then hitting alt-Q.  the wrong tab is at the top of the list.
-			addTab.execute();
-		} else if (message === "stopNavigatingRecents") {
-			navigatingRecents = false;
-		} else if (message === "getActiveTab") {
-			sendResponse(activeTab);
-		} else if (message === "settingChanged") {
-			const {key, value} = payload;
-
-			if (key == k.ShowTabCount.Key) {
-				toolbarIcon.showTabCount(value);
-			} else if (key == k.HidePopupBehavior.Key) {
-				popupWindow.hideBehavior = value;
-			} else if (key == k.CurrentWindowLimitRecents.Key) {
-				currentWindowLimitRecents = value;
-			} else if (key == k.NavigateRecentsWithPopup.Key) {
-				navigateRecentsWithPopup = value;
-			}
-		}
-	});
+	context.runtimeMessage.addListener(handlePopupMessage);
 
 		// update this flag in case the popup gets hidden or closed while the user
 		// is navigating recents by some mechanism other than releasing the modifier
@@ -246,6 +251,16 @@ export default function init(
 			currentWindowLimitRecents = settings[k.CurrentWindowLimitRecents.Key];
 			navigateRecentsWithPopup = settings[k.NavigateRecentsWithPopup.Key];
 		});
+
+	if ("onbeforeunload" in globalThis) {
+			// we're running in the popup context
+		globalThis.addEventListener("beforeunload", () => {
+console.log(">>>>>>> beforeunload removing listeners");
+			chrome.commands.onCommand.removeListener(handleCommand);
+			context.runtimeMessage.removeListener(handlePopupMessage);
+console.log(">>>>>>> beforeunload DONE");
+		});
+	}
 
 // TODO: get this to work so the startup case is handled
 //	function onCommandListener(

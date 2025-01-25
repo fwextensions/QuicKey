@@ -53,72 +53,92 @@ function handleTabActivated({
 	}
 }
 
+const APIHandlers = {
+	tabs: {
+		onActivated(event)
+		{
+			if (!startingUp) {
+				handleTabActivated(event);
+			}
+		},
+		onCreated(tab)
+		{
+			toolbarIcon.updateTabCount(1);
+
+			if (!startingUp && !tab.active && !isPopupWindow(tab)) {
+					// this tab was opened by ctrl-clicking a link or by opening
+					// all the tabs in a bookmark folder, so pass true to insert
+					// this tab in the penultimate position, which makes it the
+					// "most recent" tab
+				recentTabs.add(tab, true);
+			}
+		},
+		onRemoved(tabId, removeInfo)
+		{
+			toolbarIcon.updateTabCount(-1);
+
+				// debounce the handling of a removed tab since Chrome seems to
+				// trigger the event when shutting down, and we want to ignore
+				// those.  hopefully, Chrome will finish quitting before this
+				// handler fires.  we don't debounce the listener because we want
+				// to update the tab count immediately above.
+			handleTabRemoved(tabId, removeInfo);
+		},
+		onReplaced(newID, oldID)
+		{
+			if (!startingUp) {
+				recentTabs.replace(oldID, newID);
+			}
+		}
+	},
+	windows: {
+			// the onActivated event isn't fired when the user switches between
+			// windows, so get the active tab in this window and store it
+		onFocusChanged(windowID)
+		{
+				// check this event's windowID against the last one we saw and
+				// ignore the event if it's the same.  that happens when the popup
+				// opens and no tab is selected or the user's double-pressing.
+			if (
+				!startingUp
+				&& windowID !== chrome.windows.WINDOW_ID_NONE
+				&& windowID != lastWindowID
+			) {
+				lastWindowID = windowID;
+
+				chrome.tabs.query({ active: true, windowId: windowID })
+						// if this window doesn't have an active tab, it's likely in a
+						// different profile, so this instance of QuicKey can't access
+						// any info about it.  we'll just pass undefined to addTab(),
+						// which will ignore it.
+					.then(([tab = {}]) => handleTabActivated({
+						tabId: tab.id,
+						windowId: windowID
+					}));
+			}
+		}
+	}
+};
+
 export default function init(
 	context)
 {
 	({ sendPopupMessage, ports } = context);
 
-
-	chrome.tabs.onActivated.addListener(event => {
-		if (!startingUp) {
-			handleTabActivated(event);
+	for (const [api, handlers] of Object.entries(APIHandlers)) {
+		for (const [event, handler] of Object.entries(handlers)) {
+			chrome[api][event].addListener(handler);
 		}
-	});
+	}
 
-
-	chrome.tabs.onCreated.addListener(tab => {
-		toolbarIcon.updateTabCount(1);
-
-		if (!startingUp && !tab.active && !isPopupWindow(tab)) {
-				// this tab was opened by ctrl-clicking a link or by opening
-				// all the tabs in a bookmark folder, so pass true to insert
-				// this tab in the penultimate position, which makes it the
-				// "most recent" tab
-			recentTabs.add(tab, true);
-		}
-	});
-
-
-	chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
-		toolbarIcon.updateTabCount(-1);
-
-			// debounce the handling of a removed tab since Chrome seems to
-			// trigger the event when shutting down, and we want to ignore
-			// those.  hopefully, Chrome will finish quitting before this
-			// handler fires.  we don't debounce the listener because we want
-			// to update the tab count immediately above.
-		handleTabRemoved(tabId, removeInfo);
-	});
-
-
-		// tabs seem to get replaced with new IDs when they're auto-discarded by
-		// Chrome, so we want to update any recency data for them
-	chrome.tabs.onReplaced.addListener((newID, oldID) => {
-		if (!startingUp) {
-			recentTabs.replace(oldID, newID);
-		}
-	});
-
-
-		// the onActivated event isn't fired when the user switches between
-		// windows, so get the active tab in this window and store it
-	chrome.windows.onFocusChanged.addListener(windowID => {
-			// check this event's windowID against the last one we saw and
-			// ignore the event if it's the same.  that happens when the popup
-			// opens and no tab is selected or the user's double-pressing.
-		if (!startingUp && windowID !== chrome.windows.WINDOW_ID_NONE &&
-				windowID != lastWindowID) {
-			lastWindowID = windowID;
-
-			chrome.tabs.query({ active: true, windowId: windowID })
-					// if this window doesn't have an active tab, it's likely in a
-					// different profile, so this instance of QuicKey can't access
-					// any info about it.  we'll just pass undefined to addTab(),
-					// which will ignore it.
-				.then(([tab = {}]) => handleTabActivated({
-					tabId: tab.id,
-					windowId: windowID
-				}));
-		}
-	});
+	if ("onbeforeunload" in globalThis) {
+			// we're running in the popup context
+		globalThis.addEventListener("beforeunload", () => {
+			for (const [api, handlers] of Object.entries(APIHandlers)) {
+				for (const [event, handler] of Object.entries(handlers)) {
+					chrome[api][event].removeListener(handler);
+				}
+			}
+		});
+	}
 }
