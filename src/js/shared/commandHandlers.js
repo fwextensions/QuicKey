@@ -1,5 +1,6 @@
 import { addTab } from "@/shared/addTab";
 import { activeTab, navigateRecentsWithPopup, navigatingRecents } from "@/shared/state";
+import { addListener, removeListener } from "@/shared/controlledEvent";
 import popupWindow from "@/background/popup-window";
 import toolbarIcon from "@/background/toolbar-icon";
 import recentTabs from "@/background/recent-tabs";
@@ -232,31 +233,35 @@ function handlePopupMessage(
 }
 
 export default function init(
-	context)
+	context,
+	controlHeld)
 {
 	({ sendPopupMessage, ports } = context);
 
-	chrome.commands.onCommand.addListener(handleCommand);
-	context.runtimeMessage.addListener(handlePopupMessage);
+	addListener("commands.onCommand", handleCommand);
 
-		// update this flag in case the popup gets hidden or closed while the user
-		// is navigating recents by some mechanism other than releasing the modifier
-		// to select the currently focused tab
-	popupWindow.on(["hide", "close"], () => navigatingRecents = false);
+	if (controlHeld) {
+		context.runtimeMessage.addListener(handlePopupMessage);
 
-	settings.get()
-		.then(settings => {
-			toolbarIcon.showTabCount(settings[k.ShowTabCount.Key]);
-			popupWindow.hideBehavior = settings[k.HidePopupBehavior.Key];
-			currentWindowLimitRecents = settings[k.CurrentWindowLimitRecents.Key];
-			navigateRecentsWithPopup = settings[k.NavigateRecentsWithPopup.Key];
-		});
+			// update this flag in case the popup gets hidden or closed while the user
+			// is navigating recents by some mechanism other than releasing the modifier
+			// to select the currently focused tab
+		popupWindow.on(["hide", "close"], () => navigatingRecents = false);
+
+		settings.get()
+			.then(settings => {
+				toolbarIcon.showTabCount(settings[k.ShowTabCount.Key]);
+				popupWindow.hideBehavior = settings[k.HidePopupBehavior.Key];
+				currentWindowLimitRecents = settings[k.CurrentWindowLimitRecents.Key];
+				navigateRecentsWithPopup = settings[k.NavigateRecentsWithPopup.Key];
+			});
+	}
 
 	if ("onbeforeunload" in globalThis) {
 			// we're running in the popup context
 		globalThis.addEventListener("beforeunload", () => {
 console.log(">>>>>>> beforeunload removing listeners");
-			chrome.commands.onCommand.removeListener(handleCommand);
+			removeListener("commands.onCommand", handleCommand);
 			context.runtimeMessage.removeListener(handlePopupMessage);
 console.log(">>>>>>> beforeunload DONE");
 		});

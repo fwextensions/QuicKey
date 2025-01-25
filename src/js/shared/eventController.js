@@ -82,9 +82,12 @@ export default function initEventController({
 		runtimeMessage,
 	};
 
+	initTabEvents(innerContext, control.isHeld());
+	initCommandEvents(innerContext, control.isHeld());
+
 	control.claimWhenAvailable(() => {
-		initTabEvents(innerContext);
-		initCommandEvents(innerContext);
+		initTabEvents(innerContext, true);
+		initCommandEvents(innerContext, true);
 	});
 
 	return runtimeMessage.sendMessage;
