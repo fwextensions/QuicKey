@@ -5,12 +5,10 @@ import initCommandEvents from "@/shared/commandHandlers";
 class MessageTarget extends EventTarget {
 	static Name = "RuntimeMessage";
 
-	constructor(
-		useLocalMessaging = false)
+	constructor()
 	{
 		super();
 
-		this.useLocalMessaging = useLocalMessaging;
 		this.listeners = new Map();
 	}
 
@@ -50,13 +48,15 @@ class MessageTarget extends EventTarget {
 
 	sendMessage = (
 		message,
-		payload = {}) =>
+		payload = {},
+		local) =>
 	{
 		const messageBody = { message, ...payload };
 
-		if (this.useLocalMessaging && control.isHeld()) {
-				// when the popup has control and it calls this function, we need
-				// to trigger an event that mimics the runtime.onMessage event
+		if (control.isHeld() && local) {
+				// when the popup has control and it wants to send the message
+				// locally, we need to trigger an event that mimics the
+				// runtime.onMessage event
 			const { promise, resolve } = Promise.withResolvers();
 			const detail = {
 				message: messageBody,
@@ -72,22 +72,24 @@ class MessageTarget extends EventTarget {
 	}
 }
 
-export default function initEventController({
-	useLocalMessaging = false,
-	...context })
+export default function initEventController(
+	context)
 {
-	const runtimeMessage = new MessageTarget(useLocalMessaging);
+	const runtimeMessage = new MessageTarget();
 	const innerContext = {
 		...context,
 		runtimeMessage,
 	};
-
-	initTabEvents(innerContext, control.isHeld());
-	initCommandEvents(innerContext, control.isHeld());
+	const initFuncs = [
+		initTabEvents,
+		initCommandEvents
+	];
+		// initFuncs can optionally return a function that will be called after
+		// this process takes control
+	const controlHeldFuncs = initFuncs.map((func) => func(innerContext));
 
 	control.claimWhenAvailable(() => {
-		initTabEvents(innerContext, true);
-		initCommandEvents(innerContext, true);
+		controlHeldFuncs.forEach((func) => typeof func === "function" && func(innerContext));
 	});
 
 	return runtimeMessage.sendMessage;

@@ -6,18 +6,15 @@ const controlledListeners = new Map();
 const getEvent = (name) => name.split(".").reduce((res, key) => res[key], chrome);
 
 function createControlledListener(
-	listener,
-	name)
+	listener)
 {
 	if (controlledListeners.has(listener)) {
 		return controlledListeners.get(listener);
 	} else {
 		const controlledListener = (...eventArgs) => {
 			if (control.isHeld()) {
-//console.log("========== calling listener", name);
 				return listener(...eventArgs);
 			}
-//console.log("========== IGNORING listener", name);
 		};
 
 		controlledListeners.set(listener, controlledListener);
@@ -30,7 +27,7 @@ function addListener(
 	name,
 	listener)
 {
-	getEvent(name).addListener(createControlledListener(listener, name));
+	getEvent(name).addListener(createControlledListener(listener));
 }
 
 function removeListener(
@@ -45,28 +42,34 @@ function removeListener(
 	}
 }
 
-function addListeners(
-	listeners)
+function processListeners(
+	listeners,
+	func)
 {
-	if (listeners && typeof listeners === "object") {
+	if (!listeners) {
+		return;
+	}
+
+	if (typeof listeners === "object") {
 		listeners = Object.entries(listeners);
 	}
 
 	for (const [name, listener] of listeners) {
-		addListener(name, listener);
+		func(name, listener);
 	}
+}
+
+
+function addListeners(
+	listeners)
+{
+	processListeners(listeners, addListener);
 }
 
 function removeListeners(
 	listeners)
 {
-	if (listeners && typeof listeners === "object") {
-		listeners = Object.entries(listeners);
-	}
-
-	for (const [name, listener] of listeners) {
-		removeListener(name, listener);
-	}
+	processListeners(listeners, removeListener);
 }
 
 export {

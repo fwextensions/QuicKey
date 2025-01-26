@@ -151,8 +151,7 @@ chrome.runtime.onConnect.addListener(port => {
 });
 
 
-chrome.runtime.onMessage.addListener(({message, ...payload}, sender, sendResponse) => {
-// TODO: this won't work when the popup has control and the background isn't loaded
+chrome.runtime.onMessage.addListener(({message, ...payload}) => {
 	if (message === "reopenPopup") {
 		(async () => {
 			const currentActiveTab = activeTab;

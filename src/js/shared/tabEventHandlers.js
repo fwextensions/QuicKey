@@ -121,11 +121,4 @@ export default function init(
 	({ sendPopupMessage, ports } = context);
 
 	addListeners(EventHandlers);
-
-	if ("onbeforeunload" in globalThis) {
-			// we're running in the popup context
-		globalThis.addEventListener("beforeunload", () => {
-			removeListeners(EventHandlers);
-		});
-	}
 }

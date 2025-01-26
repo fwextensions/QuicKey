@@ -121,9 +121,12 @@ export default class App extends React.Component {
 	popupH = 0;
 	nextFrameRequestID = 0;
 	port = null;
+	sendRuntimeMessage = (...args) => console.error("ERROR: default sendRuntimeMessage() called", args);
 
 
-	constructor(props, context)
+	constructor(
+		props,
+		context)
 	{
 		super(props, context);
 
@@ -232,16 +235,19 @@ export default class App extends React.Component {
 
 				// this sendMessage function will trigger a local event when the
 				// popup has control or call runtime.sendMessage() when the
-				// background has control, since we're setting useLocalMessaging
-				// to true
-			this.sendMessage = initEventController({
+				// background has control
+			this.sendRuntimeMessage = initEventController({
 					// this is used in eventController.js to send messages to the
 					// popup.  we don't return the promise from this.onMessage()
 					// because any return value from this function is interpreted
 					// by openPopupWindow() as meaning there was an error.
-				sendPopupMessage: (message, payload = {}) => { this.onMessage({ message, ...payload }); },
+				sendPopupMessage: (
+					message,
+					payload = {}) =>
+				{
+					this.onMessage({ message, ...payload });
+				},
 				ports: { popup: {} },
-				useLocalMessaging: true,
 			});
 		}
 
@@ -1024,7 +1030,10 @@ export default class App extends React.Component {
 	{
 			// ignore the blur event triggered by closing the popup
 		this.ignoreNextBlur = true;
-		this.sendMessage("reopenPopup", { focusSearch: this.openedForSearch });
+			// pass false so that this message is sent to the background rather
+			// than being short-circuited to our onMessage handler, since the
+			// background needs to manage the closing and reopening of the popup
+		this.sendMessage("reopenPopup", { focusSearch: this.openedForSearch }, false);
 	}
 
 
@@ -1053,9 +1062,12 @@ export default class App extends React.Component {
 
 
 	sendMessage(
-		...args)
+		message,
+		payload,
+		local = true)
 	{
-		console.error("ERROR: default sendMessage() called", args);
+			// return the result so that our caller can await it
+		return this.sendRuntimeMessage(message, payload, local);
 	}
 
 

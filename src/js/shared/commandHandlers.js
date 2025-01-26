@@ -233,14 +233,13 @@ function handlePopupMessage(
 }
 
 export default function init(
-	context,
-	controlHeld)
+	context)
 {
 	({ sendPopupMessage, ports } = context);
 
 	addListener("commands.onCommand", handleCommand);
 
-	if (controlHeld) {
+	return (context) => {
 		context.runtimeMessage.addListener(handlePopupMessage);
 
 			// update this flag in case the popup gets hidden or closed while the user
@@ -255,17 +254,7 @@ export default function init(
 				currentWindowLimitRecents = settings[k.CurrentWindowLimitRecents.Key];
 				navigateRecentsWithPopup = settings[k.NavigateRecentsWithPopup.Key];
 			});
-	}
-
-	if ("onbeforeunload" in globalThis) {
-			// we're running in the popup context
-		globalThis.addEventListener("beforeunload", () => {
-console.log(">>>>>>> beforeunload removing listeners");
-			removeListener("commands.onCommand", handleCommand);
-			context.runtimeMessage.removeListener(handlePopupMessage);
-console.log(">>>>>>> beforeunload DONE");
-		});
-	}
+	};
 
 // TODO: get this to work so the startup case is handled
 //	function onCommandListener(
