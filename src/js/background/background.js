@@ -10,7 +10,7 @@ import { debounce } from "@/background/debounce";
 import * as k from "@/background/constants";
 import { isPopupWindow } from "@/background/popup-utils";
 import initEventController from "@/shared/eventController";
-import { activeTab } from "@/shared/state";
+import { activeTab, startingUp } from "@/shared/state";
 
 if (globalThis.DEBUG) {
 	globalThis.printTabs = recentTabs.print;
@@ -25,7 +25,7 @@ const tracker = trackers.background;
 
 
 const ports = {};
-let startingUp = false;
+//let startingUp = false;
 let installedPromise = new Promise(resolve => {
 	chrome.runtime.onInstalled.addListener(details => resolve(details));
 });
@@ -55,11 +55,12 @@ console.error("==== sendPopupMessage", error.message);
 });
 
 
+// TODO: this event doesn't seem to get triggered, or isn't getting cached in the sw.js
 chrome.runtime.onStartup.addListener(() => {
 	const onActivated = debounce(() => {
 		chrome.tabs.onActivated.removeListener(onActivated);
 
-DEBUG && console.log("==== last onActivated");
+DEBUG && console.log("==== last onActivated", startingUp);
 
 			// we only need to call updateAll() if Chrome is still starting up,
 			// since startingUp will be set to false when the popup opens,
@@ -77,6 +78,8 @@ DEBUG && console.log("===== updateAll done");
 	}, TabActivatedOnStartupDelay);
 
 DEBUG && console.log("== onStartup");
+
+globalThis.START = Date.now();
 
 	startingUp = true;
 	chrome.tabs.onActivated.addListener(onActivated);
@@ -107,6 +110,8 @@ chrome.runtime.onConnect.addListener(port => {
 
 	const connectTime = Date.now();
 	let closedByEsc = false;
+
+DEBUG && console.log("== onConnect", port.name, startingUp);
 
 		// in newer versions of Chrome, reopened tabs don't trigger an
 		// onActivated event, so the handler set in onStartup won't fire

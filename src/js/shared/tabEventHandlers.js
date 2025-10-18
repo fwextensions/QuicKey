@@ -1,5 +1,5 @@
 import { addTab } from "@/shared/addTab";
-import { navigatingRecents } from "@/shared/state";
+import { startingUp, navigatingRecents } from "@/shared/state";
 import { addListeners, removeListeners } from "@/shared/controlledEvent";
 import toolbarIcon from "@/background/toolbar-icon";
 import recentTabs from "@/background/recent-tabs";
@@ -11,7 +11,7 @@ import storage from "@/background/quickey-storage";
 const TabRemovedDelay = 1000;
 
 // TODO: handle the startup event so this is set correctly, add to state.js
-let startingUp = false;
+//let startingUp = false;
 let ports = {};
 let lastWindowID;
 let sendPopupMessage;
@@ -43,7 +43,7 @@ function handleTabActivated({
 					// recent one in tabIDs, that means it was just
 					// reactivated after the popup was hidden, so we don't
 					// need to tell the popup to re-render in that case
-				if (tabId !== tabIDs.slice(-1)[0]) {
+				if (tabId !== tabIDs.at(-1)) {
 //console.log("--- sending tabActivated", tabId, "old", tabIDs.slice(-1)[0]);
 					sendPopupMessage("tabActivated");
 				} else {

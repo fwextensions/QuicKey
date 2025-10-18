@@ -1,4 +1,5 @@
 const state = {
+	startingUp: false,
 	activeTab: null,
 	navigateRecentsWithPopup: false,
 	navigatingRecents: false,
