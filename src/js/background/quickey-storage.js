@@ -33,7 +33,7 @@ function addDefaultSetting(
 	...settings)
 {
 	return async data => {
-		const defaults = (await DefaultData).settings;
+		const defaults = (await getDefaultDataPromise()).settings;
 
 		settings.forEach(setting => {
 			const {Key} = setting;
@@ -117,61 +117,81 @@ const Updaters = {
 	// once we go over 9, the order is correct.
 const CurrentVersion = increment(Object.keys(Updaters).sort((a, b) => a - b).pop());
 const DefaultSettings = getDefaultSettings();
-const DefaultData = Promise.all([
-		chrome.windows.getAll(),
-		chrome.tabs.query({})
-	])
-	.then(([windows, tabs]) => {
-		let hanPattern;
+let defaultDataPromise;
 
-			// our minimum Chrome version used to be 55, but the Unicode
-			// property support was added in 64, so this may have thrown in
-			// older browsers, but the try/catch isn't really needed now
-		try { hanPattern = /\p{Script=Han}/u; } catch (e) {}
 
-		if (k.Language.indexOf("zh") == 0) {
-				// the browser is set to Chinese, so default this on
-			DefaultSettings[k.UsePinyin.Key] = true;
-		} else if (hanPattern) {
-				// default usePinyin to true if any of the currently
-				// open tabs have Chinese characters in their title/URL
-			for (let i = 0, len = tabs.length; i < len; i++) {
-				const {title, url} = tabs[i];
+function createDefaultData()
+{
+	return {
+		installTime: Date.now(),
+		lastShortcutTime: 0,
+		lastStartupTime: 0,
+		lastUpdateTime: 0,
+		lastUsedVersion: "",
+			// set this to the current storage version so that we
+			// don't show the red badge on a new install
+		lastSeenOptionsVersion: CurrentVersion,
+		lastQuery: "",
+		previousTabIndex: -1,
+		popupAdjustmentWidth: 0,
+		popupAdjustmentHeight: 0,
+		colorScheme: "light",
+		settings: DefaultSettings,
+		tabIDs: [],
+		tabsByID: {}
+	};
+}
 
-					// decode the URL, since Chinese characters in tab
-					// URLs seem to get encoded when returned by the API
-				if (hanPattern.test(title) || hanPattern.test(decode(url))) {
+
+	// tuning the default settings requires querying all the open windows and
+	// tabs, which can be slow when there are hundreds of tabs.  the defaults
+	// are only needed on a new install or a storage version update, so do the
+	// queries lazily, instead of on every startup of the worker or popup.
+function getDefaultDataPromise()
+{
+	if (!defaultDataPromise) {
+		defaultDataPromise = Promise.all([
+				chrome.windows.getAll(),
+				chrome.tabs.query({})
+			])
+			.then(([windows, tabs]) => {
+				let hanPattern;
+
+					// our minimum Chrome version used to be 55, but the Unicode
+					// property support was added in 64, so this may have thrown in
+					// older browsers, but the try/catch isn't really needed now
+				try { hanPattern = /\p{Script=Han}/u; } catch (e) {}
+
+				if (k.Language.indexOf("zh") == 0) {
+						// the browser is set to Chinese, so default this on
 					DefaultSettings[k.UsePinyin.Key] = true;
+				} else if (hanPattern) {
+						// default usePinyin to true if any of the currently
+						// open tabs have Chinese characters in their title/URL
+					for (let i = 0, len = tabs.length; i < len; i++) {
+						const {title, url} = tabs[i];
 
-					break;
+							// decode the URL, since Chinese characters in tab
+							// URLs seem to get encoded when returned by the API
+						if (hanPattern.test(title) || hanPattern.test(decode(url))) {
+							DefaultSettings[k.UsePinyin.Key] = true;
+
+							break;
+						}
+					}
 				}
-			}
-		}
 
-			// mark tabs in other windows if there are 3 or fewer windows
-			// open, as someone with lots of open windows is probably
-			// jumping between them frequently, so the icon is less relevant
-		DefaultSettings[k.MarkTabsInOtherWindows.Key] = windows.length < 4;
+					// mark tabs in other windows if there are 3 or fewer windows
+					// open, as someone with lots of open windows is probably
+					// jumping between them frequently, so the icon is less relevant
+				DefaultSettings[k.MarkTabsInOtherWindows.Key] = windows.length < 4;
 
-		return {
-			installTime: Date.now(),
-			lastShortcutTime: 0,
-			lastStartupTime: 0,
-			lastUpdateTime: 0,
-			lastUsedVersion: "",
-				// set this to the current storage version so that we
-				// don't show the red badge on a new install
-			lastSeenOptionsVersion: CurrentVersion,
-			lastQuery: "",
-			previousTabIndex: -1,
-			popupAdjustmentWidth: 0,
-			popupAdjustmentHeight: 0,
-			colorScheme: "light",
-			settings: DefaultSettings,
-			tabIDs: [],
-			tabsByID: {}
-		};
-	});
+				return createDefaultData();
+			});
+	}
+
+	return defaultDataPromise;
+}
 
 
 export default createStorage({
@@ -186,7 +206,7 @@ export default createStorage({
 			// only the currently active tab is "recent" as far as we know
 		const tabs = await chrome.tabs.query({ active: true, currentWindow: true, windowType: "normal" });
 		const tab = tabs && tabs[0];
-		const data = JSON.parse(JSON.stringify(await DefaultData));
+		const data = JSON.parse(JSON.stringify(await getDefaultDataPromise()));
 
 		if (tab) {
 				// store now as the last visit of the current tab so
@@ -207,7 +227,10 @@ export default createStorage({
 	validateUpdate: async function(
 		data)
 	{
-		const defaults = await DefaultData;
+			// only the shape of the defaults matters for validation, so build
+			// them synchronously, rather than paying for the windows and tabs
+			// queries in getDefaultDataPromise() on every startup
+		const defaults = createDefaultData();
 
 			// first check the top-level keys, but don't check sub-objects
 			// because we have the tabsByID hash, and we don't care what
