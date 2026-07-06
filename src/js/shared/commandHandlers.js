@@ -27,7 +27,6 @@ let sendPopupMessage;
 function handleCommand(
 	command)
 {
-console.log("===== handleCommand from control", globalThis.location.pathname, command);
 	switch (command) {
 		case OpenPopupCommand:
 		case FocusPopupCommand:
@@ -98,7 +97,6 @@ async function openPopupWindow(
 		// the popup is open and focused, so use the shortcut to move the
 		// selection DOWN
 	if (sendPopupMessage("modifySelected", { direction: 1 })) {
-console.error("===== openPopupWindow modifySelected", globalThis.location.pathname);
 			// an error was returned from sending the message, so close
 			// the popup
 		return popupWindow.close();

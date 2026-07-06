@@ -1,21 +1,32 @@
 const LockName = "__control__";
 
-const logColor = (color) => (highlight, ...rest) => console.log("%c" + highlight, `background: ${color}`, ...rest);
-const orange = logColor("orange");
-const locked = logColor("pink");
-const unlocked = logColor("lightgreen");
 let isHeld = false;
+const heldCallbacks = [];
 
-async function isLockHeld(
-	lockName)
+function notifyHeld()
 {
-	const locks = await navigator.locks.query();
-console.log("--------- locks", globalThis.location.pathname, locks);
-
-	return locks.held.some(({ name }) => name === lockName);
+	for (const callback of heldCallbacks) {
+		try {
+			callback();
+		} catch (e) {
+			console.error(e);
+		}
+	}
 }
 
-async function claimWhenAvailable(
+	// register a callback that will be fired when this context takes control.
+	// if control is already held, the callback fires immediately.
+function onHeld(
+	callback)
+{
+	if (isHeld) {
+		callback();
+	} else {
+		heldCallbacks.push(callback);
+	}
+}
+
+function claimWhenAvailable(
 	name,
 	task)
 {
@@ -24,24 +35,23 @@ async function claimWhenAvailable(
 		name = LockName;
 	}
 
-	const lockHeld = await isLockHeld(name);
-
-	lockHeld
-		? locked("--------- LOCK HELD", globalThis.location.pathname)
-		: unlocked("--------- LOCK AVAILABLE", globalThis.location.pathname);
-
-	return navigator.locks.request(name, async (lock) => {
+	return navigator.locks.request(name, (lock) => {
 			// make sure this is set before calling the task, in case that checks
 			// whether the lock is held
 		isHeld = true;
 
-orange("--------- GOT LOCK", globalThis.location.pathname, lock?.mode, lock?.name);
 			// don't put try/catch around this, since we want to release the lock
 			// if something goes wrong
-		const result = await task();
+		const result = task(lock);
+
+			// fire the onHeld callbacks after the task, so anything the task
+			// sets up is available when queued events are replayed
+		notifyHeld();
 
 		if (typeof result?.then === "function") {
-			return result;
+				// the task returned a promise, so it controls how long this
+				// context keeps the lock.  clear isHeld when it settles.
+			return result.finally(() => isHeld = false);
 		}
 
 			// the caller wants to keep control until the process exits
@@ -51,5 +61,6 @@ orange("--------- GOT LOCK", globalThis.location.pathname, lock?.mode, lock?.nam
 
 export default {
 	claimWhenAvailable,
+	onHeld,
 	isHeld: () => isHeld
 }
