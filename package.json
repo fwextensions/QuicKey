@@ -13,7 +13,11 @@
     "build:popup": "webpack --env production --env buildPopup",
     "build:prod": "webpack --env production",
     "build": "npm run build:prod",
-    "dev": "webpack --watch"
+    "dev": "webpack --watch",
+    "test": "vitest run unit",
+    "test:regression": "vitest run regression",
+    "test:all": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "fast-memoize": "^2.5.2",
@@ -39,6 +43,7 @@
     "webpack-bundle-analyzer": "^4.10.2",
     "webpack-cli": "^5.1.4",
     "webpack-config-utils": "^2.3.1",
+    "vitest": "^2.1.9",
     "zip-webpack-plugin": "^4.0.1"
   }
 }
