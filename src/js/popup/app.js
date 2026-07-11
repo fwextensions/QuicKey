@@ -1083,8 +1083,10 @@ export default class App extends React.Component {
 		const {selected} = this.state;
 
 			// if we're getting called because the popup itself is being
-			// closed, ignore the event, since there's no reason to load tabs
-		if (tabID !== this.popupTabID) {
+			// closed, ignore the event, since there's no reason to load tabs.
+			// also ignore it while the window is hidden, since showWindow()
+			// reloads the tabs when it's shown again.
+		if (tabID !== this.popupTabID && this.visible) {
 				// refresh the results list so that the newly closed tab
 				// will show in the closed list, and if there are multiple
 				// tabs with the same name, their index numbers will update.
@@ -1219,7 +1221,10 @@ export default class App extends React.Component {
 				break;
 
 			case "tabActivated":
-				if (!this.navigatingRecents) {
+					// ignore the event when the window is hidden, since
+					// showWindow() reloads the tabs anyway, and reloading on
+					// every tab switch while hidden wastes a lot of work
+				if (!this.navigatingRecents && this.visible) {
 						// loadTabs() calls loadPromisedItems() with a forced
 						// reload, so it'll trigger a render with the new items
 					this.loadTabs();

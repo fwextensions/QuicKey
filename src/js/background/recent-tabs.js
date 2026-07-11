@@ -342,11 +342,11 @@ const t = performance.now();
 					tabs = tabs.concat(uniqueClosedTabs);
 				}
 
-					// save off the updated recent data.  we don't call
-					// storage.set() for getAll() so that the popup doesn't
-					// have to wait for the data to get stored before it's
-					// returned, to make the recents menu render faster.
-				storage.set(() => { tabsByID });
+					// save off the updated recent data.  we don't await this
+					// storage.set() so that the popup doesn't have to wait
+					// for the data to get stored before it's returned, to
+					// make the recents menu render faster.
+				storage.set(() => ({ tabsByID }));
 
 DEBUG && console.log("getAll took", performance.now() - t, "ms");
 				return tabs;

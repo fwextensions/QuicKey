@@ -227,9 +227,11 @@ storage.set(data => {
 		// most of the time the last seen scheme is a reasonable default.
 	toolbarIcon.setColorScheme(data.colorScheme);
 
-	return {
-		lastUsedVersion: k.Version,
-	};
+		// returning undefined tells storage.set() to skip writing, so we
+		// only pay for a full storage write when the version has changed
+	return lastUsedVersion !== k.Version
+		? { lastUsedVersion: k.Version }
+		: undefined;
 })
 	.then(() => {
 		tracker.pageview();

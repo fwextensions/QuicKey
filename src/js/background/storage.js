@@ -67,7 +67,8 @@ export function createStorage({
 	async function update(
 		storage)
 	{
-		let updated = false;
+		const originalVersion = storage.version;
+		let valid = false;
 		let updater = updaters[storage.version];
 
 		while (updater) {
@@ -82,12 +83,19 @@ export function createStorage({
 		}
 
 		if (storage.version === version) {
-			updated = await validateUpdate(storage.data);
+			valid = await validateUpdate(storage.data);
 		}
 
-		if (updated) {
-				// save the updated data and version to storage
-			return saveWithVersion(storage.data);
+		if (valid) {
+			if (storage.version !== originalVersion) {
+					// save the updated data and version to storage
+				return saveWithVersion(storage.data);
+			}
+
+				// the stored data is already at the current version, so don't
+				// rewrite the whole storage, which would otherwise happen on
+				// every startup of the service worker or popup
+			return storage.data;
 		} else {
 			const failure = storage.version === version ?
 				"failed-validation" : "failed-update";
@@ -138,7 +146,9 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 		saveResult)
 	{
 		return navigator.locks.request(lockName, async () => {
-			const { data } = await chrome.storage.local.get(null);
+				// only get the data key, since that's all the tasks operate
+				// on, so we don't deserialize the other keys on every call
+			const { data } = await chrome.storage.local.get("data");
 			let result;
 
 			try {
