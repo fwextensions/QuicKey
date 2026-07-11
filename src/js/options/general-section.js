@@ -2,7 +2,7 @@ import React, {useContext} from "react";
 import {Checkbox} from "./controls";
 import {Section} from "./sections";
 import NewSetting from "./new-setting";
-import {HistoryIcon, WindowIcon, IncognitoIcon, InPrivateIcon} from "@/common/icons";
+import {HistoryIcon, WindowIcon, IncognitoIcon} from "@/common/icons";
 import {OptionsContext} from "./options-provider";
 import * as k from "@/background/constants";
 

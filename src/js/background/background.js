@@ -10,7 +10,7 @@ import { debounce } from "@/background/debounce";
 import * as k from "@/background/constants";
 import { isPopupWindow } from "@/background/popup-utils";
 import initEventController from "@/shared/eventController";
-import { activeTab, startingUp } from "@/shared/state";
+import state from "@/shared/state";
 
 if (globalThis.DEBUG) {
 	globalThis.printTabs = recentTabs.print;
@@ -60,19 +60,19 @@ chrome.runtime.onStartup.addListener(() => {
 	const onActivated = debounce(() => {
 		chrome.tabs.onActivated.removeListener(onActivated);
 
-DEBUG && console.log("==== last onActivated", startingUp);
+DEBUG && console.log("==== last onActivated", state.startingUp);
 
 			// we only need to call updateAll() if Chrome is still starting up,
 			// since startingUp will be set to false when the popup opens,
 			// which will also update all the tabs
-		if (startingUp) {
+		if (state.startingUp) {
 				// the stored recent tab data will be out of date, since the tabs
 				// will get new IDs when the app reloads each one
 			return recentTabs.updateAll()
 				.then(() => {
 DEBUG && console.log("===== updateAll done");
 
-					startingUp = false;
+					state.startingUp = false;
 				});
 		}
 	}, TabActivatedOnStartupDelay);
@@ -81,7 +81,7 @@ DEBUG && console.log("== onStartup");
 
 globalThis.START = Date.now();
 
-	startingUp = true;
+	state.startingUp = true;
 	chrome.tabs.onActivated.addListener(onActivated);
 });
 
@@ -111,13 +111,13 @@ chrome.runtime.onConnect.addListener(port => {
 	const connectTime = Date.now();
 	let closedByEsc = false;
 
-DEBUG && console.log("== onConnect", port.name, startingUp);
+DEBUG && console.log("== onConnect", port.name, state.startingUp);
 
 		// in newer versions of Chrome, reopened tabs don't trigger an
 		// onActivated event, so the handler set in onStartup won't fire
 		// until the first tab is manually activated.  set startingUp to
 		// false here in case the user opens the menu before that happens.
-	startingUp = false;
+	state.startingUp = false;
 	ports[port.name] = port;
 
 	if (port.name == "menu") {
@@ -132,7 +132,7 @@ DEBUG && console.log("== onConnect", port.name, startingUp);
 
 	port.onDisconnect.addListener(port => {
 		ports[port.name] = null;
-		activeTab = null;
+		state.activeTab = null;
 //console.log("---- background: onDisconnect", port.name);
 
 		if (port.name == "popup") {
@@ -159,7 +159,7 @@ DEBUG && console.log("== onConnect", port.name, startingUp);
 chrome.runtime.onMessage.addListener(({message, ...payload}) => {
 	if (message === "reopenPopup") {
 		(async () => {
-			const currentActiveTab = activeTab;
+			const currentActiveTab = state.activeTab;
 
 				// instead of closing the popup and then calling
 				// openPopupWindow() to reopen it, we just call create(),
@@ -171,7 +171,7 @@ chrome.runtime.onMessage.addListener(({message, ...payload}) => {
 
 				// restore activeTab, which gets cleared when the port from
 				// the popup is closed
-			activeTab = currentActiveTab;
+			state.activeTab = currentActiveTab;
 		})();
 	}
 });

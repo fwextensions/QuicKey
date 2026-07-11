@@ -1,3 +1,6 @@
+	// this must be the first import, so its error listeners are added before
+	// any other module code runs (it was a separate script tag under webpack)
+import "@/lib/error-queue";
 import "@/lib/error-handler";
 import React from "react";
 import {createRoot} from "react-dom/client";
