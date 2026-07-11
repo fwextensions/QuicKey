@@ -24,7 +24,7 @@ async function claimWhenAvailable(
 		name = LockName;
 	}
 
-	const lockHeld = await isLockHeld(LockName);
+	const lockHeld = await isLockHeld(name);
 
 	lockHeld
 		? locked("--------- LOCK HELD", globalThis.location.pathname)
