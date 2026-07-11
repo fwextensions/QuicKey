@@ -116,6 +116,28 @@ export function createLocksFake()
 
 			return Promise.resolve({ held, pending });
 		},
+
+			// test helper (not part of the real API): simulate the holder of a
+			// lock having its context destroyed — e.g. the service worker being
+			// killed while the popup is queued behind it.  the browser revokes
+			// the lock and grants it to the next waiter, which is how control is
+			// actually handed off between contexts (a task can't voluntarily
+			// release the __control__ lock on the current dev code).
+		_simulateContextLoss(
+			name)
+		{
+			const lock = getLock(name);
+
+			if (lock.held) {
+				const entry = lock.held;
+
+				lock.held = null;
+					// the destroyed context's request promise is moot, but settle
+					// it so nothing awaits it forever, then grant the next waiter
+				entry.resolve(undefined);
+				Promise.resolve().then(() => grantNext(name));
+			}
+		},
 	};
 
 	return locks;

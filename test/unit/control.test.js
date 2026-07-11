@@ -61,4 +61,51 @@ describe("control", () => {
 
 		expect(task2).not.toHaveBeenCalled();
 	});
+
+		// the core of the worker/popup design: two separate contexts each have
+		// their own control module (independent isHeld state) but share the
+		// browser's single lock manager.  the worker takes control first; the
+		// popup opens and queues behind it; when the worker is killed, the popup
+		// must inherit control and run its setup task.  we model the two contexts
+		// by importing control twice with a module reset in between, so each gets
+		// its own instance, and simulate the worker dying with the locks fake's
+		// _simulateContextLoss() (a task can't voluntarily release the lock on
+		// the current code, so context death is the only hand-off path).
+	it("hands control to a queued context when the current holder's context is lost", async () => {
+		vi.resetModules();
+		const workerControl = (await import("@/shared/control")).default;
+
+		vi.resetModules();
+		const popupControl = (await import("@/shared/control")).default;
+
+			// sanity check that the two imports are genuinely independent
+		expect(workerControl).not.toBe(popupControl);
+
+		const lockName = "control-test-handoff";
+		const workerTask = vi.fn(() => {});
+		const popupTask = vi.fn(() => {});
+
+			// the worker claims control at startup and holds it
+		workerControl.claimWhenAvailable(lockName, workerTask);
+		await flush();
+
+		expect(workerControl.isHeld()).toBe(true);
+		expect(workerTask).toHaveBeenCalledTimes(1);
+
+			// the popup opens and queues behind the worker; it does not yet have
+			// control, and its setup task must not run
+		popupControl.claimWhenAvailable(lockName, popupTask);
+		await flush();
+
+		expect(popupControl.isHeld()).toBe(false);
+		expect(popupTask).not.toHaveBeenCalled();
+
+			// the service worker is killed, so the browser revokes its lock
+		navigator.locks._simulateContextLoss(lockName);
+		await flush();
+
+			// the popup now holds control and runs its setup task
+		expect(popupControl.isHeld()).toBe(true);
+		expect(popupTask).toHaveBeenCalledTimes(1);
+	});
 });
