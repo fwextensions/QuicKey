@@ -1,5 +1,5 @@
 import { addTab } from "@/shared/addTab";
-import { startingUp, navigatingRecents } from "@/shared/state";
+import state from "@/shared/state";
 import { addListeners, removeListeners } from "@/shared/controlledEvent";
 import toolbarIcon from "@/background/toolbar-icon";
 import recentTabs from "@/background/recent-tabs";
@@ -17,7 +17,7 @@ let lastWindowID;
 let sendPopupMessage;
 
 const handleTabRemoved = debounce(
-	(tabId, removeInfo) => !startingUp && recentTabs.remove(tabId, removeInfo),
+	(tabId, removeInfo) => !state.startingUp && recentTabs.remove(tabId, removeInfo),
 	TabRemovedDelay
 );
 
@@ -34,7 +34,7 @@ function handleTabActivated({
 		// valid, since we may be getting called from an event that was triggered
 		// by a window in another profile, in which case we can't access any
 		// info about the tabs there.
-	if (Number.isInteger(tabId) && tabId !== popupWindow.tabID && !navigatingRecents) {
+	if (Number.isInteger(tabId) && tabId !== popupWindow.tabID && !state.navigatingRecents) {
 		addTab(tabId);
 
 		if (ports.popup) {
@@ -58,7 +58,7 @@ const EventHandlers = {
 	"tabs.onActivated": (event) =>
 	{
 			// if this isn't the startup event, handle the tab activation
-		if (!startingUp) {
+		if (!state.startingUp) {
 			handleTabActivated(event);
 		}
 	},
@@ -68,7 +68,7 @@ const EventHandlers = {
 
 			// if this isn't the startup event and the tab isn't active and isn't a popup window,
 			// add it to the recent tabs list
-		if (!startingUp && !tab.active && !isPopupWindow(tab)) {
+		if (!state.startingUp && !tab.active && !isPopupWindow(tab)) {
 			recentTabs.add(tab, true);
 		}
 	},
@@ -86,7 +86,7 @@ const EventHandlers = {
 	"tabs.onReplaced": (newID, oldID) =>
 	{
 			// if this isn't the startup event, replace the old tab ID with the new one in the recent tabs list
-		if (!startingUp) {
+		if (!state.startingUp) {
 			recentTabs.replace(oldID, newID);
 		}
 	},
@@ -96,7 +96,7 @@ const EventHandlers = {
 			// ignore the event if it's the same.  that happens when the popup
 			// opens and no tab is selected or the user's double-pressing.
 		if (
-			!startingUp
+			!state.startingUp
 			&& windowID !== chrome.windows.WINDOW_ID_NONE
 			&& windowID != lastWindowID
 		) {

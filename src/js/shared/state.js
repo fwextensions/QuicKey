@@ -1,17 +1,9 @@
-const state = {
+	// mutable state shared between the background modules.  it's exported as
+	// a single object whose properties are read and set by the consumers,
+	// since ESM doesn't allow imported bindings to be assigned directly.
+export default {
 	startingUp: false,
 	activeTab: null,
 	navigateRecentsWithPopup: false,
 	navigatingRecents: false,
 };
-
-// TODO: this will only work when built with webpack, since ESM modules don't
-//  allow directly setting an imported variable.  but it works well enough for now.
-for (const key of Object.keys(state)) {
-	Object.defineProperty(module.exports, key, {
-		get: () => state[key],
-		set: value => (state[key] = value),
-		enumerable: true,
-		configurable: false,
-	});
-}

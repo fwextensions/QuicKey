@@ -1,5 +1,5 @@
 import { addTab } from "@/shared/addTab";
-import { activeTab, navigateRecentsWithPopup, navigatingRecents } from "@/shared/state";
+import state from "@/shared/state";
 import { addListener, removeListener } from "@/shared/controlledEvent";
 import popupWindow from "@/background/popup-window";
 import toolbarIcon from "@/background/toolbar-icon";
@@ -72,26 +72,26 @@ async function openPopupWindow(
 	});
 
 	if (!(await popupWindow.isOpen())) {
-		activeTab = currentActiveTab;
+		state.activeTab = currentActiveTab;
 
 			// the popup window isn't open, so create a new one.  tell it whether
 			// to focus the search box or navigate recents.
 		return popupWindow.create(
-			activeTab,
-			{ focusSearch, navigatingRecents },
-			navigatingRecents ? "right-center" : "center-center"
+			state.activeTab,
+			{ focusSearch, navigatingRecents: state.navigatingRecents },
+			state.navigatingRecents ? "right-center" : "center-center"
 		);
 	}
 
 	if (!isPopupWindow(currentActiveTab)) {
-		activeTab = currentActiveTab;
+		state.activeTab = currentActiveTab;
 
 			// the popup window is open but not focused, so tell it to show
 			// itself centered on the current browser window, and whether to
 			// select the first item.  if there's no activeTab (such as when
 			// the shortcut is pressed and a devtools window is in the
 			// foreground), the popup will appear aligned to the screen.
-		return sendPopupMessage("showWindow", { focusSearch, activeTab });
+		return sendPopupMessage("showWindow", { focusSearch, activeTab: state.activeTab });
 	}
 
 		// the popup is open and focused, so use the shortcut to move the
@@ -111,7 +111,7 @@ async function navigateRecents(
 	const label = toolbarIcon.isNormal ? "single" : "repeated";
 	const action = direction == -1 ? "previous" : "next";
 
-	if ((ports.popup && popupWindow.isVisible && !navigatingRecents) || ports.menu) {
+	if ((ports.popup && popupWindow.isVisible && !state.navigatingRecents) || ports.menu) {
 			// for recentTabs.navigate(), -1 is further back in the stack,
 			// but for the menu, 1 is moving the selection down, which is
 			// equivalent to going further back in the stack, so negate
@@ -120,12 +120,12 @@ async function navigateRecents(
 			direction: -direction
 		});
 	} else {
-		if (navigateRecentsWithPopup) {
+		if (state.navigateRecentsWithPopup) {
 				// when navigating with recents, we want to ignore the "next"
 				// direction if the window isn't currently visible, since that
 				// would just mean navigating to the currently active tab
 			if (direction == -1 || popupWindow.isVisible) {
-				navigatingRecents = true;
+				state.navigatingRecents = true;
 
 					// execute any pending tab activation event so the recents
 					// list is up-to-date before we start navigating.  we have to
@@ -177,14 +177,14 @@ function toggleRecentTabs(
 			// toggling so it becomes the most recent
 		.then(() => addTab.execute())
 		.then(() => {
-			if (navigatingRecents) {
+			if (state.navigatingRecents) {
 					// tell the popup that the user's no longer navigating
 					// recents, so that when it gets blurred after we toggle
 					// to the previous tab, it'll close itself
 				sendPopupMessage("stopNavigatingRecents");
 			}
 
-			navigatingRecents = false;
+			state.navigatingRecents = false;
 
 				// in case the user was navigating recents during a cooldown and
 				// then hit the toggle command, reset the icon back to normal
@@ -212,9 +212,9 @@ function handlePopupMessage(
 // TODO: this seems to not get called when quickly switching between tabs without waiting for the dwell time to expire and then hitting alt-Q.  the wrong tab is at the top of the list.
 		addTab.execute();
 	} else if (message === "stopNavigatingRecents") {
-		navigatingRecents = false;
+		state.navigatingRecents = false;
 	} else if (message === "getActiveTab") {
-		sendResponse(activeTab);
+		sendResponse(state.activeTab);
 	} else if (message === "settingChanged") {
 		const { key, value } = payload;
 
@@ -225,7 +225,7 @@ function handlePopupMessage(
 		} else if (key == k.CurrentWindowLimitRecents.Key) {
 			currentWindowLimitRecents = value;
 		} else if (key == k.NavigateRecentsWithPopup.Key) {
-			navigateRecentsWithPopup = value;
+			state.navigateRecentsWithPopup = value;
 		}
 	}
 }
@@ -243,14 +243,14 @@ export default function init(
 			// update this flag in case the popup gets hidden or closed while the user
 			// is navigating recents by some mechanism other than releasing the modifier
 			// to select the currently focused tab
-		popupWindow.on(["hide", "close"], () => navigatingRecents = false);
+		popupWindow.on(["hide", "close"], () => state.navigatingRecents = false);
 
 		settings.get()
 			.then(settings => {
 				toolbarIcon.showTabCount(settings[k.ShowTabCount.Key]);
 				popupWindow.hideBehavior = settings[k.HidePopupBehavior.Key];
 				currentWindowLimitRecents = settings[k.CurrentWindowLimitRecents.Key];
-				navigateRecentsWithPopup = settings[k.NavigateRecentsWithPopup.Key];
+				state.navigateRecentsWithPopup = settings[k.NavigateRecentsWithPopup.Key];
 			});
 	};
 
