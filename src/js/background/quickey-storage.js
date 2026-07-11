@@ -62,7 +62,7 @@ const Updaters = {
 	4: update(async data =>
 	{
 			// add settings in v5
-		data.settings = (await DefaultData).settings;
+		data.settings = (await getDefaultDataPromise()).settings;
 	}),
 	5: update(async data =>
 	{
