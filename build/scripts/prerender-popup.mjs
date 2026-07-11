@@ -42,12 +42,6 @@ const server = await createServer({
 	plugins: [
 		babelJsx(),
 	],
-	ssr: {
-			// react-virtualized's ESM build uses extensionless import paths
-			// that node can't resolve, so let vite process it instead of
-			// externalizing it
-		noExternal: ["react-virtualized"],
-	},
 });
 
 try {

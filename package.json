@@ -19,13 +19,13 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@tanstack/react-virtual": "^3.14.5",
     "fast-memoize": "^2.5.2",
     "goober": "^2.1.14",
     "pinyin": "^3.1.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router": "^7.18.1",
-    "react-virtualized": "^9.22.5"
+    "react-router": "^7.18.1"
   },
   "devDependencies": {
     "@babel/core": "^7.29.7",
