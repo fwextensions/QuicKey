@@ -24,9 +24,11 @@ export default function babelJsx()
 				compact: false,
 				sourceMaps: true,
 				plugins: [
-						// classic runtime, matching the old preset-react
-						// setup; every JSX file imports React itself
-					"@babel/plugin-transform-react-jsx",
+						// the automatic runtime imports jsx() from
+						// react/jsx-runtime instead of compiling to
+						// React.createElement(), which React 19 warns is an
+						// outdated transform
+					["@babel/plugin-transform-react-jsx", { runtime: "automatic" }],
 					"babel-plugin-transform-goober",
 				],
 			});
