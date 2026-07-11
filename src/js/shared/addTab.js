@@ -3,7 +3,7 @@ import recentTabs from "@/background/recent-tabs";
 import trackers from "@/background/page-trackers";
 import { MinTabDwellTime } from "@/background/constants";
 import { isPopupWindow } from "@/background/popup-utils";
-import { activeTab } from "@/shared/state";
+import state from "@/shared/state";
 
 const tracker = trackers.background;
 
@@ -17,7 +17,7 @@ export const addTab = debounce(
 				// checks popupWindow.id, that may be 0 right after it's been
 				// created and triggers the tab activated event.
 			if (!isPopupWindow(tab)) {
-				activeTab = tab;
+				state.activeTab = tab;
 
 				return recentTabs.add(tab);
 			}

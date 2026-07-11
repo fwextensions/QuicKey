@@ -9,41 +9,32 @@
   "homepage": "https://fwextensions.github.io/QuicKey/",
   "bugs": "https://github.com/fwextensions/QuicKey/issues",
   "scripts": {
-    "build:pinyin": "webpack",
-    "build:popup": "webpack --env production --env buildPopup",
-    "build:prod": "webpack --env production",
+    "build:popup": "node build/scripts/prerender-popup.mjs",
+    "build:prod": "node build/scripts/build.mjs production",
     "build": "npm run build:prod",
-    "dev": "webpack --watch",
+    "dev": "node build/scripts/build.mjs development --watch",
     "test": "vitest run unit",
     "test:regression": "vitest run regression",
     "test:all": "vitest run",
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@tanstack/react-virtual": "^3.14.5",
     "fast-memoize": "^2.5.2",
     "goober": "^2.1.14",
     "pinyin": "^3.1.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.23.1",
-    "react-virtualized": "^9.22.5"
+    "react-router": "^7.18.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.24.6",
-    "@babel/preset-env": "^7.24.6",
-    "@babel/preset-react": "^7.24.6",
-    "babel-loader": "^9.1.3",
+    "@babel/core": "^7.29.7",
+    "@babel/plugin-transform-react-jsx": "^7.29.7",
+    "adm-zip": "^0.6.0",
     "babel-plugin-transform-goober": "^1.2.0",
-    "clean-webpack-plugin": "^4.0.0",
-    "copy-webpack-plugin": "^12.0.2",
-    "generate-json-webpack-plugin": "^2.0.0",
-    "html-webpack-plugin": "^5.6.0",
-    "static-site-generator-webpack-plugin": "^3.3.0",
-    "webpack": "^5.91.0",
-    "webpack-bundle-analyzer": "^4.10.2",
-    "webpack-cli": "^5.1.4",
-    "webpack-config-utils": "^2.3.1",
-    "vitest": "^4.1.10",
-    "zip-webpack-plugin": "^4.0.1"
+    "rollup-plugin-visualizer": "^7.0.1",
+    "vite": "^8.1.4",
+    "vite-plugin-static-copy": "^4.1.1",
+    "vitest": "^4.1.10"
   }
 }

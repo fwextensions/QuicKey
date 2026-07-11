@@ -14,7 +14,11 @@ export const IsEdge = /Edg\//i.test(userAgent);
 export const IsFirefox = /Firefox\//i.test(userAgent);
 export const Platform = IsMac ? "mac" : "win";
 export const Language = languageMatch && languageMatch.groups.lang || primaryLanguage;
-export const IsDev = (await chrome.management.getSelf()).installType === "development";
+	// unpacked extensions don't have an update_url in the manifest, so use
+	// that as a synchronous stand-in for checking installType === "development"
+	// via chrome.management.getSelf(), which requires a top-level await that
+	// rollup can't bundle into the iife-format background script
+export const IsDev = !("update_url" in chrome.runtime.getManifest());
 export const IncognitoNameUC = IsFirefox
 	? "Private"
 	: IsEdge

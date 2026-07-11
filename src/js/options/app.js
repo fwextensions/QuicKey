@@ -1,5 +1,5 @@
 import React, {useContext} from "react";
-import {Route, Routes, useLocation, useNavigate} from "react-router-dom";
+import {Route, Routes, useLocation, useNavigate} from "react-router";
 import {Sections, SectionList, SectionLabel} from "./sections";
 import GeneralSection from "./general-section";
 import PopupSection from "./popup-section";

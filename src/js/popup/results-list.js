@@ -1,7 +1,6 @@
-import React from "react";
-import {List} from "react-virtualized/dist/es/List";
-import handleRef from "@/lib/handle-ref";
-import {IsFirefox, ResultsListRowHeight} from "@/background/constants";
+import React, { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { IsFirefox, ResultsListRowHeight } from "@/background/constants";
 
 
 	// in FF, the scrollbar appears inside the right edge of the scrolling
@@ -11,166 +10,160 @@ const Width = IsFirefox ? 495 : 490;
 const MinShownTime = 200;
 
 
-export default class ResultsList extends React.Component {
-    startIndex = 0;
-    stopIndex = 0;
-    list = null;
-	renderTimer = null;
-	hoverSelectEnabled = false;
-
-
-	componentDidUpdate(
-		prevProps)
+export default forwardRef(function ResultsList(
 	{
-		const itemsChanged = prevProps.items !== this.props.items;
+		items,
+		maxItems,
+		itemComponent,
+		query,
+		mode,
+		visible,
+		selectedIndex,
+		setSelectedIndex,
+		openItem,
+		closeTab
+	},
+	ref)
+{
+	const itemCount = items.length;
+	const height = Math.min(itemCount, maxItems) * ResultsListRowHeight;
+	const scrollElementRef = useRef(null);
+	const hoverSelectEnabled = useRef(false);
+	const renderTimer = useRef(null);
+	const virtualizer = useVirtualizer({
+		count: itemCount,
+		getScrollElement: () => scrollElementRef.current,
+		estimateSize: () => ResultsListRowHeight,
+	});
 
-		if (itemsChanged) {
-				// the virtual list doesn't know when the items have changed,
-				// so force it to update when they do
-			this.list.forceUpdateGrid();
-		}
 
-		if (itemsChanged || (!prevProps.visible && this.props.visible)) {
-			this.enableHoverSelectDelayed();
-		} else if (prevProps.visible && !this.props.visible) {
-				// make sure the timer is cleared when the popup is hidden
-			this.disableHoverSelect();
-		}
-	}
-
-
-	scrollByPage(
-		direction)
+	const disableHoverSelect = () =>
 	{
-		const {items: {length: itemCount}, maxItems, setSelectedIndex} = this.props;
-		const rowCount = Math.min(maxItems, itemCount) - 1;
-		let {selectedIndex} = this.props;
-
-		if (direction == "down") {
-			if (selectedIndex == this.stopIndex) {
-				selectedIndex = Math.min(selectedIndex + rowCount, itemCount - 1);
-			} else {
-				selectedIndex = this.stopIndex;
-			}
-		} else {
-			if (selectedIndex == this.startIndex) {
-				selectedIndex = Math.max(selectedIndex - rowCount, 0);
-			} else {
-				selectedIndex = this.startIndex;
-			}
-		}
-
-		setSelectedIndex(selectedIndex);
-	}
+		clearTimeout(renderTimer.current);
+		hoverSelectEnabled.current = false;
+		renderTimer.current = null;
+	};
 
 
-	scrollToRow(
-		index)
-	{
-		this.list.scrollToRow(index);
-	}
-
-
-	enableHoverSelectDelayed()
-	{
-		this.disableHoverSelect();
-		this.renderTimer = setTimeout(this.handleRenderTimerDone, MinShownTime);
-	}
-
-
-	disableHoverSelect()
-	{
-		clearTimeout(this.renderTimer);
-		this.hoverSelectEnabled = false;
-		this.renderTimer = null;
-	}
-
-
-	handleRenderTimerDone = () =>
-	{
-		this.hoverSelectEnabled = true;
-		this.renderTimer = null;
-	}
-
-
-	handleItemHovered = (
+	const handleItemHovered = (
 		index) =>
 	{
-		if (this.hoverSelectEnabled && index !== this.props.selectedIndex) {
+		if (hoverSelectEnabled.current && index !== selectedIndex) {
 				// pass true so the app treats a mouse selection like one
 				// made by the MRU key, so that the user can press the menu
 				// shortcut, highlight a tab with the mouse, and then
 				// release alt to select it
-			this.props.setSelectedIndex(index, true);
+			setSelectedIndex(index, true);
 		}
 	};
 
 
-	handleListRef = handleRef("list", this);
+		// enable hover-select a beat after the items change or the popup is
+		// shown, so that the selection doesn't jump to whatever happens to be
+		// under the mouse as the list renders
+	useEffect(() => {
+		disableHoverSelect();
+
+		if (visible) {
+			renderTimer.current = setTimeout(() => {
+				hoverSelectEnabled.current = true;
+				renderTimer.current = null;
+			}, MinShownTime);
+		}
+
+		return disableHoverSelect;
+	}, [items, visible]);
 
 
-    handleRowsRendered = (
-		event) =>
-	{
-			// track the visible rendered rows so we know how to change the
-			// selection when the App tells us to page up/down, since it
-			// doesn't know what's visible
-		this.startIndex = event.startIndex;
-		this.stopIndex = event.stopIndex;
-	};
+		// keep the selected row scrolled into view, which react-virtualized
+		// used to handle via its scrollToIndex prop
+	useEffect(() => {
+		if (selectedIndex >= 0 && selectedIndex < itemCount) {
+			virtualizer.scrollToIndex(selectedIndex);
+		}
+	}, [selectedIndex, itemCount]);
 
 
-    rowRenderer = (
-		data) =>
-	{
-		const {
-			itemComponent,
-			items,
-			query,
-			mode,
-			selectedIndex,
-			openItem,
-			closeTab
-		} = this.props;
-		const item = items[data.index];
-		const ItemComponent = item.component || itemComponent;
+	useImperativeHandle(ref, () => ({
+		scrollToRow(
+			index)
+		{
+			virtualizer.scrollToIndex(index);
+		},
 
-		return <ItemComponent
-			key={data.key}
-			item={item}
-			index={data.index}
-			query={query}
-			mode={mode}
-			isSelected={selectedIndex == data.index}
-			openItem={openItem}
-			closeTab={closeTab}
-			onHover={this.handleItemHovered}
-			style={data.style}
-		/>
-	};
+		scrollByPage(
+			direction)
+		{
+				// range tracks the currently visible rows, so we know how to
+				// change the selection when the app tells us to page up/down
+			const { startIndex = 0, endIndex = 0 } = virtualizer.range ?? {};
+			const rowCount = Math.min(maxItems, itemCount) - 1;
+			let newIndex = selectedIndex;
+
+			if (direction == "down") {
+				if (selectedIndex == endIndex) {
+					newIndex = Math.min(selectedIndex + rowCount, itemCount - 1);
+				} else {
+					newIndex = endIndex;
+				}
+			} else {
+				if (selectedIndex == startIndex) {
+					newIndex = Math.max(selectedIndex - rowCount, 0);
+				} else {
+					newIndex = startIndex;
+				}
+			}
+
+			setSelectedIndex(newIndex);
+		}
+	}));
 
 
-    render()
-	{
-		const {items: {length: itemCount}, maxItems, selectedIndex} = this.props;
-		const height = Math.min(itemCount, maxItems) * ResultsListRowHeight;
-		const style = { display: height ? "block" : "none" };
-
-		return <div className="results-list-container"
-			style={style}
+	return <div className="results-list-container"
+		style={{ display: height ? "block" : "none" }}
+	>
+		<div className="results-list"
+			ref={scrollElementRef}
+			tabIndex={-1}
+			style={{
+				width: Width,
+				height,
+				position: "relative",
+				overflowY: "auto",
+				overflowX: "hidden",
+				willChange: "transform"
+			}}
 		>
-			<List
-				ref={this.handleListRef}
-				className="results-list"
-				tabIndex={-1}
-				width={Width}
-				height={height}
-				rowCount={itemCount}
-				rowHeight={ResultsListRowHeight}
-				rowRenderer={this.rowRenderer}
-				scrollToIndex={selectedIndex}
-				onRowsRendered={this.handleRowsRendered}
-			/>
+			<div style={{
+				height: virtualizer.getTotalSize(),
+				width: "100%",
+				position: "relative"
+			}}>
+				{virtualizer.getVirtualItems().map((virtualItem) => {
+					const item = items[virtualItem.index];
+					const ItemComponent = item.component || itemComponent;
+
+					return <ItemComponent
+						key={virtualItem.key}
+						item={item}
+						index={virtualItem.index}
+						query={query}
+						mode={mode}
+						isSelected={selectedIndex == virtualItem.index}
+						openItem={openItem}
+						closeTab={closeTab}
+						onHover={handleItemHovered}
+						style={{
+							position: "absolute",
+							top: 0,
+							left: 0,
+							width: "100%",
+							height: virtualItem.size,
+							transform: `translateY(${virtualItem.start}px)`
+						}}
+					/>
+				})}
+			</div>
 		</div>
-	}
-}
+	</div>
+});
