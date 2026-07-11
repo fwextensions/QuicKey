@@ -21,7 +21,7 @@
     "pinyin": "^3.1.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.23.1",
+    "react-router-dom": "^7.18.1",
     "react-virtualized": "^9.22.5"
   },
   "devDependencies": {
