@@ -29,7 +29,11 @@ export default function babelJsx()
 						// React.createElement(), which React 19 warns is an
 						// outdated transform
 					["@babel/plugin-transform-react-jsx", { runtime: "automatic" }],
-					"babel-plugin-transform-goober",
+						// pure: false stops the plugin prepending /*#__PURE__*/
+						// to the rewritten styled() calls; the annotation is
+						// invalid on a tagged template, so rolldown ignores it
+						// and warns about it on every build
+					["babel-plugin-transform-goober", { pure: false }],
 				],
 			});
 
