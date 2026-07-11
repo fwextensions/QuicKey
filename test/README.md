@@ -19,9 +19,12 @@ npm run test:watch    # watch mode
   `npm run test:regression`; any test for that PR that now passes should be
   moved into `test/unit/` (drop the `.regression` suffix) so it becomes part of
   the permanent green suite.
-- **`test/support/`** — the fakes: an in-memory `chrome.*`, a `navigator.locks`
-  implementation with real queuing semantics, and a faithful `quickey-storage`
-  get/set stand-in.
+- **`test/support/`** — the fakes: an in-memory `chrome.*` with a stateful
+  tab/window model (mutating APIs fire the same events the real browser
+  would), a `navigator.locks` implementation with real queuing semantics, a
+  faithful `quickey-storage` get/set stand-in, and `context.js`, a harness
+  for standing up multiple extension contexts (worker, popup) as independent
+  module graphs sharing one chrome fake and one lock manager.
 - **`test/setup.js`** — installs the fakes as globals and mocks the analytics
   trackers before any source module loads. Registered via `setupFiles` in
   `vitest.config.js`.
@@ -36,4 +39,17 @@ npm run test:watch    # watch mode
   `recent-tabs`), mock it with the hoisted get/set stand-in shown at the top of
   `test/unit/recent-tabs.test.js` — `vi.mock()` factories are hoisted above
   imports, so the mock must be built inside `vi.hoisted()`.
+- To test worker/popup interactions, use `resetContexts()` +
+  `createContext()` from `test/support/context.js`, following
+  `test/unit/worker-popup-control.test.js`.  Each context is a fresh module
+  graph with its own `location.pathname` and its own `control.isHeld()`
+  state; `destroy()` simulates MV3 killing the context (detaches its chrome
+  listeners and revokes its `__control__` lock).  Create contexts one at a
+  time and flush between creations so listener ownership is inferred
+  correctly.  Note that `vi.mock()` factories run once per file, so mocked
+  modules (like `popup-window`) are shared across contexts — assert on call
+  counts, not per-context instances, and `vi.clearAllMocks()` in
+  `beforeEach`.
+- `vi.mock("@/background/settings")` when importing the `commandHandlers`
+  graph, so tests don't depend on the chrome-shortcut parsing it does.
 - Match the source style: tabs for indentation, comments indented one extra tab.
