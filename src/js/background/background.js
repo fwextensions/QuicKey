@@ -85,22 +85,6 @@ globalThis.START = Date.now();
 });
 
 
-// TODO: handle enabling and disabling the keyboard shortcuts
-function enableCommands()
-{
-		// just in case the listener hasn't already been removed, call this
-		// so we don't add two listeners
-//	disableCommands();
-//	chrome.commands.onCommand.addListener(onCommandListener);
-}
-
-
-function disableCommands()
-{
-//	chrome.commands.onCommand.removeListener(onCommandListener);
-}
-
-
 chrome.runtime.onConnect.addListener(port => {
 	if (port.name !== "popup" && port.name !== "menu") {
 		return;
@@ -119,10 +103,6 @@ DEBUG && console.log("== onConnect", port.name, state.startingUp);
 	state.startingUp = false;
 	ports[port.name] = port;
 
-	if (port.name == "menu") {
-		disableCommands();
-	}
-
 // TODO: this only needs to be done for the menu case
 	port.onMessage.addListener(message => {
 //console.log("---- background: onMessage", port.name, message);
@@ -139,8 +119,6 @@ DEBUG && console.log("== onConnect", port.name, state.startingUp);
 //			if (popupWindow.isOpen) {
 				popupWindow.close();
 //			}
-		} else {
-			enableCommands();
 		}
 
 		if (!closedByEsc && Date.now() - connectTime < MaxPopupLifetime) {
@@ -196,8 +174,6 @@ DEBUG && console.log(e);
 	restartExtension();
 });
 
-
-enableCommands();
 
 chrome.runtime.getContexts({ contextTypes: [chrome.runtime.ContextType.TAB] })
 	.then((initialViews) => {

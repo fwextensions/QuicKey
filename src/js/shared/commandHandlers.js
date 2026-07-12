@@ -6,7 +6,7 @@ import toolbarIcon from "@/background/toolbar-icon";
 import recentTabs from "@/background/recent-tabs";
 import settings from "@/background/settings";
 import trackers from "@/background/page-trackers";
-import { isPopupWindow } from "@/background/popup-utils";
+import { isPopupWindow, isMenuOpen } from "@/background/popup-utils";
 import * as k from "@/background/constants";
 
 const {
@@ -24,9 +24,18 @@ let currentWindowLimitRecents = false;
 let ports = {};
 let sendPopupMessage;
 
-function handleCommand(
+async function handleCommand(
 	command)
 {
+		// while the menu is open on the toolbar icon, it handles keyboard
+		// events itself, so ignore all commands until it closes.  otherwise,
+		// a shortcut like alt-W that's both a menu navigation key and a
+		// global command would also trigger the command in whichever context
+		// has control, opening the popup window on top of the menu.
+	if (await isMenuOpen()) {
+		return;
+	}
+
 	switch (command) {
 		case OpenPopupCommand:
 		case FocusPopupCommand:

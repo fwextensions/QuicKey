@@ -332,6 +332,11 @@ export function createChromeFake(
 	}
 
 
+		// the extension contexts reported by runtime.getContexts(); tests seed
+		// this with runtime._setContexts() to simulate e.g. the toolbar menu
+		// being open (contextType: "POPUP")
+	let runtimeContexts = [];
+
 	const chromeFake = {
 		runtime: {
 			id: "quickeyfakeextensionidaaaaaaaaaa",
@@ -339,7 +344,12 @@ export function createChromeFake(
 			ContextType: { TAB: "TAB", POPUP: "POPUP", BACKGROUND: "BACKGROUND" },
 			getManifest: () => ({ ...MANIFEST }),
 			getURL: (path = "") => `chrome-extension://${chromeFake.runtime.id}/${path}`,
-			getContexts: () => Promise.resolve([]),
+			getContexts: ({ contextTypes } = {}) => Promise.resolve(
+				runtimeContexts.filter(({ contextType }) =>
+					!contextTypes || contextTypes.includes(contextType))
+			),
+				// test helper, not part of the real API
+			_setContexts: (contexts) => { runtimeContexts = contexts; },
 			connect: () => ({
 				name: "",
 				postMessage: () => {},

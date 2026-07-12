@@ -189,3 +189,64 @@ describe("worker and popup", () => {
 		expect(popupWindow.create).toHaveBeenCalledTimes(1);
 	});
 });
+
+
+describe("toolbar menu open", () => {
+	const MenuContext = {
+		contextType: "POPUP",
+		documentUrl: "chrome-extension://quickeyfakeextensionidaaaaaaaaaa/popup.html",
+	};
+
+	it("the worker ignores commands while the menu is open, and handles them again after it closes", async () => {
+		const worker = await loadContext("/background.html");
+
+		await flush();
+
+		expect(worker.modules.control.isHeld()).toBe(true);
+
+			// the menu handles keyboard events itself while it's open, so a
+			// command arriving then must be dropped, like the MV2 background
+			// page did by removing its onCommand listener
+		chrome.runtime._setContexts([MenuContext]);
+		chrome.commands.onCommand.dispatch(OpenPopupCommand);
+		await flush();
+
+		expect(popupWindow.create).not.toHaveBeenCalled();
+
+		chrome.runtime._setContexts([]);
+		chrome.commands.onCommand.dispatch(OpenPopupCommand);
+		await flush();
+
+		expect(popupWindow.create).toHaveBeenCalledTimes(1);
+	});
+
+	it("a popup that holds control also ignores commands while the menu is open", async () => {
+		const worker = await loadContext("/background.html");
+
+		await flush();
+
+		const popup = await loadContext("/popup.html");
+
+		await flush();
+		worker.destroy();
+		await flush();
+
+		expect(popup.modules.control.isHeld()).toBe(true);
+
+			// this is the case the port-based tracking in the background could
+			// never see: the popup process is handling commands, but only the
+			// worker got the menu's onConnect.  the getContexts() check works
+			// from either context.
+		chrome.runtime._setContexts([MenuContext]);
+		chrome.commands.onCommand.dispatch(OpenPopupCommand);
+		await flush();
+
+		expect(popupWindow.create).not.toHaveBeenCalled();
+
+		chrome.runtime._setContexts([]);
+		chrome.commands.onCommand.dispatch(OpenPopupCommand);
+		await flush();
+
+		expect(popupWindow.create).toHaveBeenCalledTimes(1);
+	});
+});

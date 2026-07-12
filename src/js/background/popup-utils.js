@@ -65,3 +65,16 @@ export function isPopupWindow(
 {
 	return (tab?.url || tab?.documentUrl)?.startsWith(PopupURL);
 }
+
+	// the menu on the toolbar icon is the only POPUP-type context in the
+	// extension, so the existence of one means the menu is currently open.
+	// this is true regardless of whether the background or the popup window
+	// currently has control, unlike tracking the menu's port connections,
+	// which only the background sees.
+export async function isMenuOpen()
+{
+	const contexts = await chrome.runtime.getContexts(
+		{ contextTypes: [chrome.runtime.ContextType.POPUP] });
+
+	return contexts.length > 0;
+}
