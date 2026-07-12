@@ -7,6 +7,20 @@ import {connect} from "@/lib/ipc";
 
 const {Behind, Tab, Minimize} = HidePopupBehavior;
 
+	// the storage key under which we persist the popup's window and tab IDs.
+	// this lives outside the versioned quickey-storage data blob, since it's
+	// transient bookkeeping rather than user data.
+const LastPopupIDsKey = "lastPopupIDs";
+	// when the extension is reloaded, Chrome navigates any tab that was
+	// showing one of its pages to the new tab page, so an orphaned popup can
+	// end up on one of these URLs instead of popup.html
+const OrphanedTabURLs = [
+	"chrome://newtab/",
+	"edge://newtab/",
+	"about:newtab",
+	"about:blank",
+];
+
 
 const { receive } = connect("popup-window");
 let popupAdjustmentWidth = 0;
@@ -25,6 +39,81 @@ await storage.get((data = {}) => {
 	currentWidth = PopupInnerWidth + popupAdjustmentWidth;
 	currentHeight = PopupInnerHeight + popupAdjustmentHeight;
 });
+await closeOrphanedPopup();
+
+
+function saveLastPopupIDs()
+{
+	return chrome.storage.local.set({ [LastPopupIDsKey]: { windowID, tabID } });
+}
+
+
+function isOrphanedTab(
+	{url = ""})
+{
+	return url.startsWith(PopupURL) || OrphanedTabURLs.includes(url);
+}
+
+
+	// when the extension is reloaded or updated while the popup exists, the
+	// popup page's context is destroyed and its tab gets navigated to the new
+	// tab page, so the new instance can't find it through getContexts() or a
+	// popup.html URL query, and the empty window would be left stranded.  we
+	// persist the popup's window and tab IDs whenever they change, so that on
+	// startup we can close whatever those IDs still point to.
+async function closeOrphanedPopup()
+{
+	const { [LastPopupIDsKey]: lastIDs } = await chrome.storage.local.get(LastPopupIDsKey);
+	const { windowID: lastWindowID = 0, tabID: lastTabID = 0 } = lastIDs ?? {};
+	const orphanedTabIDs = new Set();
+
+	if (!lastWindowID && !lastTabID) {
+		return;
+	}
+
+	if ((lastWindowID && lastWindowID === windowID)
+			|| (lastTabID && lastTabID === tabID)) {
+			// the stored IDs point to the live popup that getExistingPopupID()
+			// just found, which means only the service worker restarted, so
+			// there's nothing to clean up
+		return;
+	}
+
+	if (lastWindowID) {
+		try {
+			const {type} = await chrome.windows.get(lastWindowID);
+			const tabs = await chrome.tabs.query({ windowId: lastWindowID });
+
+				// only close the window if it's a popup and every tab in it
+				// looks orphaned, so that a recycled window ID after a browser
+				// restart can't take out a window the user cares about
+			if (type === "popup" && tabs.every(isOrphanedTab)) {
+				tabs.forEach(({id}) => orphanedTabIDs.add(id));
+			}
+		} catch (e) {}
+	}
+
+	if (lastTabID && !orphanedTabIDs.has(lastTabID)) {
+		try {
+				// the popup may have been hiding as a tab in a normal window
+				// when the extension was reloaded
+			const tab = await chrome.tabs.get(lastTabID);
+
+			if (isOrphanedTab(tab)) {
+				orphanedTabIDs.add(tab.id);
+			}
+		} catch (e) {}
+	}
+
+		// windowID and tabID are normally 0 here, so this clears the stale IDs
+	await saveLastPopupIDs();
+
+	if (orphanedTabIDs.size) {
+		try {
+			await chrome.tabs.remove([...orphanedTabIDs]);
+		} catch (e) {}
+	}
+}
 
 
 async function getWindow(
@@ -102,6 +191,7 @@ async function createPopup(
 
 	windowID = window.id;
 	tabID = window.tabs[0].id;
+	await saveLastPopupIDs();
 	popupEmitter.emit("create", { window });
 
 	return window;
@@ -148,6 +238,7 @@ async function create(
 			// the new tab starts out in a hidden state, by definition
 		isHiddenInTab = true;
 		tabID = tab.id;
+		await saveLastPopupIDs();
 
 			// calling show() will create a new popup window and move the
 			// QuicKey tab to it
@@ -390,6 +481,7 @@ async function close()
 	windowID = 0;
 	tabID = 0;
 	isVisible = false;
+	await saveLastPopupIDs();
 
 	try {
 		await chrome.tabs.remove(openTabs.map(({id}) => id));

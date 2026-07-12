@@ -513,6 +513,14 @@ export function createChromeFake(
 			getRecentlyClosed: () => Promise.resolve([]),
 			restore: () => Promise.resolve({}),
 		},
+		system: {
+			display: {
+				onDisplayChanged: makeEvent(),
+				getInfo: () => Promise.resolve([
+					{ workArea: { left: 0, top: 0, width: 1920, height: 1080 } },
+				]),
+			},
+		},
 		commands: {
 			getAll: () => Promise.resolve([{ name: "_execute_action" }]),
 			onCommand: makeEvent(),

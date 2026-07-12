@@ -29,6 +29,20 @@ const ports = {};
 let installedPromise = new Promise(resolve => {
 	chrome.runtime.onInstalled.addListener(details => resolve(details));
 });
+let installClosedPopupTime = 0;
+
+	// onInstalled firing means this is a fresh extension instance (install,
+	// update, or reload), so any popup window that Chrome reloaded in place
+	// from the previous instance is stale and should be closed, not adopted.
+	// popups orphaned on the new tab page are handled by popup-window.js when
+	// it initializes.  note when the close happened, so the onDisconnect
+	// handler below doesn't mistake the forced close of a just-reconnected
+	// popup page for a quick double-press of the popup shortcut.
+installedPromise.then(() => {
+	installClosedPopupTime = Date.now();
+
+	return popupWindow.close();
+});
 
 
 	// this returns a function for sending messages *from* the popup, which we
@@ -143,7 +157,8 @@ DEBUG && console.log("== onConnect", port.name, state.startingUp);
 			enableCommands();
 		}
 
-		if (!closedByEsc && Date.now() - connectTime < MaxPopupLifetime) {
+		if (!closedByEsc && Date.now() - connectTime < MaxPopupLifetime
+				&& connectTime > installClosedPopupTime) {
 				// this was a double-press of alt-Q, so toggle the tabs
 			toggleRecentTabs();
 		} else {
