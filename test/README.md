@@ -19,6 +19,11 @@ npm run test:watch    # watch mode
   `npm run test:regression`; any test for that PR that now passes should be
   moved into `test/unit/` (drop the `.regression` suffix) so it becomes part of
   the permanent green suite.
+- **`test/fixtures/`** — era-accurate snapshots of stored data at historical
+  storage versions, reconstructed from git history.  The migration tests run
+  the real updater chain over them; when you add a key to
+  `createDefaultData()` or the default settings, add a matching updater or
+  these tests fail (by design — a missing updater silently resets user data).
 - **`test/support/`** — the fakes: an in-memory `chrome.*` with a stateful
   tab/window model (mutating APIs fire the same events the real browser
   would), a `navigator.locks` implementation with real queuing semantics, a
