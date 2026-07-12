@@ -69,7 +69,7 @@ function loadContext(
 	return createContext(pathname, async () => {
 		const initEventController = (await import("@/shared/eventController")).default;
 		const control = (await import("@/shared/control")).default;
-		const state = await import("@/shared/state");
+		const state = (await import("@/shared/state")).default;
 		const sendPopupMessage = vi.fn();
 		const sendMessage = initEventController({ sendPopupMessage, ports: {} });
 
