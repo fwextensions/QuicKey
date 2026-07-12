@@ -1,7 +1,7 @@
 import React from "react";
 import { styled } from "goober";
 
-const Button = styled.button`
+const Button = styled("button")`
 	font-weight: bold;
 	font-size: inherit;
 	text-decoration: none;

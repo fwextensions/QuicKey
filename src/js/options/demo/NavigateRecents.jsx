@@ -49,12 +49,12 @@ const KeyboardRecentsOptions = createAnimOptions(
 	}
 );
 
-const Container = styled.div`
+const Container = styled("div")`
 	margin-top: 2em;
 	gap: 2em;
 	display: flex;
 `;
-const ShortcutContainer = styled.div`
+const ShortcutContainer = styled("div")`
 	flex-direction: column;
 	justify-content: center;
 	display: flex;

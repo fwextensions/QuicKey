@@ -16,7 +16,7 @@ const BrowserWindow = styled(Window)`
 	
 	z-index: 20;
 `;
-const Background = styled.div`
+const Background = styled("div")`
 	width: 110%;
 	height: 110%;
 	top: -5%;
@@ -25,13 +25,13 @@ const Background = styled.div`
 	position: absolute;
 	${({ bg }) => bg}
 `;
-const TabBarContainer = styled.div`
+const TabBarContainer = styled("div")`
 	width: 100%;
 	height: 5px;
 	background: var(--tab-container);
 	position: relative;
 `;
-const LocationBar = styled.div`
+const LocationBar = styled("div")`
 	width: 100%;
 	height: 5px;
 	border: 1px solid var(--tab-background);
@@ -39,7 +39,7 @@ const LocationBar = styled.div`
 	background: var(--location-bar);
 	position: relative;
 `;
-const QuicKeyIcon = styled.div`
+const QuicKeyIcon = styled("div")`
 	@media (prefers-color-scheme: dark) {
 		--default-icon: #cecac9;
 		--navigating-icon: #282c2d;
@@ -57,7 +57,7 @@ const QuicKeyIcon = styled.div`
 `;
 	// add an after element to cover up the divider lines on the right side,
 	// since there's no easy way to limit the number of them
-const TabDividers = styled.div`
+const TabDividers = styled("div")`
 	@media (prefers-color-scheme: dark) {
 		--divider: #5e5f61;
 	}
@@ -84,7 +84,7 @@ const TabDividers = styled.div`
 	}
 `;
 	// add a shadow on the left to make sure the divider there is covered
-const Tab = styled.div`
+const Tab = styled("div")`
 	top: 1px;
 	left: ${({ left }) => left}%;
 	width: ${({ width }) => width}%;
@@ -94,7 +94,7 @@ const Tab = styled.div`
 	position: absolute;
 	box-shadow: -2px 0 0 var(--tab-background);
 `;
-const TabName = styled.div`
+const TabName = styled("div")`
 	font-weight: 500;
 	font-size: 1rem;
 	left: .6em;
