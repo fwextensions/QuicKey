@@ -197,6 +197,22 @@ describe("toolbar menu open", () => {
 		documentUrl: "chrome-extension://quickeyfakeextensionidaaaaaaaaaa/popup.html",
 	};
 
+		// a minimal stand-in for the port the menu connects when it opens.
+		// disconnect() fires the onDisconnect listeners, like the real port
+		// does in every other context when the menu closes.
+	function makeMenuPort()
+	{
+		const disconnectListeners = new Set();
+
+		return {
+			name: "menu",
+			postMessage: () => {},
+			onMessage: { addListener: () => {} },
+			onDisconnect: { addListener: (fn) => disconnectListeners.add(fn) },
+			disconnect: () => disconnectListeners.forEach((fn) => fn()),
+		};
+	}
+
 	it("the worker ignores commands while the menu is open, and handles them again after it closes", async () => {
 		const worker = await loadContext("/background.html");
 
@@ -214,6 +230,46 @@ describe("toolbar menu open", () => {
 		expect(popupWindow.create).not.toHaveBeenCalled();
 
 		chrome.runtime._setContexts([]);
+		chrome.commands.onCommand.dispatch(OpenPopupCommand);
+		await flush();
+
+		expect(popupWindow.create).toHaveBeenCalledTimes(1);
+	});
+
+	it("a stale POPUP context left behind after the menu closes doesn't block commands", async () => {
+		const worker = await loadContext("/background.html");
+
+		await flush();
+
+			// the menu connects a port when it opens, which every context sees,
+			// so commandHandlers tracks the open state from the port events
+		const menuPort = makeMenuPort();
+
+		chrome.runtime._setContexts([MenuContext]);
+		chrome.runtime.onConnect.dispatch(menuPort);
+		chrome.commands.onCommand.dispatch(OpenPopupCommand);
+		await flush();
+
+		expect(popupWindow.create).not.toHaveBeenCalled();
+
+			// the menu closes, but getContexts() keeps (wrongly) reporting its
+			// POPUP context.  the tracked port state knows better, so commands
+			// must work again instead of being silently dropped forever.
+		menuPort.disconnect();
+		chrome.commands.onCommand.dispatch(OpenPopupCommand);
+		await flush();
+
+		expect(popupWindow.create).toHaveBeenCalledTimes(1);
+	});
+
+	it("a getContexts() failure doesn't drop commands", async () => {
+		const worker = await loadContext("/background.html");
+
+		await flush();
+
+		vi.spyOn(chrome.runtime, "getContexts")
+			.mockRejectedValue(new Error("no getContexts for you"));
+
 		chrome.commands.onCommand.dispatch(OpenPopupCommand);
 		await flush();
 

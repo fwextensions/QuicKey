@@ -24,15 +24,46 @@ let currentWindowLimitRecents = false;
 let ports = {};
 let sendPopupMessage;
 
+	// whether the toolbar menu is open, tracked through its port connecting
+	// and disconnecting.  chrome broadcasts runtime.onConnect to every
+	// extension context, so this is correct in whichever context handles
+	// commands.  null means this context hasn't seen a menu port event yet
+	// (it may have started while the menu was already open), so the tracked
+	// state can't be trusted and we ask the browser instead.
+let menuOpen = null;
+
+chrome.runtime.onConnect.addListener((port) => {
+	if (port.name === "menu") {
+		menuOpen = true;
+		port.onDisconnect.addListener(() => menuOpen = false);
+	}
+});
+
+	// while the menu is open on the toolbar icon, it handles keyboard events
+	// itself, so all commands should be ignored until it closes.  otherwise,
+	// a shortcut like alt-W that's both a menu navigation key and a global
+	// command would also trigger the command in whichever context has
+	// control, opening the popup window on top of the menu.
+async function shouldIgnoreCommands()
+{
+	if (menuOpen === false) {
+			// we saw the menu's port disconnect, so we know it's closed without
+			// asking the browser.  never falling through to getContexts() here
+			// means a stale POPUP context lingering after the menu closes can't
+			// silently eat every subsequent command.
+		return false;
+	}
+
+		// the tracked state is unknown or the menu looks open, so confirm
+		// against live browser state.  if the call fails, fall back to the
+		// tracked state rather than letting the rejection drop the command.
+	return isMenuOpen().catch(() => menuOpen === true);
+}
+
 async function handleCommand(
 	command)
 {
-		// while the menu is open on the toolbar icon, it handles keyboard
-		// events itself, so ignore all commands until it closes.  otherwise,
-		// a shortcut like alt-W that's both a menu navigation key and a
-		// global command would also trigger the command in whichever context
-		// has control, opening the popup window on top of the menu.
-	if (await isMenuOpen()) {
+	if (await shouldIgnoreCommands()) {
 		return;
 	}
 
@@ -168,7 +199,10 @@ async function navigateRecents(
 	}
 }
 
-function toggleRecentTabs(
+	// exported because background.js also calls this when the popup or menu
+	// port disconnects right after connecting, which means the user
+	// double-pressed the open-popup shortcut to switch tabs
+export function toggleRecentTabs(
 	fromShortcut)
 {
 		// we have to wait for the last toggle promise chain to resolve before
