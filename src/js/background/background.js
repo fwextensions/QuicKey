@@ -10,6 +10,7 @@ import { debounce } from "@/background/debounce";
 import { isPopupWindow } from "@/background/popup-utils";
 import handleStartup from "@/background/startup";
 import initEventController from "@/shared/eventController";
+import { toggleRecentTabs } from "@/shared/commandHandlers";
 import state from "@/shared/state";
 
 if (globalThis.DEBUG) {
