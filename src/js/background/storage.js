@@ -1,4 +1,5 @@
 import trackers from "./page-trackers";
+import log from "./persistent-log";
 
 
 const StorageKeys = [
@@ -47,6 +48,13 @@ export function createStorage({
 		return chrome.storage.local.get(null)
 			.then(storage => {
 				lastSavedFrom = storage?.lastSavedFrom;
+
+				log("storage init:",
+					"hasData:", !!storage?.data,
+					"version:", storage?.version,
+					"lastSavedFrom:", lastSavedFrom,
+					"tabIDs:", storage?.data?.tabIDs?.length,
+					"lastStartupTime:", storage?.data?.lastStartupTime);
 
 				if (!storage || !storage.data) {
 						// this is likely a new install, so reset the storage
@@ -101,6 +109,10 @@ export function createStorage({
 				"failed-validation" : "failed-update";
 
 DEBUG && console.error(`Storage error: ${failure}`, storage);
+			log("STORAGE ERROR:", failure,
+				"version:", storage.version,
+				"tabIDs:", storage.data?.tabIDs?.length,
+				"data keys:", storage.data && Object.keys(storage.data));
 			trackers.background.event("storage", failure);
 
 				// store a global reference to the bad data object so we can
@@ -128,6 +140,11 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 
 	function resetWithoutLocking()
 	{
+			// this wipes tabIDs/tabsByID, so any recent tab history is lost.
+			// log it so we can tell whether a missing history after a restart
+			// was caused by a reset vs. a failed match in updateFromFreshTabs().
+		log("RESETTING STORAGE to defaults");
+
 			// remove just the storage keys we actually use, rather than clearing everything
 		return chrome.storage.local.remove(StorageKeys)
 			.then(getDefaultData)

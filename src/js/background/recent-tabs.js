@@ -3,6 +3,7 @@ import {getRelativeTime} from "@/lib/get-relative-time";
 import storage from "./quickey-storage";
 import pageTrackers from "./page-trackers";
 import {MinTabDwellTime, PopupURL} from "./constants";
+import log from "./persistent-log";
 
 
 const MaxTabsLength = 50;
@@ -122,10 +123,15 @@ DEBUG && console.log("=== existing tabs", tabIDs.length, Object.keys(tabsByID).l
 			delete freshTabsByURL[oldTab.url];
 		} else {
 			missingCount++;
-DEBUG && console.log("=== missing", tabID, oldTab && oldTab.lastVisit, oldTab && oldTab.url);
+			log("updateFromFreshTabs: no fresh tab matches recent",
+				tabID, oldTab?.lastVisit, oldTab?.url?.slice(0, 100));
 		}
 	});
-DEBUG && console.log("=== newTabIDs", newTabIDs.length);
+	log("updateFromFreshTabs:",
+		"old recents:", tabIDs.length,
+		"fresh tabs:", freshTabs.length,
+		"matched:", newTabIDs.length,
+		"missing:", missingCount);
 
 		// use timing() instead of event() so that we can get a histogram in
 		// GA of the different values, which is hard with events
@@ -319,6 +325,16 @@ const t = performance.now();
 					// new install or after closing a window, the current tab
 					// will be in the list, but is then removed from the list
 					// in getTabs().
+				if (includeClosedTabs) {
+						// tabIDs.length <= 1 suppresses closed tabs below, so
+						// log it to correlate "closed tabs not shown" reports
+						// with an empty/reset recents list after a restart
+					log("getAll:",
+						"recents:", tabIDs.length,
+						"closed sessions:", closedTabs.length,
+						"showing closed:", tabIDs.length > 1);
+				}
+
 				if (tabIDs.length > 1) {
 					const uniqueClosedTabs = [];
 
@@ -359,7 +375,7 @@ function updateAll()
 {
 	return storage.set(data => chrome.tabs.query({})
 		.then(freshTabs => {
-DEBUG && console.log("=== updateAll");
+			log("updateAll: matching stored recents against fresh tabs");
 			return {
 				lastStartupTime: Date.now(),
 				...updateFromFreshTabs(data, freshTabs),

@@ -9,6 +9,7 @@ import trackers from "@/background/page-trackers";
 import { debounce } from "@/background/debounce";
 import { isPopupWindow } from "@/background/popup-utils";
 import handleStartup from "@/background/startup";
+import log from "@/background/persistent-log";
 import initEventController from "@/shared/eventController";
 import { toggleRecentTabs } from "@/shared/commandHandlers";
 import state from "@/shared/state";
@@ -16,6 +17,10 @@ import state from "@/shared/state";
 if (globalThis.DEBUG) {
 	globalThis.printTabs = recentTabs.print;
 }
+
+	// log every service worker startup, so we can see whether a Chrome
+	// relaunch woke the worker at all, and whether onStartup fired after it
+log("service worker loaded");
 
 	// if the popup is opened and closed within this time, switch to the
 	// previous tab
@@ -60,7 +65,7 @@ chrome.runtime.onStartup.addListener(() => {
 	const onActivated = debounce(() => {
 		chrome.tabs.onActivated.removeListener(onActivated);
 
-DEBUG && console.log("==== last onActivated", state.startingUp);
+		log("onStartup: last onActivated fired, startingUp:", state.startingUp);
 
 			// we only need to call updateAll() if Chrome is still starting up,
 			// since startingUp will be set to false when the popup opens,
@@ -70,14 +75,14 @@ DEBUG && console.log("==== last onActivated", state.startingUp);
 				// will get new IDs when the app reloads each one
 			return recentTabs.updateAll()
 				.then(() => {
-DEBUG && console.log("===== updateAll done");
+					log("onStartup: updateAll done");
 
 					state.startingUp = false;
 				});
 		}
 	}, TabActivatedOnStartupDelay);
 
-DEBUG && console.log("== onStartup");
+	log("onStartup fired");
 
 globalThis.START = Date.now();
 
@@ -96,6 +101,13 @@ chrome.runtime.onConnect.addListener(port => {
 	let closedByEsc = false;
 
 DEBUG && console.log("== onConnect", port.name, state.startingUp);
+
+	if (state.startingUp) {
+			// the popup opened before the post-startup updateAll() ran, so
+			// the update is being skipped in favor of the getAll() path.
+			// log it in case that path is what loses the history.
+		log("onConnect:", port.name, "opened while startingUp, skipping updateAll");
+	}
 
 		// in newer versions of Chrome, reopened tabs don't trigger an
 		// onActivated event, so the handler set in onStartup won't fire
