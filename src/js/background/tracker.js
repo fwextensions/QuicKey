@@ -36,12 +36,20 @@ export default class Tracker {
 			// be compared for a release before GA is dropped.  reuse the GA
 			// client_id as the distinct_id, so if we later cut over fully,
 			// install continuity is preserved.
+			// GA custom dimensions have restrictive naming, but PostHog
+			// properties don't, so send readable names and drop the
+			// dimension1/2 keys from the PostHog copy
+		const { dimension1, dimension2, ...posthogProperties } =
+			mergedSettings.persistentEventParameters ?? {};
+
 		this.posthog = createPostHogClient({
 			distinctID: mergedSettings.client_id,
 			superProperties: {
-				...mergedSettings.persistentEventParameters,
+				...posthogProperties,
+				version: dimension1,
+				channel: dimension2,
 					// PostHog's web analytics UI keys off $current_url
-				$current_url: mergedSettings.persistentEventParameters?.page_location
+				$current_url: posthogProperties.page_location
 			}
 		});
 		this.enabled = enabled;
@@ -72,12 +80,16 @@ export default class Tracker {
 			let posthogParams = params;
 
 			if (posthogEvent === "$exception") {
-					// PostHog's error tracking UI groups on $exception_list
+					// PostHog's error tracking UI groups on $exception_list,
+					// so move the potentially long description there instead
+					// of duplicating it in the payload
+				const { description, ...rest } = params ?? {};
+
 				posthogParams = {
-					...params,
+					...rest,
 					$exception_list: [{
 						type: "Error",
-						value: params?.description
+						value: description
 					}]
 				};
 			}
