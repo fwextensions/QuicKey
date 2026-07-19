@@ -34,7 +34,7 @@ const PressOptions = {
 	iterations: 1,
 };
 
-const Container = styled.div`
+const Container = styled("div")`
 	display: inline-block;
 
 	& kbd {
@@ -49,7 +49,7 @@ const Container = styled.div`
 		position: relative;
 	}
 `;
-const ShadowKeyContainer = styled.div`
+const ShadowKeyContainer = styled("div")`
 	position: absolute;
 	
 	& kbd {

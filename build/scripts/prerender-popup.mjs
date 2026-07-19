@@ -8,7 +8,6 @@ import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 import { createServer } from "vite";
 import { createRequire } from "node:module";
-import babelJsx from "./babel-jsx.mjs";
 
 const require = createRequire(import.meta.url);
 const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -39,9 +38,6 @@ const server = await createServer({
 			lodash: join(srcDir, "js/lib/lodont"),
 		}
 	},
-	plugins: [
-		babelJsx(),
-	],
 });
 
 try {

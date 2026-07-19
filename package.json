@@ -28,10 +28,7 @@
     "react-router": "^7.18.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.29.7",
-    "@babel/plugin-transform-react-jsx": "^7.29.7",
     "adm-zip": "^0.6.0",
-    "babel-plugin-transform-goober": "^1.2.0",
     "rollup-plugin-visualizer": "^7.0.1",
     "vite": "^8.1.4",
     "vite-plugin-static-copy": "^4.1.1",

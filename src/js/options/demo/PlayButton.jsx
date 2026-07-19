@@ -1,7 +1,7 @@
 import React from "react";
 import { styled } from "goober";
 
-const Container = styled.div`
+const Container = styled("div")`
 	@media (prefers-color-scheme: dark) {
 		fill: white;
 	}

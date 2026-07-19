@@ -17,7 +17,6 @@ import { build } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 import { visualizer } from "rollup-plugin-visualizer";
 import AdmZip from "adm-zip";
-import babelJsx from "./babel-jsx.mjs";
 
 const ShortName = "QuicKey";
 const FullName = `${ShortName} – The quick tab switcher`;
@@ -47,9 +46,7 @@ function baseConfig()
 				lodash: join(srcDir, "js/lib/lodont"),
 			}
 		},
-		plugins: [
-			babelJsx(),
-		],
+		plugins: [],
 		build: {
 			outDir,
 			emptyOutDir: false,

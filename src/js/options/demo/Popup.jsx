@@ -81,7 +81,7 @@ const HiddenWindowBorder = styled(Window)`
 	mix-blend-mode: screen;
 	z-index: 50;
 `;
-const Selection = styled.div`
+const Selection = styled("div")`
 	@media (prefers-color-scheme: dark) {
 		background: hsl(240, 40%, 60%);
 	}
@@ -93,24 +93,24 @@ const Selection = styled.div`
 	background: hsl(240, 90%, 93%);
 	position: absolute;
 `;
-const Tabs = styled.div`
+const Tabs = styled("div")`
 	position: relative;
 `;
-const TabItem = styled.div`
+const TabItem = styled("div")`
 	width: 100%;
 	height: var(--row-height);
 	flex-direction: row;
 	display: flex;
 	align-items: center;
 `;
-const Favicon = styled.div`
+const Favicon = styled("div")`
 	width: calc(32 * var(--px)); 
 	height: calc(32 * var(--px)); 
 	margin: 5%;
 `;
 	// we use a min-height below because the titles don't look great if the calc'd
 	// height is ~1.5 and some end up at 1px and others at 2px
-const Title = styled.div`
+const Title = styled("div")`
 	@media (prefers-color-scheme: dark) {
 		background: #aaa;
 	}
