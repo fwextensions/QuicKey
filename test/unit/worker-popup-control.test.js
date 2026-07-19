@@ -197,6 +197,39 @@ describe("toolbar menu open", () => {
 		documentUrl: "chrome-extension://quickeyfakeextensionidaaaaaaaaaa/popup.html",
 	};
 
+		// the real menu holds this lock while open (popup/init.js); the
+		// background checks it via isMenuOpen().  returns once the lock is
+		// held, and sets closeMenuLock to release it, which is what happens
+		// when the menu page goes away.
+	let closeMenuLock;
+
+	function holdMenuLock()
+	{
+		return new Promise((ready) => {
+			navigator.locks.request("__menu-open__", () => {
+				ready();
+
+				return new Promise((release) => closeMenuLock = release);
+			});
+		});
+	}
+
+		// a minimal stand-in for the port the menu connects when it opens.
+		// disconnect() fires the onDisconnect listeners, like the real port
+		// does in every other context when the menu closes.
+	function makeMenuPort()
+	{
+		const disconnectListeners = new Set();
+
+		return {
+			name: "menu",
+			postMessage: () => {},
+			onMessage: { addListener: () => {} },
+			onDisconnect: { addListener: (fn) => disconnectListeners.add(fn) },
+			disconnect: () => disconnectListeners.forEach((fn) => fn()),
+		};
+	}
+
 	it("the worker ignores commands while the menu is open, and handles them again after it closes", async () => {
 		const worker = await loadContext("/background.html");
 
@@ -208,12 +241,82 @@ describe("toolbar menu open", () => {
 			// command arriving then must be dropped, like the MV2 background
 			// page did by removing its onCommand listener
 		chrome.runtime._setContexts([MenuContext]);
+		await holdMenuLock();
 		chrome.commands.onCommand.dispatch(OpenPopupCommand);
 		await flush();
 
 		expect(popupWindow.create).not.toHaveBeenCalled();
 
 		chrome.runtime._setContexts([]);
+		closeMenuLock();
+		await flush();
+		chrome.commands.onCommand.dispatch(OpenPopupCommand);
+		await flush();
+
+		expect(popupWindow.create).toHaveBeenCalledTimes(1);
+	});
+
+	it("a stale POPUP context left behind after the menu closes doesn't block commands", async () => {
+		const worker = await loadContext("/background.html");
+
+		await flush();
+
+			// the menu connects a port when it opens, which every context sees,
+			// so commandHandlers tracks the open state from the port events
+		const menuPort = makeMenuPort();
+
+		chrome.runtime._setContexts([MenuContext]);
+		chrome.runtime.onConnect.dispatch(menuPort);
+		chrome.commands.onCommand.dispatch(OpenPopupCommand);
+		await flush();
+
+		expect(popupWindow.create).not.toHaveBeenCalled();
+
+			// the menu closes, but getContexts() keeps (wrongly) reporting its
+			// POPUP context.  the tracked port state knows better, so commands
+			// must work again instead of being silently dropped forever.
+		menuPort.disconnect();
+		chrome.commands.onCommand.dispatch(OpenPopupCommand);
+		await flush();
+
+		expect(popupWindow.create).toHaveBeenCalledTimes(1);
+	});
+
+	it("a getContexts() failure doesn't drop commands", async () => {
+		const worker = await loadContext("/background.html");
+
+		await flush();
+
+		vi.spyOn(chrome.runtime, "getContexts")
+			.mockRejectedValue(new Error("no getContexts for you"));
+
+		chrome.commands.onCommand.dispatch(OpenPopupCommand);
+		await flush();
+
+		expect(popupWindow.create).toHaveBeenCalledTimes(1);
+	});
+
+	it("a worker that starts while the menu is already open re-enables commands when the menu closes", async () => {
+			// the user opened the menu, the old worker died, and a new worker
+			// was started: it never saw the menu's port connect, and the
+			// menu's port disconnect will fire against the dead worker, so
+			// the lock release is the only close signal it will ever get.
+			// getContexts() stale-reports the menu the whole time.
+		chrome.runtime._setContexts([MenuContext]);
+		await holdMenuLock();
+
+		const worker = await loadContext("/background.html");
+
+		await flush();
+
+		chrome.commands.onCommand.dispatch(OpenPopupCommand);
+		await flush();
+
+		expect(popupWindow.create).not.toHaveBeenCalled();
+
+		closeMenuLock();
+		await flush();
+
 		chrome.commands.onCommand.dispatch(OpenPopupCommand);
 		await flush();
 
@@ -235,15 +338,18 @@ describe("toolbar menu open", () => {
 
 			// this is the case the port-based tracking in the background could
 			// never see: the popup process is handling commands, but only the
-			// worker got the menu's onConnect.  the getContexts() check works
-			// from either context.
+			// worker got the menu's onConnect.  the lock check works from
+			// either context.
 		chrome.runtime._setContexts([MenuContext]);
+		await holdMenuLock();
 		chrome.commands.onCommand.dispatch(OpenPopupCommand);
 		await flush();
 
 		expect(popupWindow.create).not.toHaveBeenCalled();
 
 		chrome.runtime._setContexts([]);
+		closeMenuLock();
+		await flush();
 		chrome.commands.onCommand.dispatch(OpenPopupCommand);
 		await flush();
 

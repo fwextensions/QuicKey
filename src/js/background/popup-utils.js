@@ -66,15 +66,28 @@ export function isPopupWindow(
 	return (tab?.url || tab?.documentUrl)?.startsWith(PopupURL);
 }
 
-	// the menu on the toolbar icon is the only POPUP-type context in the
-	// extension, so the existence of one means the menu is currently open.
-	// this is true regardless of whether the background or the popup window
-	// currently has control, unlike tracking the menu's port connections,
-	// which only the background sees.
+	// the menu holds this web lock for as long as it's open.  it's acquired
+	// in popup/init.js, which must use the same literal name.  we use a lock
+	// instead of getContexts() because getContexts() can keep returning a
+	// stale POPUP context after the menu has closed, whereas the browser
+	// releases a lock the instant its page dies, even if the page is frozen.
+export const MenuOpenLockName = "__menu-open__";
+
+	// the menu on the toolbar icon is the only context that holds the lock,
+	// so a held lock with that name means the menu is currently open.  this
+	// is true regardless of whether the background or the popup window
+	// currently has control, unlike tracking the menu's port connections.
 export async function isMenuOpen()
 {
-	const contexts = await chrome.runtime.getContexts(
-		{ contextTypes: [chrome.runtime.ContextType.POPUP] });
+	const { held } = await navigator.locks.query();
 
-	return contexts.length > 0;
+	return held.some(({ name }) => name === MenuOpenLockName);
+}
+
+	// resolves the next time the menu is closed (immediately if it's not
+	// open).  a queued request on the menu's lock is granted as soon as the
+	// menu page releases it by going away.
+export function whenMenuClosed()
+{
+	return navigator.locks.request(MenuOpenLockName, () => {});
 }

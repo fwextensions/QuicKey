@@ -1040,6 +1040,12 @@ export default class App extends React.Component {
 	showPopupWindow(
 		activeTab)
 	{
+		if (!popupWindow) {
+				// we're the menu, which never connects popupWindow, so a
+				// misrouted showWindow message would otherwise throw here
+			return;
+		}
+
 		return popupWindow.show(activeTab, activeTab ? "center-center" : "right-center");
 	}
 

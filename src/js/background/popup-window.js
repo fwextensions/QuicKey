@@ -8,7 +8,12 @@ import {connect} from "@/lib/ipc";
 const {Behind, Tab, Minimize} = HidePopupBehavior;
 
 
-const { receive } = connect("popup-window");
+	// only the background context should host the ipc channel for popup
+	// window calls.  the menu page also loads this module (via popup/app.js),
+	// and if it called connect() here, its channel would displace the
+	// worker <-> popup channel in ipc.js handleConnect(), leaving the popup's
+	// show/hide calls queued forever after the menu closes.
+const isBackgroundContext = typeof document === "undefined";
 let popupAdjustmentWidth = 0;
 let popupAdjustmentHeight = 0;
 let currentWidth = PopupInnerWidth;
@@ -404,12 +409,16 @@ async function close()
 
 
 	// listen for calls to these functions from the popup.html page
-receive({
-	show,
-	hide,
-	blur,
-	resize,
-});
+if (isBackgroundContext) {
+	const { receive } = connect("popup-window");
+
+	receive({
+		show,
+		hide,
+		blur,
+		resize,
+	});
+}
 
 
 export default {

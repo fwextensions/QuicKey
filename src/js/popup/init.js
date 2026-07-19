@@ -23,7 +23,17 @@
 	// onDisconnect event when the popup is closed.  do it first thing, in case
 	// the user quickly hits the shortcut again.  pass in a name based on
 	// whether we're in a popup window so the background knows where it's from.
-const gPort = chrome.runtime.connect({ name: location.search.includes("props") ? "popup" : "menu" });
+const gIsMenu = !location.search.includes("props");
+const gPort = chrome.runtime.connect({ name: gIsMenu ? "menu" : "popup" });
+
+if (gIsMenu) {
+		// hold this lock for as long as the menu is open, so the background
+		// can reliably tell whether it's open.  the browser releases the lock
+		// as soon as this page goes away, unlike getContexts(), which can
+		// return a stale POPUP context after the menu closes.  the name must
+		// match MenuOpenLockName in background/popup-utils.js.
+	navigator.locks.request("__menu-open__", () => new Promise(() => {}));
+}
 const gInitTime = performance.now();
 
 

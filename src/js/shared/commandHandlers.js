@@ -1,12 +1,13 @@
 import { addTab } from "@/shared/addTab";
 import state from "@/shared/state";
+import control from "@/shared/control";
 import { addListener, removeListener } from "@/shared/controlledEvent";
 import popupWindow from "@/background/popup-window";
 import toolbarIcon from "@/background/toolbar-icon";
 import recentTabs from "@/background/recent-tabs";
 import settings from "@/background/settings";
 import trackers from "@/background/page-trackers";
-import { isPopupWindow, isMenuOpen } from "@/background/popup-utils";
+import { isPopupWindow, isMenuOpen, whenMenuClosed } from "@/background/popup-utils";
 import * as k from "@/background/constants";
 
 const {
@@ -24,15 +25,117 @@ let currentWindowLimitRecents = false;
 let ports = {};
 let sendPopupMessage;
 
+	// whether the toolbar menu is open, tracked through its port connecting
+	// and disconnecting.  chrome broadcasts runtime.onConnect to every
+	// extension context, so this is correct in whichever context handles
+	// commands.  null means this context hasn't seen a menu port event yet
+	// (it may have started while the menu was already open), so the tracked
+	// state can't be trusted and we ask the browser instead.
+let menuOpen = null;
+
+const isBackgroundContext = typeof document === "undefined";
+
+	// while the menu is open, we remove the commands.onCommand listener
+	// entirely, so that Chrome delivers shortcuts like alt-W to the menu as
+	// normal keydown/keyup events instead of intercepting them as global
+	// commands.  the menu's select-on-modifier-release behavior depends on
+	// seeing the raw key events, so just ignoring the command in this
+	// context isn't enough.  that only works if NO context in the whole
+	// extension has an onCommand listener, so the hidden popup page must
+	// not register one unless it actually holds control (the worker died).
+	// otherwise, its listener keeps Chrome intercepting the shortcut even
+	// after the worker removes its own, especially if the hidden page is
+	// frozen and can't respond to the menu's connect event.
+function shouldListenForCommands()
+{
+	return isBackgroundContext || control.isHeld();
+}
+
+function enableCommands()
+{
+	if (shouldListenForCommands()) {
+		addListener("commands.onCommand", handleCommand);
+	}
+}
+
+function disableCommands()
+{
+	removeListener("commands.onCommand", handleCommand);
+}
+
+let watchingMenuClose = false;
+
+	// if this context started listening while the menu was already open
+	// (like the worker being woken by the menu's port connect), disable
+	// commands and re-enable them when the menu's lock is released.  we
+	// can't rely on the menu's port disconnect here, since its port was
+	// connected to the previous worker, so this context will never see it.
+	// if the check fails, leave commands enabled, since handleCommand()
+	// has its own menu check.
+function checkMenuNotAlreadyOpen()
+{
+	isMenuOpen()
+		.then((open) => {
+			if (open && menuOpen !== false) {
+				disableCommands();
+				watchForMenuClose();
+			}
+		})
+		.catch(() => {});
+}
+
+function watchForMenuClose()
+{
+	if (watchingMenuClose) {
+		return;
+	}
+
+	watchingMenuClose = true;
+	whenMenuClosed()
+		.then(() => {
+			menuOpen = false;
+			enableCommands();
+		})
+		.catch(() => {})
+		.finally(() => watchingMenuClose = false);
+}
+
+chrome.runtime.onConnect.addListener((port) => {
+	if (port.name === "menu") {
+		menuOpen = true;
+		disableCommands();
+		port.onDisconnect.addListener(() => {
+			menuOpen = false;
+			enableCommands();
+		});
+	}
+});
+
+	// while the menu is open on the toolbar icon, it handles keyboard events
+	// itself, so all commands should be ignored until it closes.  otherwise,
+	// a shortcut like alt-W that's both a menu navigation key and a global
+	// command would also trigger the command in whichever context has
+	// control, opening the popup window on top of the menu.
+async function shouldIgnoreCommands()
+{
+	if (menuOpen === false) {
+			// we saw the menu's port disconnect, so we know it's closed without
+			// asking the browser.  never falling through to getContexts() here
+			// means a stale POPUP context lingering after the menu closes can't
+			// silently eat every subsequent command.
+		return false;
+	}
+
+		// the tracked state is unknown or the menu looks open, so confirm
+		// against live browser state.  if the call fails, fall back to the
+		// tracked state rather than letting the rejection drop the command.
+	return isMenuOpen().catch(() => menuOpen === true);
+}
+
 async function handleCommand(
 	command)
 {
-		// while the menu is open on the toolbar icon, it handles keyboard
-		// events itself, so ignore all commands until it closes.  otherwise,
-		// a shortcut like alt-W that's both a menu navigation key and a
-		// global command would also trigger the command in whichever context
-		// has control, opening the popup window on top of the menu.
-	if (await isMenuOpen()) {
+	if (await shouldIgnoreCommands()) {
 		return;
 	}
 
@@ -90,6 +193,15 @@ async function openPopupWindow(
 			{ focusSearch, navigatingRecents: state.navigatingRecents },
 			state.navigatingRecents ? "right-center" : "center-center"
 		);
+	}
+
+	if (ports.menu) {
+			// the menu is open, so route the shortcut to it as a selection
+			// change instead of showing the popup window.  sendPopupMessage()
+			// prefers the menu port, and the menu can't handle showWindow
+			// (it has no popupWindow connection), so sending it would just
+			// throw in the menu and nothing would appear.
+		return sendPopupMessage("modifySelected", { direction: 1 });
 	}
 
 	if (!isPopupWindow(currentActiveTab)) {
@@ -168,7 +280,10 @@ async function navigateRecents(
 	}
 }
 
-function toggleRecentTabs(
+	// exported because background.js also calls this when the popup or menu
+	// port disconnects right after connecting, which means the user
+	// double-pressed the open-popup shortcut to switch tabs
+export function toggleRecentTabs(
 	fromShortcut)
 {
 		// we have to wait for the last toggle promise chain to resolve before
@@ -244,9 +359,16 @@ export default function init(
 {
 	({ sendPopupMessage, ports } = context);
 
-	addListener("commands.onCommand", handleCommand);
+	enableCommands();
+	checkMenuNotAlreadyOpen();
 
 	return (context) => {
+			// this runs when the context takes control, which is the point
+			// where a page context (the hidden popup) needs to start
+			// listening for commands, since the worker is gone
+		enableCommands();
+		checkMenuNotAlreadyOpen();
+
 		context.runtimeMessage.addListener(handlePopupMessage);
 
 			// update this flag in case the popup gets hidden or closed while the user
