@@ -1,6 +1,13 @@
 import ga4mp from "@/lib/ga4mp";
+import { createPostHogClient } from "@/lib/posthog";
 
 
+	// GA event names that PostHog has native equivalents for, which light
+	// up its built-in web analytics and error tracking UIs
+const PostHogEventNames = {
+	page_view: "$pageview",
+	exception: "$exception"
+};
 const PathPattern = /chrome-extension:\/\/[^\n]+\//g;
 const MaxStackLength = 2000;
 const DefaultSettings = {
@@ -22,7 +29,21 @@ export default class Tracker {
 			throw new Error("A Google Analytics 4 tracker ID is required.");
 		}
 
-		this.ga4 = ga4mp([id], { ...DefaultSettings, ...settings });
+		const mergedSettings = { ...DefaultSettings, ...settings };
+
+		this.ga4 = ga4mp([id], mergedSettings);
+			// send every event to PostHog as well, so the two services can
+			// be compared for a release before GA is dropped.  reuse the GA
+			// client_id as the distinct_id, so if we later cut over fully,
+			// install continuity is preserved.
+		this.posthog = createPostHogClient({
+			distinctID: mergedSettings.client_id,
+			superProperties: {
+				...mergedSettings.persistentEventParameters,
+					// PostHog's web analytics UI keys off $current_url
+				$current_url: mergedSettings.persistentEventParameters?.page_location
+			}
+		});
 		this.enabled = enabled;
 
 		if (sendPageview) {
@@ -46,6 +67,22 @@ export default class Tracker {
 	{
 		if (this.enabled) {
 			this.ga4.trackEvent(event, params);
+
+			const posthogEvent = PostHogEventNames[event] ?? event;
+			let posthogParams = params;
+
+			if (posthogEvent === "$exception") {
+					// PostHog's error tracking UI groups on $exception_list
+				posthogParams = {
+					...params,
+					$exception_list: [{
+						type: "Error",
+						value: params?.description
+					}]
+				};
+			}
+
+			this.posthog.capture(posthogEvent, posthogParams);
 		}
 	}
 
@@ -55,8 +92,10 @@ export default class Tracker {
 	{
 		if (name && typeof name == "object") {
 			Object.entries(name).forEach(([key, value]) => this.ga4.setEventsParameter(key, value));
+			this.posthog.register(name);
 		} else {
 			this.ga4.setEventsParameter(name, value);
+			this.posthog.register({ [name]: value });
 		}
 	}
 
