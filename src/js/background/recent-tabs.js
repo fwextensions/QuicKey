@@ -409,7 +409,7 @@ function navigate(
 		let previousTabIndex;
 
 		if (direction == "toggle") {
-			previousTabIndex = maxIndex - 1;
+			previousTabIndex = data.previousTabIndex > -1 ? data.previousTabIndex : maxIndex - 1;
 		} else if (now - data.lastShortcutTime < MinTabDwellTime && data.previousTabIndex > -1) {
 			if (direction == -1) {
 					// when going backwards, wrap around if necessary
@@ -438,7 +438,12 @@ DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabInde
 
 				if (previousTab && currentTab
 						&& previousTab.windowId !== currentTab.windowId) {
-					data.previousTabIndex = calcNavigationIndex(direction,
+					
+					if (data.previousTabIndex === -1) {
+						data.previousTabIndex = previousTabIndex;
+					}
+
+					data.previousTabIndex = calcNavigationIndex(direction == "toggle" ? -1 : direction,
 						data.previousTabIndex, tabIDCount);
 
 						// we need to set lastShortcutTime to now so that
@@ -447,6 +452,11 @@ DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabInde
 						// previousTabIndex would keep getting set to the
 						// penultimate tab in tabIDs.
 					data.lastShortcutTime = now;
+
+					data.skipCount = (data.skipCount || 0) + 1;
+					if (data.skipCount >= tabIDCount) {
+						return newData;
+					}
 
 					return switchTabs(data);
 				}

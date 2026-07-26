@@ -365,7 +365,8 @@ function toggleRecentTabs(
 			// that will also cause the next addTab to be executed immediately.
 		.then(() => addTab.execute(true))
 		.then(() => tracker.event("recents",
-			fromShortcut ? "toggle-shortcut" : "toggle"));
+			fromShortcut ? "toggle-shortcut" : "toggle"))
+		.catch(error => console.error("QuicKey recovered from a crash:", error));
 }
 
 
