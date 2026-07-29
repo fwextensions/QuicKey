@@ -6,7 +6,6 @@ import toolbarIcon from "@/background/toolbar-icon";
 import recentTabs from "@/background/recent-tabs";
 import storage from "@/background/quickey-storage";
 import trackers from "@/background/page-trackers";
-import { debounce } from "@/background/debounce";
 import { isPopupWindow } from "@/background/popup-utils";
 import handleStartup from "@/background/startup";
 import log from "@/background/persistent-log";
@@ -26,8 +25,23 @@ log("service worker loaded");
 	// previous tab
 const MaxPopupLifetime = 450;
 const RestartDelay = 60 * 1000;
-const TabActivatedOnStartupDelay = 750;
+	// how long to keep retrying the match between the stored recents and the
+	// restored tabs after Chrome starts, and the minimum interval between
+	// attempts.  it's a time budget rather than a pass count because each pass
+	// costs a chrome.tabs.query(), which can take seconds on a slow machine
+	// with a lot of tabs -- a fixed count could tie up the storage lock for a
+	// long time.  the pass that hits the deadline is the one that drops the
+	// recents that still haven't matched.
+const StartupUpdateTimeout = 10 * 1000;
+const StartupUpdateRetryDelay = 1000;
 const tracker = trackers.background;
+
+
+function delay(
+	ms)
+{
+	return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 
 const ports = {};
@@ -60,34 +74,77 @@ console.error("==== sendPopupMessage", error.message);
 });
 
 
-// TODO: this event doesn't seem to get triggered, or isn't getting cached in the sw.js
+	// Chrome used to fire tabs.onActivated for every tab it restored on
+	// startup, so the only way to know the restore had finished was to wait
+	// for those events to stop arriving.  it no longer does that for tabs
+	// restored as already-active, so waiting for an activation that never
+	// came meant updateAll() often never ran at all, leaving the stored
+	// recents pointing at the pre-restart tab IDs (every lookup missing, so
+	// the recency order collapsed) and lastStartupTime never updated.
+	//
+	// so remap immediately instead.  the reason for waiting in the first
+	// place is still real, though: a restored tab that Chrome hasn't loaded
+	// yet may not have its URL populated, and updateFromFreshTabs() matches
+	// recents to tabs by URL.  matching too early would drop those recents
+	// for good.  so the early passes retain whatever didn't match and we
+	// retry while anything is still outstanding, letting only the final pass
+	// drop the recents whose tabs really are gone.
 chrome.runtime.onStartup.addListener(() => {
-	const onActivated = debounce(() => {
-		chrome.tabs.onActivated.removeListener(onActivated);
-
-		log("onStartup: last onActivated fired, startingUp:", state.startingUp);
-
-			// we only need to call updateAll() if Chrome is still starting up,
-			// since startingUp will be set to false when the popup opens,
-			// which will also update all the tabs
-		if (state.startingUp) {
-				// the stored recent tab data will be out of date, since the tabs
-				// will get new IDs when the app reloads each one
-			return recentTabs.updateAll()
-				.then(() => {
-					log("onStartup: updateAll done");
-
-					state.startingUp = false;
-				});
-		}
-	}, TabActivatedOnStartupDelay);
-
 	log("onStartup fired");
 
-globalThis.START = Date.now();
-
 	state.startingUp = true;
-	chrome.tabs.onActivated.addListener(onActivated);
+
+	(async () => {
+		const deadline = Date.now() + StartupUpdateTimeout;
+		let attempt = 0;
+
+		try {
+			while (true) {
+				const passTime = Date.now();
+					// only retain unmatched recents if we'll get another look at
+					// them; the pass that ends the loop has to be the one that
+					// drops the recents whose tabs are really gone
+				const isLastPass = passTime >= deadline;
+				const {missingCount, pendingCount} =
+					await recentTabs.updateAll(!isLastPass);
+
+				attempt++;
+				log("onStartup: updateAll pass", attempt,
+					"took", Date.now() - passTime, "ms",
+					"missing:", missingCount, "pending:", pendingCount);
+
+					// retry only while tabs are still loading, since that's the
+					// only reason another pass could match anything new.  a
+					// recent that's missing because its tab was closed before
+					// the restart stays missing no matter how long we wait, so
+					// retrying on missingCount alone would burn every pass on
+					// every startup -- expensive when tabs.query() is slow, and
+					// it holds the storage lock the popup needs.
+				if (isLastPass || !pendingCount) {
+					if (pendingCount) {
+						log("onStartup: gave up with", pendingCount,
+							"tabs still loading");
+					}
+
+					break;
+				}
+
+					// the pass itself gave the pending tabs time to load, so
+					// only top it up to the retry interval
+				await delay(Math.max(StartupUpdateRetryDelay -
+					(Date.now() - passTime), 0));
+			}
+		} catch (error) {
+			log("onStartup: updateAll failed:", error.message);
+			tracker.exception(error);
+		}
+
+			// resume recording tab events, which the handlers skip while
+			// startingUp is true
+		state.startingUp = false;
+
+		log("onStartup: startup complete");
+	})();
 });
 
 

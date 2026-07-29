@@ -217,4 +217,151 @@ describe("recent-tabs updateAll() / updateFromFreshTabs", () => {
 		expect(tabIDs).toEqual([100]);
 		expect(tabsByID[20]).toBeUndefined();
 	});
+
+	it("resolves to the number of recents that didn't match a fresh tab", async () => {
+		store._seed({
+			tabIDs: [10, 20],
+			tabsByID: {
+				10: { id: 10, url: "https://a.example.com/", windowId: 1, lastVisit: 100 },
+				20: { id: 20, url: "https://gone.example.com/", windowId: 1, lastVisit: 200 },
+			},
+		});
+
+		chrome.tabs.query = vi.fn(() => Promise.resolve([
+			{ id: 100, url: "https://a.example.com/", windowId: 1 },
+		]));
+
+		await expect(recentTabs.updateAll()).resolves.toMatchObject({ missingCount: 1 });
+	});
+
+		// the startup loop retries on pendingCount, not missingCount, so that a
+		// recent whose tab was closed before the restart doesn't keep it going
+	it("reports how many fresh tabs have no URL to match against yet", async () => {
+		store._seed({ tabIDs: [], tabsByID: {} });
+
+		chrome.tabs.query = vi.fn(() => Promise.resolve([
+			{ id: 100, url: "https://a.example.com/", windowId: 1 },
+			{ id: 200, url: "", windowId: 1 },
+			{ id: 300, url: "", windowId: 1 },
+		]));
+
+		await expect(recentTabs.updateAll()).resolves.toMatchObject({ pendingCount: 2 });
+	});
+
+	it("doesn't store the counts it reports to the caller", async () => {
+		store._seed({ tabIDs: [], tabsByID: {} });
+		chrome.tabs.query = vi.fn(() => Promise.resolve([]));
+
+		await recentTabs.updateAll();
+
+		expect(store._dump()).not.toHaveProperty("missingCount");
+		expect(store._dump()).not.toHaveProperty("pendingCount");
+	});
+
+		// on startup, a restored tab may not have its URL populated yet, so an
+		// unmatched recent doesn't mean the tab is gone -- see the onStartup
+		// handler in background.js
+	it("keeps unmatched recents under their old IDs when retaining", async () => {
+		store._seed({
+			tabIDs: [10, 20],
+			tabsByID: {
+				10: { id: 10, url: "https://a.example.com/", windowId: 1, lastVisit: 100 },
+				20: { id: 20, url: "https://b.example.com/", windowId: 1, lastVisit: 200 },
+			},
+		});
+
+			// only the first tab has finished restoring and has a URL to match
+		chrome.tabs.query = vi.fn(() => Promise.resolve([
+			{ id: 100, url: "https://a.example.com/", windowId: 1 },
+			{ id: 200, url: "", windowId: 1 },
+		]));
+
+		await expect(recentTabs.updateAll(true)).resolves
+			.toMatchObject({ missingCount: 1, pendingCount: 1 });
+
+		const { tabIDs, tabsByID } = store._dump();
+
+			// the unmatched recent survives at its old ID, in recency order,
+			// so a later pass can still match it once the tab loads
+		expect(tabIDs).toEqual([100, 20]);
+		expect(tabsByID[20]).toMatchObject({ url: "https://b.example.com/", lastVisit: 200 });
+	});
+
+	it("drops a retained recent once a later pass stops retaining", async () => {
+		store._seed({
+			tabIDs: [10, 20],
+			tabsByID: {
+				10: { id: 10, url: "https://a.example.com/", windowId: 1, lastVisit: 100 },
+				20: { id: 20, url: "https://b.example.com/", windowId: 1, lastVisit: 200 },
+			},
+		});
+
+		chrome.tabs.query = vi.fn(() => Promise.resolve([
+			{ id: 100, url: "https://a.example.com/", windowId: 1 },
+		]));
+
+		await recentTabs.updateAll(true);
+		expect(store._dump().tabIDs).toEqual([100, 20]);
+
+			// the second pass finds the same fresh tabs, so the retained recent
+			// really is gone and gets dropped
+		await recentTabs.updateAll();
+		expect(store._dump().tabIDs).toEqual([100]);
+	});
+
+	it("matches a retained recent on a later pass once its tab has loaded", async () => {
+		store._seed({
+			tabIDs: [10, 20],
+			tabsByID: {
+				10: { id: 10, url: "https://a.example.com/", windowId: 1, lastVisit: 100 },
+				20: { id: 20, url: "https://b.example.com/", windowId: 1, lastVisit: 200 },
+			},
+		});
+
+		chrome.tabs.query = vi.fn(() => Promise.resolve([
+			{ id: 100, url: "https://a.example.com/", windowId: 1 },
+			{ id: 200, url: "", windowId: 1 },
+		]));
+
+		await recentTabs.updateAll(true);
+
+			// tab 200 has now finished restoring and reports its URL
+		chrome.tabs.query = vi.fn(() => Promise.resolve([
+			{ id: 100, url: "https://a.example.com/", windowId: 1 },
+			{ id: 200, url: "https://b.example.com/", windowId: 1 },
+		]));
+
+		await expect(recentTabs.updateAll()).resolves
+			.toMatchObject({ missingCount: 0, pendingCount: 0 });
+
+		const { tabIDs, tabsByID } = store._dump();
+
+		expect(tabIDs).toEqual([100, 200]);
+		expect(tabsByID[200]).toMatchObject({ lastVisit: 200 });
+		expect(tabsByID[20]).toBeUndefined();
+	});
+
+		// reusing an old ID that a restored tab now holds would clobber the
+		// real tab's entry with stale data
+	it("doesn't retain an unmatched recent whose ID a fresh tab now has", async () => {
+		store._seed({
+			tabIDs: [10, 20],
+			tabsByID: {
+				10: { id: 10, url: "https://a.example.com/", windowId: 1, lastVisit: 100 },
+				20: { id: 20, url: "https://gone.example.com/", windowId: 1, lastVisit: 200 },
+			},
+		});
+
+			// a restored tab happens to have been given ID 20
+		chrome.tabs.query = vi.fn(() => Promise.resolve([
+			{ id: 20, url: "https://a.example.com/", windowId: 1 },
+		]));
+
+		await recentTabs.updateAll(true);
+
+		const { tabIDs, tabsByID } = store._dump();
+
+		expect(tabIDs).toEqual([20]);
+		expect(tabsByID[20]).toMatchObject({ url: "https://a.example.com/", lastVisit: 100 });
+	});
 });

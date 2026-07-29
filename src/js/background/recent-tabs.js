@@ -79,12 +79,20 @@ function addVisit(
 }
 
 
+	// when retainUnmatched is true, recents that don't match any fresh tab are
+	// kept under their old IDs instead of being dropped.  that's used during
+	// Chrome's startup, where a restored tab that hasn't been loaded yet may
+	// not have its URL populated, so an unmatched recent doesn't necessarily
+	// mean the tab is gone -- it may just not be ready to match yet.  a later
+	// pass with retainUnmatched false drops whatever's still unmatched.
 function updateFromFreshTabs(
 	data,
-	freshTabs)
+	freshTabs,
+	retainUnmatched)
 {
 DEBUG && console.log("=== updateFromFreshTabs", data, freshTabs);
 	const {tabIDs, tabsByID} = data;
+	const freshTabIDs = new Set(freshTabs.map(({id}) => id));
 	const freshTabsByURL = {};
 		// start with an empty object so if there are old tabs lying around
 		// that aren't listed in tabIDs they'll get dropped
@@ -92,6 +100,7 @@ DEBUG && console.log("=== updateFromFreshTabs", data, freshTabs);
 	const newTabIDs = [];
 	const tracker = pageTrackers.background;
 	let missingCount = 0;
+	let retainedCount = 0;
 DEBUG && console.log("=== existing tabs", tabIDs.length, Object.keys(tabsByID).length, "fresh", freshTabs.length);
 
 		// create a dictionary of the new tabs by the URL and
@@ -125,13 +134,24 @@ DEBUG && console.log("=== existing tabs", tabIDs.length, Object.keys(tabsByID).l
 			missingCount++;
 			log("updateFromFreshTabs: no fresh tab matches recent",
 				tabID, oldTab?.lastVisit, oldTab?.url?.slice(0, 100));
+
+				// hang on to the old recent so a later pass can still match it
+				// once the tab finishes restoring.  skip it if a fresh tab has
+				// already claimed this ID, since reusing it would overwrite a
+				// real tab's entry with stale data.
+			if (retainUnmatched && oldTab && !freshTabIDs.has(tabID)) {
+				newTabsByID[tabID] = oldTab;
+				newTabIDs.push(tabID);
+				retainedCount++;
+			}
 		}
 	});
 	log("updateFromFreshTabs:",
 		"old recents:", tabIDs.length,
 		"fresh tabs:", freshTabs.length,
-		"matched:", newTabIDs.length,
-		"missing:", missingCount);
+		"matched:", newTabIDs.length - retainedCount,
+		"missing:", missingCount,
+		"retained:", retainedCount);
 
 		// use timing() instead of event() so that we can get a histogram in
 		// GA of the different values, which is hard with events
@@ -142,7 +162,15 @@ DEBUG && console.log("=== existing tabs", tabIDs.length, Object.keys(tabsByID).l
 	var result = {
 		tabIDs: newTabIDs,
 		tabsByID: newTabsByID,
-		lastUpdateTime: Date.now()
+		lastUpdateTime: Date.now(),
+			// not stored -- updateAll() strips these off and returns them, so
+			// the startup sequence can tell whether another pass is worthwhile.
+			// pendingCount is the one that matters there: a recent can be
+			// missing simply because its tab was closed before the restart, and
+			// no amount of retrying will bring it back, but a tab with no URL
+			// yet is one we genuinely can't match until it's finished loading.
+		missingCount,
+		pendingCount: freshTabs.filter(({url}) => !url).length
 	};
 DEBUG && console.log("updateFromFreshTabs result", result);
 
@@ -279,11 +307,28 @@ function getAll(
 const t = performance.now();
 
 	return storage.get(data => {
+			// time the two API calls separately, since getAll() has been seen
+			// taking 7s+ on a slow machine with a lot of tabs and we can't tell
+			// from the total which of them is responsible.  they run
+			// concurrently, so the total is the slower of the two, not the sum.
+		const apiTime = performance.now();
+		let queryDuration = 0;
+		let sessionsDuration = 0;
+
 		return Promise.all([
-			chrome.tabs.query({}),
-			includeClosedTabs ? chrome.sessions.getRecentlyClosed() : []
+			chrome.tabs.query({})
+				.then(result => (queryDuration = performance.now() - apiTime, result)),
+			includeClosedTabs
+				? chrome.sessions.getRecentlyClosed()
+					.then(result => (sessionsDuration = performance.now() - apiTime, result))
+				: []
 		])
 			.then(([freshTabs, closedTabs]) => {
+				log("getAll:",
+					"tabs.query:", Math.round(queryDuration), "ms for",
+					freshTabs.length, "tabs,",
+					"sessions.getRecentlyClosed:", Math.round(sessionsDuration), "ms");
+
 				const {tabIDs} = data;
 				const tabsByURL = {};
 				const {tabsByID} = data;
@@ -371,16 +416,41 @@ DEBUG && console.log("getAll took", performance.now() - t, "ms");
 }
 
 
-function updateAll()
+	// resolves to { missingCount, pendingCount }: how many stored recents
+	// didn't match an open tab, and how many open tabs have no URL to match
+	// against yet.  pass retainUnmatched to keep unmatched recents around for
+	// a later pass, rather than dropping them.
+function updateAll(
+	retainUnmatched)
 {
-	return storage.set(data => chrome.tabs.query({})
-		.then(freshTabs => {
-			log("updateAll: matching stored recents against fresh tabs");
-			return {
-				lastStartupTime: Date.now(),
-				...updateFromFreshTabs(data, freshTabs),
-			};
-		}), "updateAll");
+	let stats = { missingCount: 0, pendingCount: 0 };
+
+	return storage.set(data => {
+		const queryTime = performance.now();
+
+		return chrome.tabs.query({})
+			.then(freshTabs => {
+					// tabs.query() is the expensive part of the startup passes
+					// on a machine with a lot of tabs, so log what it costs
+				log("updateAll: tabs.query took",
+					Math.round(performance.now() - queryTime), "ms for",
+					freshTabs.length, "tabs",
+					retainUnmatched ? "(retaining unmatched)" : "");
+
+					// the counts are only for the caller, so keep them out of
+					// the object we hand back to storage.set() to be saved
+				const {missingCount, pendingCount, ...update} =
+					updateFromFreshTabs(data, freshTabs, retainUnmatched);
+
+				stats = { missingCount, pendingCount };
+
+				return {
+					lastStartupTime: Date.now(),
+					...update,
+				};
+			});
+	}, "updateAll")
+		.then(() => stats);
 }
 
 
