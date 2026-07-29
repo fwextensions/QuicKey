@@ -401,7 +401,7 @@ function navigate(
 
 
 	function switchTabs(
-		data)
+		data, skipCount = 0)
 	{
 		const {tabIDs, tabsByID} = data;
 		const tabIDCount = tabIDs.length;
@@ -453,12 +453,12 @@ DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabInde
 						// penultimate tab in tabIDs.
 					data.lastShortcutTime = now;
 
-					data.skipCount = (data.skipCount || 0) + 1;
-					if (data.skipCount >= tabIDCount) {
+					const newSkipCount = (skipCount || 0) + 1;
+					if (newSkipCount >= tabIDCount) {
 						return newData;
 					}
 
-					return switchTabs(data);
+					return switchTabs(data, newSkipCount);
 				}
 			}
 
@@ -498,7 +498,7 @@ DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabInde
 					newData.tabsByID = tabsByID;
 DEBUG && console.error(error);
 
-					return switchTabs(data);
+					return switchTabs(data, skipCount);
 				})
 				.then(() => newData);
 		} else {
