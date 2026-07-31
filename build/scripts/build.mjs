@@ -160,6 +160,10 @@ function writeManifest()
 		manifest.name = FullName;
 		manifest.short_name = ShortName;
 		manifest.action.default_title = ShortName;
+	} else {
+			// newlines are ignored when the description is shown in the Extensions
+			// tab, so force a wrap with the dashes
+		manifest.description = `Built: ${new Date().toLocaleString()}\n————————\n${manifest.description}`
 	}
 
 		// in watch mode, the build promises resolve before the first build

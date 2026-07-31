@@ -11,6 +11,7 @@
   "scripts": {
     "build:popup": "node build/scripts/prerender-popup.mjs",
     "build:prod": "node build/scripts/build.mjs production",
+    "build:dev": "node build/scripts/build.mjs development",
     "build": "npm run build:prod",
     "dev": "node build/scripts/build.mjs development --watch",
     "test": "vitest run unit",
