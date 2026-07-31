@@ -1,8 +1,5 @@
-/build/build.txt
-/build/rjs
-/build/out
-/build/temp
 /node_modules
 /release
+# dev, prod and temp build output all land under dist/
 /dist*
 /.idea

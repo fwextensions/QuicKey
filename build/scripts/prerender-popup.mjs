@@ -1,5 +1,5 @@
 	// renders the popup React app to static HTML and writes the result to
-	// build/temp/popup.html, warning if the markup differs from what's
+	// dist/temp/popup.html, warning if the markup differs from what's
 	// currently checked in to src/popup.html.  this replaces the old
 	// static-site-generator-webpack-plugin build, using vite's SSR module
 	// loader to import the JSX source directly in node.
@@ -43,7 +43,7 @@ const server = await createServer({
 try {
 	const { default: render } = await server.ssrLoadModule("/build/scripts/build-popup.js");
 	const html = render({ fs });
-	const outPath = join(rootDir, "build/temp/popup.html");
+	const outPath = join(rootDir, "dist/temp/popup.html");
 
 	fs.mkdirSync(dirname(outPath), { recursive: true });
 	fs.writeFileSync(outPath, html);

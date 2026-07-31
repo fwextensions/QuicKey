@@ -26,13 +26,20 @@ const srcDir = join(rootDir, "src");
 const mode = process.argv[2] === "development" ? "development" : "production";
 const watch = process.argv.includes("--watch");
 const isProduction = mode === "production";
-const outDir = join(rootDir, isProduction ? "build/out" : "dist");
+	// both builds land under dist/, so build/ holds only the scripts that
+	// produce them.  they're kept in separate directories so that building for
+	// production doesn't wipe out the development build that's currently loaded
+	// unpacked in Chrome -- the two differ in minification, sourcemaps and
+	// manifest name.  it's dist/prod rather than the zip in release/ that gets
+	// loaded unpacked when checking a production build.
+const outDir = join(rootDir, isProduction ? "dist/prod" : "dist/dev");
+const tempDir = join(rootDir, "dist/temp");
 const buildTime = new Date().toISOString();
 
 	// vite would normally empty outDir itself, but with three passes writing
 	// to the same dir, only we know when it's safe to clean it
 fs.rmSync(outDir, { recursive: true, force: true });
-fs.rmSync(join(rootDir, "build/temp"), { recursive: true, force: true });
+fs.rmSync(tempDir, { recursive: true, force: true });
 
 function baseConfig()
 {
@@ -86,7 +93,7 @@ function pagesConfig()
 			watch: { reloadPageOnChange: false },
 		}),
 		visualizer({
-			filename: join(rootDir, "build/temp/report-pages.html"),
+			filename: join(tempDir, "report-pages.html"),
 		}),
 	);
 	config.build.rollupOptions = {
@@ -126,7 +133,7 @@ function scriptConfig(
 
 	config.plugins.push(
 		visualizer({
-			filename: join(rootDir, `build/temp/report-${reportName}.html`),
+			filename: join(tempDir, `report-${reportName}.html`),
 		}),
 	);
 	config.build.rollupOptions = {
