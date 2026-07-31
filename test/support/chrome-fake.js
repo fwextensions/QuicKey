@@ -294,6 +294,26 @@ export function createChromeFake(
 		return tab;
 	}
 
+		// the browser closes a window as soon as it has no tabs left, whether
+		// the last tab was closed or moved out to another window.  the latter
+		// is how a popup window's ID goes stale under a context still caching
+		// it, so the fake has to model it for that to be testable.
+	function dropWindowIfEmpty(
+		windowId)
+	{
+		if (windowId === undefined || windowTabs(windowId).length) {
+			return;
+		}
+
+		allWindows = allWindows.filter((win) => win.id !== windowId);
+
+		if (focusedWindowId === windowId) {
+			const nextFocused = allWindows[allWindows.length - 1];
+
+			focusWindow(nextFocused ? nextFocused.id : chromeFake.windows.WINDOW_ID_NONE);
+		}
+	}
+
 	function removeTab(
 		id,
 		isWindowClosing = false)
@@ -412,8 +432,11 @@ export function createChromeFake(
 				}
 
 				if (windowId !== undefined) {
+					const sourceWindowId = tab.windowId;
+
 					ensureWindow(windowId);
 					tab.windowId = windowId;
+					dropWindowIfEmpty(sourceWindowId);
 				}
 
 				return Promise.resolve(cloneTab(tab));
@@ -506,7 +529,11 @@ export function createChromeFake(
 
 				if (tabId !== undefined) {
 					tab = getTabById(tabId);
+
+					const sourceWindowId = tab.windowId;
+
 					tab.windowId = win.id;
+					dropWindowIfEmpty(sourceWindowId);
 				} else {
 					tab = createTab({ url, windowId: win.id });
 				}

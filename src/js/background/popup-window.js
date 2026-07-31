@@ -3,6 +3,7 @@ import {HidePopupBehavior, IsFirefox, PopupInnerHeight, PopupInnerWidth, PopupUR
 import {calcBounds} from "@/background/popup-utils";
 import {popupEmitter} from "@/background/popup-emitter";
 import {connect} from "@/lib/ipc";
+import log from "@/background/persistent-log";
 
 
 const {Behind, Tab, Minimize} = HidePopupBehavior;
@@ -197,6 +198,55 @@ async function create(
 }
 
 
+	// re-derive windowID/tabID/isHiddenInTab from what the browser currently
+	// reports.  this module is loaded by both the worker and the popup page,
+	// and each context gets its own copy of that state, so whichever context
+	// didn't create the current popup window holds a stale windowID until its
+	// page reloads.  getExistingPopupID() only ever sets isHiddenInTab, so
+	// clear it first to avoid latching it on from a previous call.
+async function refreshPopupID()
+{
+		// we only get here because showing failed, so the popup certainly isn't
+		// visible.  that matters because showInWindow() checks isVisible before
+		// isHiddenInTab, so a stale true would send us back to the windows
+		// .update() branch even after we've learned the tab is stashed in a
+		// normal window and has no popup window ID to update.
+	isVisible = false;
+	isHiddenInTab = false;
+	({ windowID, tabID } = await getExistingPopupID());
+}
+
+
+	// the body of show()'s attempt, factored out so it can be retried after a
+	// resync without duplicating the branch logic
+async function showInWindow(
+	bounds)
+{
+		// if we're already visible and show() is being called again, that
+		// means the user is navigating recent tabs while keeping the popup
+		// open, so focus the existing window even if it's in tab mode
+	if (isVisible || !isHiddenInTab) {
+			// to get a minimized window to change position, we seem to have
+			// to make an additional update() call with the position, but
+			// only if the window is currently not visible.  otherwise, it
+			// won't move back to the focused window after it's shown while
+			// navigating recents.
+		if (hideBehavior == "minimize" && !isVisible) {
+			await chrome.windows.update(windowID, { focused: true, left: bounds.left, top: bounds.top });
+		}
+
+			// we seem to have to pass width and height here, even if they
+			// haven't changed, to keep the window from shifting size
+		return chrome.windows.update(windowID, { focused: true, ...bounds });
+	}
+
+		// create a popup window with the tab that's hiding in another
+		// window, instead of passing in a URL.  that will move the
+		// existing tab into the new popup.
+	return createPopup({ tabId: tabID, ...bounds });
+}
+
+
 async function show(
 	activeTab,
 	alignment)
@@ -213,29 +263,31 @@ async function show(
 	let window;
 
 	try {
-			// if we're already visible and show() is being called again, that
-			// means the user is navigating recent tabs while keeping the popup
-			// open, so focus the existing window even if it's in tab mode
-		if (isVisible || !isHiddenInTab) {
-				// to get a minimized window to change position, we seem to have
-				// to make an additional update() call with the position, but
-				// only if the window is currently not visible.  otherwise, it
-				// won't move back to the focused window after it's shown while
-				// navigating recents.
-			if (hideBehavior == "minimize" && !isVisible) {
-				await chrome.windows.update(windowID, { focused: true, left: bounds.left, top: bounds.top });
-			}
+		window = await showInWindow(bounds);
+	} catch (e) {
+			// most likely "No window with id", because this context's cached
+			// windowID points at a popup window that some other context has
+			// since replaced -- see the note on getExistingPopupID().  re-derive
+			// the IDs from live browser state and try once more, rather than
+			// staying wedged until the popup page happens to reload.
+		log("popup show failed, resyncing:", e.message,
+			"windowID:", windowID, "tabID:", tabID,
+			"isVisible:", isVisible, "isHiddenInTab:", isHiddenInTab,
+			"hideBehavior:", hideBehavior,
+			"bounds:", bounds);
 
-				// we seem to have to pass width and height here, even if they
-				// haven't changed, to keep the window from shifting size
-			window = await chrome.windows.update(windowID, { focused: true, ...bounds });
-		} else {
-				// create a popup window with the tab that's hiding in another
-				// window, instead of passing in a URL.  that will move the
-				// existing tab into the new popup.
-			window = await createPopup({ tabId: tabID, ...bounds });
+		try {
+			await refreshPopupID();
+
+			window = await showInWindow(bounds);
+
+			log("popup show resynced to windowID:", windowID);
+		} catch (retryError) {
+			log("popup show FAILED after resync:", retryError.message,
+				"windowID:", windowID, "tabID:", tabID,
+				"isHiddenInTab:", isHiddenInTab);
 		}
-	} catch (e) {}
+	}
 
 	lastActiveTab = activeTab;
 	isVisible = true;
@@ -418,6 +470,22 @@ if (isBackgroundContext) {
 		blur,
 		resize,
 	});
+
+		// these are all module-local, so there's no way to see from the service
+		// worker console which branch show() will take.  dump them with:
+		// popupState()
+	if (globalThis.DEBUG) {
+		globalThis.popupState = () => ({
+			windowID,
+			tabID,
+			isVisible,
+			isHiddenInTab,
+			hideBehavior,
+			currentWidth,
+			currentHeight,
+			lastActiveTab,
+		});
+	}
 }
 
 
