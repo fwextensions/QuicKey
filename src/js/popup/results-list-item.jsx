@@ -26,6 +26,24 @@ const CloseButtonTooltips = {
 const IncognitoTooltip = `This tab is in ${IncognitoNameLC} mode`;
 
 
+	// wrap a favicon URL in a quoted url(), since an unquoted one can't
+	// contain spaces, parens or quotes, which SVG data URIs typically do.  if
+	// the value is invalid CSS, the browser ignores the assignment entirely and
+	// the element keeps the icon from whatever item was previously rendered in
+	// that recycled row.
+function cssURL(
+	url)
+{
+	const escapedURL = url
+		.replace(/[\\"]/g, "\\$&")
+			// a literal newline can't appear in a CSS string, and collapsing
+			// them to spaces keeps multi-line SVG data URIs intact
+		.replace(/[\n\r]+/g, " ");
+
+	return `url("${escapedURL}")`;
+}
+
+
 export default class ResultsListItem extends React.Component {
     onClick = (
 		event) =>
@@ -93,6 +111,8 @@ export default class ResultsListItem extends React.Component {
 			pinyinTitle,
 			pinyinDisplayURL,
 			sessionId,
+			discarded,
+			frozen,
 			otherWindow,
 			incognito
 		} = item;
@@ -100,13 +120,13 @@ export default class ResultsListItem extends React.Component {
 			"results-list-item",
 			mode,
 			isSelected ? "selected" : "",
-			unsuspendURL ? "suspended" : "",
+			(unsuspendURL || discarded || frozen) ? "suspended" : "",
 			incognito ? "incognito" :
 				(otherWindow ? "other-window" : ""),
 			sessionId ? "closed" : ""
 		].join(" ");
 		const faviconStyle = {
-			backgroundImage: `url(${faviconURL})`
+			backgroundImage: cssURL(faviconURL)
 		};
 		let tooltip = [
 			title.length > MaxTitleLength ? title : "",
@@ -133,11 +153,15 @@ export default class ResultsListItem extends React.Component {
 			// so trim them
 		tooltip = tooltip.trim();
 
-		if (unsuspendURL && faviconURL.indexOf(FaviconURL) == 0 && !sessionId) {
-				// this is a suspended tab, but The Great Suspender has
-				// forgotten the faded favicon for it or has set its own
-				// icon for some reason.  so we get the favicon through
-				// chrome://favicon/ and then fade it ourselves
+		if (
+			(unsuspendURL && faviconURL.indexOf(FaviconURL) == 0 && !sessionId)
+			|| discarded
+			|| frozen
+		) {
+				// this tab was discarded/frozen by Chrome, or The Great Suspender
+				// suspended it and forgot  the faded favicon for it or has set
+				// its own icon for some reason.  so we get the favicon through
+				// chrome://favicon/ and then fade it ourselves.
 			faviconStyle.opacity = SuspendedFaviconOpacity;
 		}
 
