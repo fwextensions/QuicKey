@@ -58,6 +58,49 @@ function earlySettings()
 	};
 }
 
+	// the settings a v6-era profile had if the user never opened the options
+	// page: every value left at its 2018 default.  the other fixtures
+	// deliberately customize settings, to prove migration preserves them,
+	// which also makes them blind to a default that drifts.  this one exists
+	// for the opposite assertion -- an untouched profile must come out of the
+	// updater chain matching a fresh install exactly.
+function pristineEarlySettings()
+{
+	const shortcuts = {
+		mruSelect: "w",
+		closeTab: "ctrl+w",
+		moveTabLeft: "ctrl+[",
+		moveTabRight: "ctrl+]",
+		copyURL: "mod+c",
+		copyTitleURL: "mod+shift+c",
+	};
+
+	return {
+		spaceBehavior: "select",
+		escBehavior: "clear",
+		includeClosedTabs: true,
+		shortcuts: {
+			mac: { ...shortcuts, closeTab: "cmd+ctrl+w" },
+			win: { ...shortcuts },
+		},
+	};
+}
+
+
+	// a v6 profile with nothing customized; see pristineEarlySettings() above
+export const pristine6 = {
+	tabIDs: [101, 102],
+	tabsByID: structuredClone(tabs),
+	previousTabIndex: -1,
+	lastShortcutTime: 0,
+	lastStartupTime: 0,
+	lastUpdateTime: 0,
+	installTime: 1500000000000,
+	lastUsedVersion: "1.1.2",
+	settings: pristineEarlySettings(),
+};
+
+
 export default {
 		// pre-installTime, pre-settings era.  switchFromShortcut and
 		// lastShortcutTabID are dropped by updater 3.

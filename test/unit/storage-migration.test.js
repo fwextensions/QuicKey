@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import fixtures from "../fixtures/storage-versions";
+import fixtures, { pristine6 } from "../fixtures/storage-versions";
 
 	// upgrade coverage for the real quickey-storage module: era-accurate
 	// fixtures of old stored data (see test/fixtures/storage-versions.js) are
@@ -147,6 +147,28 @@ describe("storage migration from historical versions", () => {
 		expect(data.lastQuery).toBe("docs");
 		expect(data.settings.showTabCount).toBe(true);
 		expect(data.lastSeenOptionsVersion).toBe(7);
+	});
+});
+
+
+describe("upgraded profiles converge on the fresh-install defaults", () => {
+		// expectSameShape() only compares key sets, so an updater that writes a
+		// value differing from the current default passes it unnoticed: the
+		// upgraded user and the new user quietly end up with different
+		// behavior.  that's how every profile installed after updater 12
+		// shipped got spaceBehavior "select" while upgraders got "both",
+		// making the "/b then a space" placeholder impossible to follow.
+		// a user who never touched the options page must land exactly where a
+		// new install lands, so compare the values, not just the keys.
+	it("gives an uncustomized old profile the same settings as a fresh install", async () => {
+		const fresh = await freshInstall();
+
+		seedVersion(6, pristine6);
+		await importStorage();
+
+		const { data } = chrome.storage.local._dump();
+
+		expect(data.settings).toEqual(fresh.data.settings);
 	});
 });
 

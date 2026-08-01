@@ -102,10 +102,12 @@ const Updaters = {
 		data.popupAdjustmentWidth = 0;
 		data.popupAdjustmentHeight = 0;
 	}),
-	12: update(async data =>
-	{
-		data.settings[k.SpaceBehavior.Key] = k.SpaceBehavior.Both;
-	}),
+		// this one resets an existing setting to the default, rather than
+		// adding a new one, since the Both option didn't exist before v13.
+		// go through addDefaultSetting() anyway, like every other updater, so
+		// that upgraded profiles can't drift away from what a fresh install
+		// gets if the default is ever changed again.
+	12: update(addDefaultSetting(k.SpaceBehavior)),
 	13: update(async data =>
 	{
 		data.colorScheme = "light";
