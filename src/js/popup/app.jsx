@@ -110,6 +110,12 @@ export default class App extends React.Component {
 	navigatingRecents = false;
 	gotModifierUp = false;
 	gotMRUKey = false;
+		// where the selection should land on the setQuery() that a keystroke is
+		// about to trigger, for handlers that let a character be inserted but
+		// don't want the selection reset to the first item.  cleared on every
+		// keyDown, so it can't leak into a later keystroke if the character
+		// doesn't end up being inserted after all.
+	pendingSelectedIndex = null;
 	mruModifier = "Alt";
 	resultsList = null;
 	searchBox = null;
@@ -452,13 +458,23 @@ export default class App extends React.Component {
 	setQuery(
 		query)
 	{
-		this.setState({
-			query,
-			matchingItems: this.getMatchingItems(query),
-			selected: (query || (this.props.isPopup && (!this.openedForSearch || this.navigatingRecents)))
-				? 0
-				: -1
-		});
+		const {pendingSelectedIndex} = this;
+		const matchingItems = this.getMatchingItems(query);
+		const {length} = matchingItems;
+		let selected = (query || (this.props.isPopup && (!this.openedForSearch || this.navigatingRecents)))
+			? 0
+			: -1;
+
+		this.pendingSelectedIndex = null;
+
+		if (pendingSelectedIndex !== null && length) {
+				// a key handler let a character be inserted and asked for the
+				// selection to end up somewhere other than the first item.
+				// wrap around the list, like setSelectedIndex() does.
+			selected = (pendingSelectedIndex + length) % length;
+		}
+
+		this.setState({ query, matchingItems, selected });
 	}
 
 
@@ -1122,6 +1138,10 @@ export default class App extends React.Component {
 			// an alt-W or alt-shift-W before releasing alt.  it will get set
 			// to true in setSelectedIndex().
 		this.gotMRUKey = false;
+
+			// only the handler for the key we're about to dispatch can ask for
+			// a selection on the setQuery() that key triggers
+		this.pendingSelectedIndex = null;
 
 			// keydown handling is managed in another module
 		return shortcuts.handleEvent(event, this);
