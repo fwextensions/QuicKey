@@ -30,17 +30,22 @@ const MenuBindings = [
 	[["ctrl+Space", "ctrl+shift+Space"], event => self.modifySelected(event.shiftKey ? -1 : 1)],
 	[["Space", "shift+Space"], event => {
 		const setting = self.settings[k.SpaceBehavior.Key];
+		const isCommand = self.mode === "command";
 			// when the mode is command, `query` will be empty, even though `/b`
-			// has been typed in the search box.  if there's selected text in
-			// the search box, don't replace the text with a space and just move
-			// the selection instead.
+			// has been typed in the search box.  the placeholder tells the user
+			// to type a space to get into bookmark or history search, so always
+			// insert one in that mode, whatever the spaceBehavior setting is.
+			// command mode never has any results, so don't touch the selection
+			// there either.  if there's selected text in the search box, don't
+			// replace the text with a space and just move the selection instead.
 		const allowSpace = !self.searchBox.getSelection()
-			&& (setting !== k.SpaceBehavior.Select)
-			&& (self.mode === "command"
-				|| (!event.shiftKey && !EmptyOrSpacePattern.test(self.state.query)));
+			&& (isCommand
+				|| (setting !== k.SpaceBehavior.Select
+					&& !event.shiftKey
+					&& !EmptyOrSpacePattern.test(self.state.query)));
 		const currentSelection = self.state.selected;
 
-		if (setting !== k.SpaceBehavior.Space) {
+		if (!isCommand && setting !== k.SpaceBehavior.Space) {
 				// only the Space option prevents selection, so select the next
 				// item either after inserting a space or immediately
 			if (allowSpace) {
