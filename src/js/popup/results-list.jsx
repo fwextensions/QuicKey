@@ -10,6 +10,31 @@ const Width = IsFirefox ? 495 : 490;
 const MinShownTime = 200;
 
 
+	// return a stable identity for an item, so that a given row's DOM node is
+	// reused only for the same item.  the key must not include the index,
+	// since that would recycle a node when a different item lands on that row,
+	// which is what we're trying to avoid.  prefix with the mode because a
+	// bookmark ID and a tab ID can stringify to the same value, and the list
+	// stays mounted when the mode changes.
+function getItemKey(
+	item,
+	index,
+	mode)
+{
+	const {id, sessionId} = item;
+
+	if (sessionId !== undefined) {
+			// closed tabs don't have a usable id, but sessionId is unique
+		return `closed-${sessionId}`;
+	} else if (id !== undefined) {
+		return `${mode}-${id}`;
+	} else {
+			// message items have no ID, but they're the only item in the list
+		return `${mode}-message-${index}`;
+	}
+}
+
+
 export default forwardRef(function ResultsList(
 	{
 		items,
@@ -34,6 +59,7 @@ export default forwardRef(function ResultsList(
 		count: itemCount,
 		getScrollElement: () => scrollElementRef.current,
 		estimateSize: () => ResultsListRowHeight,
+		getItemKey: (index) => getItemKey(items[index], index, mode),
 	});
 
 
