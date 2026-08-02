@@ -67,7 +67,7 @@ export function isPopupWindow(
 }
 
 	// the menu holds this web lock for as long as it's open.  it's acquired
-	// in popup/init.js, which must use the same literal name.  we use a lock
+	// in public/js/popup/init.js, which must use the same literal name.  we use a lock
 	// instead of getContexts() because getContexts() can keep returning a
 	// stale POPUP context after the menu has closed, whereas the browser
 	// releases a lock the instant its page dies, even if the page is frozen.

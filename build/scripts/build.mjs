@@ -34,12 +34,75 @@ const isProduction = mode === "production";
 	// loaded unpacked when checking a production build.
 const outDir = join(rootDir, isProduction ? "dist/prod" : "dist/dev");
 const tempDir = join(rootDir, "dist/temp");
-const buildTime = new Date().toISOString();
+
+	// this has to be recalculated for each pass, rather than stamped once when
+	// the script starts, so that a watch rebuild shows when it actually
+	// happened.  that's how you can tell whether the build loaded in Chrome
+	// includes the latest edit.
+function buildTime()
+{
+	return new Date().toLocaleString();
+}
 
 	// vite would normally empty outDir itself, but with three passes writing
 	// to the same dir, only we know when it's safe to clean it
 fs.rmSync(outDir, { recursive: true, force: true });
 fs.rmSync(tempDir, { recursive: true, force: true });
+
+	// some files are copied to outDir verbatim rather than being imported by
+	// anything: src/public/ holds the classic scripts that have to stay
+	// outside the module graph, like popup/init.js, and src/img/ is copied
+	// wholesale by viteStaticCopy.  since they're not in any module graph,
+	// rollup would never notice an edit, so watch them explicitly to make
+	// `npm run dev` rebuild (and re-copy) when one of them changes.  the
+	// directories themselves are watched too, so added or deleted files
+	// trigger a rebuild as well.
+function watchCopiedFiles()
+{
+	const dirs = [join(srcDir, "public"), join(srcDir, "img")];
+
+	return {
+		name: "quickey:watch-copied-files",
+		buildStart()
+		{
+			const walk = (dir) => {
+				this.addWatchFile(dir);
+
+				for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+					const path = join(dir, entry.name);
+
+					if (entry.isDirectory()) {
+						walk(path);
+					} else {
+						this.addWatchFile(path);
+					}
+				}
+			};
+
+			dirs.filter(fs.existsSync).forEach(walk);
+		}
+	};
+}
+
+
+	// vite reports how long each pass took, but not when it finished.  rewrite
+	// the manifest here as well as logging, since closeBundle fires after
+	// every watch rebuild, whereas the build() promises resolve as soon as the
+	// watcher is set up, before the first build has even finished.  writing it
+	// from each pass means the manifest's Built: time keeps up with whichever
+	// passes a given edit triggered.
+function finishBuild(
+	name)
+{
+	return {
+		name: "quickey:finish-build",
+		closeBundle()
+		{
+			writeManifest();
+			console.log(`${name} built at ${new Date().toLocaleTimeString()}`);
+		}
+	};
+}
 
 function baseConfig()
 {
@@ -77,7 +140,7 @@ function pagesConfig()
 			name: "quickey:build-time",
 			transformIndexHtml(html)
 			{
-				return html.replace("__BUILD_TIME__", buildTime);
+				return html.replace("__BUILD_TIME__", buildTime());
 			}
 		},
 		viteStaticCopy({
@@ -86,15 +149,16 @@ function pagesConfig()
 					// from html/css, but the manifest and runtime code expect
 					// the whole directory at img/
 				{ src: "img", dest: "." },
-					// classic scripts loaded outside the module graph
+					// classic script loaded outside the module graph
 				{ src: "js/lib/pinyin.js", dest: "." },
-				{ src: "js/popup/init.js", dest: "." },
 			],
 			watch: { reloadPageOnChange: false },
 		}),
+		watchCopiedFiles(),
 		visualizer({
 			filename: join(tempDir, "report-pages.html"),
 		}),
+		finishBuild("pages"),
 	);
 	config.build.rollupOptions = {
 		input: {
@@ -131,10 +195,13 @@ function scriptConfig(
 {
 	const config = baseConfig();
 
+		// only the pages build needs to copy src/public/ to outDir
+	config.publicDir = false;
 	config.plugins.push(
 		visualizer({
 			filename: join(tempDir, `report-${reportName}.html`),
 		}),
+		finishBuild(reportName),
 	);
 	config.build.rollupOptions = {
 		input: join(srcDir, entry),
@@ -170,11 +237,9 @@ function writeManifest()
 	} else {
 			// newlines are ignored when the description is shown in the Extensions
 			// tab, so force a wrap with the dashes
-		manifest.description = `Built: ${new Date().toLocaleString()}\n————————\n${manifest.description}`
+		manifest.description = `Built: ${buildTime()}\n————————\n${manifest.description}`
 	}
 
-		// in watch mode, the build promises resolve before the first build
-		// finishes, so the output dir may not exist yet
 	fs.mkdirSync(outDir, { recursive: true });
 	fs.writeFileSync(join(outDir, "manifest.json"), JSON.stringify(manifest, null, "\t"));
 
@@ -193,14 +258,14 @@ function zipOutput(
 	console.log(`Created ${zipPath}`);
 }
 
-console.log(`Build mode: ${mode}${watch ? " (watch)" : ""} (${buildTime})`);
+console.log(`Build mode: ${mode}${watch ? " (watch)" : ""} (${buildTime()})`);
 
+	// each pass writes the manifest as it finishes, so there's nothing left to
+	// do here but zip up what they produced
 await build(pagesConfig());
 await build(scriptConfig("js/background/background.js", "background"));
 await build(scriptConfig("js/background/sw.js", "sw"));
 
-const manifest = writeManifest();
-
 if (isProduction && !watch) {
-	zipOutput(manifest);
+	zipOutput(JSON.parse(fs.readFileSync(join(outDir, "manifest.json"), "utf8")));
 }
