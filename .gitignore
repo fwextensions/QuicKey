@@ -3,3 +3,4 @@
 # dev, prod and temp build output all land under dist/
 /dist*
 /.idea
+/.plans
