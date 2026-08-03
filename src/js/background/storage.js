@@ -38,13 +38,41 @@ export function createStorage({
 {
 	const storageLocation = globalThis.location.pathname;
 	const lockName = LockNameBase + name;
-		// createStorage() has to return synchronously, so the load/update/reset
-		// of the stored data runs in the background and every task waits on this
-		// before touching storage.  otherwise a set() called during startup can
-		// read chrome.storage.local before the initial write lands and get
-		// undefined, which is what happens on a new install.
-	const initPromise = initialize();
 	let lastSavedFrom;
+		// the in-flight load/update/reset of the stored data, which every task
+		// waits on before touching storage.  null means it hasn't been started,
+		// or that the last attempt failed and the next task should retry.
+	let initPromise = null;
+
+
+		// createStorage() has to return synchronously, so the initial load runs
+		// in the background and doTask() blocks on it.  otherwise a set() called
+		// during startup can read chrome.storage.local before the initial write
+		// lands and get undefined, which is what happens on a new install.
+	function ensureInitialized()
+	{
+		if (!initPromise) {
+			initPromise = initialize()
+				.catch(error => {
+						// the storage APIs can fail for reasons that have nothing
+						// to do with us and may not last -- a full disk is the
+						// common one -- and in MV3 the worker is short-lived
+						// enough that giving up for its whole lifetime is a big
+						// hammer.  so clear the promise to let the next task try
+						// again, and reject this one so the caller sees the
+						// failure instead of a task running against no data.
+					initPromise = null;
+
+DEBUG && console.error("Storage error: failed-init", error);
+					log("STORAGE ERROR: failed-init", error?.message);
+					trackers.background.event("storage", "failed-init");
+
+					throw error;
+				});
+		}
+
+		return initPromise;
+	}
 
 
 	function initialize()
@@ -164,7 +192,7 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 				// don't read until the initial load or reset has finished
 				// writing, so the first task on a new install sees the
 				// defaults instead of undefined
-			await initPromise;
+			await ensureInitialized();
 
 				// we read from storage on every task rather than keeping an
 				// in-memory copy the way the MV2 persistent background page
@@ -226,6 +254,13 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 		return doTask(resetWithoutLocking);
 	}
 
+
+		// start loading now rather than waiting for the first task, since the
+		// popup needs the data as soon as it can get it.  swallow the rejection
+		// here so a failed load isn't an unhandled rejection -- ensureInitialized()
+		// has already reported it, and the task that retries will surface it to
+		// a caller that can actually respond.
+	ensureInitialized().catch(() => {});
 
 	return {
 		get version() { return version; },
