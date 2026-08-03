@@ -31,16 +31,25 @@ function handleError(
 	}
 
 	try {
-		const timestamp = new Date().toLocaleString();
 		const {detail, reason = ((detail && detail.reason) || "")} = event;
-		const stack = getStack(event.error) || getStack(reason);
+			// fall back to the reason itself when there's no stack to report,
+			// as with a promise rejected with a string, so that we send
+			// something more useful than the bare "Caught unhandled" prefix
+		const stack = getStack(event.error) || getStack(reason) ||
+			String(reason ?? "");
 		const type = event.type == "unhandledrejection"
 			? "promise rejection"
 			: "exception";
-		const errorMessage = `Caught unhandled ${type} at ${timestamp}:\n${stack}`;
+		const description = `Caught unhandled ${type}:\n${stack}`;
 
-		globalThis.DEBUG && console.error(errorMessage);
-		tracker.exception(errorMessage, true);
+			// the timestamp stays in the console but is deliberately kept out
+			// of what we send to GA.  it made every report a unique string, so
+			// two users hitting the same error never aggregated into one row,
+			// and it used up room in a field that's truncated long before a
+			// useful amount of the stack fits.
+		globalThis.DEBUG &&
+			console.error(new Date().toLocaleString(), description);
+		tracker.exception(description, true);
 
 		if (event.preventDefault) {
 			event.preventDefault();
