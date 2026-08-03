@@ -1,6 +1,7 @@
 import trackers from "@/background/page-trackers";
 import { IsEdge, IsFirefox } from "@/background/constants";
 import storage from "@/background/quickey-storage";
+import { debounce } from "@/background/debounce";
 import { connect } from "@/lib/ipc";
 
 
@@ -43,9 +44,18 @@ const IconPaths = {
 const ExtensionName = chrome.runtime.getManifest().short_name;
 
 
+	// how long to wait for the tab count to settle before rendering it.  long
+	// enough to collapse a burst of tabs.onCreated/onRemoved events into one
+	// write, short enough that a single tab closing still looks instant.
+const BadgeWriteDelay = 50;
+
 let isNormalIcon = true;
 let isTabCountVisible = false;
 let tabCount = 0;
+	// whether the badge currently has anything in it, so that we can tell a
+	// pointless write (the count is off and nothing is shown) from the one
+	// write that's needed to clear the badge after the count is turned off
+let isBadgeShown = false;
 let inversionTimer;
 let colorScheme = "light";
 
@@ -109,28 +119,23 @@ async function invertFor(
 }
 
 
-async function showTabCount(
-	value)
-{
-	if (isTabCountVisible !== value) {
-		isTabCountVisible = value;
-		tabCount = (await chrome.tabs.query({})).length;
-
-		await setNormalIcon();
-		await updateTabCount();
+	// render whatever tabCount is up to now.  this is debounced rather than
+	// called directly from updateTabCount() because closing a window fires
+	// tabs.onRemoved for every tab in it: rendering each intermediate number is
+	// wasted work, and during a browser shutdown every one of those calls
+	// throws "The browser is shutting down", which we'd then report once per
+	// tab.  the debounced function deliberately takes no arguments and reads
+	// tabCount when it fires, since this debounce keeps only the last call's
+	// args and would otherwise drop all but one of the deltas.
+const writeBadge = debounce(async () => {
+		// nothing to render and nothing left over to clear
+	if (!isTabCountVisible && !isBadgeShown) {
+		return;
 	}
-}
 
-
-async function updateTabCount(
-	delta = 0)
-{
 		// default to an empty string, which will hide the badge
 	let text = "";
 	let title = ExtensionName;
-
-	tabCount += delta;
-
 
 	if (isTabCountVisible) {
 		text = String(tabCount);
@@ -145,11 +150,51 @@ async function updateTabCount(
 	}
 
 	try {
-		await chrome.action.setBadgeText({ text }),
-		await chrome.action.setTitle({ title })
+		await chrome.action.setBadgeText({ text });
+		await chrome.action.setTitle({ title });
+
+			// only after both writes land, so a failure leaves us knowing the
+			// badge still needs clearing
+		isBadgeShown = isTabCountVisible;
 	} catch (error) {
 		backgroundTracker.exception(error);
 	}
+}, BadgeWriteDelay);
+
+
+async function showTabCount(
+	value)
+{
+	if (isTabCountVisible !== value) {
+		isTabCountVisible = value;
+
+		if (value) {
+				// only pay for the query when we're going to show the result.
+				// while the count is hidden, tabCount drifts with the tab
+				// events, and this is where it gets resynced
+			tabCount = (await chrome.tabs.query({})).length;
+		}
+
+		await setNormalIcon();
+
+			// toggling the setting should take effect now rather than after the
+			// debounce, so queue the write and immediately flush it.  turning
+			// the count off relies on this for the single write that clears the
+			// badge, since nothing else will call updateTabCount() afterwards.
+		writeBadge();
+
+		await writeBadge.execute();
+	}
+}
+
+
+function updateTabCount(
+	delta = 0)
+{
+		// keep the running total exact even though the render is coalesced
+	tabCount += delta;
+
+	writeBadge();
 }
 
 
