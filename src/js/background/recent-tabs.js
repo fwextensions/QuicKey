@@ -2,11 +2,10 @@ import addURLs from "@/popup/data/add-urls";
 import {getRelativeTime} from "@/lib/get-relative-time";
 import storage from "./quickey-storage";
 import pageTrackers from "./page-trackers";
-import {MinTabDwellTime, PopupURL} from "./constants";
+import {MaxRecentTabs as MaxTabsLength, MinTabDwellTime, PopupURL} from "./constants";
 import log from "./persistent-log";
 
 
-const MaxTabsLength = 50;
 const TabKeys = ["id", "url", "windowId"];
 
 

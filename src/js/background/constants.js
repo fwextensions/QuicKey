@@ -32,6 +32,11 @@ export const IncognitoPermission = IsFirefox
 	: `Allow in ${IncognitoNameLC}`;
 export const Homepage = "https://fwextensions.github.io/QuicKey/";
 export const MinTabDwellTime = 1250;
+	// the most tabs we keep in the recents list
+export const MaxRecentTabs = 50;
+	// how many times the banner explaining the seeded recents order is shown
+	// before it hides itself for good
+export const MaxSeededRecentsBannerDisplays = 5;
 export const PopupURL = chrome.runtime.getURL("popup.html");
 export const PopupInnerWidth = 500;
 export const PopupInnerHeight = 488;

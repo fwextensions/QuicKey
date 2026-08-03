@@ -56,7 +56,9 @@ describe("first install", () => {
 
 		const { version, data } = await firstInstall();
 
-		expect(data.tabIDs).toEqual([5]);
+			// the active tab is always last, and the other open tab is seeded
+			// ahead of it from its lastAccessed time
+		expect(data.tabIDs).toEqual([6, 5]);
 		expect(data.tabsByID[5]).toMatchObject({ id: 5, url: "https://a.example.com/" });
 		expect(data.tabsByID[5].lastVisit).toBeTypeOf("number");
 
@@ -89,6 +91,63 @@ describe("first install", () => {
 		const { data } = await firstInstall();
 
 		expect(data.tabIDs).toEqual([]);
+	});
+
+		// a fresh install has no history of its own, so the open tabs are
+		// seeded from Chrome's lastAccessed times rather than showing nothing
+	it("seeds the open tabs in lastAccessed order, oldest first", async () => {
+		stubEnvironment({
+			tabs: [
+				{ id: 1, url: "https://a.example.com/", windowId: 1, active: true, lastAccessed: 5000 },
+				{ id: 2, url: "https://b.example.com/", windowId: 1, lastAccessed: 1000 },
+				{ id: 3, url: "https://c.example.com/", windowId: 2, lastAccessed: 4000 },
+				{ id: 4, url: "https://d.example.com/", windowId: 2, lastAccessed: 2000 },
+			],
+		});
+
+		const { data } = await firstInstall();
+
+			// the active tab stays at the end no matter what its own
+			// lastAccessed says, since it's the one the user is on right now
+		expect(data.tabIDs).toEqual([2, 4, 3, 1]);
+		expect(data.tabsByID[3].lastVisit).toBe(4000);
+	});
+
+		// discarded tabs can lose lastAccessed, and moved tabs can corrupt it,
+		// so those tabs sort below the ones we have real times for instead of
+		// dropping out of the seeded list
+	it("sorts tabs with no lastAccessed below the ones that have it", async () => {
+		stubEnvironment({
+			tabs: [
+				{ id: 1, url: "https://a.example.com/", windowId: 1, active: true, lastAccessed: 5000 },
+				{ id: 2, url: "https://b.example.com/", windowId: 1, lastAccessed: 3000 },
+				{ id: 3, url: "https://c.example.com/", windowId: 1 },
+			],
+		});
+
+		const { data } = await firstInstall();
+
+		expect(data.tabIDs).toEqual([3, 2, 1]);
+		expect(data.tabsByID[3].lastVisit).toBeLessThan(data.tabsByID[2].lastVisit);
+	});
+
+	it("caps the seeded recents at the max list length", async () => {
+		stubEnvironment({
+			tabs: Array.from({ length: 60 }, (_, i) => ({
+				id: i + 1,
+				url: `https://t${i}.example.com/`,
+				windowId: 1,
+				active: i === 0,
+				lastAccessed: 1000 + i,
+			})),
+		});
+
+		const { data } = await firstInstall();
+
+		expect(data.tabIDs.length).toBe(50);
+			// the oldest tabs are the ones dropped, and the active tab is last
+		expect(data.tabIDs[0]).toBe(12);
+		expect(data.tabIDs.at(-1)).toBe(1);
 	});
 
 	it("defaults usePinyin on for a Chinese-locale browser", async () => {

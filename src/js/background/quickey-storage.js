@@ -112,6 +112,14 @@ const Updaters = {
 	{
 		data.colorScheme = "light";
 	}),
+		// only a new install seeds its recents from Chrome's lastAccessed
+		// times, so an existing profile has never shown the banner explaining
+		// that order, and never should.  start it at the limit, which is the
+		// same state a profile lands in once the banner has run its course.
+	14: update(async data =>
+	{
+		data.seededRecentsBannerCount = k.MaxSeededRecentsBannerDisplays;
+	}),
 };
 	// calculate the version by incrementing the highest key in the
 	// Updaters hash, so that the version is automatically increased
@@ -138,6 +146,9 @@ function createDefaultData()
 		popupAdjustmentWidth: 0,
 		popupAdjustmentHeight: 0,
 		colorScheme: "light",
+			// default to the limit, so the banner stays hidden unless
+			// seedRecents() actually has something to seed the list with
+		seededRecentsBannerCount: k.MaxSeededRecentsBannerDisplays,
 		settings: DefaultSettings,
 		tabIDs: [],
 		tabsByID: {}
@@ -196,6 +207,72 @@ function getDefaultDataPromise()
 }
 
 
+	// on a brand-new install we have no history of our own, so the recents
+	// list would otherwise be empty until the user switched tabs a few times.
+	// Chrome 121+ puts a lastAccessed time on each tab -- "the last time the
+	// tab became active in its window" -- which is the same thing our own
+	// lastVisit tracking records, so it's a reasonable seed for the ordering.
+	//
+	// it isn't reliable enough to use beyond this one-time seed, though:
+	// discarding a tab can drop the value, moving a tab can corrupt it, it's
+	// omitted from the tab objects passed to the tabs events, and a tab that
+	// was never activated just reports when it was created.  so we only use it
+	// to pick an initial order, and let recent-tabs.js take over from there.
+function seedRecents(
+	data,
+	tabs,
+	activeTab)
+{
+	const seedable = [];
+	const untimed = [];
+
+	tabs.forEach(tab => {
+			// skip the extension's own popups, and the current tab, which the
+			// caller adds after us so that it lands at the end of the list
+		if (tab.url?.includes(k.PopupURL) || (activeTab && tab.id === activeTab.id)) {
+			return;
+		}
+
+		if (typeof tab.lastAccessed === "number") {
+			seedable.push(tab);
+		} else {
+				// a discarded tab, a tab that got confused by being moved, or
+				// a pre-121 Chrome.  we don't know when it was last seen, so
+				// rather than dropping it, sort it below the tabs we do know
+				// about, in the order the query returned it.
+			untimed.push(tab);
+		}
+	});
+
+	seedable.sort((a, b) => a.lastAccessed - b.lastAccessed);
+
+		// tabIDs runs oldest to newest, so the unknown tabs go in front
+	const orderedTabs = untimed.concat(seedable)
+			// leave room for the current tab the caller pushes on after us
+		.slice(-(k.MaxRecentTabs - 1));
+		// keep the synthesized times for the unknown tabs below the real ones,
+		// since getAll() sorts the menu by lastVisit rather than by tabIDs
+	const oldestTime = seedable.length ? seedable[0].lastAccessed : Date.now();
+
+	orderedTabs.forEach((tab, i) => {
+		const index = orderedTabs.length - i;
+
+		tab.lastVisit = typeof tab.lastAccessed === "number"
+			? tab.lastAccessed
+			: oldestTime - index;
+		data.tabIDs.push(tab.id);
+		data.tabsByID[tab.id] = tab;
+	});
+
+		// this ordering is a guess, so let the popup explain that to the user
+		// for the first few times it's opened.  a one-tab install has nothing
+		// to explain, so leave the count at the limit in that case.
+	if (orderedTabs.length) {
+		data.seededRecentsBannerCount = 0;
+	}
+}
+
+
 export default createStorage({
 	name: "QuicKey",
 	version: CurrentVersion,
@@ -204,11 +281,18 @@ export default createStorage({
 
 	getDefaultData: async function()
 	{
-			// we only want to get the tabs in the current window because
-			// only the currently active tab is "recent" as far as we know
-		const tabs = await chrome.tabs.query({ active: true, currentWindow: true, windowType: "normal" });
-		const tab = tabs && tabs[0];
+		const [activeTabs, allTabs] = await Promise.all([
+				// we need the current window's active tab separately, since a
+				// query over all the windows can't tell us which one is current
+			chrome.tabs.query({ active: true, currentWindow: true, windowType: "normal" }),
+			chrome.tabs.query({ windowType: "normal" })
+		]);
+		const tab = activeTabs && activeTabs[0];
 		const data = JSON.parse(JSON.stringify(await getDefaultDataPromise()));
+
+			// we have no history of our own yet, so seed the recents from the
+			// open tabs, ordered by Chrome's lastAccessed times
+		seedRecents(data, allTabs, tab);
 
 		if (tab) {
 				// store now as the last visit of the current tab so

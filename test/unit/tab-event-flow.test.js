@@ -88,8 +88,11 @@ afterEach(() => {
 
 
 describe("tab activity drives the persisted MRU order", () => {
-	it("seeds the current active tab on first run", async () => {
-		expect(await mruTabIDs()).toEqual([1]);
+		// on first run the open tabs are seeded from their lastAccessed times;
+		// these fixture tabs have none, so they keep the order tabs.query()
+		// returned them in, with the current tab last
+	it("seeds the open tabs on first run, with the active tab last", async () => {
+		expect(await mruTabIDs()).toEqual([2, 3, 4, 1]);
 	});
 
 	it("records activated tabs after the dwell time", async () => {
@@ -98,7 +101,7 @@ describe("tab activity drives the persisted MRU order", () => {
 		await chrome.tabs.update(3, { active: true });
 		await flush(Dwell);
 
-		expect(await mruTabIDs()).toEqual([1, 2, 3]);
+		expect(await mruTabIDs()).toEqual([4, 1, 2, 3]);
 	});
 
 	it("collapses rapid switching, recording only the tab the user settles on", async () => {
@@ -115,7 +118,7 @@ describe("tab activity drives the persisted MRU order", () => {
 		await chrome.tabs.update(2, { active: true });
 		await flush(Dwell);
 
-		expect(await mruTabIDs()).toEqual([1, 3, 2]);
+		expect(await mruTabIDs()).toEqual([4, 1, 3, 2]);
 	});
 
 	it("drops closed tabs from the MRU list after the removal debounce", async () => {
@@ -129,7 +132,7 @@ describe("tab activity drives the persisted MRU order", () => {
 		await chrome.tabs.remove(2);
 		await flush(Dwell);
 
-		expect(await mruTabIDs()).toEqual([1, 3]);
+		expect(await mruTabIDs()).toEqual([4, 1, 3]);
 	});
 
 	it("re-keys a tab when Chrome replaces it, keeping its place in the order", async () => {
@@ -140,13 +143,13 @@ describe("tab activity drives the persisted MRU order", () => {
 		chrome.tabs.onReplaced.dispatch(200, 2);
 		await flush();
 
-		expect(await mruTabIDs()).toEqual([1, 200]);
+		expect(await mruTabIDs()).toEqual([3, 4, 1, 200]);
 	});
 
 	it("records the active tab of a window when focus switches to it", async () => {
 		await chrome.windows.update(2, { focused: true });
 		await flush(Dwell);
 
-		expect(await mruTabIDs()).toEqual([1, 4]);
+		expect(await mruTabIDs()).toEqual([2, 3, 1, 4]);
 	});
 });
