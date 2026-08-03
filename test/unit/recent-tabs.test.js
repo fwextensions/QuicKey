@@ -105,6 +105,32 @@ describe("recent-tabs add()", () => {
 		expect(tabsByID[1].url).toBe("https://a-changed.example.com/");
 	});
 
+		// a tab we can't see a URL for still isn't one of our own popups, so
+		// the popup check has to let it through rather than throwing on it.
+		// tabs.onCreated in particular hands us tabs that haven't committed a
+		// URL yet, and dropping those would lose a ctrl-clicked background tab
+		// from the recents list.
+	it("adds a tab whose URL isn't available instead of throwing", async () => {
+		await recentTabs.add({ id: 1, windowId: 1 });
+
+		const { tabIDs, tabsByID } = store._dump();
+
+		expect(tabIDs).toEqual([1]);
+		expect(tabsByID[1]).toMatchObject({ id: 1, windowId: 1 });
+	});
+
+	it("adds a tab whose URL hasn't committed yet", async () => {
+		await recentTabs.add(tab(1, ""));
+
+		expect(store._dump().tabIDs).toEqual([1]);
+	});
+
+	it("still ignores the extension's own popup", async () => {
+		await recentTabs.add(tab(1, chrome.runtime.getURL("popup.html")));
+
+		expect(store._dump().tabIDs).toEqual([]);
+	});
+
 	it("trims tabs beyond MaxTabsLength and deletes the oldest from tabsByID", async () => {
 		for (let id = 1; id <= 51; id++) {
 			await recentTabs.add(tab(id, `https://site${id}.example.com/`));

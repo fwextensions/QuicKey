@@ -181,8 +181,10 @@ function add(
 	tab,
 	penultimately)
 {
-		// ignore the extension's own popups
-	if (!tab || tab.url.includes(PopupURL)) {
+		// ignore the extension's own popups.  a tab we can't see a URL for
+		// definitely isn't one of ours, so let it through rather than throwing
+		// here, the same way isPopupWindow() treats a missing URL.
+	if (!tab || tab.url?.includes(PopupURL)) {
 		return Promise.resolve();
 	}
 
@@ -332,7 +334,7 @@ const t = performance.now();
 				const tabsByURL = {};
 				const {tabsByID} = data;
 // TODO: should use startsWith
-				let tabs = freshTabs.filter(({url}) => !url.includes(PopupURL));
+				let tabs = freshTabs.filter(({url}) => !url?.includes(PopupURL));
 
 					// update the fresh tabs with any recent data we have
 				tabs = tabs.map(tab => {
@@ -353,7 +355,11 @@ const t = performance.now();
 					}
 
 					tab.lastVisit = lastVisit;
-					tabsByURL[url] = true;
+
+						// don't key the dedupe hash off a tab we have no URL
+						// for, or every closed tab that's also missing one
+						// would dedupe against the "undefined" key below
+					url && (tabsByURL[url] = true);
 
 						// if the tab is suspended, also store it with the
 						// unsuspendURL so that we can dedupe it against
@@ -390,7 +396,7 @@ const t = performance.now();
 						const lastVisit = session.lastModified * 1000;
 
 						[].concat(session.tab || session.window.tabs).forEach(tab => {
-							if (!(tab.url in tabsByURL) && !tab.url.includes(PopupURL)) {
+							if (!(tab.url in tabsByURL) && !tab.url?.includes(PopupURL)) {
 								tabsByURL[tab.url] = true;
 								tab.lastVisit = lastVisit;
 								addURLs(tab);
