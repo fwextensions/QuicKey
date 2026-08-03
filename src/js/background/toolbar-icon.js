@@ -58,6 +58,9 @@ let tabCount = 0;
 let isBadgeShown = false;
 let inversionTimer;
 let colorScheme = "light";
+	// the decoded pixels for each icon set, keyed on the paths object it came
+	// from.  there are only ever two sets, and they never change.
+const imageDataByPaths = new Map();
 
 
 function getIconsAndBadgeColor(
@@ -68,6 +71,66 @@ function getIconsAndBadgeColor(
 	const color = BadgeColors[colorScheme][iconMode];
 
 	return { paths, color };
+}
+
+
+	// decode one set of icons into the pixels setIcon() would otherwise fetch
+	// for itself
+async function loadImageData(
+	paths)
+{
+	const sizes = await Promise.all(
+		Object.entries(paths).map(async ([size, path]) => {
+			const response = await fetch(chrome.runtime.getURL(path));
+			const bitmap = await createImageBitmap(await response.blob());
+			const {width, height} = bitmap;
+			const context = new OffscreenCanvas(width, height).getContext("2d");
+
+			context.drawImage(bitmap, 0, 0);
+
+			return [size, context.getImageData(0, 0, width, height)];
+		})
+	);
+
+	return Object.fromEntries(sizes);
+}
+
+
+	// setIcon() fetches the PNG itself when it's handed a path, and that fetch
+	// is what fails with "Failed to set icon '/img/icon-16.png': Failed to
+	// fetch" -- the single noisiest real error we report after the shutdown
+	// noise.  the icons never change, so decode them once and hand setIcon the
+	// pixels from then on, which takes the fetch out of every icon update and
+	// leaves it somewhere we control.
+	//
+	// keyed on the paths object rather than a name because IconPaths points
+	// both color schemes at the same two objects.
+async function getImageData(
+	paths)
+{
+	if (!imageDataByPaths.has(paths)) {
+			// cache the promise, so overlapping calls share one decode
+		imageDataByPaths.set(paths, loadImageData(paths.path)
+				// fall back to letting setIcon fetch the paths itself.  we don't
+				// report this: if the images really are unreachable then the
+				// setIcon() below will fail too, and the caller reports that the
+				// same way it always has, rather than us sending two errors for
+				// one problem.  the failure stays cached so a broken profile
+				// doesn't retry five fetches on every icon update -- a new
+				// worker gets a fresh attempt soon enough.
+			.catch(() => null));
+	}
+
+	return imageDataByPaths.get(paths);
+}
+
+
+async function setIcon(
+	paths)
+{
+	const imageData = await getImageData(paths);
+
+	return chrome.action.setIcon(imageData ? { imageData } : paths);
 }
 
 
@@ -82,7 +145,7 @@ async function setNormalIcon()
 
 	try {
 		await chrome.action.setBadgeBackgroundColor({ color });
-		await chrome.action.setIcon(paths);
+		await setIcon(paths);
 	} catch (error) {
 		backgroundTracker.exception(error);
 	}
@@ -111,7 +174,7 @@ async function invertFor(
 		if (isTabCountVisible) {
 			await chrome.action.setBadgeBackgroundColor({ color });
 		} else {
-			await chrome.action.setIcon(paths);
+			await setIcon(paths);
 		}
 	} catch (error) {
 		backgroundTracker.exception(error);

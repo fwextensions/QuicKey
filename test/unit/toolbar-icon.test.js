@@ -12,6 +12,8 @@ const BadgeWriteDelay = 50;
 let toolbarIcon;
 let setBadgeText;
 let setTitle;
+let setIcon;
+let fetchImage;
 
 
 	// let the debounced write fire
@@ -21,18 +23,46 @@ function flushBadge()
 }
 
 
+	// the image-decoding path setIcon() takes: none of fetch/createImageBitmap/
+	// OffscreenCanvas exist in the node test environment, so stand in for them
+	// with something that just records which icon was asked for
+function stubImageDecoding()
+{
+	fetchImage = vi.fn(async (url) => ({ blob: async () => ({ url }) }));
+
+	vi.stubGlobal("fetch", fetchImage);
+	vi.stubGlobal("createImageBitmap", async ({ url }) => ({
+		width: 16,
+		height: 16,
+		url,
+	}));
+	vi.stubGlobal("OffscreenCanvas", class {
+		getContext() {
+			return {
+				drawImage: (bitmap) => (this.url = bitmap.url),
+				getImageData: () => ({ decodedFrom: this.url }),
+			};
+		}
+	});
+}
+
+
 beforeEach(async () => {
 	vi.useFakeTimers();
 	vi.resetModules();
+	stubImageDecoding();
 
 	toolbarIcon = (await import("@/background/toolbar-icon")).default;
 
 	setBadgeText = vi.spyOn(chrome.action, "setBadgeText");
 	setTitle = vi.spyOn(chrome.action, "setTitle");
+	setIcon = vi.spyOn(chrome.action, "setIcon");
 });
 
 afterEach(() => {
 	vi.useRealTimers();
+		// no unstubAllGlobals(): setup.js installs chrome/navigator/location the
+		// same way, and clearing those breaks every module that reads them
 	vi.restoreAllMocks();
 });
 
@@ -195,5 +225,73 @@ describe("toolbar icon tab count", () => {
 		await toolbarIcon.showTabCount(false);
 
 		expect(setBadgeText).toHaveBeenLastCalledWith({ text: "" });
+	});
+});
+
+
+	// setIcon() fetches the PNG itself when given a path, and that fetch is
+	// what fails with "Failed to set icon ...: Failed to fetch".  we decode the
+	// images once and pass the pixels instead, so nothing is fetched at the
+	// moment the icon changes.
+describe("toolbar icon images", () => {
+	it("passes decoded pixels rather than paths", async () => {
+		await toolbarIcon.setNormalIcon();
+
+		const [arg] = setIcon.mock.calls[0];
+
+		expect(arg).toHaveProperty("imageData");
+		expect(arg).not.toHaveProperty("path");
+			// one per size in the set
+		expect(Object.keys(arg.imageData)).toEqual(["16", "19", "24", "32", "38"]);
+	});
+
+	it("decodes each icon set only once", async () => {
+		await toolbarIcon.setNormalIcon();
+
+		const afterFirst = fetchImage.mock.calls.length;
+
+		await toolbarIcon.setNormalIcon();
+		await toolbarIcon.setNormalIcon();
+
+		expect(afterFirst).toBe(5);
+		expect(fetchImage).toHaveBeenCalledTimes(afterFirst);
+	});
+
+	it("decodes the inverted set separately from the normal one", async () => {
+		await toolbarIcon.setNormalIcon();
+		await toolbarIcon.invertFor();
+
+		const normal = setIcon.mock.calls[0][0].imageData;
+		const inverted = setIcon.mock.calls[1][0].imageData;
+
+		expect(normal[16]).not.toEqual(inverted[16]);
+		expect(inverted[16].decodedFrom).toContain("icon-16-inverted.png");
+	});
+
+		// a decode that fails shouldn't leave the toolbar with no icon at all,
+		// so fall back to what we did before and let setIcon fetch the paths
+	it("falls back to paths when the images can't be decoded", async () => {
+		fetchImage.mockRejectedValue(new TypeError("Failed to fetch"));
+
+		await toolbarIcon.setNormalIcon();
+
+		const [arg] = setIcon.mock.calls[0];
+
+		expect(arg).toHaveProperty("path");
+		expect(arg.path[16]).toBe("/img/icon-16.png");
+	});
+
+		// ...and shouldn't then refetch five images on every icon update for
+		// the life of the worker
+	it("doesn't retry a failed decode on every update", async () => {
+		fetchImage.mockRejectedValue(new TypeError("Failed to fetch"));
+
+		await toolbarIcon.setNormalIcon();
+
+		const afterFirst = fetchImage.mock.calls.length;
+
+		await toolbarIcon.setNormalIcon();
+
+		expect(fetchImage).toHaveBeenCalledTimes(afterFirst);
 	});
 });
