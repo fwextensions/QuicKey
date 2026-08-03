@@ -38,7 +38,12 @@ export function createStorage({
 {
 	const storageLocation = globalThis.location.pathname;
 	const lockName = LockNameBase + name;
-	let dataPromise = initialize();
+		// createStorage() has to return synchronously, so the load/update/reset
+		// of the stored data runs in the background and every task waits on this
+		// before touching storage.  otherwise a set() called during startup can
+		// read chrome.storage.local before the initial write lands and get
+		// undefined, which is what happens on a new install.
+	const initPromise = initialize();
 	let lastSavedFrom;
 
 
@@ -130,7 +135,6 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 	function saveWithVersion(
 		data)
 	{
-		dataPromise = Promise.resolve(data);
 		lastSavedFrom = storageLocation;
 
 		return chrome.storage.local.set({ version, data, lastSavedFrom: storageLocation })
@@ -148,13 +152,7 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 			// remove just the storage keys we actually use, rather than clearing everything
 		return chrome.storage.local.remove(StorageKeys)
 			.then(getDefaultData)
-			.then(saveWithVersion)
-				// normally, dataPromise points to the resolved promise from
-				// getAll() that was created when createStorage() was first
-				// called and returns the in-memory copy of the data from
-				// storage.  but since we just cleared that, we need to
-				// update the promise to point to the fresh data in memory.
-			.then(data => dataPromise = Promise.resolve(data));
+			.then(saveWithVersion);
 	}
 
 
@@ -163,6 +161,15 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 		saveResult)
 	{
 		return navigator.locks.request(lockName, async () => {
+				// don't read until the initial load or reset has finished
+				// writing, so the first task on a new install sees the
+				// defaults instead of undefined
+			await initPromise;
+
+				// we read from storage on every task rather than keeping an
+				// in-memory copy the way the MV2 persistent background page
+				// could, since the worker and the popup each get their own
+				// copy of this module and have to see each other's writes.
 				// only get the data key, since that's all the tasks operate
 				// on, so we don't deserialize the other keys on every call
 			const { data } = await chrome.storage.local.get("data");
