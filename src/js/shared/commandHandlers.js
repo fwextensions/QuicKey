@@ -251,7 +251,7 @@ async function navigateRecents(
 					// execute any pending tab activation event so the recents
 					// list is up-to-date before we start navigating.  we have to
 					// do this regardless of whether the popup is open or not.
-				await addTab.execute();
+				await addTab.flush();
 
 				if (!ports.popup) {
 						// since the popup isn't currently open, we rely on it
@@ -299,7 +299,7 @@ export function toggleRecentTabs(
 			// if the user navigated to a tab but hasn't waited for the min
 			// dwell time before toggling back, add the current tab before
 			// toggling so it becomes the most recent
-		.then(() => addTab.execute())
+		.then(() => addTab.flush())
 		.then(() => {
 			if (state.navigatingRecents) {
 					// tell the popup that the user's no longer navigating
@@ -319,10 +319,10 @@ export function toggleRecentTabs(
 			// be the most recent, in case the user quickly toggles again.
 			// otherwise, the debounced add would fire after we navigate,
 			// putting that tab on the top of the stack, even though a
-			// different tab was now active.  pass true to tell execute() we want
-			// to wait for the next addTab event if there isn't one pending.
-			// that will also cause the next addTab to be executed immediately.
-		.then(() => addTab.execute(true))
+			// different tab was now active.  if no add is pending yet, we need
+			// to wait for the next one, which flushOrNext() will also fire
+			// immediately rather than debouncing.
+		.then(() => addTab.flushOrNext())
 		.then(() => tracker.event("recents",
 			fromShortcut ? "toggle-shortcut" : "toggle"));
 }
@@ -334,7 +334,7 @@ function handlePopupMessage(
 {
 	if (message === "executeAddTab") {
 // TODO: this seems to not get called when quickly switching between tabs without waiting for the dwell time to expire and then hitting alt-Q.  the wrong tab is at the top of the list.
-		addTab.execute();
+		addTab.flush();
 	} else if (message === "stopNavigatingRecents") {
 		state.navigatingRecents = false;
 	} else if (message === "getActiveTab") {

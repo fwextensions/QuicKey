@@ -178,12 +178,10 @@ async function showTabCount(
 		await setNormalIcon();
 
 			// toggling the setting should take effect now rather than after the
-			// debounce, so queue the write and immediately flush it.  turning
-			// the count off relies on this for the single write that clears the
-			// badge, since nothing else will call updateTabCount() afterwards.
-		writeBadge();
-
-		await writeBadge.execute();
+			// debounce.  turning the count off relies on this for the single
+			// write that clears the badge, since nothing else will call
+			// updateTabCount() afterwards.
+		await writeBadge.now();
 	}
 }
 
