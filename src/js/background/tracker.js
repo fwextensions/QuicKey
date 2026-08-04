@@ -3,6 +3,23 @@ import ga4mp from "@/lib/ga4mp";
 
 const PathPattern = /chrome-extension:\/\/[^\n]+\//g;
 const MaxStackLength = 2000;
+	// conditions in the browser rather than bugs in QuicKey: the user's disk is
+	// full, a tab closed between us looking it up and using it, a drag is in
+	// progress.  there's nothing to fix in any of them, and they arrive often
+	// enough to crowd out the errors we can act on, since GA buckets everything
+	// past 500 distinct descriptions into "(other)".  matched anywhere in the
+	// description, since these arrive both as bare messages and buried in a
+	// stack or an unhandled-rejection wrapper.
+	//
+	// "The browser is shutting down" is deliberately not in this list.  It's the
+	// single biggest source of noise, but coalescing the badge writes should
+	// have taken most of it out, and dropping it now would hide whether that
+	// worked.  Revisit once there's a month of numbers to compare.
+const IgnoredErrors = [
+	"FILE_ERROR_NO_SPACE",
+	"No tab with id:",
+	"Tabs cannot be edited right now"
+];
 const DefaultSettings = {
 	client_id: crypto.randomUUID(),
 	user_id: undefined,
@@ -129,6 +146,10 @@ export default class Tracker {
 					: "";
 
 				description = `${error.message}${location}`;
+			}
+
+			if (IgnoredErrors.some((text) => description?.includes(text))) {
+				return;
 			}
 
 			this.send("exception", {
