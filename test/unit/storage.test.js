@@ -143,6 +143,128 @@ describe("storage versioning", () => {
 		expect(data).toEqual({ fresh: true });
 	});
 
+		// validateUpdate() only runs after the updaters, so data that isn't an
+		// object has to survive them to reach the check that would reset it.
+		// an updater that throws on it never resets at all -- it wedges the
+		// storage behind a failed-init that retries forever
+	it("resets rather than handing the updaters data that isn't an object", async () => {
+		chrome.storage.local._seed({
+			version: 1,
+			data: "}{ truncated json",
+			lastSavedFrom: "/x.html",
+		});
+
+		const updater = vi.fn((data) => [{ ...data, migrated: true }, 2]);
+		const storage = createStorage({
+			name: "precheck",
+			version: 2,
+			updaters: { 1: updater },
+			getDefaultData: () => Promise.resolve({ fresh: true }),
+		});
+
+		await flush();
+
+		expect(updater).not.toHaveBeenCalled();
+		expect(await storage.get()).toEqual({ fresh: true });
+	});
+
+
+		// addDefaultSetting() writes straight into data.settings
+	it("resets when settings isn't an object the updaters can write into", async () => {
+		chrome.storage.local._seed({
+			version: 1,
+			data: { settings: "gone" },
+			lastSavedFrom: "/x.html",
+		});
+
+		const updater = vi.fn((data) => [{ ...data, migrated: true }, 2]);
+		const storage = createStorage({
+			name: "precheck-settings",
+			version: 2,
+			updaters: { 1: updater },
+			getDefaultData: () => Promise.resolve({ fresh: true }),
+		});
+
+		await flush();
+
+		expect(updater).not.toHaveBeenCalled();
+		expect(await storage.get()).toEqual({ fresh: true });
+	});
+
+
+		// the check can't look at the shape, since changing the shape is what
+		// the updaters are for: old data legitimately lacks keys the current
+		// version has, and carries keys it doesn't
+	it("still updates old data whose shape doesn't match the current version", async () => {
+		chrome.storage.local._seed({
+			version: 1,
+			data: { name: "old", goingAway: true },
+			lastSavedFrom: "/x.html",
+		});
+
+		const storage = createStorage({
+			name: "precheck-old-shape",
+			version: 2,
+			updaters: {
+				1: ({goingAway, ...data}) => [{ ...data, settings: { added: true } }, 2],
+			},
+			getDefaultData: () => Promise.resolve({ fresh: true }),
+		});
+
+		await flush();
+
+		expect(await storage.get()).toEqual({ name: "old", settings: { added: true } });
+	});
+
+
+		// a reset triggered by bad data isn't a new install, and the data it's
+		// replacing may still hold parts worth keeping, so getDefaultData() is
+		// given the chance to salvage them
+	it("hands the rejected data to getDefaultData on a recovery reset", async () => {
+		chrome.storage.local._seed({
+			version: 1,
+			data: { corrupt: true, worthKeeping: "mine" },
+			lastSavedFrom: "/x.html",
+		});
+
+		const getDefaultData = vi.fn((previousData) => Promise.resolve({
+			fresh: true,
+			worthKeeping: previousData?.worthKeeping ?? "default",
+		}));
+		const storage = createStorage({
+			name: "recovery",
+			version: 1,
+			validateUpdate: () => Promise.resolve(false),
+			getDefaultData,
+		});
+
+		await flush();
+
+		expect(await storage.get()).toEqual({ fresh: true, worthKeeping: "mine" });
+	});
+
+
+		// asking for a reset is asking for a clean slate, not a recovery
+	it("hands nothing to getDefaultData on an explicit reset", async () => {
+		chrome.storage.local._seed({
+			version: 1,
+			data: { worthKeeping: "mine" },
+			lastSavedFrom: "/x.html",
+		});
+
+		const getDefaultData = vi.fn((previousData) => Promise.resolve({
+			worthKeeping: previousData?.worthKeeping ?? "default",
+		}));
+		const storage = createStorage({ name: "explicit-reset", version: 1, getDefaultData });
+
+		await flush();
+		await storage.reset();
+
+		expect(getDefaultData).toHaveBeenCalledWith(undefined);
+		expect(await storage.get()).toEqual({ worthKeeping: "default" });
+	});
+
+
 	it("resets to getDefaultData on a fresh install with no stored data", async () => {
 		const storage = createStorage({
 			name: "fresh-install",

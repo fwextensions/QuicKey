@@ -1,5 +1,6 @@
 import objectsHaveSameKeys from "@/lib/objects-have-same-keys";
 import decode from "@/lib/decode";
+import log from "./persistent-log";
 import { createStorage } from "./storage";
 import getDefaultSettings from "./get-default-settings";
 import * as k from "./constants";
@@ -160,13 +161,18 @@ function createDefaultData()
 	// tabs, which can be slow when there are hundreds of tabs.  the defaults
 	// are only needed on a new install or a storage version update, so do the
 	// queries lazily, instead of on every startup of the worker or popup.
-function getDefaultDataPromise()
+	// enumerating every tab is the slow part on a machine with thousands of
+	// them, so a caller that has already done it can hand the results in rather
+	// than making us query them all over again.
+function getDefaultDataPromise(
+	queriedWindows,
+	queriedTabs)
 {
 	if (!defaultDataPromise) {
 		defaultDataPromise = Promise.all([
-				chrome.windows.getAll(),
-				chrome.tabs.query({})
-			])
+			queriedWindows ?? chrome.windows.getAll(),
+			queriedTabs ?? chrome.tabs.query({})
+		])
 			.then(([windows, tabs]) => {
 				let hanPattern;
 
@@ -198,6 +204,12 @@ function getDefaultDataPromise()
 					// open, as someone with lots of open windows is probably
 					// jumping between them frequently, so the icon is less relevant
 				DefaultSettings[k.MarkTabsInOtherWindows.Key] = windows.length < 4;
+
+					// log what we tuned from, since a reset that happens during
+					// startup can see the browser before the windows have been
+					// restored, which makes both of these counts too low
+				log("tuning defaults from",
+					windows.length, "windows and", tabs.length, "tabs");
 
 				return createDefaultData();
 			});
@@ -279,20 +291,36 @@ export default createStorage({
 	updaters: Updaters,
 
 
-	getDefaultData: async function()
+		// previousData is passed only by a recovery reset, and is the data that
+		// failed to update or validate
+	getDefaultData: async function(
+		previousData)
 	{
-		const [activeTabs, allTabs] = await Promise.all([
+		const [activeTabs, allTabs, windows] = await Promise.all([
 				// we need the current window's active tab separately, since a
 				// query over all the windows can't tell us which one is current
 			chrome.tabs.query({ active: true, currentWindow: true, windowType: "normal" }),
-			chrome.tabs.query({ windowType: "normal" })
+				// query every tab, rather than just the ones in normal windows,
+				// so that this one enumeration can serve both the settings
+				// tuning below and the seeding further down
+			chrome.tabs.query({}),
+			chrome.windows.getAll()
 		]);
 		const tab = activeTabs && activeTabs[0];
-		const data = JSON.parse(JSON.stringify(await getDefaultDataPromise()));
+			// pass in what we just queried, so the tuning doesn't enumerate
+			// every tab a second time.  if an updater already ran this, it's
+			// memoized and the arguments are ignored, which is also fine.
+		const data = JSON.parse(JSON.stringify(await getDefaultDataPromise(windows, allTabs)));
+			// a tab only knows its window's ID, not its type, so we need the
+			// windows to tell which tabs are in normal ones
+		const normalWindowIDs = new Set(windows
+			.filter(({type}) => type == "normal")
+			.map(({id}) => id)
+		);
 
 			// we have no history of our own yet, so seed the recents from the
 			// open tabs, ordered by Chrome's lastAccessed times
-		seedRecents(data, allTabs, tab);
+		seedRecents(data, allTabs.filter(({windowId}) => normalWindowIDs.has(windowId)), tab);
 
 		if (tab) {
 				// store now as the last visit of the current tab so
@@ -304,6 +332,41 @@ export default createStorage({
 			tab.lastVisit = Date.now();
 			data.tabIDs.push(tab.id);
 			data.tabsByID[tab.id] = tab;
+		}
+
+			// a recovery reset isn't a new install: the data it's replacing was
+			// valid enough to have a version.  the corruption we've seen is
+			// always in the tab data, which rebuilding is the whole point of the
+			// reset, but the settings are the part the user tuned by hand, and
+			// there's no reason to make them do it again.  the defaults we just
+			// built are also tuned from the window count, which is unreliable
+			// here -- a reset during startup can run before the windows have
+			// been restored -- so the stored settings are the better source even
+			// when nothing was hand-tuned.
+			//
+			// only keep them if they still pass the same deep shape check
+			// validateUpdate() applies, so settings that are themselves the
+			// problem still get reset along with everything else.
+		if (previousData?.settings
+				&& objectsHaveSameKeys(data.settings, previousData.settings, true)) {
+			data.settings = previousData.settings;
+
+				// this is the same profile it was before the reset, so carry
+				// its install date forward rather than dating it to whenever
+				// the corruption happened to be noticed.  only if it really is
+				// a date, though: the top level is what failed validation, so
+				// nothing up here can be assumed, and writing a bad value back
+				// would fail validation again on the next startup and reset in
+				// a loop.
+			const keepInstallTime = typeof previousData.installTime == "number"
+				&& previousData.installTime > 0;
+
+			if (keepInstallTime) {
+				data.installTime = previousData.installTime;
+			}
+
+			log("RESET: keeping the existing settings",
+				keepInstallTime ? "and install time" : "");
 		}
 
 		return data;
