@@ -9,6 +9,7 @@ const FirefoxToolPattern = /\/mozapps\//;
 const TGSIconPath = "chrome-extension://klbibkeccnjlkjkiokjodocebajanakg/img/";
 const DefaultFaviconPath = "img/default-favicon.svg";
 const FaviconURLPrefix = `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=`;
+const RemoteFaviconPattern = /^https?:/;
 
 
 export default function addURLs(
@@ -37,17 +38,20 @@ export default function addURLs(
 			item.unsuspendURL = unsuspendURL;
 		}
 
-			// look up the favicon via chrome://favicon if the item itself
-			// doesn't have one.  we want to prioritize the item's URL since
-			// The Great Suspender creates faded favicons and stores them as
-			// data URIs in item.favIconUrl.  except, sometimes it seems to
-			// put its own icon in there if the background page wasn't
-			// available, so default to the chrome:// URL in that case.
-			// in FF, use a fallback icon, as bookmarks and history items
-			// don't show favicons, annoyingly.
-		item.faviconURL = (IsFirefox && !favIconUrl)
-			? DefaultFaviconPath
-			: (favIconUrl && favIconUrl.indexOf(TGSIconPath) != 0)
+			// look up the favicon via the _favicon API if we can't use the
+			// item's own.  we want to prioritize item.favIconUrl since The
+			// Great Suspender creates faded favicons and stores them there as
+			// data URIs.  but only data URIs, since the popup page can't load
+			// a remote http(s) favicon from a different origin.  and sometimes
+			// TGS seems to put its own icon in there if the background page
+			// wasn't available, so fall back to the _favicon URL in that case.
+			// in FF, which has no _favicon API, use a fallback icon, as
+			// bookmarks and history items don't show favicons, annoyingly.
+		item.faviconURL = IsFirefox
+			? (favIconUrl || DefaultFaviconPath)
+			: (favIconUrl
+					&& !RemoteFaviconPattern.test(favIconUrl)
+					&& favIconUrl.indexOf(TGSIconPath) != 0)
 				? favIconUrl
 				: FaviconURLPrefix + (item.unsuspendURL || url);
 	}
