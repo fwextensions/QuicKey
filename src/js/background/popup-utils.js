@@ -38,25 +38,35 @@ export function calcBounds(
 		width: targetW,
 		height: targetH
 	} = targetWindow || screen;
+		// chrome.windows throws "Invalid value for bounds" if any of these is a
+		// float.  that happens on fractional display scaling, where the popup
+		// page measures its own outerWidth/outerHeight as non-integers and hands
+		// them to resize().  round the size before positioning, so the centering
+		// math and the off-screen clamp below both work from the same values
+		// Chrome will actually be given.
+	const w = Math.round(width);
+	const h = Math.round(height);
 		// Chrome will throw an error if the popup is more than 50% off-screen,
 		// which can happen if the target window has been dragged mostly off-
 		// screen.  so clamp the top/left to keep it fully on-screen, with padding.
 	const left = Math.max(
 		screen.left + PopupPadding,
 		Math.min(
-			getAlignedPosition(horizontal, width, targetX, targetW, PopupPadding),
-			screen.width - width - PopupPadding
+			getAlignedPosition(horizontal, w, targetX, targetW, PopupPadding),
+			screen.width - w - PopupPadding
 		)
 	);
 	const top = Math.max(
 		screen.top + PopupPadding,
 		Math.min(
-			getAlignedPosition(vertical, height, targetY, targetH, PopupPadding),
-			screen.height - height - PopupPadding
+			getAlignedPosition(vertical, h, targetY, targetH, PopupPadding),
+			screen.height - h - PopupPadding
 		)
 	);
 
-	return { left, top, width, height };
+		// the target window's bounds can be fractional too, so the aligned
+		// position needs rounding even after the size has been rounded
+	return { left: Math.round(left), top: Math.round(top), width: w, height: h };
 }
 
 	// get the URL from either a tab object or what's returned from getContexts()

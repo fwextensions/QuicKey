@@ -462,16 +462,26 @@ async function resize(
 		return;
 	}
 
-	currentWidth = width;
-	currentHeight = height;
+		// resize() is the one path to chrome.windows that doesn't go through
+		// calcBounds(), and it's where the fractional values originate -- the
+		// popup page derives these from outerWidth/outerHeight, which aren't
+		// integers on fractional display scaling.  round here so the stored
+		// size stays integral for every later calcBounds() call too.
+	currentWidth = Math.round(width);
+	currentHeight = Math.round(height);
+
+	const size = {
+		width: currentWidth,
+		height: currentHeight
+	};
 
 	try {
 			// keepVisible, since resize() is normally called on a popup that's
 			// showing, and refreshPopupID() would otherwise clear isVisible and
 			// send the next show() down the wrong branch
 		await retryAfterResync("resize",
-			() => chrome.windows.update(windowID, { width, height }),
-			{ keepVisible: true, details: { width, height } });
+			() => chrome.windows.update(windowID, size),
+			{ keepVisible: true, details: size });
 	} catch (e) {}
 }
 
