@@ -217,6 +217,59 @@ async function refreshPopupID()
 }
 
 
+	// run a chrome.windows call that depends on this context's cached windowID,
+	// and if it throws -- most likely "No window with id", because some other
+	// context has since replaced the popup window -- re-derive the IDs from live
+	// browser state and try once more, rather than staying wedged until this
+	// context's page happens to reload.  see the note on getExistingPopupID().
+	//
+	// fn has to read windowID/tabID when it's called, not close over them, so
+	// the retry picks up the resynced values.
+	//
+	// keepVisible is for resize(), which can legitimately run while the popup is
+	// showing.  every other caller has already given up on the window being
+	// visible, which is what refreshPopupID() assumes.
+async function retryAfterResync(
+	name,
+	fn,
+	{ keepVisible, details } = {})
+{
+	try {
+		return await fn();
+	} catch (e) {
+		log(`popup ${name} failed, resyncing:`, e.message,
+			"windowID:", windowID, "tabID:", tabID,
+			"isVisible:", isVisible, "isHiddenInTab:", isHiddenInTab,
+			"hideBehavior:", hideBehavior,
+			...(details ? [details] : []));
+
+		const wasVisible = isVisible;
+
+		await refreshPopupID();
+
+		if (keepVisible) {
+			isVisible = wasVisible;
+		}
+
+		try {
+			const result = await fn();
+
+			log(`popup ${name} resynced to windowID:`, windowID);
+
+			return result;
+		} catch (retryError) {
+			log(`popup ${name} FAILED after resync:`, retryError.message,
+				"windowID:", windowID, "tabID:", tabID,
+				"isHiddenInTab:", isHiddenInTab);
+
+				// let the caller decide what a second failure means.  hide()
+				// falls back to close(); the others give up quietly.
+			throw retryError;
+		}
+	}
+}
+
+
 	// the body of show()'s attempt, factored out so it can be retried after a
 	// resync without duplicating the branch logic
 async function showInWindow(
@@ -263,30 +316,11 @@ async function show(
 	let window;
 
 	try {
-		window = await showInWindow(bounds);
+		window = await retryAfterResync("show", () => showInWindow(bounds),
+			{ details: { bounds } });
 	} catch (e) {
-			// most likely "No window with id", because this context's cached
-			// windowID points at a popup window that some other context has
-			// since replaced -- see the note on getExistingPopupID().  re-derive
-			// the IDs from live browser state and try once more, rather than
-			// staying wedged until the popup page happens to reload.
-		log("popup show failed, resyncing:", e.message,
-			"windowID:", windowID, "tabID:", tabID,
-			"isVisible:", isVisible, "isHiddenInTab:", isHiddenInTab,
-			"hideBehavior:", hideBehavior,
-			"bounds:", bounds);
-
-		try {
-			await refreshPopupID();
-
-			window = await showInWindow(bounds);
-
-			log("popup show resynced to windowID:", windowID);
-		} catch (retryError) {
-			log("popup show FAILED after resync:", retryError.message,
-				"windowID:", windowID, "tabID:", tabID,
-				"isHiddenInTab:", isHiddenInTab);
-		}
+			// both attempts failed and retryAfterResync() has already logged
+			// why.  fall through and emit "show" anyway, as before.
 	}
 
 	lastActiveTab = activeTab;
@@ -372,7 +406,9 @@ async function hide(
 DEBUG && hideBehavior == Behind && (!Number.isInteger(options.left) || !Number.isInteger(options.top)) && console.error("==== bad popup options", options, targetWindow);
 
 		try {
-			const {state} = await chrome.windows.update(windowID, options);
+			const {state} = await retryAfterResync("hide",
+				() => chrome.windows.update(windowID, options),
+				{ details: { options } });
 
 			if (hideBehavior == Minimize && state !== "minimized") {
 					// for some irritating reason, minimizing the popup after it
@@ -410,7 +446,8 @@ async function blur()
 	isVisible = false;
 
 	try {
-		await chrome.windows.update(windowID, { focused: false });
+		await retryAfterResync("blur",
+			() => chrome.windows.update(windowID, { focused: false }));
 	} catch (e) {}
 
 	popupEmitter.emit("blur", { windowID });
@@ -429,11 +466,20 @@ async function resize(
 	currentHeight = height;
 
 	try {
-		await chrome.windows.update(windowID, { width, height });
+			// keepVisible, since resize() is normally called on a popup that's
+			// showing, and refreshPopupID() would otherwise clear isVisible and
+			// send the next show() down the wrong branch
+		await retryAfterResync("resize",
+			() => chrome.windows.update(windowID, { width, height }),
+			{ keepVisible: true, details: { width, height } });
 	} catch (e) {}
 }
 
 
+	// close() deliberately doesn't use retryAfterResync().  it doesn't act on
+	// the cached windowID at all -- it queries for the popup tabs by URL and
+	// removes those -- so a stale ID can't wedge it.  windowID is only read to
+	// decide whether to emit "close".
 async function close()
 {
 		// look for any open popup tabs.  there should only ever be one, but
