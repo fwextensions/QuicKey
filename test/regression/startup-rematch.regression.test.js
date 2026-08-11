@@ -132,6 +132,32 @@ describe("rematch after a startup that matched nothing", () => {
 		expect(lastUpdateTime).toBe(1000);
 	});
 
+		// the case a URL-less-tab check can't see: Chrome is part way through
+		// restoring, so the tabs that haven't arrived yet are *absent* from the
+		// query rather than present without a URL.  gating retention on
+		// "some tab has no URL" reads this as "those recents are closed" and
+		// drops them, permanently, while the tabs were still on their way.
+	it("keeps unmatched recents when the restore is only part way through", async () => {
+		seedStaleRecents({ lastStartupTime: 2000, lastUpdateTime: 1000 });
+			// only the first page is back, and it has its URL -- so there is
+			// nothing "pending" to notice
+		chrome.tabs.query = vi.fn(() => Promise.resolve([
+			{ id: 12, url: "https://trmnl.com/flash", windowId: 5 },
+		]));
+
+		await recentTabs.getAll(false);
+		await settle();
+
+		const { tabIDs, tabsByID } = store._dump();
+
+			// the restored one is remapped to its new ID...
+		expect(tabsByID[12]).toBeDefined();
+			// ...and the one still being restored is kept, not dropped
+		expect(tabsByID[775172658]).toBeDefined();
+		expect(tabsByID[775172658].url).toBe("https://trmnl.com/dashboard");
+		expect(tabIDs).toContain(775172658);
+	});
+
 	it("keeps unmatched recents while a tab is still loading", async () => {
 		seedStaleRecents({ lastStartupTime: 2000, lastUpdateTime: 1000 });
 			// the second page hasn't got its URL yet, so its recent can't be

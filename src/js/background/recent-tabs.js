@@ -355,15 +355,24 @@ const t = performance.now();
 					// is not evidence that the recents are gone, and rebuilding
 					// against it would drop all of them.
 				if (lastStartupTime > lastUpdateTime && freshTabs.length > 0) {
-						// hang on to recents that didn't match while any tab is
-						// still loading -- it may just not have its URL yet.
-					const pendingCount = freshTabs.filter(({url}) => !url).length;
-					const {missingCount, ...update} = updateFromFreshTabs(data, freshTabs, pendingCount > 0);
+						// always retain what didn't match.  a recent with no fresh
+						// tab may belong to a tab Chrome hasn't restored yet, and
+						// there's no telling that apart from a tab that's really
+						// closed: an unrestored tab is *absent* from the query,
+						// not present without a URL, so counting URL-less tabs
+						// doesn't detect it.  dropping a live recent can't be
+						// undone, while keeping a dead one costs a slot in tabIDs
+						// and is invisible in the menu, which is built from the
+						// fresh tabs.  navigate() clears out dead entries anyway,
+						// and you're far likelier to open the menu looking for a
+						// tab mid-restore than to be paging through the MRU stack.
+					const {missingCount, ...update} = updateFromFreshTabs(data, freshTabs, true);
 
 					log("getAll: rebuilt recents after startup didn't",
 						"lastStartupTime:", lastStartupTime,
 						"lastUpdateTime:", lastUpdateTime,
-						"missing:", missingCount, "pending:", pendingCount);
+						"fresh tabs:", freshTabs.length,
+						"missing:", missingCount);
 
 					rebuilt = update;
 					({tabIDs, tabsByID} = update);
