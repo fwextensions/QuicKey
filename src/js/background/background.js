@@ -99,6 +99,15 @@ chrome.runtime.onStartup.addListener(() => {
 		let attempt = 0;
 
 		try {
+				// record that a restart happened *before* attempting any match,
+				// so the fact of the restart survives the passes below failing.
+				// updateFromFreshTabs() only writes lastUpdateTime when it had a
+				// real tab list to work from, so if every pass runs against an
+				// empty query -- the worker waking before Chrome restores the
+				// session -- lastStartupTime stays ahead of lastUpdateTime and
+				// getAll() picks up the rebuild on the next popup open.
+			await storage.set(() => ({ lastStartupTime: Date.now() }));
+
 			while (true) {
 				const passTime = Date.now();
 					// only retain unmatched recents if we'll get another look at

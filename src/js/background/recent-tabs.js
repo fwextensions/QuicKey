@@ -158,10 +158,17 @@ DEBUG && console.log("=== existing tabs", tabIDs.length, Object.keys(tabsByID).l
 	tracker.event("update", "new-tabs", freshTabs.length);
 	tracker.event("update", "missing-recents", missingCount);
 
-	var result = {
+	const result = {
 		tabIDs: newTabIDs,
 		tabsByID: newTabsByID,
-		lastUpdateTime: Date.now(),
+			// only claim we've reconciled the recents if we had a real tab list
+			// to reconcile them against.  an empty freshTabs means Chrome hasn't
+			// restored the session yet, not that every recent is gone, and
+			// getAll() keys its rebuild off lastStartupTime > lastUpdateTime --
+			// so leaving this unwritten is what lets a later pass retry.  a
+			// populated list that matched nothing IS a real answer: those tabs
+			// are closed, and running again won't bring them back.
+		...(freshTabs.length > 0 ? { lastUpdateTime: Date.now() } : {}),
 			// not stored -- updateAll() strips these off and returns them, so
 			// the startup sequence can tell whether another pass is worthwhile.
 			// pendingCount is the one that matters there: a recent can be
@@ -330,9 +337,38 @@ const t = performance.now();
 					freshTabs.length, "tabs,",
 					"sessions.getRecentlyClosed:", Math.round(sessionsDuration), "ms");
 
-				const {tabIDs} = data;
+				const {lastStartupTime = 0, lastUpdateTime = 0} = data;
 				const tabsByURL = {};
-				const {tabsByID} = data;
+				let {tabIDs, tabsByID} = data;
+				let rebuilt;
+
+					// a Chrome restart regenerates every tab ID, so the stored
+					// recents have to be rematched to the restored tabs by URL.
+					// onStartup does that, but it can finish having matched
+					// nothing -- most often because the worker woke before Chrome
+					// restored any tabs -- and nothing else ever retries, so the
+					// recents stay pointed at dead IDs until the next restart.
+					// lastUpdateTime is only written once a pass had a real tab
+					// list, so this stays true until a rebuild actually happens.
+					//
+					// the freshTabs guard is the same invariant: an empty query
+					// is not evidence that the recents are gone, and rebuilding
+					// against it would drop all of them.
+				if (lastStartupTime > lastUpdateTime && freshTabs.length > 0) {
+						// hang on to recents that didn't match while any tab is
+						// still loading -- it may just not have its URL yet.
+					const pendingCount = freshTabs.filter(({url}) => !url).length;
+					const {missingCount, ...update} = updateFromFreshTabs(data, freshTabs, pendingCount > 0);
+
+					log("getAll: rebuilt recents after startup didn't",
+						"lastStartupTime:", lastStartupTime,
+						"lastUpdateTime:", lastUpdateTime,
+						"missing:", missingCount, "pending:", pendingCount);
+
+					rebuilt = update;
+					({tabIDs, tabsByID} = update);
+				}
+
 // TODO: should use startsWith
 				let tabs = freshTabs.filter(({url}) => !url?.includes(PopupURL));
 
@@ -411,8 +447,11 @@ const t = performance.now();
 					// save off the updated recent data.  we don't await this
 					// storage.set() so that the popup doesn't have to wait
 					// for the data to get stored before it's returned, to
-					// make the recents menu render faster.
-				storage.set(() => ({ tabsByID }));
+					// make the recents menu render faster.  when we rebuilt
+					// above, the new tabIDs and lastUpdateTime have to go with
+					// it -- lastUpdateTime is what stops the rebuild from
+					// running again on the next open.
+				storage.set(() => ({ ...rebuilt, tabsByID }));
 
 DEBUG && console.log("getAll took", performance.now() - t, "ms");
 				return tabs;
@@ -449,10 +488,13 @@ function updateAll(
 
 				stats = { missingCount, pendingCount };
 
-				return {
-					lastStartupTime: Date.now(),
-					...update,
-				};
+					// lastStartupTime is written by the onStartup handler before
+					// any of this runs, so that a startup whose passes all fail
+					// still leaves lastStartupTime > lastUpdateTime for getAll()
+					// to notice.  writing it here would defeat that: it would
+					// always land alongside lastUpdateTime and the two could
+					// never disagree.
+				return update;
 			});
 	}, "updateAll")
 		.then(() => stats);
