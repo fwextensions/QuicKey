@@ -73,6 +73,14 @@ export default function GeneralSection()
 					onChange={onChange}
 				/>
 			</NewSetting>
+			<NewSetting addedVersion={15}>
+				<Checkbox
+					id={k.MarkSuspendedTabs.Key}
+					label="Dim tabs that the browser has discarded or frozen"
+					value={settings[k.MarkSuspendedTabs.Key]}
+					onChange={onChange}
+				/>
+			</NewSetting>
 
 
 			<h2>Multiple browser windows</h2>

@@ -39,8 +39,11 @@ function addRecentBoost(
 export default async function initTabs(
 	tabsPromise,
 	activeTab,
-	markTabsInOtherWindows,
-	usePinyin)
+	{
+		markTabsInOtherWindows,
+		markSuspendedTabs,
+		usePinyin
+	})
 {
 	let tabsByTitle = {};
 
@@ -85,6 +88,12 @@ export default async function initTabs(
 					// don't treat closed tabs as being in other windows
 				tab.otherWindow = markTabs &&
 					tab.windowId !== currentWindowID && !tab.sessionId;
+
+					// tabs that Chrome has discarded or frozen are dimmed only
+					// if the user wants them marked.  this doesn't cover tabs
+					// suspended by The Great Suspender, which are always marked.
+				tab.suspended = Boolean(markSuspendedTabs &&
+					(tab.discarded || tab.frozen));
 
 					// if the tab is suspended, check if it it's in the bad
 					// state where The Great Suspender hasn't updated its

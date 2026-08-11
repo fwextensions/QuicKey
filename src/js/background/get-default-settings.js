@@ -24,6 +24,7 @@ const DefaultSettings = {
 	[k.HomeEndBehavior.Key]: k.HomeEndBehavior.ResultsList,
 	[k.HidePopupBehavior.Key]: k.HidePopupBehavior.Behind,
 	[k.MarkTabsInOtherWindows.Key]: true,
+	[k.MarkSuspendedTabs.Key]: true,
 	[k.IncludeClosedTabs.Key]: true,
 	[k.ShowTabCount.Key]: false,
 	[k.UsePinyin.Key]: false,

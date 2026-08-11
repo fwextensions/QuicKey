@@ -120,6 +120,8 @@ const Updaters = {
 	14: update(async data =>
 	{
 		data.seededRecentsBannerCount = k.MaxSeededRecentsBannerDisplays;
+
+		await addDefaultSetting(k.MarkSuspendedTabs)(data);
 	}),
 };
 	// calculate the version by incrementing the highest key in the

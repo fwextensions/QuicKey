@@ -372,8 +372,11 @@ export default class App extends React.Component {
 					// current tab in the list in the popup window, so pass
 					// null so initTabs() doesn't filter it out
 				this.navigatingRecents ? null : activeTab,
-				settings[k.MarkTabsInOtherWindows.Key],
-				settings[k.UsePinyin.Key]
+				{
+					markTabsInOtherWindows: settings[k.MarkTabsInOtherWindows.Key],
+					markSuspendedTabs: settings[k.MarkSuspendedTabs.Key],
+					usePinyin: settings[k.UsePinyin.Key]
+				}
 			);
 			const currentWindowID = activeTab && activeTab.windowId;
 				// this promise chain starts with settingsPromise, so by

@@ -75,6 +75,9 @@ export const HidePopupBehavior = {
 export const MarkTabsInOtherWindows = {
 	Key: "markTabsInOtherWindows"
 };
+export const MarkSuspendedTabs = {
+	Key: "markSuspendedTabs"
+};
 export const IncludeClosedTabs = {
 	Key: "includeClosedTabs"
 };

@@ -111,8 +111,7 @@ export default class ResultsListItem extends React.Component {
 			pinyinTitle,
 			pinyinDisplayURL,
 			sessionId,
-			discarded,
-			frozen,
+			suspended,
 			otherWindow,
 			incognito
 		} = item;
@@ -120,7 +119,7 @@ export default class ResultsListItem extends React.Component {
 			"results-list-item",
 			mode,
 			isSelected ? "selected" : "",
-			(unsuspendURL || discarded || frozen) ? "suspended" : "",
+			(unsuspendURL || suspended) ? "suspended" : "",
 			incognito ? "incognito" :
 				(otherWindow ? "other-window" : ""),
 			sessionId ? "closed" : ""
@@ -155,8 +154,7 @@ export default class ResultsListItem extends React.Component {
 
 		if (
 			(unsuspendURL && faviconURL.indexOf(FaviconURL) == 0 && !sessionId)
-			|| discarded
-			|| frozen
+			|| suspended
 		) {
 				// this tab was discarded/frozen by Chrome, or The Great Suspender
 				// suspended it and forgot  the faded favicon for it or has set
