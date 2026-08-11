@@ -66,6 +66,15 @@ const EventHandlers = {
 	{
 		toolbarIcon.updateTabCount(1);
 
+			// temporary instrumentation: count the tabs Chrome creates while
+			// restoring a session, so we can see the shape of the restore rather
+			// than only its end state.  free unless onStartup armed it.
+		if (state.restoreStartTime) {
+			state.restoreTabCount++;
+			state.restoreLastTabTime = Date.now();
+			state.restoreFirstTabTime ||= state.restoreLastTabTime;
+		}
+
 			// if this isn't the startup event and the tab isn't active and isn't a popup window,
 			// add it to the recent tabs list
 		if (!state.startingUp && !tab.active && !isPopupWindow(tab)) {

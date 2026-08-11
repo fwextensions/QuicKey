@@ -186,7 +186,10 @@ DEBUG && console.error("Storage error: failed-init", error);
 					"version:", storage?.version,
 					"lastSavedFrom:", lastSavedFrom,
 					"tabIDs:", storage?.data?.tabIDs?.length,
-					"lastStartupTime:", storage?.data?.lastStartupTime);
+						// log both times, since lastStartupTime > lastUpdateTime
+						// is what tells getAll() a startup rematch is still owed
+					"lastStartupTime:", storage?.data?.lastStartupTime,
+					"lastUpdateTime:", storage?.data?.lastUpdateTime);
 
 				if (!storage || !storage.data) {
 						// this is likely a new install, so reset the storage

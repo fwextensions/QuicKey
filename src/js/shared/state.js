@@ -6,4 +6,13 @@ export default {
 	activeTab: null,
 	navigateRecentsWithPopup: false,
 	navigatingRecents: false,
+
+		// temporary instrumentation -- see trackRestoreProgress() in
+		// background.js.  restoreStartTime is 0 except in the worker instance
+		// that handled onStartup, which is what keeps the counting free for
+		// every other tab creation.
+	restoreStartTime: 0,
+	restoreTabCount: 0,
+	restoreFirstTabTime: 0,
+	restoreLastTabTime: 0,
 };

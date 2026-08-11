@@ -7,6 +7,9 @@ import log from "./persistent-log";
 
 
 const TabKeys = ["id", "url", "windowId"];
+	// how many unmatched recents updateFromFreshTabs() names individually in the
+	// persistent log before falling back to just the count
+const MaxMissingToLog = 3;
 
 
 function titleOrURL(
@@ -131,8 +134,16 @@ DEBUG && console.log("=== existing tabs", tabIDs.length, Object.keys(tabsByID).l
 			delete freshTabsByURL[oldTab.url];
 		} else {
 			missingCount++;
-			log("updateFromFreshTabs: no fresh tab matches recent",
-				tabID, oldTab?.lastVisit, oldTab?.url?.slice(0, 100));
+
+				// log only the first few.  a failed startup match misses every
+				// recent, so this was emitting 50 lines a pass -- two restarts
+				// filled a quarter of the log's 400 entries with one fact and
+				// pushed out the surrounding history.  the summary below carries
+				// the totals; these are just for a sense of what didn't match.
+			if (missingCount <= MaxMissingToLog) {
+				log("updateFromFreshTabs: no fresh tab matches recent",
+					tabID, oldTab?.lastVisit, oldTab?.url?.slice(0, 100));
+			}
 
 				// hang on to the old recent so a later pass can still match it
 				// once the tab finishes restoring.  skip it if a fresh tab has
@@ -150,6 +161,9 @@ DEBUG && console.log("=== existing tabs", tabIDs.length, Object.keys(tabsByID).l
 		"fresh tabs:", freshTabs.length,
 		"matched:", newTabIDs.length - retainedCount,
 		"missing:", missingCount,
+		...(missingCount > MaxMissingToLog
+			? [`(${missingCount - MaxMissingToLog} not listed above)`]
+			: []),
 		"retained:", retainedCount);
 
 		// use timing() instead of event() so that we can get a histogram in

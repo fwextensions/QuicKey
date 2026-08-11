@@ -34,6 +34,19 @@ const RestartDelay = 60 * 1000;
 	// recents that still haven't matched.
 const StartupUpdateTimeout = 10 * 1000;
 const StartupUpdateRetryDelay = 1000;
+	// TEMPORARY INSTRUMENTATION -- remove once it's answered its question.
+	// we don't know how Chrome restores a large session: all at once, or
+	// progressively, and over what span.  that's what decides whether
+	// StartupUpdateTimeout is anywhere near right, and whether waiting on a
+	// budget is the right shape at all versus reacting to the tabs arriving.
+	// counting tabs.onCreated is free -- the event is already registered in
+	// sw.js and already handled -- unlike re-running tabs.query(), which cost
+	// 124 ms to 1.9 s per call on the profile where this was first seen.
+	//
+	// a checkpoint that never logs is itself a result: it means the worker was
+	// killed before that point, which the next "service worker loaded" line
+	// confirms.  the counts are per worker instance and reset with it.
+const RestoreProgressCheckpoints = [1000, 5000, 15000, 30000];
 const tracker = trackers.background;
 
 
@@ -41,6 +54,37 @@ function delay(
 	ms)
 {
 	return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+
+	// see RestoreProgressCheckpoints above.  arms the counting in the
+	// tabs.onCreated handler and logs what's arrived at each checkpoint.  the
+	// checkpoints run independently of the update loop so a slow pass doesn't
+	// skew them, and they aren't awaited, so they never delay startup.
+function trackRestoreProgress()
+{
+	state.restoreStartTime = Date.now();
+	state.restoreTabCount = 0;
+	state.restoreFirstTabTime = 0;
+	state.restoreLastTabTime = 0;
+
+	for (const checkpoint of RestoreProgressCheckpoints) {
+		delay(checkpoint).then(() => {
+			const {restoreStartTime, restoreTabCount, restoreFirstTabTime,
+				restoreLastTabTime} = state;
+			const since = (time) => time ? `+${time - restoreStartTime}ms` : "never";
+
+			log(`onStartup: restore progress +${checkpoint / 1000}s:`,
+				restoreTabCount, "tabs created,",
+				"first:", since(restoreFirstTabTime),
+				"last:", since(restoreLastTabTime),
+					// how long the list has looked settled, which is the signal
+					// a budget-free version of the update loop would wait on
+				"quiet for:", restoreLastTabTime
+					? `${Date.now() - restoreLastTabTime}ms`
+					: "n/a");
+		});
+	}
 }
 
 
@@ -93,6 +137,8 @@ chrome.runtime.onStartup.addListener(() => {
 	log("onStartup fired");
 
 	state.startingUp = true;
+
+	trackRestoreProgress();
 
 	(async () => {
 		const deadline = Date.now() + StartupUpdateTimeout;
