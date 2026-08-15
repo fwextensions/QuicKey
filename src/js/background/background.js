@@ -39,14 +39,37 @@ const StartupUpdateRetryDelay = 1000;
 	// progressively, and over what span.  that's what decides whether
 	// StartupUpdateTimeout is anywhere near right, and whether waiting on a
 	// budget is the right shape at all versus reacting to the tabs arriving.
-	// counting tabs.onCreated is free -- the event is already registered in
-	// sw.js and already handled -- unlike re-running tabs.query(), which cost
-	// 124 ms to 1.9 s per call on the profile where this was first seen.
 	//
-	// a checkpoint that never logs is itself a result: it means the worker was
-	// killed before that point, which the next "service worker loaded" line
-	// confirms.  the counts are per worker instance and reset with it.
-const RestoreProgressCheckpoints = [1000, 5000, 15000, 30000];
+	// tabs.query() is the ground truth -- it's what updateAll() acts on -- so
+	// sample that, even though it costs 200 ms to 2.3 s a call on a big
+	// profile.  the onCreated count is recorded alongside it to find out
+	// whether the event is usable as a wait signal at all: Chrome stopped
+	// firing onActivated for restored tabs (see 189b35f), so it may well not
+	// fire onCreated for them either, and if it doesn't, there's nothing to
+	// wait on and polling is the only option.
+	//
+	// the first attempt at this counted inside the tabs.onCreated *handler*,
+	// which createControlledListener() only runs while this context holds
+	// control -- so a zero reading couldn't be told apart from "we weren't
+	// listening".  count on a raw listener instead.  it adds no wakeups, since
+	// sw.js already registers the event.
+	//
+	// a checkpoint that never logs is itself a result: the worker was killed
+	// before it, which the next "service worker loaded" line confirms.  the
+	// counts are per worker instance and reset with it.
+const RestoreProgressCheckpoints = [1000, 5000, 15000, 30000, 60000];
+let restoreStartTime = 0;
+let restoreCreatedCount = 0;
+let restoreFirstTabTime = 0;
+let restoreLastTabTime = 0;
+
+chrome.tabs.onCreated.addListener(() => {
+	if (restoreStartTime) {
+		restoreCreatedCount++;
+		restoreLastTabTime = Date.now();
+		restoreFirstTabTime ||= restoreLastTabTime;
+	}
+});
 const tracker = trackers.background;
 
 
@@ -63,27 +86,27 @@ function delay(
 	// skew them, and they aren't awaited, so they never delay startup.
 function trackRestoreProgress()
 {
-	state.restoreStartTime = Date.now();
-	state.restoreTabCount = 0;
-	state.restoreFirstTabTime = 0;
-	state.restoreLastTabTime = 0;
+	restoreStartTime = Date.now();
+	restoreCreatedCount = 0;
+	restoreFirstTabTime = 0;
+	restoreLastTabTime = 0;
 
 	for (const checkpoint of RestoreProgressCheckpoints) {
-		delay(checkpoint).then(() => {
-			const {restoreStartTime, restoreTabCount, restoreFirstTabTime,
-				restoreLastTabTime} = state;
-			const since = (time) => time ? `+${time - restoreStartTime}ms` : "never";
+		delay(checkpoint)
+			.then(async () => {
+				const queryTime = performance.now();
+				const tabs = await chrome.tabs.query({});
+				const windows = await chrome.windows.getAll({ populate: false });
+				const since = (time) => time ? `+${time - restoreStartTime}ms` : "never";
 
-			log(`onStartup: restore progress +${checkpoint / 1000}s:`,
-				restoreTabCount, "tabs created,",
-				"first:", since(restoreFirstTabTime),
-				"last:", since(restoreLastTabTime),
-					// how long the list has looked settled, which is the signal
-					// a budget-free version of the update loop would wait on
-				"quiet for:", restoreLastTabTime
-					? `${Date.now() - restoreLastTabTime}ms`
-					: "n/a");
-		});
+				log(`onStartup: restore progress +${checkpoint / 1000}s:`,
+					tabs.length, "tabs in", windows.length, "windows",
+					`(query ${Math.round(performance.now() - queryTime)} ms),`,
+					"onCreated:", restoreCreatedCount,
+					"first:", since(restoreFirstTabTime),
+					"last:", since(restoreLastTabTime));
+			})
+			.catch(error => log("onStartup: restore progress failed:", error.message));
 	}
 }
 
