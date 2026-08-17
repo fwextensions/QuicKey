@@ -21,6 +21,7 @@ import recentTabs from "@/background/recent-tabs";
 import storage from "@/background/quickey-storage";
 import settings from "@/background/settings";
 import { debounce } from "@/background/debounce";
+import log from "@/background/persistent-log";
 import * as k from "@/background/constants";
 import _ from "lodash";
 
@@ -127,6 +128,7 @@ export default class App extends React.Component {
 	popupTabID = -1;
 	popupW = 0;
 	popupH = 0;
+	lastLoggedSize = "";
 	nextFrameRequestID = 0;
 	port = null;
 	sendRuntimeMessage = (...args) => console.error("ERROR: default sendRuntimeMessage() called", args);
@@ -230,6 +232,7 @@ export default class App extends React.Component {
 				// handlers that are only needed in that case
 			this.popupW = outerWidth;
 			this.popupH = outerHeight;
+			this.logSize("mount");
 			window.addEventListener("resize", this.onWindowResize);
 
 				// hide the window if it loses focus
@@ -239,8 +242,15 @@ export default class App extends React.Component {
 
 				// listen for resolution changes so we can resize the popup, in
 				// case it changes based on the new DPI
-			matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`).addEventListener("change", event => {
+			const mountDPR = window.devicePixelRatio;
+
+			matchMedia(`(resolution: ${mountDPR}dppx)`).addEventListener("change", event => {
 				if (!event.matches) {
+						// force past the dedupe: this is the transition we're
+						// chasing, and the target it's about to re-apply was
+						// measured under mountDPR, not the current one
+					this.lastLoggedSize = "";
+					this.logSize("dpi-change", "was dpr:", mountDPR);
 					popupWindow.resize(this.popupW, this.popupH);
 				}
 			});
@@ -325,6 +335,11 @@ export default class App extends React.Component {
 						// has changed for some reason.
 					this.ignoreNextResize = true;
 					this.popupH = bodyHeight + windowPadding;
+						// the other place popupH is assigned, and the one that
+						// could bake a bad measurement into the target
+					this.logSize("fit-content",
+						"bodyHeight:", bodyHeight,
+						"windowPadding:", windowPadding);
 					popupWindow.resize(this.popupW, this.popupH);
 				}
 			});
@@ -1344,6 +1359,43 @@ export default class App extends React.Component {
 	};
 
 
+		// TEMPORARY INSTRUMENTATION -- remove once the DPI resize bug is fixed.
+		// this.popupW/popupH are captured once at mount and re-applied on a
+		// resolution change without being re-measured, so after moving between
+		// displays with different scale factors the popup comes back the wrong
+		// height -- tall enough to run off the bottom of the screen, while the
+		// width looks right.  the working theory is that a device-pixel height
+		// is being recorded as the CSS-pixel target, which on a 2x display
+		// would be about twice what it should be.
+		//
+		// the numbers that would confirm it: target height near 2x outer
+		// height, or popupAdjustmentHeight (logged in popup-window.create())
+		// near +488 rather than the few tens of px of window chrome.
+		//
+		// deduped, since componentDidUpdate() and the resize handler both run
+		// far more often than the size actually changes, and each log entry is
+		// a chrome.storage.local write.
+	logSize(
+		event,
+		...details)
+	{
+		const measured = [devicePixelRatio, outerWidth, outerHeight,
+			innerWidth, innerHeight, this.popupW, this.popupH].join();
+
+		if (measured !== this.lastLoggedSize) {
+			this.lastLoggedSize = measured;
+
+			log(`popup size [${event}]`,
+				"dpr:", devicePixelRatio,
+				"outer:", `${outerWidth}x${outerHeight}`,
+				"inner:", `${innerWidth}x${innerHeight}`,
+				"target:", `${this.popupW}x${this.popupH}`,
+				"screen:", `${screen.width}x${screen.height}`,
+				...details);
+		}
+	}
+
+
 	onWindowResize = debounce(() => {
 		if (innerWidth == outerWidth && k.IsWin) {
 				// sometimes, something forces the popup to redraw in
@@ -1360,6 +1412,10 @@ export default class App extends React.Component {
 				// or height have actually changed, since we sometimes
 				// get resize events when the size is the same
 			this.ignoreNextResize = true;
+				// the window changed size on its own and we're forcing it back
+				// to the target -- if the target is wrong, this is the loop
+				// that keeps it wrong
+			this.logSize("resize-snapback");
 			popupWindow.resize(this.popupW, this.popupH);
 
 			return;

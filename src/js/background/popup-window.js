@@ -30,6 +30,13 @@ await storage.get((data = {}) => {
 	({ popupAdjustmentWidth = 0, popupAdjustmentHeight = 0 } = data);
 	currentWidth = PopupInnerWidth + popupAdjustmentWidth;
 	currentHeight = PopupInnerHeight + popupAdjustmentHeight;
+
+		// TEMPORARY INSTRUMENTATION -- the adjustments outlive the worker, so
+		// log what we start from.  a bad one persists across restarts and would
+		// otherwise look like the popup being wrong for no reason.
+	(popupAdjustmentWidth || popupAdjustmentHeight) &&
+		log("popup size seeded from storage:", `${currentWidth}x${currentHeight}`,
+			"adjustment:", `${popupAdjustmentWidth}x${popupAdjustmentHeight}`);
 });
 
 
@@ -164,6 +171,20 @@ async function create(
 	const {width: innerWidth, height: innerHeight} = popupTab;
 	const widthDelta = PopupInnerWidth - innerWidth;
 	const heightDelta = PopupInnerHeight - innerHeight;
+
+		// TEMPORARY INSTRUMENTATION -- see logSize() in popup/app.jsx.  these
+		// adjustments persist to storage and seed currentWidth/currentHeight on
+		// every later show(), so a bad measurement here follows the popup
+		// around until something recreates the window.  window chrome is a few
+		// tens of px; an adjustment anywhere near PopupInnerHeight means a
+		// device-pixel value got recorded as the CSS-pixel target.
+	log("popup create: measured",
+		`${innerWidth}x${innerHeight}`,
+		"wanted", `${PopupInnerWidth}x${PopupInnerHeight}`,
+		"delta", `${widthDelta}x${heightDelta}`,
+		"adjustment now",
+		`${popupAdjustmentWidth + widthDelta}x${popupAdjustmentHeight + heightDelta}`,
+		"bounds", `${bounds.width}x${bounds.height}`);
 
 	if (widthDelta || heightDelta) {
 			// the current adjustments weren't enough to hit the target size,
@@ -469,6 +490,11 @@ async function resize(
 		// size stays integral for every later calcBounds() call too.
 	currentWidth = Math.round(width);
 	currentHeight = Math.round(height);
+
+		// TEMPORARY INSTRUMENTATION -- every size the popup page asks for lands
+		// here, so this is the single choke point for seeing a bad target
+		// arrive, whichever call site sent it
+	log("popup resize:", `${currentWidth}x${currentHeight}`);
 
 	const size = {
 		width: currentWidth,
