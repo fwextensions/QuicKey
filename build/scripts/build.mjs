@@ -124,6 +124,14 @@ function baseConfig()
 			sourcemap: !isProduction,
 			minify: isProduction,
 			watch: watch ? {} : null,
+				// modulepreload is a hint for hiding network latency, and there
+				// is none here -- every chunk is a local file inside the
+				// extension.  it also produced a console warning on every popup
+				// open ("preloaded using link preload but not used within a few
+				// seconds"), since the popup page can be moved between windows
+				// and hidden immediately after loading, which leaves the
+				// preloaded chunk unclaimed.
+			modulePreload: false,
 		},
 			// silence "Module level directives cause errors when bundled"
 			// style warnings from deps
