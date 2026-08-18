@@ -78,8 +78,13 @@ export async function printLog(
 	count = MaxEntries)
 {
 	const { [LogKey]: entries = [] } = await chrome.storage.local.get(LogKey);
-	const rows = entries.slice(-count).map(({ time, context, message }) =>
-		`${new Date(time).toISOString()} ${context}  ${message}`);
+	const rows = entries.slice(-count).map(({ time, context, message }) => {
+		const date = new Date(time);
+		const day = date.toLocaleDateString("en-CA");
+		const msTime = date.toLocaleTimeString().replace(" ", `.${date.getMilliseconds()} `);
+
+		return `${day} ${msTime}  ${context}  ${message}`;
+	});
 
 	console.log("\n" + rows.join("\n"));
 

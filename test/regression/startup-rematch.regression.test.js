@@ -243,6 +243,56 @@ describe("rematch after a startup that matched nothing", () => {
 });
 
 
+	// updateFromFreshTabs() used to return the storage update and the caller's
+	// counts mixed into one object, with a comment telling callers to strip the
+	// counts off.  getAll()'s rebuild stripped missingCount and missed
+	// pendingCount, which then landed in chrome.storage as a 16th top-level
+	// key.  validateUpdate() compares top-level keys against the defaults, so
+	// the next load failed validation and reset the whole profile -- recents,
+	// popup adjustments, everything.
+describe("the stored shape", () => {
+	const StorageKeys = ["tabIDs", "tabsByID", "lastStartupTime", "lastUpdateTime"];
+
+	function expectNoStrayKeys()
+	{
+		const stored = Object.keys(store._dump());
+		const stray = stored.filter((key) => !StorageKeys.includes(key));
+
+		expect(stray, `unexpected keys written to storage: ${stray}`).toEqual([]);
+	}
+
+	it("writes no stray keys when getAll() rebuilds", async () => {
+		seedStaleRecents({ lastStartupTime: 2000, lastUpdateTime: 1000 });
+		chrome.tabs.query = vi.fn(() => Promise.resolve(RestoredTabs));
+
+		await recentTabs.getAll(false);
+		await settle();
+
+		expectNoStrayKeys();
+	});
+
+	it("writes no stray keys when getAll() rebuilds on staleness", async () => {
+		seedStaleRecents({ lastStartupTime: 0, lastUpdateTime: 0 });
+		chrome.tabs.query = vi.fn(() => Promise.resolve(RestoredTabs));
+
+		await recentTabs.getAll(false);
+		await settle();
+
+		expectNoStrayKeys();
+	});
+
+	it("writes no stray keys when updateAll() runs", async () => {
+		seedStaleRecents({ lastStartupTime: 2000, lastUpdateTime: 1000 });
+		chrome.tabs.query = vi.fn(() => Promise.resolve(RestoredTabs));
+
+		await recentTabs.updateAll(true);
+		await settle();
+
+		expectNoStrayKeys();
+	});
+});
+
+
 describe("updateAll", () => {
 	it("doesn't record a reconciliation it couldn't perform", async () => {
 		seedStaleRecents({ lastStartupTime: 2000, lastUpdateTime: 1000 });

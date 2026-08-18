@@ -179,25 +179,35 @@ DEBUG && console.log("=== existing tabs", tabIDs.length, Object.keys(tabsByID).l
 	tracker.event("update", "new-tabs", freshTabs.length);
 	tracker.event("update", "missing-recents", missingCount);
 
+		// the storage update and the caller-facing counts are returned as two
+		// separate objects, so that a caller can't persist the counts by
+		// forgetting to strip one off.  they used to be mixed into one object
+		// with a comment saying to strip them: getAll()'s rebuild stripped
+		// missingCount and missed pendingCount, which then landed in storage as
+		// a 16th top-level key, failed validation, and reset the profile.
 	const result = {
-		tabIDs: newTabIDs,
-		tabsByID: newTabsByID,
-			// only claim we've reconciled the recents if we had a real tab list
-			// to reconcile them against.  an empty freshTabs means Chrome hasn't
-			// restored the session yet, not that every recent is gone, and
-			// getAll() keys its rebuild off lastStartupTime > lastUpdateTime --
-			// so leaving this unwritten is what lets a later pass retry.  a
-			// populated list that matched nothing IS a real answer: those tabs
-			// are closed, and running again won't bring them back.
-		...(freshTabs.length > 0 ? { lastUpdateTime: Date.now() } : {}),
-			// not stored -- updateAll() strips these off and returns them, so
-			// the startup sequence can tell whether another pass is worthwhile.
+		update: {
+			tabIDs: newTabIDs,
+			tabsByID: newTabsByID,
+				// only claim we've reconciled the recents if we had a real tab
+				// list to reconcile them against.  an empty freshTabs means
+				// Chrome hasn't restored the session yet, not that every recent
+				// is gone, and getAll() keys its rebuild off lastStartupTime >
+				// lastUpdateTime -- so leaving this unwritten is what lets a
+				// later pass retry.  a populated list that matched nothing IS a
+				// real answer: those tabs are closed, and running again won't
+				// bring them back.
+			...(freshTabs.length > 0 ? { lastUpdateTime: Date.now() } : {}),
+		},
+			// how the startup sequence tells whether another pass is worthwhile.
 			// pendingCount is the one that matters there: a recent can be
 			// missing simply because its tab was closed before the restart, and
 			// no amount of retrying will bring it back, but a tab with no URL
 			// yet is one we genuinely can't match until it's finished loading.
-		missingCount,
-		pendingCount: freshTabs.filter(({url}) => !url).length
+		stats: {
+			missingCount,
+			pendingCount: freshTabs.filter(({url}) => !url).length
+		}
 	};
 DEBUG && console.log("updateFromFreshTabs result", result);
 
@@ -408,7 +418,8 @@ const t = performance.now();
 						// fresh tabs.  navigate() clears out dead entries anyway,
 						// and you're far likelier to open the menu looking for a
 						// tab mid-restore than to be paging through the MRU stack.
-					const {missingCount, ...update} = updateFromFreshTabs(data, freshTabs, true);
+					const {update, stats: {missingCount}} =
+						updateFromFreshTabs(data, freshTabs, true);
 
 					log("getAll: rebuilt recents,",
 						"triggered by:", rematchOwed ? "startup" : "staleness",
@@ -534,12 +545,10 @@ function updateAll(
 					freshTabs.length, "tabs",
 					retainUnmatched ? "(retaining unmatched)" : "");
 
-					// the counts are only for the caller, so keep them out of
-					// the object we hand back to storage.set() to be saved
-				const {missingCount, pendingCount, ...update} =
+				const {update, stats: newStats} =
 					updateFromFreshTabs(data, freshTabs, retainUnmatched);
 
-				stats = { missingCount, pendingCount };
+				stats = newStats;
 
 					// lastStartupTime is written by the onStartup handler before
 					// any of this runs, so that a startup whose passes all fail
