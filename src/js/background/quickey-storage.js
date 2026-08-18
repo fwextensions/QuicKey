@@ -389,5 +389,34 @@ export default createStorage({
 			// the right shape.
 		return objectsHaveSameKeys(defaults, data, false) &&
 			objectsHaveSameKeys(defaults.settings, data.settings, true);
+	},
+
+		// the only damage worth repairing is an unexpected top-level key, which
+		// is almost always a bug leaking one of its own values into the object
+		// handed to storage.set() -- pendingCount did exactly that in a492a9d
+		// and cost a profile.  dropping it keeps the recents and everything else
+		// the user cares about, where validation would otherwise treat it the
+		// same as real corruption and reset.
+		//
+		// deliberately narrow: a *missing* key means an updater didn't run or
+		// didn't finish, which is a genuine failure, and a wrong-shaped settings
+		// object is not something we can guess our way out of.  both still fall
+		// through to the reset.
+	repairUpdate: async function(
+		data)
+	{
+		const defaults = createDefaultData();
+		const strayKeys = Object.keys(data)
+			.filter((key) => !(key in defaults));
+
+		if (!strayKeys.length) {
+			return;
+		}
+
+		const repaired = { ...data };
+
+		strayKeys.forEach((key) => delete repaired[key]);
+
+		return repaired;
 	}
 });

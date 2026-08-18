@@ -142,3 +142,59 @@ describe("recovery reset", () => {
 		expect(data.settings.includeClosedTabs).toBe(true);
 	});
 });
+
+
+	// an unexpected top-level key is almost always a bug leaking one of its own
+	// values into the object handed to storage.set() -- pendingCount did exactly
+	// that in a492a9d, and validation treated it like real corruption and reset
+	// the profile.  the recents it threw away were fine.
+describe("repair instead of reset", () => {
+		// a reset drops the stray key too, and keeps the settings, so neither of
+		// those tells the two apart.  the recents do: a reset rebuilds tabIDs
+		// from the open tabs, so a marker that isn't one of them survives only a
+		// repair.  the assertions read chrome.storage.local, so they also prove
+		// the repair was written back rather than only fixed in memory.
+	const RecentsMarker = [777];
+
+	it("drops a stray top-level key and keeps the recents", async () => {
+		const { data } = await resetFrom((data) => {
+			data.tabIDs = [...RecentsMarker];
+			data.pendingCount = 0;
+		});
+
+		expect(data.pendingCount).toBeUndefined();
+		expect(data.tabIDs).toEqual(RecentsMarker);
+	});
+
+		// the narrowness is the point: a missing key means an updater didn't
+		// run, which the repair can't reason about and mustn't paper over
+	it("still resets when a key is missing", async () => {
+		const { data } = await resetFrom((data) => delete data.tabIDs);
+
+		expect(data.tabIDs).toEqual([1, 2]);
+	});
+
+	it("still resets when a stray key comes with a missing one", async () => {
+		const { data } = await resetFrom((data) => {
+			data.pendingCount = 0;
+			delete data.tabIDs;
+		});
+
+		expect(data.pendingCount).toBeUndefined();
+		expect(data.tabIDs).toEqual([1, 2]);
+	});
+
+		// settings are checked deeply, and dropping stray top-level keys can't
+		// fix a bad settings shape
+	it("still resets when settings are the problem", async () => {
+		const { data } = await resetFrom((data) => {
+			data.tabIDs = [...RecentsMarker];
+			data.pendingCount = 0;
+			data.settings.includeClosedTabs = "true";
+		});
+
+		expect(data.pendingCount).toBeUndefined();
+		expect(data.tabIDs).toEqual([1, 2]);
+		expect(data.settings.includeClosedTabs).toBe(true);
+	});
+});

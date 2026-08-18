@@ -100,6 +100,12 @@ function alwaysValidate()
 }
 
 
+function neverRepair()
+{
+	return Promise.resolve();
+}
+
+
 function returnData(
 	data)
 {
@@ -133,6 +139,11 @@ export function createStorage({
 	version = 1,
 	getDefaultData = emptyDefaultData,
 	validateUpdate = alwaysValidate,
+		// given data that failed validateUpdate(), return a repaired copy, or
+		// nothing if the damage isn't the kind this can fix.  the repair is
+		// re-validated before it's accepted, so a bad one costs a reset, not
+		// corruption.  the default never repairs anything.
+	repairUpdate = neverRepair,
 	updaters = {} })
 {
 	const storageLocation = globalThis.location.pathname;
@@ -255,13 +266,37 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 			updater = updaters[storage.version];
 		}
 
+		let repaired = false;
+
 		if (storage.version === version) {
 			valid = await validateUpdate(storage.data);
+
+			if (!valid) {
+					// before resetting -- which throws away every recent tab the
+					// user has -- give the config a chance to salvage the data.
+					// the repair is validated again below, so a bad one just
+					// falls through to the reset we were about to do anyway.
+				const repair = await repairUpdate(storage.data);
+
+				if (repair) {
+					valid = await validateUpdate(repair);
+
+					if (valid) {
+						log("REPAIRED STORAGE instead of resetting:",
+							describeData(storage.data), "->", describeData(repair));
+						trackers.background.event("storage", "repaired-validation");
+						storage.data = repair;
+						repaired = true;
+					}
+				}
+			}
 		}
 
 		if (valid) {
-			if (storage.version !== originalVersion) {
-					// save the updated data and version to storage
+			if (storage.version !== originalVersion || repaired) {
+					// save the updated data and version to storage.  a repair
+					// has to be written even at the same version, or the bad
+					// keys stay on disk and every later load repairs again
 				return saveWithVersion(storage.data);
 			}
 
