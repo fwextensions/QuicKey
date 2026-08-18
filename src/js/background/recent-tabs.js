@@ -10,6 +10,13 @@ const TabKeys = ["id", "url", "windowId"];
 	// how many unmatched recents updateFromFreshTabs() names individually in the
 	// persistent log before falling back to just the count
 const MaxMissingToLog = 3;
+	// the fraction of stored recents whose tab IDs have to be gone before we
+	// treat the list as belonging to a dead session rather than as normal churn
+const StaleRecentsRatio = 0.9;
+	// and the least time between two rebuilds triggered that way, so a list that
+	// stays stale -- because those tabs really are gone -- can't make every
+	// popup open pay for a rebuild
+const MinRematchInterval = 5 * 60 * 1000;
 
 
 function titleOrURL(
@@ -364,11 +371,32 @@ const t = performance.now();
 					// recents stay pointed at dead IDs until the next restart.
 					// lastUpdateTime is only written once a pass had a real tab
 					// list, so this stays true until a rebuild actually happens.
+				const rematchOwed = lastStartupTime > lastUpdateTime;
+				const liveIDs = new Set(freshTabs.map(({id}) => id));
+				const staleCount =
+					tabIDs.filter(id => !liveIDs.has(id)).length;
+					// ...but that only fires if onStartup ran at all, and it
+					// doesn't always: it's been seen not firing across days of
+					// restarts, leaving both times at 0 and the check inert in
+					// exactly the case it exists for.  so also notice the state
+					// itself.  nearly every ID being gone means the list belongs
+					// to a dead session -- ordinary churn retires a few at a time
+					// -- and this needs no event to have fired, so it covers an
+					// extension reload and a missed onStartup alike.
 					//
-					// the freshTabs guard is the same invariant: an empty query
-					// is not evidence that the recents are gone, and rebuilding
-					// against it would drop all of them.
-				if (lastStartupTime > lastUpdateTime && freshTabs.length > 0) {
+					// rate-limited because a rebuild retains what it couldn't
+					// match, so a list that stays stale (those tabs really are
+					// closed) would otherwise keep the ratio high and make every
+					// popup open pay.  lastUpdateTime doubles as that clock,
+					// which is why this needs no new stored key.
+				const staleRatio = tabIDs.length ? staleCount / tabIDs.length : 0;
+				const looksStale = staleRatio >= StaleRecentsRatio
+					&& Date.now() - lastUpdateTime > MinRematchInterval;
+
+					// the freshTabs guard is the invariant both share: an empty
+					// query is not evidence that the recents are gone, and
+					// rebuilding against it would drop all of them.
+				if ((rematchOwed || looksStale) && freshTabs.length > 0) {
 						// always retain what didn't match.  a recent with no fresh
 						// tab may belong to a tab Chrome hasn't restored yet, and
 						// there's no telling that apart from a tab that's really
@@ -382,7 +410,9 @@ const t = performance.now();
 						// tab mid-restore than to be paging through the MRU stack.
 					const {missingCount, ...update} = updateFromFreshTabs(data, freshTabs, true);
 
-					log("getAll: rebuilt recents after startup didn't",
+					log("getAll: rebuilt recents,",
+						"triggered by:", rematchOwed ? "startup" : "staleness",
+						"stale:", `${staleCount}/${tabIDs.length}`,
 						"lastStartupTime:", lastStartupTime,
 						"lastUpdateTime:", lastUpdateTime,
 						"fresh tabs:", freshTabs.length,

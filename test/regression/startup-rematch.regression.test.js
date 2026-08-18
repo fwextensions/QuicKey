@@ -102,17 +102,81 @@ describe("rematch after a startup that matched nothing", () => {
 		expect(lastUpdateTime).toBeGreaterThan(2000);
 	});
 
-	it("doesn't rebuild again once lastUpdateTime is current", async () => {
-		seedStaleRecents({ lastStartupTime: 1000, lastUpdateTime: 2000 });
+	it("doesn't rebuild in the steady state", async () => {
+			// nothing owed, and the stored IDs are the live ones
+		store._seed({
+			tabIDs: [12, 34],
+			tabsByID: {
+				12: { id: 12, url: "https://trmnl.com/flash", windowId: 5, lastVisit: 100 },
+				34: { id: 34, url: "https://trmnl.com/dashboard", windowId: 5, lastVisit: 200 },
+			},
+			lastStartupTime: 1000,
+			lastUpdateTime: 2000,
+		});
 		chrome.tabs.query = vi.fn(() => Promise.resolve(RestoredTabs));
 
 		await recentTabs.getAll(false);
 		await settle();
 
-			// no rebuild, so the stale IDs are left exactly as they were -- this
-			// is the steady-state path, where reconciliation is getAll()'s
-			// existing per-ID refresh and not a full remap
+			// reconciliation here is getAll()'s existing per-ID refresh, not a
+			// full remap, so lastUpdateTime is untouched
+		expect(store._dump().tabIDs).toEqual([12, 34]);
+		expect(store._dump().lastUpdateTime).toBe(2000);
+	});
+
+		// the case that made the timestamp trigger useless in practice:
+		// runtime.onStartup was seen not firing across days of restarts, so
+		// nothing ever wrote lastStartupTime and 0 > 0 is false.  the recents
+		// sat pointed at dead IDs with no path back.
+	it("rebuilds on staleness when onStartup never fired", async () => {
+		seedStaleRecents({ lastStartupTime: 0, lastUpdateTime: 0 });
+		chrome.tabs.query = vi.fn(() => Promise.resolve(RestoredTabs));
+
+		await recentTabs.getAll(false);
+		await settle();
+
+		const { tabIDs, tabsByID } = store._dump();
+
+		expect(tabIDs).toEqual([12, 34]);
+			// carried across from the dead ID, which is the point of matching by
+			// URL rather than starting over
+		expect(tabsByID[12].lastVisit).toBe(1786221758926);
+	});
+
+		// a rebuild retains what it couldn't match, so a genuinely dead list
+		// stays stale -- without the rate limit that would rebuild on every
+		// single popup open
+	it("doesn't rebuild on staleness again right away", async () => {
+		seedStaleRecents({ lastStartupTime: 0, lastUpdateTime: Date.now() - 1000 });
+		chrome.tabs.query = vi.fn(() => Promise.resolve(RestoredTabs));
+
+		await recentTabs.getAll(false);
+		await settle();
+
 		expect(store._dump().tabIDs).toEqual([775172655, 775172658]);
+	});
+
+		// ordinary churn -- a couple of tabs closed -- must not look like a
+		// dead session, or every popup open would remap the whole list
+	it("doesn't treat ordinary churn as staleness", async () => {
+		store._seed({
+			tabIDs: [12, 34, 56],
+			tabsByID: {
+				12: { id: 12, url: "https://trmnl.com/flash", windowId: 5, lastVisit: 100 },
+				34: { id: 34, url: "https://trmnl.com/dashboard", windowId: 5, lastVisit: 200 },
+				56: { id: 56, url: "https://trmnl.com/gone", windowId: 5, lastVisit: 300 },
+			},
+			lastStartupTime: 0,
+			lastUpdateTime: 0,
+		});
+		chrome.tabs.query = vi.fn(() => Promise.resolve(RestoredTabs));
+
+		await recentTabs.getAll(false);
+		await settle();
+
+			// one of three gone is 33%, well under the threshold, so the list is
+			// left alone rather than remapped
+		expect(store._dump().tabIDs).toEqual([12, 34, 56]);
 	});
 
 		// the guard that keeps the fix from becoming a worse bug: if getAll()
