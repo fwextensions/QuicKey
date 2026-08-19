@@ -13,6 +13,7 @@ import getHistory from "./data/get-history";
 import addURLs from "./data/add-urls";
 import { loadPinyin } from "./data/add-pinyin";
 import shortcuts from "./shortcuts/popup-shortcuts";
+import { getWindowPadding } from "./window-padding";
 import handleRef from "@/lib/handle-ref";
 import copyTextToClipboard from "@/lib/copy-to-clipboard";
 import initEventController from "@/shared/eventController";
@@ -129,6 +130,9 @@ export default class App extends React.Component {
 	popupW = 0;
 	popupH = 0;
 	lastLoggedSize = "";
+		// the last outer-minus-inner measurement that made sense; see
+		// getWindowPadding()
+	lastWindowPadding = undefined;
 	nextFrameRequestID = 0;
 	port = null;
 	sendRuntimeMessage = (...args) => console.error("ERROR: default sendRuntimeMessage() called", args);
@@ -232,6 +236,10 @@ export default class App extends React.Component {
 				// handlers that are only needed in that case
 			this.popupW = outerWidth;
 			this.popupH = outerHeight;
+				// seed the chrome measurement while we know the window isn't
+				// mid-transition, so the first fit-content has something to fall
+				// back on if it lands during one
+			this.lastWindowPadding = getWindowPadding(window).padding;
 			this.logSize("mount");
 			window.addEventListener("resize", this.onWindowResize);
 
@@ -324,8 +332,18 @@ export default class App extends React.Component {
 			cancelAnimationFrame(this.nextFrameRequestID);
 			this.nextFrameRequestID = requestAnimationFrame(() => {
 				const bodyHeight = document.body.offsetHeight;
-				const windowPadding = outerHeight - innerHeight;
-// TODO: if the window is already small, the outerHeight could be smaller than innerHeight
+					// outerWidth/outerHeight and innerWidth/innerHeight don't
+					// update in the same frame when the window moves to a display
+					// with a different scale factor, so subtracting one from the
+					// other can span two coordinate spaces and produce nonsense.
+					// getWindowPadding() falls back to the last believable value
+					// rather than baking that into the target height.
+				const {settled, padding: windowPadding} =
+					getWindowPadding(window, this.lastWindowPadding);
+
+				if (settled) {
+					this.lastWindowPadding = windowPadding;
+				}
 
 				if (notEqual(innerHeight, bodyHeight)) {
 						// don't fight with the onResize handler, and use the Chrome
@@ -339,7 +357,8 @@ export default class App extends React.Component {
 						// could bake a bad measurement into the target
 					this.logSize("fit-content",
 						"bodyHeight:", bodyHeight,
-						"windowPadding:", windowPadding);
+						"windowPadding:", windowPadding,
+						settled ? "" : "(measurement unsettled, reused)");
 					popupWindow.resize(this.popupW, this.popupH);
 				}
 			});
