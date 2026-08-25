@@ -17,6 +17,9 @@ const StaleRecentsRatio = 0.9;
 	// stays stale -- because those tabs really are gone -- can't make every
 	// popup open pay for a rebuild
 const MinRematchInterval = 5 * 60 * 1000;
+	// how many dead tab IDs navigate() will step over before it stops deleting
+	// them one at a time and rematches the whole list
+const MaxNavigationMisses = 3;
 
 
 function titleOrURL(
@@ -574,6 +577,64 @@ function navigate(
 		lastShortcutTime: direction == "toggle" ? 0 : now,
 		previousTabIndex: -1
 	};
+		// how many stored IDs switchTabs() has found dead in a row, and whether
+		// we've already rematched during this navigation.  see the catch() in
+		// switchTabs().
+	let missCount = 0;
+	let rematched = false;
+		// tabIDs/tabsByID as they were before the first deletion below
+	let unprunedData = null;
+
+
+		// the catch() below throws away one dead tab ID per attempt, which is
+		// right when the user closed a tab behind our back, and useless after a
+		// restart: every stored ID is dead, so a single keypress walks the whole
+		// list, deletes all of it, and switches to nothing -- discarding
+		// recents that a URL rematch would have recovered, since the tabs are
+		// still open under new IDs.
+		//
+		// so once a few IDs in a row have missed, stop guessing and rematch.
+		// this can't call getAll(), which is the obvious way to do it: we're
+		// inside storage.set(switchTabs, "navigate") and therefore already hold
+		// the storage lock, and getAll() requests it again through storage.get().
+		// web locks aren't reentrant, so that deadlocks.  the matching itself
+		// needs no lock -- just the tab list -- so do that part inline and let
+		// the enclosing set() persist it.
+	async function rematchInPlace(
+		data)
+	{
+		const freshTabs = await chrome.tabs.query({});
+
+			// an empty query means the browser isn't ready, not that every tab
+			// is gone -- the same invariant getAll() and updateAll() follow.
+			// put back what the misses deleted and stop, rather than walking
+			// the rest of the list and deleting all of it on the way
+		if (!freshTabs.length) {
+			log("navigate: no tabs to rematch against, restoring",
+				unprunedData.tabIDs.length, "recents");
+			Object.assign(data, unprunedData);
+			Object.assign(newData, unprunedData);
+
+			return false;
+		}
+
+			// match against the list as it was before the misses started
+			// deleting from it, or the entries already dropped stay dropped --
+			// and those are exactly the ones the rematch exists to recover
+		const {update} = updateFromFreshTabs(unprunedData, freshTabs, true);
+
+		log("navigate: rematched after", missCount, "misses,",
+			"recents:", unprunedData.tabIDs.length, "->", update.tabIDs.length);
+
+			// switchTabs() re-reads these from data on each recursion, and
+			// newData is what the enclosing storage.set() writes
+		Object.assign(data, update);
+		Object.assign(newData, update);
+			// the indexes we'd walked to refer to the pruned list, so start over
+		data.previousTabIndex = -1;
+
+		return true;
+	}
 
 
 	function calcNavigationIndex(
@@ -675,6 +736,13 @@ DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabInde
 						// so set data.previousTabIndex to that so when we
 						// recurse below, the next iteration will calculate
 						// the previous tab starting from there.
+						// snapshot before the first deletion, so the rematch
+						// below can work from the whole list
+					unprunedData ||= {
+						tabIDs: [...tabIDs],
+						tabsByID: {...tabsByID}
+					};
+
 					tabIDs.splice(previousTabIndex, 1);
 					delete tabsByID[previousTabID];
 					data.previousTabIndex = previousTabIndex;
@@ -682,6 +750,17 @@ DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabInde
 					newData.tabIDs = tabIDs;
 					newData.tabsByID = tabsByID;
 DEBUG && console.error(error);
+
+						// one miss is an ordinary closed tab; a run of them says
+						// the whole list is from a dead session.  rematch once
+						// per navigation, then fall back to deleting as before,
+						// so a genuinely gone tab still gets dropped.
+					if (++missCount >= MaxNavigationMisses && !rematched) {
+						rematched = true;
+
+						return rematchInPlace(data)
+							.then((matched) => matched ? switchTabs(data) : newData);
+					}
 
 					return switchTabs(data);
 				})
