@@ -25,51 +25,12 @@ log("service worker loaded");
 	// previous tab
 const MaxPopupLifetime = 450;
 const RestartDelay = 60 * 1000;
-	// how long to keep retrying the match between the stored recents and the
-	// restored tabs after Chrome starts, and the minimum interval between
-	// attempts.  it's a time budget rather than a pass count because each pass
-	// costs a chrome.tabs.query(), which can take seconds on a slow machine
-	// with a lot of tabs -- a fixed count could tie up the storage lock for a
-	// long time.  the pass that hits the deadline is the one that drops the
-	// recents that still haven't matched.
-const StartupUpdateTimeout = 10 * 1000;
-const StartupUpdateRetryDelay = 1000;
-	// TEMPORARY INSTRUMENTATION -- remove once it's answered its question.
-	// we don't know how Chrome restores a large session: all at once, or
-	// progressively, and over what span.  that's what decides whether
-	// StartupUpdateTimeout is anywhere near right, and whether waiting on a
-	// budget is the right shape at all versus reacting to the tabs arriving.
-	//
-	// tabs.query() is the ground truth -- it's what updateAll() acts on -- so
-	// sample that, even though it costs 200 ms to 2.3 s a call on a big
-	// profile.  the onCreated count is recorded alongside it to find out
-	// whether the event is usable as a wait signal at all: Chrome stopped
-	// firing onActivated for restored tabs (see 189b35f), so it may well not
-	// fire onCreated for them either, and if it doesn't, there's nothing to
-	// wait on and polling is the only option.
-	//
-	// the first attempt at this counted inside the tabs.onCreated *handler*,
-	// which createControlledListener() only runs while this context holds
-	// control -- so a zero reading couldn't be told apart from "we weren't
-	// listening".  count on a raw listener instead.  it adds no wakeups, since
-	// sw.js already registers the event.
-	//
-	// a checkpoint that never logs is itself a result: the worker was killed
-	// before it, which the next "service worker loaded" line confirms.  the
-	// counts are per worker instance and reset with it.
-const RestoreProgressCheckpoints = [1000, 5000, 15000, 30000, 60000];
-let restoreStartTime = 0;
-let restoreCreatedCount = 0;
-let restoreFirstTabTime = 0;
-let restoreLastTabTime = 0;
+	// how long the tab handlers stay quiet after a restart if nothing else
+	// clears the flag.  generous, since a big profile can take over a minute to
+	// restore, and the cost of being wrong is only that some of Chrome's own
+	// restore churn lands in the recents.
+const StartupWindow = 90 * 1000;
 
-chrome.tabs.onCreated.addListener(() => {
-	if (restoreStartTime) {
-		restoreCreatedCount++;
-		restoreLastTabTime = Date.now();
-		restoreFirstTabTime ||= restoreLastTabTime;
-	}
-});
 const tracker = trackers.background;
 
 
@@ -77,37 +38,6 @@ function delay(
 	ms)
 {
 	return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-
-	// see RestoreProgressCheckpoints above.  arms the counting in the
-	// tabs.onCreated handler and logs what's arrived at each checkpoint.  the
-	// checkpoints run independently of the update loop so a slow pass doesn't
-	// skew them, and they aren't awaited, so they never delay startup.
-function trackRestoreProgress()
-{
-	restoreStartTime = Date.now();
-	restoreCreatedCount = 0;
-	restoreFirstTabTime = 0;
-	restoreLastTabTime = 0;
-
-	for (const checkpoint of RestoreProgressCheckpoints) {
-		delay(checkpoint)
-			.then(async () => {
-				const queryTime = performance.now();
-				const tabs = await chrome.tabs.query({});
-				const windows = await chrome.windows.getAll({ populate: false });
-				const since = (time) => time ? `+${time - restoreStartTime}ms` : "never";
-
-				log(`onStartup: restore progress +${checkpoint / 1000}s:`,
-					tabs.length, "tabs in", windows.length, "windows",
-					`(query ${Math.round(performance.now() - queryTime)} ms),`,
-					"onCreated:", restoreCreatedCount,
-					"first:", since(restoreFirstTabTime),
-					"last:", since(restoreLastTabTime));
-			})
-			.catch(error => log("onStartup: restore progress failed:", error.message));
-	}
 }
 
 
@@ -141,88 +71,46 @@ console.error("==== sendPopupMessage", error.message);
 });
 
 
-	// Chrome used to fire tabs.onActivated for every tab it restored on
-	// startup, so the only way to know the restore had finished was to wait
-	// for those events to stop arriving.  it no longer does that for tabs
-	// restored as already-active, so waiting for an activation that never
-	// came meant updateAll() often never ran at all, leaving the stored
-	// recents pointing at the pre-restart tab IDs (every lookup missing, so
-	// the recency order collapsed) and lastStartupTime never updated.
+	// Chrome fires this well before the session is restored.  Measured on a
+	// profile with ~2200 tabs across ~108 windows: chrome.tabs.query() returned
+	// 0 tabs in 0 windows at +1s, +5s, +15s, +30s and +60s after the event, and
+	// tabs.onCreated never fired at all for the restored tabs.  So there's
+	// nothing here to match the stored recents against, and nothing to wait on.
+	// An earlier version retried on a 10s budget: every pass ran against an
+	// empty browser, and the queries got slower as Chrome got busier (2ms ->
+	// 3027ms) while holding the storage lock the popup needs.
 	//
-	// so remap immediately instead.  the reason for waiting in the first
-	// place is still real, though: a restored tab that Chrome hasn't loaded
-	// yet may not have its URL populated, and updateFromFreshTabs() matches
-	// recents to tabs by URL.  matching too early would drop those recents
-	// for good.  so the early passes retain whatever didn't match and we
-	// retry while anything is still outstanding, letting only the final pass
-	// drop the recents whose tabs really are gone.
+	// So don't try.  Record that a restart happened and let the rematch run on
+	// demand -- getAll() rebuilds when lastStartupTime is ahead of
+	// lastUpdateTime or the stored IDs are broadly stale, and navigate()
+	// rematches in place once it walks into a run of dead IDs.  Both run when
+	// the data is actually wanted, by which time the browser has restored.
 chrome.runtime.onStartup.addListener(() => {
 	log("onStartup fired");
 
+		// the tab handlers skip recording while this is set, so Chrome's own
+		// restore activity isn't logged as the user visiting 2000 tabs.  it's
+		// cleared by the first sign of the user doing something (onConnect,
+		// below) and by the timeout here, in case they browse without opening
+		// QuicKey at all.  it's module state either way, so a worker restart
+		// clears it too.
 	state.startingUp = true;
-
-	trackRestoreProgress();
-
-	(async () => {
-		const deadline = Date.now() + StartupUpdateTimeout;
-		let attempt = 0;
-
-		try {
-				// record that a restart happened *before* attempting any match,
-				// so the fact of the restart survives the passes below failing.
-				// updateFromFreshTabs() only writes lastUpdateTime when it had a
-				// real tab list to work from, so if every pass runs against an
-				// empty query -- the worker waking before Chrome restores the
-				// session -- lastStartupTime stays ahead of lastUpdateTime and
-				// getAll() picks up the rebuild on the next popup open.
-			await storage.set(() => ({ lastStartupTime: Date.now() }));
-
-			while (true) {
-				const passTime = Date.now();
-					// only retain unmatched recents if we'll get another look at
-					// them; the pass that ends the loop has to be the one that
-					// drops the recents whose tabs are really gone
-				const isLastPass = passTime >= deadline;
-				const {missingCount, pendingCount} =
-					await recentTabs.updateAll(!isLastPass);
-
-				attempt++;
-				log("onStartup: updateAll pass", attempt,
-					"took", Date.now() - passTime, "ms",
-					"missing:", missingCount, "pending:", pendingCount);
-
-					// retry only while tabs are still loading, since that's the
-					// only reason another pass could match anything new.  a
-					// recent that's missing because its tab was closed before
-					// the restart stays missing no matter how long we wait, so
-					// retrying on missingCount alone would burn every pass on
-					// every startup -- expensive when tabs.query() is slow, and
-					// it holds the storage lock the popup needs.
-				if (isLastPass || !pendingCount) {
-					if (pendingCount) {
-						log("onStartup: gave up with", pendingCount,
-							"tabs still loading");
-					}
-
-					break;
-				}
-
-					// the pass itself gave the pending tabs time to load, so
-					// only top it up to the retry interval
-				await delay(Math.max(StartupUpdateRetryDelay -
-					(Date.now() - passTime), 0));
-			}
-		} catch (error) {
-			log("onStartup: updateAll failed:", error.message);
-			tracker.exception(error);
+	delay(StartupWindow).then(() => {
+		if (state.startingUp) {
+			log("onStartup: startup window elapsed");
+			state.startingUp = false;
 		}
+	});
 
-			// resume recording tab events, which the handlers skip while
-			// startingUp is true
-		state.startingUp = false;
-
-		log("onStartup: startup complete");
-	})();
+		// written before anything tries to match, so the fact of the restart
+		// survives having nothing to match against.  updateFromFreshTabs() only
+		// writes lastUpdateTime when it had a real tab list, so this stays ahead
+		// of it until a rebuild actually happens.
+	storage.set(() => ({ lastStartupTime: Date.now() }))
+		.catch(error => {
+			log("onStartup: recording the startup time failed:", error.message);
+			tracker.exception(error);
+		});
 });
 
 
@@ -238,16 +126,14 @@ chrome.runtime.onConnect.addListener(port => {
 DEBUG && console.log("== onConnect", port.name, state.startingUp);
 
 	if (state.startingUp) {
-			// the popup opened before the post-startup updateAll() ran, so
-			// the update is being skipped in favor of the getAll() path.
-			// log it in case that path is what loses the history.
-		log("onConnect:", port.name, "opened while startingUp, skipping updateAll");
+			// the user opening the popup or menu is the clearest sign that
+			// Chrome has finished restoring, whatever the tab list says
+		log("onConnect:", port.name, "opened while startingUp");
 	}
 
-		// in newer versions of Chrome, reopened tabs don't trigger an
-		// onActivated event, so the handler set in onStartup won't fire
-		// until the first tab is manually activated.  set startingUp to
-		// false here in case the user opens the menu before that happens.
+		// whether or not the restore has actually finished, the user is
+		// interacting with us, so their tab activity is real and should be
+		// recorded from here on
 	state.startingUp = false;
 	ports[port.name] = port;
 
