@@ -293,6 +293,43 @@ describe("the stored shape", () => {
 });
 
 
+	// A machine restart left the browser so starved that the startup loop's
+	// 10s deadline had already passed by the time its first pass ran -- 17.7s
+	// after runtime.onStartup, with one restore-progress query alone taking
+	// 7470ms.  So pass one was treated as the last pass, the one licensed to
+	// drop unmatched recents, and it dropped all 50 against a tabs.query() that
+	// had returned nothing:
+	//
+	//     updateAll: tabs.query took 3 ms for 0 tabs
+	//     old recents: 50 fresh tabs: 0 matched: 0 missing: 50 retained: 0
+	//
+	// The loop is gone now, but the hazard was that updateFromFreshTabs() would
+	// do this at all: every caller had to remember the guard, and one didn't.
+describe("an empty tab list", () => {
+	it("never drops recents, even when asked to", async () => {
+		seedStaleRecents({ lastStartupTime: 2000, lastUpdateTime: 1000 });
+		chrome.tabs.query = vi.fn(() => Promise.resolve([]));
+
+			// false is what the startup loop's final pass used to pass
+		await recentTabs.updateAll(false);
+
+		expect(store._dump().tabIDs).toEqual([775172655, 775172658]);
+	});
+
+	it("still drops them when the browser really has other tabs", async () => {
+		seedStaleRecents({ lastStartupTime: 2000, lastUpdateTime: 1000 });
+			// a populated list that matches nothing IS a real answer
+		chrome.tabs.query = vi.fn(() => Promise.resolve([
+			{ id: 12, url: "https://somewhere.else/", windowId: 5 },
+		]));
+
+		await recentTabs.updateAll(false);
+
+		expect(store._dump().tabIDs).toEqual([]);
+	});
+});
+
+
 describe("updateAll", () => {
 	it("doesn't record a reconciliation it couldn't perform", async () => {
 		seedStaleRecents({ lastStartupTime: 2000, lastUpdateTime: 1000 });

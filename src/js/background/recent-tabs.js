@@ -103,6 +103,17 @@ function updateFromFreshTabs(
 	retainUnmatched)
 {
 DEBUG && console.log("=== updateFromFreshTabs", data, freshTabs);
+		// ...except that an empty tab list is never evidence that the tabs are
+		// gone -- it means the browser hasn't restored the session yet, which
+		// on a big profile can be a minute or more after runtime.onStartup.
+		// callers guard this, but the one that didn't wiped 50 recents in one
+		// call: the startup loop's deadline had already passed by the time its
+		// first pass ran, so pass one was treated as the last one and dropped
+		// everything against a query that had returned nothing.  the invariant
+		// belongs here, where it can't be forgotten again.
+	if (!freshTabs.length) {
+		retainUnmatched = true;
+	}
 	const {tabIDs, tabsByID} = data;
 	const freshTabIDs = new Set(freshTabs.map(({id}) => id));
 	const freshTabsByURL = {};
