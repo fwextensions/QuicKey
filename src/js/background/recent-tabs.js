@@ -10,6 +10,11 @@ const TabKeys = ["id", "url", "windowId"];
 	// how many unmatched recents updateFromFreshTabs() names individually in the
 	// persistent log before falling back to just the count
 const MaxMissingToLog = 3;
+	// how many changed titles to name individually before falling back to the count
+const MaxTitleChangesToLog = 10;
+	// tabs whose title QuicKey should be able to match are worth logging in full
+	// on each pass, since the reported failure was against one of them
+const WatchedTitlePattern = /mail\.google\.com/;
 	// the fraction of stored recents whose tab IDs have to be gone before we
 	// treat the list as belonging to a dead session rather than as normal churn
 const StaleRecentsRatio = 0.9;
@@ -354,6 +359,78 @@ DEBUG && console.log("tab replaced", oldID, "index", index, getRecentStackString
 }
 
 
+	// the reported failure is a tab that silently stops matching the title
+	// Chrome shows for it, then starts matching again on a later pass with no
+	// navigation in between.  the first attempt at catching that looked for
+	// empty or hostname-only titles, which turned out to be a stable population
+	// of ~22 tabs that were never loaded this session -- they match fine, and
+	// none of them was the tab that failed.
+	//
+	// so watch for the thing itself instead: a title that changed while the URL
+	// did not.  that needs no guess about what Chrome substitutes, which is what
+	// the first attempt got wrong -- the suspect title was neither empty nor a
+	// hostname.  a page that rewrites its own title (Gmail's unread count) trips
+	// this too, so the log is noisy by design; a corruption should still read
+	// differently from a count ticking up, and the URLs are there to tell them
+	// apart.
+	//
+	// the map lives as long as the popup page, which survives being hidden and
+	// reshown -- the window the failure was seen in.  the service worker restarts
+	// far too often to hold this, but every getAll() runs in the popup anyway.
+const lastTitlesByID = new Map();
+
+
+function logTitleChanges(
+	freshTabs)
+{
+		// this walks every tab on each getAll(), 2200+ on a big profile, so keep
+		// it to the dev builds that can actually read the log
+	if (!globalThis.DEBUG) {
+		return;
+	}
+
+	const changes = [];
+	const watched = [];
+
+	freshTabs.forEach(({id, url, title, status}) => {
+		const previous = lastTitlesByID.get(id);
+
+			// only a title that moved under an unchanged URL is evidence of
+			// anything.  a new URL for this ID is just navigation, or an ID
+			// reused after a restart.
+		if (previous && previous.url === url && previous.title !== title) {
+			changes.push([id, status, previous.title, "->", title]);
+		}
+
+		lastTitlesByID.set(id, { url, title });
+
+		if (WatchedTitlePattern.test(url)) {
+			watched.push([id, status, title]);
+		}
+	});
+
+		// drop tabs that are gone, so this doesn't grow across a long-lived
+		// popup and can't match a recycled ID against a dead tab's title
+	if (lastTitlesByID.size > freshTabs.length) {
+		const liveIDs = new Set(freshTabs.map(({id}) => id));
+
+		lastTitlesByID.forEach((value, id) =>
+			liveIDs.has(id) || lastTitlesByID.delete(id));
+	}
+
+	if (changes.length) {
+		log("getAll: titles changed under an unchanged URL:", changes.length,
+			changes.slice(0, MaxTitleChangesToLog));
+	}
+
+		// log these unconditionally: the failure was invisible precisely because
+		// nothing recorded what QuicKey held for the tab at the time
+	if (watched.length) {
+		log("getAll: watched titles:", watched);
+	}
+}
+
+
 function getAll(
 	includeClosedTabs)
 {
@@ -365,6 +442,11 @@ const t = performance.now();
 			// from the total which of them is responsible.  they run
 			// concurrently, so the total is the slower of the two, not the sum.
 		const apiTime = performance.now();
+			// how long we waited on the storage lock to get here.  the two API
+			// timings below start from this point, so they've never included it,
+			// and the only place the wait was visible was a console.log() that
+			// dies with the service worker.
+		const lockDuration = apiTime - t;
 		let queryDuration = 0;
 		let sessionsDuration = 0;
 
@@ -378,9 +460,11 @@ const t = performance.now();
 		])
 			.then(([freshTabs, closedTabs]) => {
 				log("getAll:",
+					"storage lock:", Math.round(lockDuration), "ms,",
 					"tabs.query:", Math.round(queryDuration), "ms for",
 					freshTabs.length, "tabs,",
 					"sessions.getRecentlyClosed:", Math.round(sessionsDuration), "ms");
+				logTitleChanges(freshTabs);
 
 				const {lastStartupTime = 0, lastUpdateTime = 0} = data;
 				const tabsByURL = {};
