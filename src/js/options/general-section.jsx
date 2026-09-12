@@ -46,16 +46,20 @@ export default function GeneralSection()
 				onChange={onChange}
 			>
 				<div className="subtitle">
-					Selecting a closed tab will reopen it with its full history.
+					Select a closed tab to reopen it with its full history.
 				</div>
 			</Checkbox>
 			<NewSetting addedVersion={10}>
 				<Checkbox
 					id={k.ShowBookmarkPaths.Key}
-					label="Show the folder path to each bookmark in its title"
+					label="Include the folder path in bookmark titles"
 					value={settings[k.ShowBookmarkPaths.Key]}
-					onChange={onChange}
-				/>
+					onChange={onChange}>
+				<div className="subtitle">
+					Search for bookmarks by their folder names.
+				</div>
+
+				</Checkbox>
 			</NewSetting>
 			<NewSetting addedVersion={10}>
 				<Checkbox
@@ -73,10 +77,22 @@ export default function GeneralSection()
 					onChange={onChange}
 				/>
 			</NewSetting>
+
+
+			<h2>Display</h2>
+
+			<NewSetting addedVersion={8}>
+				<Checkbox
+					id={k.ShowTabCount.Key}
+					label="Show the number of open tabs on the QuicKey toolbar icon"
+					value={settings[k.ShowTabCount.Key]}
+					onChange={onChange}
+				/>
+			</NewSetting>
 			<NewSetting addedVersion={15}>
 				<Checkbox
 					id={k.MarkSuspendedTabs.Key}
-					label="Dim tabs that the browser has discarded or frozen"
+					label="Mark discarded or frozen tabs with a dimmed icon and label"
 					value={settings[k.MarkSuspendedTabs.Key]}
 					onChange={onChange}
 				/>
@@ -123,18 +139,6 @@ export default function GeneralSection()
 				tooltipDisabled="When recent tabs and search results are limited to the current window, no tabs from other windows will be visible"
 				onChange={onChange}
 			/>
-
-
-			<h2>Toolbar icon</h2>
-
-			<NewSetting addedVersion={8}>
-				<Checkbox
-					id={k.ShowTabCount.Key}
-					label="Show the number of open tabs in a badge on the QuicKey toolbar icon"
-					value={settings[k.ShowTabCount.Key]}
-					onChange={onChange}
-				/>
-			</NewSetting>
 
 
 			{!k.IsFirefox && <div>

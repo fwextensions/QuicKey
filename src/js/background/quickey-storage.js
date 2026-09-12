@@ -113,12 +113,12 @@ const Updaters = {
 	{
 		data.colorScheme = "light";
 	}),
-		// only a new install seeds its recents from Chrome's lastAccessed
-		// times, so an existing profile has never shown the banner explaining
-		// that order, and never should.  start it at the limit, which is the
-		// same state a profile lands in once the banner has run its course.
 	14: update(async data =>
 	{
+			// only a new install seeds its recents from Chrome's lastAccessed
+			// times, so an existing profile has never shown the banner explaining
+			// that order, and never should.  start it at the limit, which is the
+			// same state a profile lands in once the banner has run its course.
 		data.seededRecentsBannerCount = k.MaxSeededRecentsBannerDisplays;
 
 		await addDefaultSetting(k.MarkSuspendedTabs)(data);
