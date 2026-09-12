@@ -108,10 +108,32 @@ async function createPopup(
 		focused: true
 	};
 
-	const window = await chrome.windows.create({
+	const createData = {
 		...defaultOptions,
 		...options,
-	});
+	};
+
+		// chrome.windows.create() rejects a non-integer bound, which takes the
+		// popup out entirely -- seen 2026-09-04 as "Error at property 'left':
+		// Invalid type: expected integer, found number".  calcBounds() rounds
+		// everything it returns, and Math.round() can only produce a non-integer
+		// from NaN, so a bad value here means some input to the position math was
+		// undefined rather than that something forgot to round.  the likeliest
+		// source is a screen with missing bounds, which getScreenFromWindow()
+		// can hand back before chrome.system.display has populated.
+		//
+		// log what arrived and drop it, rather than throwing: an unpositioned
+		// window in Chrome's default spot still gives the user a working popup.
+	const badBounds = ["left", "top", "width", "height"]
+		.filter(key => key in createData && !Number.isInteger(createData[key]));
+
+	if (badBounds.length) {
+		log("popup create: dropping non-integer bounds:",
+			badBounds.map(key => [key, createData[key]]));
+		badBounds.forEach(key => delete createData[key]);
+	}
+
+	const window = await chrome.windows.create(createData);
 
 	windowID = window.id;
 	tabID = window.tabs[0].id;
