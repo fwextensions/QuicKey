@@ -12,9 +12,6 @@ const TabKeys = ["id", "url", "windowId"];
 const MaxMissingToLog = 3;
 	// how many changed titles to name individually before falling back to the count
 const MaxTitleChangesToLog = 10;
-	// tabs whose title QuicKey should be able to match are worth logging in full
-	// on each pass, since the reported failure was against one of them
-const WatchedTitlePattern = /mail\.google\.com/;
 	// the fraction of stored recents whose tab IDs have to be gone before we
 	// treat the list as belonging to a dead session rather than as normal churn
 const StaleRecentsRatio = 0.9;
@@ -390,7 +387,6 @@ function logTitleChanges(
 	}
 
 	const changes = [];
-	const watched = [];
 
 	freshTabs.forEach(({id, url, title, status}) => {
 		const previous = lastTitlesByID.get(id);
@@ -403,10 +399,6 @@ function logTitleChanges(
 		}
 
 		lastTitlesByID.set(id, { url, title });
-
-		if (WatchedTitlePattern.test(url)) {
-			watched.push([id, status, title]);
-		}
 	});
 
 		// drop tabs that are gone, so this doesn't grow across a long-lived
@@ -422,12 +414,6 @@ function logTitleChanges(
 		log("getAll: titles changed under an unchanged URL:", changes.length,
 			changes.slice(0, MaxTitleChangesToLog));
 	}
-
-		// log these unconditionally: the failure was invisible precisely because
-		// nothing recorded what QuicKey held for the tab at the time
-	if (watched.length) {
-		log("getAll: watched titles:", watched);
-	}
 }
 
 
@@ -437,33 +423,27 @@ function getAll(
 const t = performance.now();
 
 	return storage.get(data => {
-			// time the two API calls separately, since getAll() has been seen
-			// taking 7s+ on a slow machine with a lot of tabs and we can't tell
-			// from the total which of them is responsible.  they run
-			// concurrently, so the total is the slower of the two, not the sum.
+			// getAll() has been seen taking 7s+ on a slow machine with a lot of
+			// tabs, so log how long we waited on the storage lock separately from
+			// the API calls.  only the total of the calls is worth logging:
+			// tabs.query() is nearly all of it, and a reply to getRecentlyClosed()
+			// can't be processed until the huge tabs.query() result has been, so
+			// timing it separately just repeats the query's time.
 		const apiTime = performance.now();
-			// how long we waited on the storage lock to get here.  the two API
-			// timings below start from this point, so they've never included it,
-			// and the only place the wait was visible was a console.log() that
-			// dies with the service worker.
 		const lockDuration = apiTime - t;
-		let queryDuration = 0;
-		let sessionsDuration = 0;
 
 		return Promise.all([
-			chrome.tabs.query({})
-				.then(result => (queryDuration = performance.now() - apiTime, result)),
+			chrome.tabs.query({}),
 			includeClosedTabs
 				? chrome.sessions.getRecentlyClosed()
-					.then(result => (sessionsDuration = performance.now() - apiTime, result))
 				: []
 		])
 			.then(([freshTabs, closedTabs]) => {
 				log("getAll:",
 					"storage lock:", Math.round(lockDuration), "ms,",
-					"tabs.query:", Math.round(queryDuration), "ms for",
-					freshTabs.length, "tabs,",
-					"sessions.getRecentlyClosed:", Math.round(sessionsDuration), "ms");
+					"tabs.query and getRecentlyClosed:",
+					Math.round(performance.now() - apiTime), "ms for",
+					freshTabs.length, "tabs");
 				logTitleChanges(freshTabs);
 
 				const {lastStartupTime = 0, lastUpdateTime = 0} = data;
