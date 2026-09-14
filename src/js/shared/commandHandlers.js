@@ -1,4 +1,5 @@
 import { addTab } from "@/shared/addTab";
+import { enqueue } from "@/shared/enqueue";
 import state from "@/shared/state";
 import control from "@/shared/control";
 import { addListener, removeListener } from "@/shared/controlledEvent";
@@ -24,6 +25,16 @@ let lastOpenPromise = Promise.resolve();
 let currentWindowLimitRecents = false;
 let ports = {};
 let sendPopupMessage;
+
+
+	// report a failed command once, the same way other caught errors are, and
+	// let the command queue it came from carry on
+function handleCommandError(
+	error)
+{
+	tracker.exception(error);
+	console.error(error);
+}
 
 	// whether the toolbar menu is open, tracked through its port connecting
 	// and disconnecting.  chrome broadcasts runtime.onConnect to every
@@ -142,24 +153,24 @@ async function handleCommand(
 	switch (command) {
 		case OpenPopupCommand:
 		case FocusPopupCommand:
-				// call openPopupWindow() in a finally() method so that the promise
-				// chain won't stop if there's an uncaught exception at some point.
-				// we need to wait for the previous call to openPopupWindow() to
-				// settle before calling it again in case the user is spamming
-				// alt-Q.  without waiting, the second key press would find the
+				// enqueue() keeps the chain going if a call throws.  we need to
+				// wait for the previous call to openPopupWindow() to settle
+				// before calling it again in case the user is spamming alt-Q.  without waiting, the second key press would find the
 				// first one hadn't finished opening yet and tell the partially
 				// loaded popup to close and open a new one.  rinse and repeat.
-			lastOpenPromise = lastOpenPromise
-				.finally(() => openPopupWindow(command === FocusPopupCommand));
+			lastOpenPromise = enqueue(lastOpenPromise,
+				() => openPopupWindow(command === FocusPopupCommand),
+				handleCommandError);
 			break;
 
 		case PreviousTabCommand:
 		case NextTabCommand:
-			lastTogglePromise = lastTogglePromise
-				.finally(() => navigateRecents(
+			lastTogglePromise = enqueue(lastTogglePromise,
+				() => navigateRecents(
 					command === PreviousTabCommand ? -1 : 1,
 					currentWindowLimitRecents
-				));
+				),
+				handleCommandError);
 			break;
 
 		case ToggleTabsCommand:
@@ -295,7 +306,7 @@ export function toggleRecentTabs(
 		// and await that before calling this function again; otherwise, the
 		// event handler would keep starting new chains.  seems cleanest to
 		// keep the promise chain handling just within this function.
-	lastTogglePromise = lastTogglePromise
+	lastTogglePromise = enqueue(lastTogglePromise, () => Promise.resolve()
 			// if the user navigated to a tab but hasn't waited for the min
 			// dwell time before toggling back, add the current tab before
 			// toggling so it becomes the most recent
@@ -322,9 +333,14 @@ export function toggleRecentTabs(
 			// different tab was now active.  if no add is pending yet, we need
 			// to wait for the next one, which flushOrNext() will also fire
 			// immediately rather than debouncing.
-		.then(() => addTab.flushOrNext())
+			// only wait if we actually switched, though.  otherwise no
+			// activation is coming, and this chain would stall until the user
+			// switched tabs some other way, with every toggle pressed in the
+			// meantime queued up behind it.
+		.then((switched) => switched && addTab.flushOrNext())
 		.then(() => tracker.event("recents",
-			fromShortcut ? "toggle-shortcut" : "toggle"));
+			fromShortcut ? "toggle-shortcut" : "toggle")),
+		handleCommandError);
 }
 
 function handlePopupMessage(

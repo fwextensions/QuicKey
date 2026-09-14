@@ -659,6 +659,10 @@ function navigate(
 	let rematched = false;
 		// tabIDs/tabsByID as they were before the first deletion below
 	let unprunedData = null;
+		// whether we actually activated a tab.  a toggle with nowhere to go,
+		// like one limited to a window with no other recents, switches nothing,
+		// and the caller mustn't then wait for a tab activation that won't come.
+	let switched = false;
 
 
 		// the catch() below throws away one dead tab ID per attempt, which is
@@ -741,6 +745,22 @@ function navigate(
 
 		if (direction == "toggle") {
 			previousTabIndex = maxIndex - 1;
+
+			if (limitToCurrentWindow) {
+					// the window check below recurses expecting the next pass
+					// to move farther back via data.previousTabIndex, but toggle
+					// always starts from the penultimate tab, so it would recurse
+					// until the stack overflows.  walk back to the most recent
+					// tab in this window here instead.  a tab with no data still
+					// counts as a match, so the catch() below can prune it.
+				const currentWindowID = tabsByID[tabIDs[maxIndex]]?.windowId;
+
+				while (previousTabIndex >= 0 && currentWindowID !== undefined
+						&& tabsByID[tabIDs[previousTabIndex]]
+						&& tabsByID[tabIDs[previousTabIndex]].windowId !== currentWindowID) {
+					previousTabIndex--;
+				}
+			}
 		} else if (now - data.lastShortcutTime < MinTabDwellTime && data.previousTabIndex > -1) {
 			if (direction == -1) {
 					// when going backwards, wrap around if necessary
@@ -802,6 +822,7 @@ DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabInde
 				.then(() => chrome.windows.update(tabsByID[previousTabID].windowId,
 					{ focused: true }))
 				.then(() => chrome.tabs.update(previousTabID, { active: true }))
+				.then(() => switched = true)
 				.catch(error => {
 						// we got an error either because the previous
 						// tab is no longer around or its data is not in
@@ -848,7 +869,8 @@ DEBUG && console.error(error);
 
 		// we break the tab switching into a function so it can call itself
 		// recursively if it hits a bad tab while navigating
-	return storage.set(switchTabs, "navigate");
+	return storage.set(switchTabs, "navigate")
+		.then(() => switched);
 }
 
 
