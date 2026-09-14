@@ -37,7 +37,7 @@ await storage.get((data = {}) => {
 	(popupAdjustmentWidth || popupAdjustmentHeight) &&
 		log("popup size seeded from storage:", `${currentWidth}x${currentHeight}`,
 			"adjustment:", `${popupAdjustmentWidth}x${popupAdjustmentHeight}`);
-});
+}, "seedPopupSize");
 
 
 async function getWindow(
@@ -225,7 +225,7 @@ async function create(
 		bounds.top += -Math.floor(heightDelta / 2);
 
 		await chrome.windows.update(window.id, bounds);
-		await storage.set(() => ({ popupAdjustmentWidth, popupAdjustmentHeight }));
+		await storage.set(() => ({ popupAdjustmentWidth, popupAdjustmentHeight }), "savePopupAdjustment");
 	}
 
 	lastActiveTab = activeTab;

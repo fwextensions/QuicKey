@@ -593,12 +593,12 @@ const t = performance.now();
 					// above, the new tabIDs and lastUpdateTime have to go with
 					// it -- lastUpdateTime is what stops the rebuild from
 					// running again on the next open.
-				storage.set(() => ({ ...rebuilt, tabsByID }));
+				storage.set(() => ({ ...rebuilt, tabsByID }), "saveGetAll");
 
 DEBUG && console.log("getAll took", performance.now() - t, "ms");
 				return tabs;
 			});
-	});
+	}, "getAll");
 }
 
 

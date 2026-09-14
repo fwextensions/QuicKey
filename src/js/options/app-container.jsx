@@ -58,7 +58,7 @@ class OptionsAppContainer extends React.Component {
 				// popup is cleared and we won't show NEW badges the next
 				// time the options page is opened
 			return { lastSeenOptionsVersion: storage.version };
-		});
+		}, "markOptionsSeen");
 		this.tracker.pageview();
 	}
 

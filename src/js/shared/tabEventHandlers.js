@@ -49,7 +49,7 @@ function handleTabActivated({
 				} else {
 //console.log("--- NOT sending tabActivated");
 				}
-			});
+			}, "onActivated");
 		}
 	}
 }

@@ -35,7 +35,7 @@ export default function handleStartup({
 		return lastUsedVersion !== k.Version
 			? { lastUsedVersion: k.Version }
 			: undefined;
-	})
+	}, "handleStartup")
 		.then(() => {
 			tracker.pageview();
 			tracker.timing("loading", "background-loaded", performance.now());

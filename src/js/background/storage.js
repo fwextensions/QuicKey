@@ -13,6 +13,29 @@ const LockNameBase = "storage://";
 const FailedDataKey = "failedStorageData";
 const MaxFailedDataLength = 10000;
 const MaxLoggedKeys = 20;
+	// a task that holds the lock longer than this gets logged
+const SlowTaskThreshold = 1000;
+
+
+	// a task waiting on the lock can't see what's holding it, since the worker
+	// and the popup share it, so the holder logs itself when it's slow.  that
+	// puts a line naming the culprit just before the waiter's long wait.
+async function logIfSlow(
+	name,
+	callback)
+{
+	const startTime = performance.now();
+
+	try {
+		return await callback();
+	} finally {
+		const duration = performance.now() - startTime;
+
+		if (duration > SlowTaskThreshold) {
+			log(`storage task "${name}" held the lock`, Math.round(duration), "ms");
+		}
+	}
+}
 
 
 	// describe the data we're about to throw away.  when it isn't the object we
@@ -356,9 +379,10 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 
 	function doTask(
 		task,
-		saveResult)
+		saveResult,
+		name = task.name || "anonymous")
 	{
-		return navigator.locks.request(lockName, async () => {
+		return navigator.locks.request(lockName, () => logIfSlow(name, async () => {
 				// don't read until the initial load or reset has finished
 				// writing, so the first task on a new install sees the
 				// defaults instead of undefined
@@ -398,24 +422,26 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 			}
 
 			return result;
-		});
+		}));
 	}
 
 
 	function set(
-		task)
+		task,
+		name)
 	{
-		return doTask(task, true);
+		return doTask(task, true, name);
 	}
 
 
 	function get(
-		task = returnData)
+		task = returnData,
+		name)
 	{
 			// if a function isn't passed in, use a noop function that will
 			// just return the data as a promise, so the caller can handle
 			// it in a then() chain
-		return doTask(task, false);
+		return doTask(task, false, name);
 	}
 
 
@@ -423,7 +449,7 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 	{
 			// doTask() passes the current data to the task, but an explicit
 			// reset is asking for a clean slate, not a recovery, so drop it
-		return doTask(() => resetWithoutLocking());
+		return doTask(() => resetWithoutLocking(), false, "reset");
 	}
 
 

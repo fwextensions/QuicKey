@@ -106,7 +106,7 @@ chrome.runtime.onStartup.addListener(() => {
 		// survives having nothing to match against.  updateFromFreshTabs() only
 		// writes lastUpdateTime when it had a real tab list, so this stays ahead
 		// of it until a rebuild actually happens.
-	storage.set(() => ({ lastStartupTime: Date.now() }))
+	storage.set(() => ({ lastStartupTime: Date.now() }), "recordStartupTime")
 		.catch(error => {
 			log("onStartup: recording the startup time failed:", error.message);
 			tracker.exception(error);

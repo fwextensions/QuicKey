@@ -265,7 +265,7 @@ connect("colorScheme").receive({
 	{
 		if (name !== colorScheme) {
 			await setColorScheme(name);
-			await storage.set(() => ({ colorScheme: name }));
+			await storage.set(() => ({ colorScheme: name }), "saveColorScheme");
 		}
 	}
 });

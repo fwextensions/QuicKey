@@ -288,7 +288,7 @@ export default class App extends React.Component {
 				? this.state.searchBoxText
 				: "";
 
-			storage.set(() => ({ lastQuery }));
+			storage.set(() => ({ lastQuery }), "saveLastQuery");
 		});
 
 		this.visible = true;
@@ -1062,13 +1062,13 @@ export default class App extends React.Component {
 					// box doesn't overwrite the saved query.  we have to
 					// check this before setting it to false below.
 				if (!this.navigatingRecents) {
-					storage.set(() => ({ lastQuery: this.state.searchBoxText }));
+					storage.set(() => ({ lastQuery: this.state.searchBoxText }), "saveLastQuery");
 				}
 			} else {
 					// the restore last query option is off, so clear any
 					// existing stored query
 				this.setSearchBoxText("");
-				storage.set(() => ({ lastQuery: "" }));
+				storage.set(() => ({ lastQuery: "" }), "clearLastQuery");
 			}
 
 			this.forceUpdate = true;
@@ -1256,7 +1256,7 @@ export default class App extends React.Component {
 				// open at once
 			await storage.set(({seededRecentsBannerCount}) => ({
 				seededRecentsBannerCount: seededRecentsBannerCount + 1
-			}));
+			}), "countBannerDisplay");
 		}
 	}
 
@@ -1267,7 +1267,7 @@ export default class App extends React.Component {
 		this.setState({ bannerVisible: false });
 		await storage.set(() => ({
 			seededRecentsBannerCount: k.MaxSeededRecentsBannerDisplays
-		}));
+		}), "closeBanner");
 	};
 
 

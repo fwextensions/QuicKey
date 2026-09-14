@@ -115,7 +115,7 @@ export default {
 			}
 
 			return { settings };
-		})
+		}, "setSetting")
 			.then(addChromeShortcuts);
 	},
 
@@ -131,7 +131,7 @@ export default {
 			settings.shortcuts[Platform] = getDefaultSettings().shortcuts[Platform];
 
 			return { settings };
-		})
+		}, "resetShortcuts")
 			.then(addChromeShortcuts);
 	}
 };
