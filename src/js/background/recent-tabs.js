@@ -422,38 +422,77 @@ function logTitleChanges(
 }
 
 
+	// the in-flight loadAll() for each value of includeClosedTabs
+const pendingLoads = new Map();
+
+
+	// every popup open calls this, and when Chrome is backed up the opens queue
+	// behind one another, each one then querying 2200+ tabs of its own -- seven
+	// in a row once a stall cleared, adding seconds of work to a browser that
+	// was already struggling.  so a call made while another is still loading
+	// just shares its result.
+	//
 	// onTabCount, if passed, gets the length of the full tabs.query() result,
-	// so the caller can pass it on without querying again
+	// so the caller can pass it on without querying again.  it's called per
+	// caller, since a caller sharing another's load still wants the count.
 function getAll(
 	includeClosedTabs,
 	onTabCount)
 {
+	const key = Boolean(includeClosedTabs);
+	let load = pendingLoads.get(key);
+
+	if (!load) {
+		load = loadAll(key)
+			.finally(() => pendingLoads.delete(key));
+		pendingLoads.set(key, load);
+	}
+
+		// initTabs() decorates the tab objects in place, so give each caller
+		// its own copies, or a second caller would see the first one's changes
+	return load.then(({ tabs, tabCount }) => {
+		onTabCount?.(tabCount);
+
+		return tabs.map(tab => ({ ...tab }));
+	});
+}
+
+
+	// resolves to { tabs, tabCount }, where tabCount is the length of the full
+	// tabs.query() result, for getAll()'s onTabCount
+function loadAll(
+	includeClosedTabs)
+{
 const t = performance.now();
 
-	return storage.get(data => {
-			// getAll() has been seen taking 7s+ on a slow machine with a lot of
-			// tabs, so log how long we waited on the storage lock separately from
-			// the API calls.  only the total of the calls is worth logging:
-			// tabs.query() is nearly all of it, and a reply to getRecentlyClosed()
-			// can't be processed until the huge tabs.query() result has been, so
-			// timing it separately just repeats the query's time.
-		const apiTime = performance.now();
-		const lockDuration = apiTime - t;
+		// query the tabs before taking the storage lock, rather than inside
+		// it.  tabs.query() takes a second or more with 2200+ tabs, and far
+		// longer when Chrome is backed up, and holding the lock through it
+		// blocked every other storage task in the worker and the popup for
+		// that long.  the recents can still change while the query is out,
+		// but they already could between this read and the unlocked write
+		// at the end.
+	return Promise.all([
+		chrome.tabs.query({}),
+		includeClosedTabs
+			? chrome.sessions.getRecentlyClosed()
+			: []
+	])
+		.then(([freshTabs, closedTabs]) => {
+				// only the total of the calls is worth logging: tabs.query() is
+				// nearly all of it, and a reply to getRecentlyClosed() can't be
+				// processed until the huge tabs.query() result has been, so
+				// timing it separately just repeats the query's time
+			const queryDuration = performance.now() - t;
+			const lockTime = performance.now();
 
-		return Promise.all([
-			chrome.tabs.query({}),
-			includeClosedTabs
-				? chrome.sessions.getRecentlyClosed()
-				: []
-		])
-			.then(([freshTabs, closedTabs]) => {
+			return storage.get(data => {
 				log("getAll:",
-					"storage lock:", Math.round(lockDuration), "ms,",
 					"tabs.query and getRecentlyClosed:",
-					Math.round(performance.now() - apiTime), "ms for",
-					freshTabs.length, "tabs");
+					Math.round(queryDuration), "ms for",
+					freshTabs.length, "tabs,",
+					"storage lock:", Math.round(performance.now() - lockTime), "ms");
 				logTitleChanges(freshTabs);
-				onTabCount?.(freshTabs.length);
 
 				const {lastStartupTime = 0, lastUpdateTime = 0} = data;
 				const tabsByURL = {};
@@ -605,9 +644,9 @@ const t = performance.now();
 				storage.set(() => ({ ...rebuilt, tabsByID }), "saveGetAll");
 
 DEBUG && console.log("getAll took", performance.now() - t, "ms");
-				return tabs;
-			});
-	}, "getAll");
+				return { tabs, tabCount: freshTabs.length };
+			}, "getAll");
+		});
 }
 
 

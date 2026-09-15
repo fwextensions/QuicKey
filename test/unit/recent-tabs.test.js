@@ -407,3 +407,53 @@ describe("recent-tabs updateAll() / updateFromFreshTabs", () => {
 		expect(tabsByID[20]).toMatchObject({ url: "https://a.example.com/", lastVisit: 100 });
 	});
 });
+
+
+describe("recent-tabs getAll()", () => {
+	beforeEach(() => {
+		store._seed({
+			tabIDs: [1, 2],
+			tabsByID: {
+				1: { ...tab(1, "https://a.example.com/"), lastVisit: 100 },
+				2: { ...tab(2, "https://b.example.com/"), lastVisit: 200 },
+			},
+		});
+		chrome.tabs.query = vi.fn(() => Promise.resolve([
+			tab(1, "https://a.example.com/"),
+			tab(2, "https://b.example.com/"),
+		]));
+	});
+
+	it("shares one tabs.query() between calls made while it's loading", async () => {
+		const [first, second] = await Promise.all([
+			recentTabs.getAll(false),
+			recentTabs.getAll(false),
+		]);
+
+		expect(chrome.tabs.query).toHaveBeenCalledTimes(1);
+		expect(second).toEqual(first);
+			// initTabs() mutates the tabs, so the callers can't share objects
+		expect(second[0]).not.toBe(first[0]);
+	});
+
+	it("passes the tab count to every caller sharing a load", async () => {
+		const firstCount = vi.fn();
+		const secondCount = vi.fn();
+
+		await Promise.all([
+			recentTabs.getAll(false, firstCount),
+			recentTabs.getAll(false, secondCount),
+		]);
+
+		expect(chrome.tabs.query).toHaveBeenCalledTimes(1);
+		expect(firstCount).toHaveBeenCalledExactlyOnceWith(2);
+		expect(secondCount).toHaveBeenCalledExactlyOnceWith(2);
+	});
+
+	it("queries again once the earlier load has finished", async () => {
+		await recentTabs.getAll(false);
+		await recentTabs.getAll(false);
+
+		expect(chrome.tabs.query).toHaveBeenCalledTimes(2);
+	});
+});
