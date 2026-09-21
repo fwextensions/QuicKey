@@ -12,6 +12,12 @@
 const LogKey = "debugLog";
 const LockName = "storage://debugLog";
 const MaxEntries = 400;
+	// how long to let entries accumulate before writing them.  each write costs
+	// a read and a write of the whole log, so a burst that would have been one
+	// storage round trip per line becomes one for the burst.  keep it short:
+	// anything still buffered when the worker is killed is lost, and the point
+	// of this log is to survive exactly that.
+const FlushDelay = 1000;
 	// track which context wrote each entry, since both the service worker
 	// and the popup/menu pages use the storage module
 const Context = globalThis.location?.pathname ?? "unknown";
@@ -33,9 +39,58 @@ function stringify(
 }
 
 
-	// serialize writes within this context so concurrent log() calls don't
+	// entries waiting to be written, and the flush they'll go out in
+let pendingEntries = [];
+let flushTimer = null;
+let flushPromise = Promise.resolve();
+let resolveFlush = null;
+	// serialize writes within this context so concurrent flushes don't
 	// clobber each other while waiting for the cross-context lock
 let queue = Promise.resolve();
+
+
+	// write whatever has accumulated.  reading and writing the whole log on
+	// every line was costing 50-100KB of storage traffic per line, on the same
+	// storage the tasks being logged were waiting on
+export function flushLog()
+{
+	const resolvePending = resolveFlush;
+
+	if (flushTimer) {
+		clearTimeout(flushTimer);
+		flushTimer = null;
+	}
+
+	resolveFlush = null;
+
+	if (!pendingEntries.length) {
+			// a flush called early still has to settle the promise log()
+			// handed out, or a caller awaiting it would hang forever
+		resolvePending?.(queue);
+
+		return queue;
+	}
+
+	const entriesToWrite = pendingEntries;
+
+	pendingEntries = [];
+	queue = queue
+		.then(() => navigator.locks.request(LockName, async () => {
+			const { [LogKey]: entries = [] } = await chrome.storage.local.get(LogKey);
+
+			entries.push(...entriesToWrite);
+			entries.splice(0, Math.max(entries.length - MaxEntries, 0));
+
+			await chrome.storage.local.set({ [LogKey]: entries });
+		}))
+			// never let a logging failure break the caller's promise chain
+		.catch(console.error);
+
+	resolvePending?.(queue);
+
+	return queue;
+}
+
 
 export default function log(
 	...args)
@@ -46,7 +101,7 @@ export default function log(
 		// here rather than at module scope, since error-handler.js is what
 		// assigns it and may not have run by the time this module is imported.
 	if (!globalThis.DEBUG) {
-		return queue;
+		return flushPromise;
 	}
 
 	const entry = {
@@ -58,25 +113,26 @@ export default function log(
 		// also echo to the console so live debugging still works
 	console.log("[log]", ...args);
 
-	queue = queue
-		.then(() => navigator.locks.request(LockName, async () => {
-			const { [LogKey]: entries = [] } = await chrome.storage.local.get(LogKey);
+	pendingEntries.push(entry);
 
-			entries.push(entry);
-			entries.splice(0, Math.max(entries.length - MaxEntries, 0));
+	if (!flushTimer) {
+			// the returned promise resolves when this batch has been written,
+			// so a caller that awaits log() still waits for its own entry
+		flushPromise = new Promise(resolve => resolveFlush = resolve);
+		flushTimer = setTimeout(flushLog, FlushDelay);
+	}
 
-			await chrome.storage.local.set({ [LogKey]: entries });
-		}))
-			// never let a logging failure break the caller's promise chain
-		.catch(console.error);
-
-	return queue;
+	return flushPromise;
 }
 
 
 export async function printLog(
 	count = MaxEntries)
 {
+		// write anything still buffered, so printing from the console shows
+		// the lines that just scrolled by rather than stopping a beat short
+	await flushLog();
+
 	const { [LogKey]: entries = [] } = await chrome.storage.local.get(LogKey);
 	const rows = entries.slice(-count).map(({ time, context, message }) => {
 		const date = new Date(time);
@@ -94,6 +150,9 @@ export async function printLog(
 
 export function clearLog()
 {
+	pendingEntries = [];
+	flushLog();
+
 	return chrome.storage.local.remove(LogKey);
 }
 
@@ -102,3 +161,4 @@ export function clearLog()
 	// loads this module (service worker, popup, options page)
 globalThis.printLog = printLog;
 globalThis.clearLog = clearLog;
+globalThis.flushLog = flushLog;
