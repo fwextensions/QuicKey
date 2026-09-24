@@ -10,6 +10,7 @@ import settings from "@/background/settings";
 import trackers from "@/background/page-trackers";
 import { isPopupWindow, isMenuOpen, whenMenuClosed } from "@/background/popup-utils";
 import * as k from "@/background/constants";
+import log from "@/background/persistent-log";
 
 const {
 	OpenPopupCommand,
@@ -62,16 +63,33 @@ function shouldListenForCommands()
 	return isBackgroundContext || control.isHeld();
 }
 
-function enableCommands()
+	// log each change to whether this context listens for commands, since a
+	// listener that never gets re-added would make every shortcut silently do
+	// nothing, with no sign of it in handleCommand()'s own logging
+let commandsEnabled = false;
+
+function enableCommands(
+	reason)
 {
 	if (shouldListenForCommands()) {
 		addListener("commands.onCommand", handleCommand);
+
+		if (!commandsEnabled) {
+			commandsEnabled = true;
+			log("commands enabled:", reason);
+		}
 	}
 }
 
-function disableCommands()
+function disableCommands(
+	reason)
 {
 	removeListener("commands.onCommand", handleCommand);
+
+	if (commandsEnabled) {
+		commandsEnabled = false;
+		log("commands disabled:", reason);
+	}
 }
 
 let watchingMenuClose = false;
@@ -88,7 +106,7 @@ function checkMenuNotAlreadyOpen()
 	isMenuOpen()
 		.then((open) => {
 			if (open && menuOpen !== false) {
-				disableCommands();
+				disableCommands("menu already open");
 				watchForMenuClose();
 			}
 		})
@@ -105,7 +123,7 @@ function watchForMenuClose()
 	whenMenuClosed()
 		.then(() => {
 			menuOpen = false;
-			enableCommands();
+			enableCommands("menu lock released");
 		})
 		.catch(() => {})
 		.finally(() => watchingMenuClose = false);
@@ -114,10 +132,10 @@ function watchForMenuClose()
 chrome.runtime.onConnect.addListener((port) => {
 	if (port.name === "menu") {
 		menuOpen = true;
-		disableCommands();
+		disableCommands("menu connected");
 		port.onDisconnect.addListener(() => {
 			menuOpen = false;
-			enableCommands();
+			enableCommands("menu disconnected");
 		});
 	}
 });
@@ -143,10 +161,41 @@ async function shouldIgnoreCommands()
 	return isMenuOpen().catch(() => menuOpen === true);
 }
 
+	// numbers each command in the log, so its later steps can be matched up
+let commandCount = 0;
+
+	// log a command's progress through the queue, with the time since it
+	// arrived, so a shortcut that seems to do nothing shows whether it was
+	// never received, ignored, or stuck waiting on the previous command or a
+	// lock
+function trackCommand(
+	command,
+	fn)
+{
+	const id = ++commandCount;
+	const start = Date.now();
+	const elapsed = () => `${Date.now() - start} ms`;
+
+	log(`command #${id} queued:`, command);
+
+	return async () => {
+		log(`command #${id} started after`, elapsed());
+
+		try {
+			return await fn();
+		} finally {
+			log(`command #${id} finished after`, elapsed());
+		}
+	};
+}
+
 async function handleCommand(
 	command)
 {
+	log("command received:", command, "menuOpen:", menuOpen);
+
 	if (await shouldIgnoreCommands()) {
+		log("command ignored, menu is open:", command);
 		return;
 	}
 
@@ -159,17 +208,18 @@ async function handleCommand(
 				// first one hadn't finished opening yet and tell the partially
 				// loaded popup to close and open a new one.  rinse and repeat.
 			lastOpenPromise = enqueue(lastOpenPromise,
-				() => openPopupWindow(command === FocusPopupCommand),
+				trackCommand(command,
+					() => openPopupWindow(command === FocusPopupCommand)),
 				handleCommandError);
 			break;
 
 		case PreviousTabCommand:
 		case NextTabCommand:
 			lastTogglePromise = enqueue(lastTogglePromise,
-				() => navigateRecents(
+				trackCommand(command, () => navigateRecents(
 					command === PreviousTabCommand ? -1 : 1,
 					currentWindowLimitRecents
-				),
+				)),
 				handleCommandError);
 			break;
 
@@ -375,14 +425,14 @@ export default function init(
 {
 	({ sendPopupMessage, ports } = context);
 
-	enableCommands();
+	enableCommands("init");
 	checkMenuNotAlreadyOpen();
 
 	return (context) => {
 			// this runs when the context takes control, which is the point
 			// where a page context (the hidden popup) needs to start
 			// listening for commands, since the worker is gone
-		enableCommands();
+		enableCommands("took control");
 		checkMenuNotAlreadyOpen();
 
 		context.runtimeMessage.addListener(handlePopupMessage);

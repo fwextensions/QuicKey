@@ -15,7 +15,7 @@ globalThis.DEBUG ??= !("update_url" in chrome.runtime.getManifest());
 	// a startup handled by an earlier worker instance would leave no trace
 	// there; this survives.  logging every cached event would mean a storage
 	// write per restored tab, hence the filter.
-const LoggedEvents = new Set(["runtime.onStartup", "runtime.onInstalled"]);
+const LoggedEvents = new Set(["runtime.onStartup", "runtime.onInstalled", "commands.onCommand"]);
 
 function cacheEvents(
 	eventNames)
