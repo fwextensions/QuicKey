@@ -3,6 +3,7 @@ import { IsEdge, IsFirefox } from "@/background/constants";
 import storage from "@/background/quickey-storage";
 import { debounce } from "@/background/debounce";
 import { connect } from "@/lib/ipc";
+import log from "@/background/persistent-log";
 
 
 const backgroundTracker = trackers.background;
@@ -259,6 +260,31 @@ function updateTabCount(
 }
 
 
+	// replace the running total with a real count.  the deltas can't be trusted
+	// after a restart: the worker's first query runs before Chrome has restored
+	// the session, and the restored tabs never fire tabs.onCreated, so the badge
+	// would otherwise sit at 0 until the next worker queries again.
+async function resyncTabCount(
+	count)
+{
+	if (!isTabCountVisible) {
+		return;
+	}
+
+	const source = typeof count == "number" ? "popup" : "query";
+
+	if (source == "query") {
+		count = (await chrome.tabs.query({})).length;
+	}
+
+	if (count !== tabCount) {
+		log("tab count resync:", tabCount, "->", count, "from:", source);
+		tabCount = count;
+		writeBadge();
+	}
+}
+
+
 connect("colorScheme").receive({
 	async setColorScheme(
 		name)
@@ -271,12 +297,24 @@ connect("colorScheme").receive({
 });
 
 
+	// the popup already queries every tab when it opens, so it hands us that
+	// count instead of making us run a second big query at the same moment
+connect("tabCount").receive({
+	setTabCount(
+		count)
+	{
+		return resyncTabCount(count);
+	}
+});
+
+
 export default {
 	setColorScheme,
 	setNormalIcon,
 	invertFor,
 	showTabCount,
 	updateTabCount,
+	resyncTabCount,
 	get isNormal() {
 		return isNormalIcon;
 	}

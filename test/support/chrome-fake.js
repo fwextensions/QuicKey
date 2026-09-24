@@ -358,6 +358,10 @@ export function createChromeFake(
 	let runtimeContexts = [];
 
 	const chromeFake = {
+		alarms: {
+			create: async () => {},
+			onAlarm: makeEvent(),
+		},
 		runtime: {
 			id: "quickeyfakeextensionidaaaaaaaaaa",
 			lastError: undefined,

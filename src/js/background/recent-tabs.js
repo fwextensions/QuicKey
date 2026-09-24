@@ -417,8 +417,11 @@ function logTitleChanges(
 }
 
 
+	// onTabCount, if passed, gets the length of the full tabs.query() result,
+	// so the caller can pass it on without querying again
 function getAll(
-	includeClosedTabs)
+	includeClosedTabs,
+	onTabCount)
 {
 const t = performance.now();
 
@@ -445,6 +448,7 @@ const t = performance.now();
 					Math.round(performance.now() - apiTime), "ms for",
 					freshTabs.length, "tabs");
 				logTitleChanges(freshTabs);
+				onTabCount?.(freshTabs.length);
 
 				const {lastStartupTime = 0, lastUpdateTime = 0} = data;
 				const tabsByURL = {};

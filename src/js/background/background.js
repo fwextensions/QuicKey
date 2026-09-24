@@ -30,6 +30,13 @@ const RestartDelay = 60 * 1000;
 	// restore, and the cost of being wrong is only that some of Chrome's own
 	// restore churn lands in the recents.
 const StartupWindow = 90 * 1000;
+	// when to recount the tabs for the badge after a restart, in minutes from
+	// onStartup.  the worker's own count ran against an unrestored browser, and
+	// it'll likely be shut down long before the restore finishes, so an alarm is
+	// the only thing that reliably wakes it to count again.  the restore has been
+	// seen taking over a minute on a big profile, hence the spread.
+const TabCountResyncDelays = [0.5, 1, 2, 5];
+const TabCountResyncAlarmPrefix = "resyncTabCount-";
 
 const tracker = trackers.background;
 
@@ -102,6 +109,12 @@ chrome.runtime.onStartup.addListener(() => {
 		}
 	});
 
+		// the badge count taken when the worker started is from before the
+		// restore, so recount a few times as the restore progresses
+	TabCountResyncDelays.forEach(delayInMinutes =>
+		chrome.alarms.create(TabCountResyncAlarmPrefix + delayInMinutes,
+			{ delayInMinutes }));
+
 		// written before anything tries to match, so the fact of the restart
 		// survives having nothing to match against.  updateFromFreshTabs() only
 		// writes lastUpdateTime when it had a real tab list, so this stays ahead
@@ -111,6 +124,16 @@ chrome.runtime.onStartup.addListener(() => {
 			log("onStartup: recording the startup time failed:", error.message);
 			tracker.exception(error);
 		});
+});
+
+
+chrome.alarms.onAlarm.addListener(({name}) => {
+	if (name.startsWith(TabCountResyncAlarmPrefix)) {
+			// the badge setting may not have been loaded yet if this alarm is
+			// what woke the worker, but loading it does its own fresh count
+		toolbarIcon.resyncTabCount()
+			.catch(error => tracker.exception(error));
+	}
 });
 
 

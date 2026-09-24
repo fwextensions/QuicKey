@@ -53,6 +53,7 @@ function cacheEvents(
 }
 
 globalThis.dispatchCachedEvents = cacheEvents([
+	"alarms.onAlarm",
 	"commands.onCommand",
 	"runtime.onConnect",
 	"runtime.onInstalled",

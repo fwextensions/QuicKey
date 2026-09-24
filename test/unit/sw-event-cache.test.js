@@ -15,6 +15,7 @@ vi.stubGlobal("skipWaiting", vi.fn());
 vi.stubGlobal("clients", { claim: vi.fn() });
 
 const CachedEventNames = [
+	"alarms.onAlarm",
 	"commands.onCommand",
 	"runtime.onConnect",
 	"runtime.onInstalled",
