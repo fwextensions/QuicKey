@@ -26,24 +26,6 @@ const CloseButtonTooltips = {
 const IncognitoTooltip = `This tab is in ${IncognitoNameLC} mode`;
 
 
-	// wrap a favicon URL in a quoted url(), since an unquoted one can't
-	// contain spaces, parens or quotes, which SVG data URIs typically do.  if
-	// the value is invalid CSS, the browser ignores the assignment entirely and
-	// the element keeps the icon from whatever item was previously rendered in
-	// that recycled row.
-function cssURL(
-	url)
-{
-	const escapedURL = url
-		.replace(/[\\"]/g, "\\$&")
-			// a literal newline can't appear in a CSS string, and collapsing
-			// them to spaces keeps multi-line SVG data URIs intact
-		.replace(/[\n\r]+/g, " ");
-
-	return `url("${escapedURL}")`;
-}
-
-
 export default class ResultsListItem extends React.Component {
     onClick = (
 		event) =>
@@ -82,6 +64,24 @@ export default class ResultsListItem extends React.Component {
 	{
 			// prevent the click from stealing focus from the search box
 		event.preventDefault();
+	};
+
+
+    handleFaviconError = (
+		event) =>
+	{
+		const {item} = this.props;
+		const {fallbackFaviconURL} = item;
+
+			// the item's own favicon failed to load, most likely because the
+			// site blocks it with cross-origin-resource-policy.  switch this
+			// item to the fallback so it doesn't try the blocked one again
+			// if it's re-rendered.  setting src directly sticks until React
+			// renders a different faviconURL into this recycled row.
+		if (fallbackFaviconURL && item.faviconURL !== fallbackFaviconURL) {
+			item.faviconURL = fallbackFaviconURL;
+			event.currentTarget.src = fallbackFaviconURL;
+		}
 	};
 
 
@@ -124,9 +124,7 @@ export default class ResultsListItem extends React.Component {
 				(otherWindow ? "other-window" : ""),
 			sessionId ? "closed" : ""
 		].join(" ");
-		const faviconStyle = {
-			backgroundImage: cssURL(faviconURL)
-		};
+		const faviconStyle = {};
 		let tooltip = [
 			title.length > MaxTitleLength ? title : "",
 			displayURL.length > MaxURLLength ? displayURL : ""
@@ -180,8 +178,14 @@ export default class ResultsListItem extends React.Component {
 			onClick={this.onClick}
 			onMouseMove={this.handleMouseMove}
 		>
-			<div className="favicon"
+				{/* use an img rather than a background-image, since only an
+					img tells us when the favicon fails to load */}
+			<img className="favicon"
+				src={faviconURL}
+				alt=""
+				draggable={false}
 				style={faviconStyle}
+				onError={this.handleFaviconError}
 			/>
 			<div className="badge"
 				title={badgeTooltip}

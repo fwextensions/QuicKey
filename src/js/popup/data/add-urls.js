@@ -9,7 +9,6 @@ const FirefoxToolPattern = /\/mozapps\//;
 const TGSIconPath = "chrome-extension://klbibkeccnjlkjkiokjodocebajanakg/img/";
 const DefaultFaviconPath = "img/default-favicon.svg";
 const FaviconURLPrefix = `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=`;
-const RemoteFaviconPattern = /^https?:/;
 
 
 export default function addURLs(
@@ -38,22 +37,27 @@ export default function addURLs(
 			item.unsuspendURL = unsuspendURL;
 		}
 
-			// look up the favicon via the _favicon API if we can't use the
-			// item's own.  we want to prioritize item.favIconUrl since The
-			// Great Suspender creates faded favicons and stores them there as
-			// data URIs.  but only data URIs, since the popup page can't load
-			// a remote http(s) favicon from a different origin.  and sometimes
-			// TGS seems to put its own icon in there if the background page
-			// wasn't available, so fall back to the _favicon URL in that case.
-			// in FF, which has no _favicon API, use a fallback icon, as
-			// bookmarks and history items don't show favicons, annoyingly.
-		item.faviconURL = IsFirefox
-			? (favIconUrl || DefaultFaviconPath)
-			: (favIconUrl
-					&& !RemoteFaviconPattern.test(favIconUrl)
-					&& favIconUrl.indexOf(TGSIconPath) != 0)
-				? favIconUrl
-				: FaviconURLPrefix + (item.unsuspendURL || url);
+			// in FF, which has no _favicon API, fall back to a default icon,
+			// as bookmarks and history items don't show favicons, annoyingly.
+		const fallbackURL = IsFirefox
+			? DefaultFaviconPath
+			: FaviconURLPrefix + (item.unsuspendURL || url);
+
+			// prioritize the item's own favicon, since it reflects icons that
+			// pages set dynamically, like Google Docs vs. Sheets vs. Slides,
+			// which all share a host and so all get the Docs icon from
+			// _favicon.  The Great Suspender also stores faded favicons there
+			// as data URIs.  but sometimes TGS seems to put its own icon in
+			// there if the background page wasn't available, so use the
+			// fallback in that case.  some sites block their favicon from
+			// loading in the popup via cross-origin-resource-policy, so
+			// ResultsListItem switches to fallbackFaviconURL if it fails.
+		if (favIconUrl && favIconUrl.indexOf(TGSIconPath) != 0) {
+			item.faviconURL = favIconUrl;
+			item.fallbackFaviconURL = fallbackURL;
+		} else {
+			item.faviconURL = fallbackURL;
+		}
 	}
 
 		// add a clean displayURL to each tab that we can score against and
