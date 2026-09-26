@@ -1,8 +1,7 @@
 import * as k from "./constants";
 
 	// the tail of the background's boot sequence: record the running version,
-	// restore the toolbar icon for the last-seen color scheme, replay the
-	// events sw.js cached while we were initializing, and react to how this
+	// restore the toolbar icon for the last-seen color scheme, and react to how this
 	// startup came about (fresh install, extension update, plain worker
 	// wake-up).  extracted from background.js so the version-change behavior
 	// is testable: the deps are what background.js passes, and the returned
@@ -39,9 +38,6 @@ export default function handleStartup({
 		.then(() => {
 			tracker.pageview();
 			tracker.timing("loading", "background-loaded", performance.now());
-
-				// now that everything is set up, fire all the cached events
-			globalThis.dispatchCachedEvents();
 DEBUG && console.log("%c%s", "background: darkgreen; color: white;", "====== startup done ======", performance.now());
 		})
 			// pause the chain to wait for the installed promise to resolve,

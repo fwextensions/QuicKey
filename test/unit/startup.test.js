@@ -60,7 +60,6 @@ beforeEach(() => {
 		// vi.spyOn() reuses the existing spy (and its call history) when the
 		// same method is spied twice, so restore between tests
 	vi.restoreAllMocks();
-	globalThis.dispatchCachedEvents = vi.fn();
 });
 
 
@@ -75,11 +74,10 @@ describe("startup", () => {
 
 		expect(writes).toEqual([{ lastUsedVersion: CurrentVersion }]);
 		expect(deps.toolbarIcon.setColorScheme).toHaveBeenCalledWith("dark");
-		expect(globalThis.dispatchCachedEvents).toHaveBeenCalledTimes(1);
 		expect(deps.tracker.event).toHaveBeenCalledWith("extension", "install", undefined);
 	});
 
-	it("on a plain worker wake-up, skips the storage write but still replays cached events", async () => {
+	it("on a plain worker wake-up, skips the storage write", async () => {
 		const { deps, writes } = makeDeps({ lastUsedVersion: CurrentVersion });
 
 		handleStartup(deps);
@@ -88,7 +86,6 @@ describe("startup", () => {
 			// the version didn't change, so startup must not rewrite storage --
 			// this runs on every worker cold start
 		expect(writes).toEqual([]);
-		expect(globalThis.dispatchCachedEvents).toHaveBeenCalledTimes(1);
 		expect(deps.tracker.event).not.toHaveBeenCalled();
 	});
 

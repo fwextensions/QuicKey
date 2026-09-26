@@ -19,20 +19,34 @@ const SlowTaskThreshold = 1000;
 
 	// a task waiting on the lock can't see what's holding it, since the worker
 	// and the popup share it, so the holder logs itself when it's slow.  that
-	// puts a line naming the culprit just before the waiter's long wait.
+	// puts a line naming the culprit just before the waiter's long wait.  the
+	// waiter logs its own wait too, and both break the hold down by phase, so
+	// a slow task shows whether the time went to Chrome's storage or to the
+	// task's own work.
 async function logIfSlow(
 	name,
+	requestTime,
 	callback)
 {
 	const startTime = performance.now();
+	const phases = {};
+	let phaseStart = startTime;
+	const endPhase = (phase) => {
+		const now = performance.now();
+
+		phases[phase] = Math.round(now - phaseStart);
+		phaseStart = now;
+	};
 
 	try {
-		return await callback();
+		return await callback(endPhase);
 	} finally {
 		const duration = performance.now() - startTime;
+		const wait = startTime - requestTime;
 
-		if (duration > SlowTaskThreshold) {
-			log(`storage task "${name}" held the lock`, Math.round(duration), "ms");
+		if (duration > SlowTaskThreshold || wait > SlowTaskThreshold) {
+			log(`storage task "${name}" held the lock`, Math.round(duration), "ms",
+				phases, "after waiting", Math.round(wait), "ms for it");
 		}
 	}
 }
@@ -382,11 +396,14 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 		saveResult,
 		name = task.name || "anonymous")
 	{
-		return navigator.locks.request(lockName, () => logIfSlow(name, async () => {
+		const requestTime = performance.now();
+
+		return navigator.locks.request(lockName, () => logIfSlow(name, requestTime, async (endPhase) => {
 				// don't read until the initial load or reset has finished
 				// writing, so the first task on a new install sees the
 				// defaults instead of undefined
 			await ensureInitialized();
+			endPhase("init");
 
 				// we read from storage on every task rather than keeping an
 				// in-memory copy the way the MV2 persistent background page
@@ -397,8 +414,11 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 			const { data } = await chrome.storage.local.get("data");
 			let result;
 
+			endPhase("read");
+
 			try {
 				result = await task(data);
+				endPhase("task");
 
 				if (saveResult && result) {
 						// the task will probably return only the changed keys,
@@ -414,6 +434,7 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 						lastSavedFrom: storageLocation,
 						data: result
 					});
+					endPhase("write");
 				}
 			} catch (error) {
 				console.error(error);

@@ -17,6 +17,12 @@ globalThis.DEBUG ??= !("update_url" in chrome.runtime.getManifest());
 	// write per restored tab, hence the filter.
 const LoggedEvents = new Set(["runtime.onStartup", "runtime.onInstalled", "commands.onCommand"]);
 
+	// cached events older than this are dropped rather than replayed.  a
+	// command in particular has to run close to when it was pressed or not at
+	// all: replaying a toggle after a long stall flips tabs out from under the
+	// user, which was seen happening 18 minutes late.
+const MaxCachedEventAge = 2000;
+
 function cacheEvents(
 	eventNames)
 {
@@ -26,7 +32,7 @@ function cacheEvents(
 	let cache = [];
 	let listeners = eventNames.map((eventName) => {
 		const listener = (...eventArgs) => {
-			cache.push([eventName, eventArgs]);
+			cache.push([eventName, eventArgs, Date.now()]);
 			LoggedEvents.has(eventName) && log("sw caught:", eventName);
 		};
 
@@ -41,7 +47,14 @@ function cacheEvents(
 			getEvent(eventName).removeListener(listener);
 		}
 
-		for (const [eventName, eventArgs] of cache) {
+		const cutoff = Date.now() - MaxCachedEventAge;
+
+		for (const [eventName, eventArgs, time] of cache) {
+			if (time < cutoff) {
+				log("sw dropping stale event:", eventName, Date.now() - time, "ms old");
+				continue;
+			}
+
 			globalThis.DEBUG && console.log("◆ dispatching", eventName, eventArgs);
 			LoggedEvents.has(eventName) && log("◆ sw dispatching:", eventName);
 			getEvent(eventName).dispatch(...eventArgs);
@@ -52,7 +65,7 @@ function cacheEvents(
 	}
 }
 
-globalThis.dispatchCachedEvents = cacheEvents([
+const dispatchCachedEvents = cacheEvents([
 	"alarms.onAlarm",
 	"commands.onCommand",
 	"runtime.onConnect",
@@ -72,3 +85,11 @@ try {
 } catch (err) {
 	console.error(err);
 }
+
+	// background.js registers all of its listeners while it's evaluated, so
+	// from here on every event reaches a real handler.  stop caching and replay
+	// the backlog now, rather than after startup's storage task: that task
+	// needs the storage lock, which the popup can hold for many minutes when
+	// Chrome is struggling, and every event that arrived in the meantime was
+	// both handled live and then replayed a second time once it finished.
+dispatchCachedEvents();

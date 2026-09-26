@@ -356,7 +356,9 @@ export function toggleRecentTabs(
 		// and await that before calling this function again; otherwise, the
 		// event handler would keep starting new chains.  seems cleanest to
 		// keep the promise chain handling just within this function.
-	lastTogglePromise = enqueue(lastTogglePromise, () => Promise.resolve()
+	const command = fromShortcut ? ToggleTabsCommand : "toggle from double-press";
+
+	lastTogglePromise = enqueue(lastTogglePromise, trackCommand(command, () => Promise.resolve()
 			// if the user navigated to a tab but hasn't waited for the min
 			// dwell time before toggling back, add the current tab before
 			// toggling so it becomes the most recent
@@ -375,7 +377,14 @@ export function toggleRecentTabs(
 				// then hit the toggle command, reset the icon back to normal
 			return toolbarIcon.setNormalIcon();
 		})
+		.then(() => log("toggle: pending addTab flushed, toggling"))
 		.then(() => recentTabs.toggle(currentWindowLimitRecents))
+		.then((switched) => {
+			log("toggle: switched:", switched,
+				switched ? "waiting for the activation" : "");
+
+			return switched;
+		})
 			// fire the debounced addTab() so the tab we just toggled to will
 			// be the most recent, in case the user quickly toggles again.
 			// otherwise, the debounced add would fire after we navigate,
@@ -389,7 +398,7 @@ export function toggleRecentTabs(
 			// meantime queued up behind it.
 		.then((switched) => switched && addTab.flushOrNext())
 		.then(() => tracker.event("recents",
-			fromShortcut ? "toggle-shortcut" : "toggle")),
+			fromShortcut ? "toggle-shortcut" : "toggle"))),
 		handleCommandError);
 }
 
