@@ -31,6 +31,18 @@ export function calcBounds(
 	} = {})
 {
 	const [horizontal, vertical] = alignment.split("-");
+
+		// hide() is handed the tab that was just focused and swaps it for its
+		// window, but if that lookup fails, the tab itself arrives here.  a tab
+		// has a width and height but no left or top, so positioning against it
+		// produced NaN, which Chrome rejects as "expected integer, found
+		// number".  anything without a full set of finite bounds is treated as
+		// no target, which centers the popup on the screen instead.
+	if (targetWindow && !["left", "top", "width", "height"]
+			.every(key => Number.isFinite(targetWindow[key]))) {
+		targetWindow = null;
+	}
+
 	const screen = getScreenFromWindow(targetWindow);
 	const {
 		left: targetX,
@@ -49,18 +61,20 @@ export function calcBounds(
 		// Chrome will throw an error if the popup is more than 50% off-screen,
 		// which can happen if the target window has been dragged mostly off-
 		// screen.  so clamp the top/left to keep it fully on-screen, with padding.
+		// the far edges are right/bottom, not width/height, so the clamp still
+		// works on a screen that doesn't start at 0,0.
 	const left = Math.max(
 		screen.left + PopupPadding,
 		Math.min(
 			getAlignedPosition(horizontal, w, targetX, targetW, PopupPadding),
-			screen.width - w - PopupPadding
+			screen.right - w - PopupPadding
 		)
 	);
 	const top = Math.max(
 		screen.top + PopupPadding,
 		Math.min(
 			getAlignedPosition(vertical, h, targetY, targetH, PopupPadding),
-			screen.height - h - PopupPadding
+			screen.bottom - h - PopupPadding
 		)
 	);
 

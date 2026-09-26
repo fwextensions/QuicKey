@@ -173,6 +173,22 @@ describe("recent-tabs replace()", () => {
 		expect(tabsByID[1]).toBeUndefined();
 		expect(tabsByID[100]).toMatchObject({ id: 100, url: "https://a.example.com/", windowId: 1 });
 	});
+
+	it("swaps an id that tabsByID has lost instead of throwing", async () => {
+		await recentTabs.add(tab(1, "https://a.example.com/"));
+		await recentTabs.add(tab(2, "https://b.example.com/"));
+
+		const data = store._dump();
+
+		delete data.tabsByID[1];
+		store._seed(data);
+		await recentTabs.replace(1, 100);
+
+		const { tabIDs, tabsByID } = store._dump();
+
+		expect(tabIDs).toEqual([100, 2]);
+		expect(tabsByID[100]).toBeUndefined();
+	});
 });
 
 

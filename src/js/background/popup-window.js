@@ -446,7 +446,6 @@ async function hide(
 			options.state = "minimized";
 		}
 
-DEBUG && hideBehavior == Behind && (!Number.isInteger(options.left) || !Number.isInteger(options.top)) && console.error("==== bad popup options", options, targetWindow);
 
 		try {
 			const {state} = await retryAfterResync("hide",
@@ -474,7 +473,9 @@ DEBUG && hideBehavior == Behind && (!Number.isInteger(options.left) || !Number.i
 
 			popupEmitter.emit("hide", { hideBehavior });
 		} catch (e) {
-DEBUG && console.error("Failed to hide popup", e);
+			log("popup hide failed, closing it:", e.message, "options:", options,
+				"target:", targetWindow && ["id", "windowId", "left", "top", "width", "height"]
+					.map(key => [key, targetWindow[key]]));
 
 				// we couldn't move the window for some reason, so close it
 			await close();

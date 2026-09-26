@@ -344,8 +344,13 @@ function replace(
 		if (index > -1) {
 DEBUG && console.log("tab replaced", oldID, "index", index, getRecentStackString(tabIDs), titleOrURL(oldTab));
 			tabIDs[index] = newID;
-			tabsByID[newID] = oldTab;
-			tabsByID[newID].id = newID;
+
+				// tabIDs can list an ID that tabsByID has lost, so there may
+				// be no record to move
+			if (oldTab) {
+				tabsByID[newID] = oldTab;
+				oldTab.id = newID;
+			}
 
 			newData.tabIDs = tabIDs;
 			newData.tabsByID = tabsByID;

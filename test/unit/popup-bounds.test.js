@@ -121,4 +121,42 @@ describe("calcBounds", () => {
 		expect(bounds.left + bounds.width).toBeLessThanOrEqual(screen.width);
 		expect(bounds.top + bounds.height).toBeLessThanOrEqual(screen.height);
 	});
+
+		// hide() passes the focused tab through when it can't look up the tab's
+		// window, and a tab has no left or top
+	it("centers on the screen when the target has no position", () => {
+		const bounds = calcBounds(
+			{ id: 5, windowId: 1, width: 1280, height: 720 },
+			{ width: 500, height: 600 }
+		);
+
+		expectAllIntegers(bounds);
+		expect(bounds).toEqual({ left: 710, top: 240, width: 500, height: 600 });
+	});
+
+	it("clamps against a screen that doesn't start at 0,0", () => {
+		const saved = screen;
+
+		screen = {
+			left: 1920,
+			top: 0,
+			width: 1536,
+			height: 960,
+			right: 3456,
+			bottom: 960,
+		};
+
+		try {
+			const bounds = calcBounds(
+				{ left: 2000, top: 100, width: 1200, height: 700 },
+				{ width: 500, height: 600 }
+			);
+
+				// centered on the window, not pinned to the screen's left edge
+			expect(bounds.left).toBe(2350);
+			expect(bounds.top).toBe(150);
+		} finally {
+			screen = saved;
+		}
+	});
 });
