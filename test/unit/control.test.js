@@ -18,6 +18,32 @@ beforeEach(() => {
 
 
 describe("control", () => {
+	it("doesn't take control in a context the extension reload invalidated", async () => {
+		const control = (await import("@/shared/control")).default;
+		const task = vi.fn();
+		const { id } = chrome.runtime;
+
+			// an invalidated context sees chrome.runtime.id as undefined
+		chrome.runtime.id = undefined;
+
+		try {
+			await control.claimWhenAvailable("control-test-invalidated", task);
+		} finally {
+			chrome.runtime.id = id;
+		}
+
+		expect(task).not.toHaveBeenCalled();
+		expect(control.isHeld()).toBe(false);
+
+			// and the lock was let go, so a live context can claim it
+		const liveTask = vi.fn();
+
+		control.claimWhenAvailable("control-test-invalidated", liveTask);
+		await flush();
+
+		expect(liveTask).toHaveBeenCalledTimes(1);
+	});
+
 	it("isHeld() is false before any claim", async () => {
 		const control = (await import("@/shared/control")).default;
 

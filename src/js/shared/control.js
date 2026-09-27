@@ -36,6 +36,17 @@ function claimWhenAvailable(
 	}
 
 	return navigator.locks.request(name, (lock) => {
+			// reloading the extension invalidates a page left open from the old
+			// build, and the old worker exiting grants that page's pending lock
+			// request.  every chrome API call from there throws "Extension
+			// context invalidated", so don't take control: let the lock go to a
+			// live context, and close the orphaned page if it's a window.
+		if (!chrome.runtime?.id) {
+			globalThis.document && globalThis.close?.();
+
+			return;
+		}
+
 			// make sure this is set before calling the task, in case that checks
 			// whether the lock is held
 		isHeld = true;
