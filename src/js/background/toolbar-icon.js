@@ -213,6 +213,11 @@ const writeBadge = debounce(async () => {
 		}
 	}
 
+		// keep the dev-only start time that sw.js put in the title
+	if (globalThis.workerStartMarker) {
+		title += ` ${globalThis.workerStartMarker}`;
+	}
+
 	try {
 		await chrome.action.setBadgeText({ text });
 		await chrome.action.setTitle({ title });

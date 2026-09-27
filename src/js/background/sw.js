@@ -10,6 +10,18 @@ globalThis.onactivate = () => clients.claim();
 	// anything logged from here.  same default it uses.
 globalThis.DEBUG ??= !("update_url" in chrome.runtime.getManifest());
 
+	// in dev, stamp the toolbar icon's tooltip with when this worker started.
+	// the title doesn't survive a browser restart, so if it still reads just
+	// "QuicKey" hours after one, no worker has run since.  unlike the
+	// persistent log, this doesn't depend on chrome.storage answering, and
+	// unlike opening devtools, checking it doesn't start the worker.
+if (globalThis.DEBUG) {
+	globalThis.workerStartMarker = `(worker started ${new Date().toLocaleTimeString()})`;
+	chrome.action.setTitle({
+		title: `${chrome.runtime.getManifest().short_name} ${globalThis.workerStartMarker}`
+	}).catch(() => {});
+}
+
 	// these are the ones worth a persistent record, at the earliest point we
 	// can take one.  the worker console is lost when the worker is replaced, so
 	// a startup handled by an earlier worker instance would leave no trace

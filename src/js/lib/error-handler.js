@@ -9,7 +9,7 @@ globalThis.DEBUG = typeof globalThis.DEBUG !== "boolean"
 	: globalThis.DEBUG;
 
 if (globalThis.DEBUG) {
-	stdout("lconfjbjgbjenjaahemlkoemdafcnhdf");
+//	stdout("lconfjbjgbjenjaahemlkoemdafcnhdf");
 }
 
 function getStack(
