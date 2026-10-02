@@ -563,6 +563,7 @@ export function createChromeFake(
 			setBadgeText: () => Promise.resolve(),
 			setBadgeBackgroundColor: () => Promise.resolve(),
 			setTitle: () => Promise.resolve(),
+			getTitle: () => Promise.resolve("QuicKey"),
 		},
 		history: {
 			deleteUrl: () => Promise.resolve(),

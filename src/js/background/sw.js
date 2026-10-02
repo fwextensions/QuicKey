@@ -15,11 +15,17 @@ globalThis.DEBUG ??= !("update_url" in chrome.runtime.getManifest());
 	// "QuicKey" hours after one, no worker has run since.  unlike the
 	// persistent log, this doesn't depend on chrome.storage answering, and
 	// unlike opening devtools, checking it doesn't start the worker.
+	//
+	// replace any earlier worker's stamp rather than the whole title: a worker
+	// that starts while the popup holds control never writes the badge, so it
+	// would otherwise wipe out the tab count the popup put in the title.
 if (globalThis.DEBUG) {
 	globalThis.workerStartMarker = `(worker started ${new Date().toLocaleTimeString()})`;
-	chrome.action.setTitle({
-		title: `${chrome.runtime.getManifest().short_name} ${globalThis.workerStartMarker}`
-	}).catch(() => {});
+	chrome.action.getTitle({})
+		.then((title) => chrome.action.setTitle({
+			title: `${title.replace(/ \(worker started [^)]*\)$/, "")} ${globalThis.workerStartMarker}`
+		}))
+		.catch(() => {});
 }
 
 	// these are the ones worth a persistent record, at the earliest point we

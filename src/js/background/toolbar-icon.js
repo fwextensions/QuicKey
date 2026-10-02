@@ -45,6 +45,9 @@ const IconPaths = {
 const ExtensionName = chrome.runtime.getManifest().short_name;
 
 
+	// the dev-only stamp sw.js adds to the end of the title
+const WorkerStartMarkerPattern = / (\(worker started [^)]*\))$/;
+
 	// how long to wait for the tab count to settle before rendering it.  long
 	// enough to collapse a burst of tabs.onCreated/onRemoved events into one
 	// write, short enough that a single tab closing still looks instant.
@@ -213,12 +216,19 @@ const writeBadge = debounce(async () => {
 		}
 	}
 
-		// keep the dev-only start time that sw.js put in the title
-	if (globalThis.workerStartMarker) {
-		title += ` ${globalThis.workerStartMarker}`;
-	}
-
 	try {
+			// keep the dev-only worker start time that sw.js put in the title.
+			// the popup can write the badge when it holds control, and it has
+			// no stamp of its own, so it carries over the one already there.
+		if (globalThis.DEBUG) {
+			const marker = globalThis.workerStartMarker
+				?? (await chrome.action.getTitle({})).match(WorkerStartMarkerPattern)?.[1];
+
+			if (marker) {
+				title += ` ${marker}`;
+			}
+		}
+
 		await chrome.action.setBadgeText({ text });
 		await chrome.action.setTitle({ title });
 
