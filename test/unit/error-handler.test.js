@@ -128,3 +128,33 @@ describe("error handler reporting", () => {
 		expect(exception).not.toHaveBeenCalled();
 	});
 });
+
+
+describe("error handler in an invalidated context", () => {
+		// a page left open across an extension reload, like the hidden popup,
+		// throws "Extension context invalidated" from every chrome API call
+	it("closes the page instead of reporting the error", () => {
+		const { id } = chrome.runtime;
+		const close = vi.fn();
+		const event = {
+			type: "unhandledrejection",
+			reason: new Error("Extension context invalidated."),
+			preventDefault: vi.fn(),
+		};
+
+		vi.stubGlobal("document", {});
+		vi.stubGlobal("close", close);
+		chrome.runtime.id = undefined;
+
+		try {
+			handlers.unhandledrejection(event);
+		} finally {
+			chrome.runtime.id = id;
+			vi.stubGlobal("document", undefined);
+		}
+
+		expect(close).toHaveBeenCalledTimes(1);
+		expect(event.preventDefault).toHaveBeenCalled();
+		expect(exception).not.toHaveBeenCalled();
+	});
+});

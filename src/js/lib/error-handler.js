@@ -30,6 +30,21 @@ function handleError(
 		return;
 	}
 
+	if (!chrome.runtime?.id) {
+			// reloading the extension invalidated this context, so it's a page
+			// left over from the old build, and every chrome API call it makes
+			// will throw "Extension context invalidated".  there's nothing to
+			// report -- the tracker can't send from here anyway -- so close the
+			// page on its first failure.  control.js does the same if the page
+			// is still waiting to claim control, but a page that already held
+			// it, like the hidden popup, only finds out when it next calls an
+			// API, such as getting the active tab when the window blurs.
+		event.preventDefault?.();
+		globalThis.document && globalThis.close?.();
+
+		return;
+	}
+
 	try {
 		const {detail, reason = ((detail && detail.reason) || "")} = event;
 			// fall back to the reason itself when there's no stack to report,
