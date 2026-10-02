@@ -35,6 +35,12 @@ const LoggedEvents = new Set(["runtime.onStartup", "runtime.onInstalled", "comma
 	// user, which was seen happening 18 minutes late.
 const MaxCachedEventAge = 2000;
 
+	// the one cached event whose placeholder listener can't stay attached.  the
+	// toolbar menu needs NO onCommand listener anywhere in the extension while
+	// it's open, so Chrome passes alt-W and the rest to it as key events --
+	// see enableCommands() in commandHandlers.js.
+const DetachedEventNames = new Set(["commands.onCommand"]);
+
 function cacheEvents(
 	eventNames)
 {
@@ -42,10 +48,13 @@ function cacheEvents(
 	const getEvent = (name) => name.split(".").reduce((res, key) => res[key], chrome);
 
 	let cache = [];
-	let listeners = eventNames.map((eventName) => {
+	const listeners = eventNames.map((eventName) => {
 		const listener = (...eventArgs) => {
-			cache.push([eventName, eventArgs, Date.now()]);
-			LoggedEvents.has(eventName) && log("sw caught:", eventName);
+				// after the replay, this is just a placeholder
+			if (cache) {
+				cache.push([eventName, eventArgs, Date.now()]);
+				LoggedEvents.has(eventName) && log("sw caught:", eventName);
+			}
 		};
 
 		getEvent(eventName).addListener(listener);
@@ -53,15 +62,36 @@ function cacheEvents(
 		return [eventName, listener];
 	});
 
-	return function dispatchCachedEvents()
+	return function dispatchCachedEvents(
+		loaded)
 	{
+		const events = cache;
+
+			// stop caching, but leave the listeners attached.  Chrome drops an
+			// event's wake-up registration when a worker removes the last
+			// listener for it, and then that event never starts the worker
+			// again, until something like devtools does.  removing these after
+			// background.js threw on import, before adding its own listeners,
+			// wiped every registration but the one an earlier module had made,
+			// and the shortcuts, tab events and onStartup all went dead.
+		cache = null;
+
+		if (!loaded) {
+				// there are no real handlers to replay to.  keeping every
+				// placeholder, including onCommand's, means the next event
+				// starts a fresh worker that can try the import again.
+			return;
+		}
+
 		for (const [eventName, listener] of listeners) {
-			getEvent(eventName).removeListener(listener);
+			if (DetachedEventNames.has(eventName)) {
+				getEvent(eventName).removeListener(listener);
+			}
 		}
 
 		const cutoff = Date.now() - MaxCachedEventAge;
 
-		for (const [eventName, eventArgs, time] of cache) {
+		for (const [eventName, eventArgs, time] of events) {
 			if (time < cutoff) {
 				log("sw dropping stale event:", eventName, Date.now() - time, "ms old");
 				continue;
@@ -71,9 +101,6 @@ function cacheEvents(
 			LoggedEvents.has(eventName) && log("◆ sw dispatching:", eventName);
 			getEvent(eventName).dispatch(...eventArgs);
 		}
-
-		cache = null;
-		listeners = null;
 	}
 }
 
@@ -92,10 +119,16 @@ const dispatchCachedEvents = cacheEvents([
 	"windows.onFocusChanged",
 ]);
 
+let loaded = false;
+
 try {
 	importScripts("./background.js");
-} catch (err) {
-	console.error(err);
+	loaded = true;
+} catch (error) {
+	console.error(error);
+		// the console is gone once the worker stops, so keep a record.  the
+		// stack says which module threw.
+	log("background.js failed to load:", error?.stack || String(error));
 }
 
 	// background.js registers all of its listeners while it's evaluated, so
@@ -104,4 +137,4 @@ try {
 	// needs the storage lock, which the popup can hold for many minutes when
 	// Chrome is struggling, and every event that arrived in the meantime was
 	// both handled live and then replayed a second time once it finished.
-dispatchCachedEvents();
+dispatchCachedEvents(loaded);

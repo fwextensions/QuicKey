@@ -69,12 +69,17 @@ describe("sw.js event caching", () => {
 			["activated", 8],
 		]);
 
-			// the caching listeners detached themselves, so only the real
-			// handlers remain and a new event is neither cached nor doubled
-		expect(chrome.tabs.onActivated.listenerCount()).toBe(1);
+			// the placeholders stay attached, so Chrome keeps each event's
+			// wake-up registration, but a new event is neither cached nor
+			// doubled
+		expect(chrome.tabs.onActivated.listenerCount()).toBe(2);
 
 		chrome.tabs.onActivated.dispatch({ tabId: 9, windowId: 1 });
 
 		expect(replayed.slice(3)).toEqual([["activated", 9]]);
+
+			// except onCommand's, which has to go so the toolbar menu can get
+			// the shortcut keys while it's open
+		expect(chrome.commands.onCommand.listenerCount()).toBe(1);
 	});
 });
