@@ -84,6 +84,11 @@ export default class SearchBox extends React.Component {
 				tabIndex="0"
 				placeholder="Search for a tab title or URL, or type / for more options"
 				spellCheck={false}
+					// Chrome ignores autocomplete="off" when its heuristics
+					// decide a field could take an address or email, but it
+					// won't offer address autofill on a field whose token it
+					// doesn't recognize, so use a made-up one
+				autoComplete="quickey-search"
 				autoFocus={true}
 				value={query}
 				forceUpdate={forceUpdate}
