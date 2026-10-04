@@ -20,7 +20,13 @@ globalThis.DEBUG ??= !("update_url" in chrome.runtime.getManifest());
 	// that starts while the popup holds control never writes the badge, so it
 	// would otherwise wipe out the tab count the popup put in the title.
 if (globalThis.DEBUG) {
-	globalThis.workerStartMarker = `(worker started ${new Date().toLocaleTimeString()})`;
+		// include the date, since a stamp from a previous day's launch would
+		// otherwise look like it's from today
+	const now = new Date();
+	const date = now.toLocaleDateString("en-US",
+		{ month: "2-digit", day: "2-digit", year: "numeric" });
+
+	globalThis.workerStartMarker = `(worker started ${date} ${now.toLocaleTimeString()})`;
 	chrome.action.getTitle({})
 		.then((title) => chrome.action.setTitle({
 			title: `${title.replace(/ \(worker started [^)]*\)$/, "")} ${globalThis.workerStartMarker}`
