@@ -38,6 +38,7 @@ const DefaultSettings = {
 export default class Tracker {
 	constructor({
 		id,
+		posthog = {},
 		settings = {},
 		sendPageview = true,
 		enabled = true })
@@ -60,6 +61,7 @@ export default class Tracker {
 			mergedSettings.persistentEventParameters ?? {};
 
 		this.posthog = createPostHogClient({
+			...posthog,
 			distinctID: mergedSettings.client_id,
 			superProperties: {
 				...posthogProperties,

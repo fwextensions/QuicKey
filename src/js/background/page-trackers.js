@@ -2,9 +2,16 @@ import Tracker from "./tracker";
 import { IsEdge } from "./constants";
 
 
-const TrackerID = IsEdge
+const GA4ID = IsEdge
 	? "G-C4JVSJ09QQ"
 	: "G-Y6PNZ406H1";
+	// the QuicKey project's API key, which is public and safe to ship in the
+	// bundle, like the GA IDs above.  use https://eu.i.posthog.com for a
+	// project hosted in the EU region.
+const PostHogSettings = {
+	apiKey: "phc_9xd4G5AYHtZCBizFaVnQRsguCsDTTPmX0Sp0sQW20lN",
+	host: "https://us.i.posthog.com"
+};
 const ClientIDKey = "clientID";
 
 
@@ -23,7 +30,8 @@ const createTracker = await (async () => {
 	}
 
 	return (name) => new Tracker({
-		id: TrackerID,
+		id: GA4ID,
+		posthog: PostHogSettings,
 		name,
 		settings: {
 			client_id,
