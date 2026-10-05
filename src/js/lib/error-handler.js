@@ -64,7 +64,15 @@ function handleError(
 			// useful amount of the stack fits.
 		globalThis.DEBUG &&
 			console.error(new Date().toLocaleString(), description);
-		tracker.exception(description, true);
+			// pass the original error too, so PostHog gets its real type and
+			// stack frames rather than our prefixed description.  an error
+			// event may not have an error object, but it still has the message
+			// and location.
+		const source = event.type == "unhandledrejection"
+			? reason
+			: (event.error ?? event);
+
+		tracker.exception(description, true, source);
 
 		if (event.preventDefault) {
 			event.preventDefault();

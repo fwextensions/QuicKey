@@ -1,5 +1,6 @@
 import ga4mp from "@/lib/ga4mp";
 import { createPostHogClient } from "@/lib/posthog";
+import { createExceptionList } from "@/lib/exception-list";
 
 
 	// GA event names that PostHog has native equivalents for, which light
@@ -90,30 +91,12 @@ export default class Tracker {
 
 	send(
 		event,
-		params)
+		params,
+		posthogParams = params)
 	{
 		if (this.enabled) {
 			this.ga4.trackEvent(event, params);
-
-			const posthogEvent = PostHogEventNames[event] ?? event;
-			let posthogParams = params;
-
-			if (posthogEvent === "$exception") {
-					// PostHog's error tracking UI groups on $exception_list,
-					// so move the potentially long description there instead
-					// of duplicating it in the payload
-				const { description, ...rest } = params ?? {};
-
-				posthogParams = {
-					...rest,
-					$exception_list: [{
-						type: "Error",
-						value: description
-					}]
-				};
-			}
-
-			this.posthog.capture(posthogEvent, posthogParams);
+			this.posthog.capture(PostHogEventNames[event] ?? event, posthogParams);
 		}
 	}
 
@@ -179,9 +162,14 @@ export default class Tracker {
 		}
 	}
 
+		// source is the original error, when what's passed as error is a
+		// description that's already been built from it.  GA gets the
+		// description, while PostHog gets the type, message and stack frames
+		// parsed from the source, which its error tracking groups issues on.
 	exception(
 		error,
-		fatal)
+		fatal,
+		source = error)
 	{
 		let description;
 
@@ -208,6 +196,10 @@ export default class Tracker {
 			this.send("exception", {
 				description: description,
 				fatal: Boolean(fatal)
+			}, {
+				fatal: Boolean(fatal),
+					// fatal is only passed for errors that nothing caught
+				$exception_list: createExceptionList(source, { handled: !fatal })
 			});
 		} catch (e) {
 			DEBUG && console.error("Calling tracker.exception() failed.", e);

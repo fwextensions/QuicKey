@@ -88,6 +88,22 @@ describe("error handler reporting", () => {
 		expect(description).not.toContain("chrome-extension://");
 	});
 
+		// PostHog parses the type and stack frames from the original error
+		// rather than from the prefixed description GA gets
+	it("passes the original error along with the description", async () => {
+		const error = new TypeError("boom");
+
+		await reject(error);
+		await handlers.error({
+			type: "error",
+			error,
+			preventDefault: vi.fn(),
+		});
+
+		expect(exception.mock.calls[0][2]).toBe(error);
+		expect(exception.mock.calls[1][2]).toBe(error);
+	});
+
 	it("marks the report fatal, which is how GA tells these from caught errors", async () => {
 		await reject(new Error("boom"));
 
