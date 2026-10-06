@@ -52,8 +52,12 @@ export function createPostHogClient({
 				timestamp: new Date().toISOString()
 			})
 		})
-				// analytics must never break the extension
-			.catch(error => globalThis.DEBUG && console.error("PostHog capture failed", error));
+				// analytics must never break the extension.  a send fails now
+				// and then for reasons outside our control, like the network
+				// being down when the worker wakes, so log it like ga4mp.js
+				// does.  console.error() would add it to the extension's
+				// errors page as if it were a bug in QuicKey.
+			.catch(error => globalThis.DEBUG && console.log("PostHog capture failed", error));
 	}
 
 
