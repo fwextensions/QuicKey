@@ -245,3 +245,8 @@ chrome.runtime.getContexts({ contextTypes: [chrome.runtime.ContextType.TAB] })
 	});
 
 handleStartup({ storage, toolbarIcon, tracker, installedPromise });
+
+	// every listener is registered now, so tell sw.js to stop caching events
+	// and replay the ones that arrived while the top-level awaits in the
+	// modules above were pending
+globalThis.backgroundLoaded?.();

@@ -64,6 +64,13 @@ function cacheEvents(
 		const listener = (...eventArgs) => {
 				// after the replay, this is just a placeholder
 			if (cache) {
+					// background.js can sit in a top-level await for minutes
+					// when the storage lock is held, so drop anything that's
+					// already too old to replay, rather than collecting every
+					// tab event in the meantime
+				const cutoff = Date.now() - MaxCachedEventAge;
+
+				cache = cache.filter(([, , time]) => time >= cutoff);
 				cache.push([eventName, eventArgs, Date.now()]);
 				LoggedEvents.has(eventName) && log("sw caught:", eventName);
 			}
@@ -79,13 +86,18 @@ function cacheEvents(
 	{
 		const events = cache;
 
+		if (!events) {
+				// already dispatched
+			return;
+		}
+
 			// stop caching, but leave the listeners attached.  Chrome drops an
 			// event's wake-up registration when a worker removes the last
 			// listener for it, and then that event never starts the worker
 			// again, until something like devtools does.  removing these after
 			// background.js threw on import, before adding its own listeners,
 			// wiped every registration but the one an earlier module had made,
-			// and the shortcuts, tab events and onStartup all went dead.
+			// causing the shortcuts, tab events and onStartup to all go dead.
 		cache = null;
 
 		if (!loaded) {
@@ -131,22 +143,28 @@ const dispatchCachedEvents = cacheEvents([
 	"windows.onFocusChanged",
 ]);
 
-let loaded = false;
+	// background.js calls this once all of its listeners are registered, and
+	// from then on every event reaches a real handler, so stop caching and
+	// replay the backlog.  importScripts() returning isn't that point: the
+	// bundle is wrapped in an async iife for the modules that use top-level
+	// await (page-trackers.js, popup-window.js), so everything after the first await,
+	// including every listener in background.js, registers asynchronously.
+	// replaying when the import returned removed the onCommand placeholder
+	// before the real listener existed, so the shortcut that woke the worker
+	// went nowhere, and only the second press opened the popup.
+	//
+	// it's also not after startup's storage task: that task needs the storage
+	// lock, which the popup can hold for many minutes when Chrome is
+	// struggling, and every event that arrived in the meantime was both
+	// handled live and then replayed a second time once it finished.
+globalThis.backgroundLoaded = () => dispatchCachedEvents(true);
 
 try {
 	importScripts("./background.js");
-	loaded = true;
 } catch (error) {
 	console.error(error);
 		// the console is gone once the worker stops, so keep a record.  the
 		// stack says which module threw.
 	log("background.js failed to load:", error?.stack || String(error));
+	dispatchCachedEvents(false);
 }
-
-	// background.js registers all of its listeners while it's evaluated, so
-	// from here on every event reaches a real handler.  stop caching and replay
-	// the backlog now, rather than after startup's storage task: that task
-	// needs the storage lock, which the popup can hold for many minutes when
-	// Chrome is struggling, and every event that arrived in the meantime was
-	// both handled live and then replayed a second time once it finished.
-dispatchCachedEvents(loaded);
