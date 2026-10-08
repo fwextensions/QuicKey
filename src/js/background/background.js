@@ -50,8 +50,14 @@ function delay(
 
 const ports = {};
 //let startingUp = false;
+	// handleStartup() reads the reason synchronously to decide whether this
+	// is a cold start, and waits on the promise for the rest of the details
+let installReason = null;
 let installedPromise = new Promise(resolve => {
-	chrome.runtime.onInstalled.addListener(details => resolve(details));
+	chrome.runtime.onInstalled.addListener(details => {
+		installReason = details.reason;
+		resolve(details);
+	});
 });
 
 
@@ -181,10 +187,6 @@ DEBUG && console.log("== onConnect", port.name, state.startingUp);
 		if (!closedByEsc && Date.now() - connectTime < MaxPopupLifetime) {
 				// this was a double-press of alt-Q, so toggle the tabs
 			toggleRecentTabs();
-		} else {
-				// send a background "pageview", since the popup is now closed,
-				// so that GA will track the time the popup was open
-			tracker.pageview();
 		}
 	});
 });
@@ -244,14 +246,15 @@ chrome.runtime.getContexts({ contextTypes: [chrome.runtime.ContextType.TAB] })
 		}
 	});
 
-	// onStartup sets startingUp when sw.js replays it at the end of this
-	// module, which is before handleStartup() reaches the point where it
-	// checks, since that waits on storage first
+	// onInstalled and onStartup set these when sw.js replays them at the end
+	// of this module, which is before handleStartup() reaches the point where
+	// it checks, since that waits on storage first
 handleStartup({
 	storage,
 	toolbarIcon,
 	tracker,
 	installedPromise,
+	getInstallReason: () => installReason,
 	isBrowserStartup: () => state.startingUp
 });
 

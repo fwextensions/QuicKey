@@ -4,9 +4,8 @@ import { createExceptionList } from "@/lib/exception-list";
 
 
 	// GA event names that PostHog has native equivalents for, which light
-	// up its built-in web analytics and error tracking UIs
+	// up its built-in error tracking UI
 const PostHogEventNames = {
-	page_view: "$pageview",
 	exception: "$exception"
 };
 const PathPattern = /chrome-extension:\/\/[^\n]+\//g;
@@ -41,7 +40,6 @@ export default class Tracker {
 		id,
 		posthog = {},
 		settings = {},
-		sendPageview = true,
 		enabled = true })
 	{
 		if (!id || typeof id !== "string") {
@@ -68,10 +66,6 @@ export default class Tracker {
 			}
 		});
 		this.enabled = enabled;
-
-		if (sendPageview) {
-			this.pageview();
-		}
 	}
 
 	enable()
@@ -133,11 +127,6 @@ export default class Tracker {
 		}
 
 		this.send(eventName, params);
-	}
-
-	pageview()
-	{
-		this.send("page_view");
 	}
 
 	timing(

@@ -14,6 +14,7 @@ const CurrentVersion = "2.0.2";
 function makeDeps({
 	lastUsedVersion,
 	installedWith,
+	installReason = null,
 	browserStartup = false } = {})
 {
 	const data = { lastUsedVersion, colorScheme: "dark" };
@@ -46,6 +47,7 @@ function makeDeps({
 			installedPromise: installedWith
 				? Promise.resolve(installedWith)
 				: new Promise(() => {}),
+			getInstallReason: () => installReason,
 			isBrowserStartup: () => browserStartup,
 		},
 	};
@@ -91,6 +93,30 @@ describe("startup", () => {
 	});
 
 	it("always reports the load time on an install or update", async () => {
+		const { deps } = makeDeps({ lastUsedVersion: "2.0.1", installReason: "update" });
+
+		vi.spyOn(Math, "random").mockReturnValue(0.99);
+		handleStartup(deps);
+		await flush();
+
+		expect(deps.tracker.timing).toHaveBeenCalledWith("loading", "background-loaded",
+			expect.any(Number), { start_type: "update" });
+	});
+
+		// reloading an unpacked build fires onInstalled as an update, but
+		// leaves the version unchanged
+	it("treats a reload with the same version as an update", async () => {
+		const { deps } = makeDeps({ lastUsedVersion: CurrentVersion, installReason: "update" });
+
+		vi.spyOn(Math, "random").mockReturnValue(0.99);
+		handleStartup(deps);
+		await flush();
+
+		expect(deps.tracker.timing).toHaveBeenCalledWith("loading", "background-loaded",
+			expect.any(Number), { start_type: "update" });
+	});
+
+	it("falls back to the version change if onInstalled was missed", async () => {
 		const { deps } = makeDeps({ lastUsedVersion: "2.0.1" });
 
 		vi.spyOn(Math, "random").mockReturnValue(0.99);
@@ -98,7 +124,7 @@ describe("startup", () => {
 		await flush();
 
 		expect(deps.tracker.timing).toHaveBeenCalledWith("loading", "background-loaded",
-			expect.any(Number), { start_type: "install-or-update" });
+			expect.any(Number), { start_type: "update" });
 	});
 
 	it("always reports the load time on a browser startup", async () => {

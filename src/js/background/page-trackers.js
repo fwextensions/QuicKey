@@ -44,8 +44,7 @@ const createTracker = await (async () => {
 				version,
 				installType
 			}
-		},
-		sendPageview: false
+		}
 	});
 })();
 

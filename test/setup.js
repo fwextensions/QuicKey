@@ -41,7 +41,6 @@ vi.stubGlobal("chrome", createChromeFake());
 vi.mock("@/background/page-trackers", () => {
 	const noopTracker = {
 		event: () => {},
-		pageview: () => {},
 		timing: () => {},
 		exception: () => {},
 		set: () => {},

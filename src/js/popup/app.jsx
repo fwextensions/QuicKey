@@ -104,6 +104,11 @@ function notEqual(
 
 export default class App extends React.Component {
 	visible = false;
+		// when the current popup session started, or null while it's hidden
+	sessionStart = null;
+		// set just before an action that will close the popup indirectly,
+		// like focusing a tab, which then closes it via the blur handler
+	pendingCloseReason = null;
 	mode = "tabs";
 	tabsPromise = null;
 	bookmarksPromise = null;
@@ -293,7 +298,15 @@ export default class App extends React.Component {
 			storage.set(() => ({ lastQuery }), "saveLastQuery");
 		});
 
+			// the page going away while a session is open means it was closed
+			// without going through closeWindow().  for the menu, that's
+			// usually it losing focus.  for the popup window, it's the user
+			// clicking its close box, or a close from the background, like
+			// when the hide behavior setting changes.
+		window.addEventListener("pagehide", () => this.endSession("page-closed"));
+
 		this.visible = true;
+		this.startSession();
 		this.countBannerDisplay();
 		this.port = this.props.port;
 		this.port.onMessage.addListener(this.onMessage);
@@ -535,7 +548,7 @@ export default class App extends React.Component {
 		if (!searchBoxText || this.settings[k.EscBehavior.Key] == k.EscBehavior.Close) {
 				// pressing esc in an empty field should close the popup, or
 				// if the user checked the always close option
-			this.closeWindow(true, await this.getActiveTab());
+			this.closeWindow(true, await this.getActiveTab(), "esc");
 		} else {
 			const searchBoxTextLC = searchBoxText.toLowerCase();
 
@@ -671,7 +684,7 @@ export default class App extends React.Component {
 				this.props.tracker.event(this.mode, "open");
 			}
 
-			await this.closeWindow(false, tabOrWindow);
+			await this.closeWindow(false, tabOrWindow, "open");
 		}
 	};
 
@@ -705,6 +718,9 @@ export default class App extends React.Component {
 					// activation event will get tracked
 				await this.sendMessage("stopNavigatingRecents");
 			}
+
+				// focusing the tab's window blurs the popup, which closes it
+			this.pendingCloseReason = "select";
 
 				// bring the tab's window forward *before* focusing the tab, since
 				// activating the window can sometimes put keyboard focus on the
@@ -857,7 +873,7 @@ export default class App extends React.Component {
 
 					// focusing the tab doesn't close the menu in FF, so
 					// close it explicitly just in case
-				this.closeWindow();
+				this.closeWindow(false, undefined, "move");
 
 // TODO: this is only needed if we don't focus the tab after moving it
 //					return this.loadTabs()
@@ -1005,6 +1021,7 @@ export default class App extends React.Component {
 			// the display the window was created for.
 		if (!this.visible) {
 			this.countBannerDisplay();
+			this.startSession();
 		}
 
 			// set visible before calling loadTabs(), since that will call
@@ -1045,9 +1062,11 @@ export default class App extends React.Component {
 
 	closeWindow(
 		closedByEsc,
-		focusedTabOrWindow)
+		focusedTabOrWindow,
+		reason = "other")
 	{
 		this.ignoreNextBlur = true;
+		this.endSession(reason);
 
 // TODO: if the popup has control but the background is loaded, do we still need to send the message?
 		if (closedByEsc && !control.isHeld() && this.port) {
@@ -1100,10 +1119,42 @@ export default class App extends React.Component {
 	}
 
 
+		// the popup window is hidden and reused rather than reloaded, so its
+		// page load doesn't mark when it's opened.  instead, time each stretch
+		// between showing and hiding it, or between the menu opening and
+		// closing, and send that as one event.  this replaces the old pair of
+		// pageviews that GA was supposed to infer the time from.
+	startSession()
+	{
+		this.sessionStart = performance.now();
+		this.pendingCloseReason = null;
+	}
+
+
+	endSession(
+		reason)
+	{
+		if (this.sessionStart !== null) {
+				// a session under MaxPopupLifetime in background.js is a
+				// double-press of the shortcut to toggle tabs, rather than the
+				// user looking at the list
+			this.props.tracker.event("popup-session", {
+				ui: this.props.isPopup ? "popup" : "menu",
+				ms: Math.round(performance.now() - this.sessionStart),
+				reason: this.pendingCloseReason ?? reason
+			});
+			this.sessionStart = null;
+		}
+
+		this.pendingCloseReason = null;
+	}
+
+
 	reopenWindow()
 	{
 			// ignore the blur event triggered by closing the popup
 		this.ignoreNextBlur = true;
+		this.endSession("reopen");
 			// pass false so that this message is sent to the background rather
 			// than being short-circuited to our onMessage handler, since the
 			// background needs to manage the closing and reopening of the popup
@@ -1224,7 +1275,7 @@ export default class App extends React.Component {
 						// doesn't interpret a quick open and close as a
 						// toggle recents action.  closeWindow also sets
 						// navigatingRecents to false.
-					await this.closeWindow(true, selectedItem);
+					await this.closeWindow(true, selectedItem, "select");
 
 						// tell the background to add the newly focused tab
 						// to recents immediately so the user could quickly
@@ -1296,7 +1347,7 @@ export default class App extends React.Component {
 			// pass true on Mac to make sure the popup hides behind
 			// something, since creating a new options tab doesn't seem to
 			// blur the popup.
-		this.closeWindow(k.IsMac, optionsTab);
+		this.closeWindow(k.IsMac, optionsTab, "options");
 		this.props.tracker.event("extension", "open-options");
 	};
 
@@ -1377,7 +1428,7 @@ export default class App extends React.Component {
 				// pass true to getActiveTab() so it ignores the fact that
 				// the popup is still visible, since we want to query to get
 				// the tab that was just focused, which we want to hide behind.
-			this.closeWindow(false, await this.getActiveTab(true));
+			this.closeWindow(false, await this.getActiveTab(true), "blur");
 		}
 
 		this.ignoreNextBlur = false;

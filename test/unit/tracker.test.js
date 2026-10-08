@@ -29,7 +29,7 @@ function sentDescriptions()
 
 beforeEach(() => {
 	vi.clearAllMocks();
-	tracker = new Tracker({ id: "G-TEST", sendPageview: false });
+	tracker = new Tracker({ id: "G-TEST" });
 });
 
 

@@ -17,6 +17,7 @@ export default function handleStartup({
 	toolbarIcon,
 	tracker,
 	installedPromise,
+	getInstallReason = () => null,
 	isBrowserStartup = () => false })
 {
 	let lastUsedVersion;
@@ -43,15 +44,19 @@ export default function handleStartup({
 			: undefined;
 	}, "handleStartup")
 		.then(() => {
-				// a changed version means this is an install or an update.
-				// there used to be a pageview here too, from when MV2's
-				// background page loaded once per browser session, but under
-				// MV3 it just duplicated this event on every wake-up.
-			const startType = lastUsedVersion !== k.Version
-				? "install-or-update"
-				: isBrowserStartup()
-					? "browser-startup"
-					: "wakeup";
+				// onInstalled's reason is "install", "update" or
+				// "chrome_update".  it also fires as "update" when an unpacked
+				// build is reloaded, which doesn't change the version, so check
+				// it first.  the version check is a fallback in case the event
+				// was missed.  there used to be a pageview here too, from when
+				// MV2's background page loaded once per browser session, but
+				// under MV3 it just duplicated this event on every wake-up.
+			const startType = getInstallReason()
+				?? (lastUsedVersion !== k.Version
+					? "update"
+					: isBrowserStartup()
+						? "browser-startup"
+						: "wakeup");
 
 			if (startType !== "wakeup" || Math.random() < WakeupSampleRate) {
 					// include the type, so a count of these can be scaled

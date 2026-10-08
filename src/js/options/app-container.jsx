@@ -60,7 +60,9 @@ class OptionsAppContainer extends React.Component {
 				// time the options page is opened
 			return { lastSeenOptionsVersion: storage.version };
 		}, "markOptionsSeen");
-		this.tracker.pageview();
+			// named to match popup-loaded and background-loaded, rather than
+			// a generic pageview
+		this.tracker.timing("loading", "options-loaded", performance.now());
 	}
 
 
