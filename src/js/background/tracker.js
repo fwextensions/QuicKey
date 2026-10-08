@@ -143,12 +143,14 @@ export default class Tracker {
 	timing(
 		category,
 		name,
-		value)
+		value,
+		params = {})
 	{
 		const roundedValue = Math.round(value);
 
 		if (category == "loading") {
 			this.send(name, {
+				...params,
 				event_category: category,
 				ms: roundedValue
 			});

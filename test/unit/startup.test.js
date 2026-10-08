@@ -13,7 +13,8 @@ const CurrentVersion = "2.0.2";
 
 function makeDeps({
 	lastUsedVersion,
-	installedWith } = {})
+	installedWith,
+	browserStartup = false } = {})
 {
 	const data = { lastUsedVersion, colorScheme: "dark" };
 	const writes = [];
@@ -36,7 +37,6 @@ function makeDeps({
 			},
 			toolbarIcon: { setColorScheme: vi.fn() },
 			tracker: {
-				pageview: vi.fn(),
 				timing: vi.fn(),
 				event: vi.fn(),
 				exception: vi.fn(),
@@ -46,6 +46,7 @@ function makeDeps({
 			installedPromise: installedWith
 				? Promise.resolve(installedWith)
 				: new Promise(() => {}),
+			isBrowserStartup: () => browserStartup,
 		},
 	};
 }
@@ -87,6 +88,46 @@ describe("startup", () => {
 			// this runs on every worker cold start
 		expect(writes).toEqual([]);
 		expect(deps.tracker.event).not.toHaveBeenCalled();
+	});
+
+	it("always reports the load time on an install or update", async () => {
+		const { deps } = makeDeps({ lastUsedVersion: "2.0.1" });
+
+		vi.spyOn(Math, "random").mockReturnValue(0.99);
+		handleStartup(deps);
+		await flush();
+
+		expect(deps.tracker.timing).toHaveBeenCalledWith("loading", "background-loaded",
+			expect.any(Number), { start_type: "install-or-update" });
+	});
+
+	it("always reports the load time on a browser startup", async () => {
+		const { deps } = makeDeps({ lastUsedVersion: CurrentVersion, browserStartup: true });
+
+		vi.spyOn(Math, "random").mockReturnValue(0.99);
+		handleStartup(deps);
+		await flush();
+
+		expect(deps.tracker.timing).toHaveBeenCalledWith("loading", "background-loaded",
+			expect.any(Number), { start_type: "browser-startup" });
+	});
+
+		// the worker wakes constantly, so routine wake-ups are only sampled
+	it("reports the load time on only a sample of plain wake-ups", async () => {
+		const skipped = makeDeps({ lastUsedVersion: CurrentVersion });
+		const sampled = makeDeps({ lastUsedVersion: CurrentVersion });
+		const random = vi.spyOn(Math, "random");
+
+		random.mockReturnValue(0.5);
+		handleStartup(skipped.deps);
+		await flush();
+		random.mockReturnValue(0.001);
+		handleStartup(sampled.deps);
+		await flush();
+
+		expect(skipped.deps.tracker.timing).not.toHaveBeenCalled();
+		expect(sampled.deps.tracker.timing).toHaveBeenCalledWith("loading", "background-loaded",
+			expect.any(Number), { start_type: "wakeup" });
 	});
 
 	it("opens the options page with the welcome message when updating from 1.8", async () => {

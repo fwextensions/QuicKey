@@ -1,5 +1,11 @@
 import * as k from "./constants";
 
+	// the worker restarts every time Chrome wakes it, which made the startup
+	// events about 90% of everything sent to analytics.  so report the load
+	// time on every cold start, where it's visible to the user, but only on a
+	// small sample of routine wake-ups, which is still plenty for a baseline.
+const WakeupSampleRate = 0.01;
+
 	// the tail of the background's boot sequence: record the running version,
 	// restore the toolbar icon for the last-seen color scheme, and react to how this
 	// startup came about (fresh install, extension update, plain worker
@@ -10,7 +16,8 @@ export default function handleStartup({
 	storage,
 	toolbarIcon,
 	tracker,
-	installedPromise })
+	installedPromise,
+	isBrowserStartup = () => false })
 {
 	let lastUsedVersion;
 
@@ -36,8 +43,22 @@ export default function handleStartup({
 			: undefined;
 	}, "handleStartup")
 		.then(() => {
-			tracker.pageview();
-			tracker.timing("loading", "background-loaded", performance.now());
+				// a changed version means this is an install or an update.
+				// there used to be a pageview here too, from when MV2's
+				// background page loaded once per browser session, but under
+				// MV3 it just duplicated this event on every wake-up.
+			const startType = lastUsedVersion !== k.Version
+				? "install-or-update"
+				: isBrowserStartup()
+					? "browser-startup"
+					: "wakeup";
+
+			if (startType !== "wakeup" || Math.random() < WakeupSampleRate) {
+					// include the type, so a count of these can be scaled
+					// back up by the sample rate
+				tracker.timing("loading", "background-loaded", performance.now(),
+					{ start_type: startType });
+			}
 DEBUG && console.log("%c%s", "background: darkgreen; color: white;", "====== startup done ======", performance.now());
 		})
 			// pause the chain to wait for the installed promise to resolve,

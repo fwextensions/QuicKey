@@ -244,7 +244,16 @@ chrome.runtime.getContexts({ contextTypes: [chrome.runtime.ContextType.TAB] })
 		}
 	});
 
-handleStartup({ storage, toolbarIcon, tracker, installedPromise });
+	// onStartup sets startingUp when sw.js replays it at the end of this
+	// module, which is before handleStartup() reaches the point where it
+	// checks, since that waits on storage first
+handleStartup({
+	storage,
+	toolbarIcon,
+	tracker,
+	installedPromise,
+	isBrowserStartup: () => state.startingUp
+});
 
 	// every listener is registered now, so tell sw.js to stop caching events
 	// and replay the ones that arrived while the top-level awaits in the
