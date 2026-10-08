@@ -19,8 +19,7 @@ const ClientIDKey = "clientID";
 	// that then returns a function that creates trackers with standard settings.
 	// this is a workaround so that createTracker() doesn't have to be async.
 const createTracker = await (async () => {
-	const { version: dimension1, installType } = await chrome.management.getSelf();
-	const dimension2 = installType === "development" ? "D" : "P";
+	const { version, installType } = await chrome.management.getSelf();
 	let { [ClientIDKey]: client_id } = await chrome.storage.local.get(ClientIDKey);
 
 	if (!client_id) {
@@ -38,8 +37,12 @@ const createTracker = await (async () => {
 			persistentEventParameters: {
 				page_location: `/${name}.html`,
 				page_title: `/${name}`,
-				dimension1,
-				dimension2
+					// these names match the "Extension version" and "Install
+					// type" custom dimensions registered in GA4.  installType
+					// is "development" for unpacked builds, which is how dev
+					// events are filtered out.
+				version,
+				installType
 			}
 		},
 		sendPageview: false
