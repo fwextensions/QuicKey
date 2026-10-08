@@ -281,7 +281,7 @@ async function openPopupWindow(
 	if (sendPopupMessage("modifySelected", { direction: 1 })) {
 			// an error was returned from sending the message, so close
 			// the popup
-		return popupWindow.close();
+		return popupWindow.close("modify-selected-failed");
 	}
 }
 

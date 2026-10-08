@@ -180,7 +180,7 @@ DEBUG && console.log("== onConnect", port.name, state.startingUp);
 		if (port.name == "popup") {
 // TODO: remove popupWindow.isOpen?
 //			if (popupWindow.isOpen) {
-				popupWindow.close();
+				popupWindow.close("popup-port-disconnected");
 //			}
 		}
 

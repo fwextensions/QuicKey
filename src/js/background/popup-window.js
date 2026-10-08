@@ -149,7 +149,7 @@ async function create(
 	alignment)
 {
 		// close any existing window, in case one was still open
-	await close();
+	await close("create");
 
 	const propsJSON = JSON.stringify(props);
 		// get the full URL with the extension ID in it so that we can
@@ -396,7 +396,7 @@ async function hideInTab()
 	} else {
 			// there's no window in which to stash the tab, so just
 			// close it
-		await close();
+		await close("hide-in-tab-no-window");
 		isHiddenInTab = false;
 	}
 }
@@ -478,7 +478,7 @@ async function hide(
 					.map(key => [key, targetWindow[key]]));
 
 				// we couldn't move the window for some reason, so close it
-			await close();
+			await close("hide-failed");
 		}
 	}
 }
@@ -539,12 +539,30 @@ async function resize(
 	// the cached windowID at all -- it queries for the popup tabs by URL and
 	// removes those -- so a stale ID can't wedge it.  windowID is only read to
 	// decide whether to emit "close".
-async function close()
+	//
+	// reason is logged so a background-initiated close can be told apart from
+	// the user clicking the close box, which never comes through here.
+async function close(
+	reason = "unknown")
 {
 		// look for any open popup tabs.  there should only ever be one, but
 		// at least one time, two got opened, so get them all to be safe.
 	const openTabs = await chrome.tabs.query({ url: `${PopupURL}*` });
 	const originalWindowID = windowID;
+
+	if (openTabs.length) {
+			// TEMPORARY INSTRUMENTATION -- when the popup page holds control,
+			// this runs in the page itself, and removing the tabs below kills
+			// it.  log() only queues a storage write, so without waiting, this
+			// line and anything logged just before it, like hide()'s "closing
+			// it", die with the page.  cap the wait in case storage is stalled.
+		await Promise.race([
+			log("popup close:", reason,
+				"tabs:", openTabs.map(({ id }) => id),
+				"windowID:", windowID, "isVisible:", isVisible),
+			new Promise(resolve => setTimeout(resolve, 1000))
+		]);
+	}
 
 		// set the IDs to 0 before calling remove(), so that if someone
 		// calls isOpen() before the tab is fully closed, isOpen will
@@ -625,7 +643,7 @@ export default {
 
 				// do this after updating hideBehavior, since we're not
 				// awaiting the call
-			close();
+			close("hide-behavior-changed");
 		}
 	},
 
