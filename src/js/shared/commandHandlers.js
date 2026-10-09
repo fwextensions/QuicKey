@@ -164,25 +164,46 @@ async function shouldIgnoreCommands()
 	// numbers each command in the log, so its later steps can be matched up
 let commandCount = 0;
 
+	// a command older than this when it gets its turn is dropped rather than
+	// run.  when chrome.storage stalls, the storage lock can be held for 30 s
+	// or more, and every toggle queued behind it would then flip tabs out from
+	// under the user long after they gave up, the same hazard sw.js guards
+	// against with MaxCachedEventAge for events replayed after a worker start.
+const MaxCommandAge = 2000;
+
 	// log a command's progress through the queue, with the time since it
 	// arrived, so a shortcut that seems to do nothing shows whether it was
 	// never received, ignored, or stuck waiting on the previous command or a
-	// lock
+	// lock.  the age is measured from receivedTime, not from being queued,
+	// since handleCommand() can itself wait seconds on isMenuOpen() before
+	// queuing.  fn gets a function that returns whether the command is now
+	// too old, so it can bail out before a late side effect.
 function trackCommand(
 	command,
-	fn)
+	fn,
+	receivedTime = Date.now())
 {
 	const id = ++commandCount;
-	const start = Date.now();
-	const elapsed = () => `${Date.now() - start} ms`;
+	const elapsed = () => `${Date.now() - receivedTime} ms`;
+	const isStale = () => {
+		const stale = Date.now() - receivedTime > MaxCommandAge;
 
-	log(`command #${id} queued:`, command);
+		stale && log(`command #${id} dropped after`, elapsed());
+
+		return stale;
+	};
+
+	log(`command #${id} queued:`, command, "after", elapsed());
 
 	return async () => {
 		log(`command #${id} started after`, elapsed());
 
+		if (isStale()) {
+			return;
+		}
+
 		try {
-			return await fn();
+			return await fn(isStale);
 		} finally {
 			log(`command #${id} finished after`, elapsed());
 		}
@@ -192,6 +213,8 @@ function trackCommand(
 async function handleCommand(
 	command)
 {
+	const receivedTime = Date.now();
+
 	log("command received:", command, "menuOpen:", menuOpen);
 
 	if (await shouldIgnoreCommands()) {
@@ -209,7 +232,8 @@ async function handleCommand(
 				// loaded popup to close and open a new one.  rinse and repeat.
 			lastOpenPromise = enqueue(lastOpenPromise,
 				trackCommand(command,
-					() => openPopupWindow(command === FocusPopupCommand)),
+					() => openPopupWindow(command === FocusPopupCommand),
+					receivedTime),
 				handleCommandError);
 			break;
 
@@ -219,12 +243,12 @@ async function handleCommand(
 				trackCommand(command, () => navigateRecents(
 					command === PreviousTabCommand ? -1 : 1,
 					currentWindowLimitRecents
-				)),
+				), receivedTime),
 				handleCommandError);
 			break;
 
 		case ToggleTabsCommand:
-			toggleRecentTabs(true);
+			toggleRecentTabs(true, receivedTime);
 			break;
 	}
 }
@@ -345,7 +369,8 @@ async function navigateRecents(
 	// port disconnects right after connecting, which means the user
 	// double-pressed the open-popup shortcut to switch tabs
 export function toggleRecentTabs(
-	fromShortcut)
+	fromShortcut,
+	receivedTime = Date.now())
 {
 		// we have to wait for the last toggle promise chain to resolve before
 		// starting the next one.  otherwise, if the toggle key is held down,
@@ -358,7 +383,7 @@ export function toggleRecentTabs(
 		// keep the promise chain handling just within this function.
 	const command = fromShortcut ? ToggleTabsCommand : "toggle from double-press";
 
-	lastTogglePromise = enqueue(lastTogglePromise, trackCommand(command, () => Promise.resolve()
+	lastTogglePromise = enqueue(lastTogglePromise, trackCommand(command, (isStale) => Promise.resolve()
 			// if the user navigated to a tab but hasn't waited for the min
 			// dwell time before toggling back, add the current tab before
 			// toggling so it becomes the most recent
@@ -378,7 +403,11 @@ export function toggleRecentTabs(
 			return toolbarIcon.setNormalIcon();
 		})
 		.then(() => log("toggle: pending addTab flushed, toggling"))
-		.then(() => recentTabs.toggle(currentWindowLimitRecents))
+			// the flush above waits on the storage lock, which can be held
+			// for many seconds, so check the age again before switching.
+			// toggle() itself waits on the lock too, so a stall that starts
+			// after this point can still make the switch land late.
+		.then(() => !isStale() && recentTabs.toggle(currentWindowLimitRecents))
 		.then((switched) => {
 			log("toggle: switched:", switched,
 				switched ? "waiting for the activation" : "");

@@ -51,6 +51,7 @@ async function settle()
 
 beforeEach(async () => {
 	vi.resetModules();
+	vi.restoreAllMocks();
 	vi.clearAllMocks();
 	vi.spyOn(console, "error").mockImplementation(() => {});
 	({ toggleRecentTabs } = await import("@/shared/commandHandlers"));
@@ -99,5 +100,45 @@ describe("the toggle queue", () => {
 
 		expect(mocks.toggle).toHaveBeenCalledTimes(3);
 		expect(mocks.exception).toHaveBeenCalledExactlyOnceWith(error);
+	});
+
+		// seen 2026-10-08: chrome.storage stalled and held the storage lock for
+		// 27 s, and four presses queued behind it all flipped tabs 18-46 s late
+	it("drops presses that sat in the queue too long", async () => {
+		let releaseActivation;
+
+		mocks.toggle.mockResolvedValue(true);
+		mocks.flushOrNext.mockReturnValueOnce(
+			new Promise((resolve) => releaseActivation = resolve));
+
+		toggleRecentTabs(true);
+		toggleRecentTabs(true);
+		toggleRecentTabs(true);
+		await settle();
+		expect(mocks.toggle).toHaveBeenCalledTimes(1);
+
+		vi.spyOn(Date, "now").mockReturnValue(Date.now() + 5000);
+		releaseActivation();
+		await settle();
+
+		expect(mocks.toggle).toHaveBeenCalledTimes(1);
+	});
+
+	it("drops a press whose flush stalled past the limit", async () => {
+		let releaseFlush;
+
+		mocks.toggle.mockResolvedValue(false);
+		mocks.flush.mockReturnValueOnce(
+			new Promise((resolve) => releaseFlush = resolve));
+
+		toggleRecentTabs(true);
+		await settle();
+
+		vi.spyOn(Date, "now").mockReturnValue(Date.now() + 5000);
+		releaseFlush();
+		await settle();
+
+		expect(mocks.toggle).not.toHaveBeenCalled();
+		expect(mocks.flushOrNext).not.toHaveBeenCalled();
 	});
 });
