@@ -3,7 +3,7 @@ import {HidePopupBehavior, IsFirefox, PopupInnerHeight, PopupInnerWidth, PopupUR
 import {calcBounds} from "@/background/popup-utils";
 import {popupEmitter} from "@/background/popup-emitter";
 import {connect} from "@/lib/ipc";
-import log from "@/background/persistent-log";
+import log, { flushLog } from "@/background/persistent-log";
 
 
 const {Behind, Tab, Minimize} = HidePopupBehavior;
@@ -553,13 +553,15 @@ async function close(
 	if (openTabs.length) {
 			// TEMPORARY INSTRUMENTATION -- when the popup page holds control,
 			// this runs in the page itself, and removing the tabs below kills
-			// it.  log() only queues a storage write, so without waiting, this
-			// line and anything logged just before it, like hide()'s "closing
-			// it", die with the page.  cap the wait in case storage is stalled.
+			// it.  log() buffers its entries for a second before writing them,
+			// so without flushing and waiting, this line and anything logged
+			// just before it, like hide()'s "closing it", die with the page.
+			// cap the wait in case storage is stalled.
+		log("popup close:", reason,
+			"tabs:", openTabs.map(({ id }) => id),
+			"windowID:", windowID, "isVisible:", isVisible);
 		await Promise.race([
-			log("popup close:", reason,
-				"tabs:", openTabs.map(({ id }) => id),
-				"windowID:", windowID, "isVisible:", isVisible),
+			flushLog(),
 			new Promise(resolve => setTimeout(resolve, 1000))
 		]);
 	}
