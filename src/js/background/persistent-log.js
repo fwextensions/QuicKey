@@ -137,7 +137,8 @@ export async function printLog(
 	const rows = entries.slice(-count).map(({ time, context, message }) => {
 		const date = new Date(time);
 		const day = date.toLocaleDateString("en-CA");
-		const msTime = date.toLocaleTimeString().replace(" ", `.${date.getMilliseconds()} `);
+		const ms = String(date.getMilliseconds()).padStart(3, "0");
+		const msTime = date.toLocaleTimeString().replace(" ", `.${ms} `);
 
 		return `${day} ${msTime}  ${context}  ${message}`;
 	});
