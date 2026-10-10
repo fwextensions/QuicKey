@@ -2,11 +2,12 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { resetContexts, createContext } from "../support/context";
 import popupWindow from "@/background/popup-window";
 
-	// background.js's own handling of the popup and menu ports: a popup that
-	// closes right after opening is a double-press of the open-popup shortcut,
-	// which toggles to the previous tab, unless it was closed with esc.  this
-	// loads the real background.js; window management, the toolbar icon and
-	// the startup sequence are out of scope, so those modules are mocked.
+	// background.js's own handling of the popup and menu ports: a toolbar menu
+	// that closes right after opening is a double-press of its shortcut
+	// (alt-E by default), which toggles to the previous tab, unless it was
+	// closed with esc.  this loads the real background.js; window management,
+	// the toolbar icon and the startup sequence are out of scope, so those
+	// modules are mocked.
 
 vi.mock("@/background/popup-window", () => ({
 	default: {
@@ -106,28 +107,27 @@ beforeEach(() => {
 });
 
 
-describe("popup port lifecycle", () => {
-	it("toggles to the previous tab when the popup closes right after opening", async () => {
+describe("menu port lifecycle", () => {
+	it("toggles to the previous tab when the menu closes right after opening", async () => {
 		const background = await loadBackground();
 
 		await flush();
 
-		const port = makePort("popup");
+		const port = makePort("menu");
 
 		chrome.runtime.onConnect.dispatch(port);
 		port.disconnect();
 		await flush();
 
 		expect(background.modules.recentTabs.toggle).toHaveBeenCalledTimes(1);
-		expect(popupWindow.close).toHaveBeenCalledWith("popup-port-disconnected");
 	});
 
-	it("doesn't toggle when the popup was closed with esc", async () => {
+	it("doesn't toggle when the menu was closed with esc", async () => {
 		const background = await loadBackground();
 
 		await flush();
 
-		const port = makePort("popup");
+		const port = makePort("menu");
 
 		chrome.runtime.onConnect.dispatch(port);
 		port.send("closedByEsc");
@@ -137,9 +137,28 @@ describe("popup port lifecycle", () => {
 		expect(background.modules.recentTabs.toggle).not.toHaveBeenCalled();
 	});
 
-	it("doesn't toggle when the popup stayed open for a while", async () => {
+	it("doesn't toggle when the menu stayed open for a while", async () => {
 		const background = await loadBackground();
 
+		await flush();
+
+		const port = makePort("menu");
+		const now = Date.now();
+
+		chrome.runtime.onConnect.dispatch(port);
+		vi.spyOn(Date, "now").mockReturnValue(now + 1000);
+		port.disconnect();
+		vi.mocked(Date.now).mockRestore();
+		await flush();
+
+		expect(background.modules.recentTabs.toggle).not.toHaveBeenCalled();
+	});
+});
+
+
+describe("popup port lifecycle", () => {
+	it("closes the popup window when its page's port disconnects", async () => {
+		await loadBackground();
 		await flush();
 
 		const port = makePort("popup");
@@ -151,7 +170,7 @@ describe("popup port lifecycle", () => {
 		vi.mocked(Date.now).mockRestore();
 		await flush();
 
-		expect(background.modules.recentTabs.toggle).not.toHaveBeenCalled();
+		expect(popupWindow.close).toHaveBeenCalledExactlyOnceWith("popup-port-disconnected");
 	});
 });
 
