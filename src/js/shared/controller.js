@@ -1,3 +1,5 @@
+import control from "@/shared/control";
+import { serveApi } from "@/shared/api";
 import { createAddTab } from "@/shared/addTab";
 import createTabEventHandlers from "@/shared/tabEventHandlers";
 import createCommandHandlers from "@/shared/commandHandlers";
@@ -63,11 +65,12 @@ export function createController({
 
 
 		// the methods the popup and options pages call on whichever context
-		// holds control.  each takes a single payload object.
+		// holds control.  each takes a single payload object.  add any new
+		// ones to ControllerApiNames in controller-api.js.
 	const api = {
 		getActiveTab: () => state.activeTab,
 
-		executeAddTab: () => {
+		flushAddTab: () => {
 // TODO: this seems to not get called when quickly switching between tabs without waiting for the dwell time to expire and then hitting alt-Q.  the wrong tab is at the top of the list.
 			addTab.flush();
 		},
@@ -76,7 +79,7 @@ export function createController({
 			state.navigatingRecents = false;
 		},
 
-		settingChanged: ({ key, value }) => applySetting(key, value),
+		applySetting: ({ key, value }) => applySetting(key, value),
 	};
 
 
@@ -97,6 +100,7 @@ export function createController({
 			// called once this context holds control
 		start()
 		{
+			serveApi(api);
 			commands.start();
 
 				// update this flag in case the popup gets hidden or closed while
@@ -111,3 +115,20 @@ export function createController({
 	};
 }
 
+
+	// create a controller, add its listeners, and start it once this context
+	// gets control
+export function startController(
+	options)
+{
+	const controller = createController(options);
+
+	controller.listen();
+	control.claimWhenAvailable(() => {
+			// don't return start()'s promise, since a task that returns a
+			// promise gives up control when it settles
+		controller.start();
+	});
+
+	return controller;
+}

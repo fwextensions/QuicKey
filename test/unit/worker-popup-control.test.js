@@ -4,7 +4,7 @@ import popupWindow from "@/background/popup-window";
 import toolbarIcon from "@/background/toolbar-icon";
 
 	// the full worker/popup coordination story, driven through the real
-	// eventController graph (control, controlledEvent, tabEventHandlers,
+	// controller graph (control, controlledEvent, tabEventHandlers,
 	// commandHandlers, recent-tabs, quickey-storage) in two simulated
 	// contexts: a service worker at /background.html and a popup at
 	// /popup.html.  the two module graphs are independent -- each has its own
@@ -61,14 +61,15 @@ async function flush(
 	}
 }
 
-	// stand up one extension context: import the graph, start the event
+	// stand up one extension context: import the graph, start the
 	// controller the way background.js / the popup's init do, and hand back
 	// the modules the tests poke at
 function loadContext(
 	pathname)
 {
 	return createContext(pathname, async () => {
-		const initEventController = (await import("@/shared/eventController")).default;
+		const { startController } = await import("@/shared/controller");
+		const { createControllerClient } = await import("@/shared/controller-api");
 		const control = (await import("@/shared/control")).default;
 		const popupMessages = [];
 		let failNext = false;
@@ -87,12 +88,13 @@ function loadContext(
 				return delivered;
 			},
 		};
-		const { controller, sendMessage } = initEventController({ popupLink });
+		const controller = startController({ popupLink });
 
 		return {
 			control,
 			state: controller.state,
-			sendMessage,
+				// what the popup and options pages use to call the controller
+			client: createControllerClient(() => controller),
 				// the messages the controller sent to the popup, as [name, payload]
 			popupMessages: () => popupMessages,
 				// make the next message to the popup fail to be delivered
@@ -125,7 +127,7 @@ describe("worker alone", () => {
 
 		worker.modules.state.activeTab = { id: 42, url: "https://a.example.com/" };
 
-		const response = await worker.modules.sendMessage("getActiveTab", {}, true);
+		const response = await worker.modules.client.getActiveTab();
 
 		expect(response).toMatchObject({ id: 42 });
 		expect(sendMessageSpy).not.toHaveBeenCalled();
@@ -148,7 +150,7 @@ describe("worker and popup", () => {
 
 		const sendMessageSpy = vi.spyOn(chrome.runtime, "sendMessage");
 
-		await popup.modules.sendMessage("getActiveTab", {}, true);
+		await popup.modules.client.getActiveTab();
 
 		expect(sendMessageSpy).toHaveBeenCalledExactlyOnceWith({ message: "getActiveTab" });
 	});
@@ -201,7 +203,7 @@ describe("worker and popup", () => {
 
 		popup.modules.state.activeTab = { id: 7, url: "https://a.example.com/" };
 
-		const response = await popup.modules.sendMessage("getActiveTab", {}, true);
+		const response = await popup.modules.client.getActiveTab();
 
 		expect(response).toMatchObject({ id: 7 });
 		expect(sendMessageSpy).not.toHaveBeenCalled();
@@ -407,12 +409,12 @@ describe("messages between the popup and the controller", () => {
 			// the options page broadcasts the change, and only the context
 			// that holds control is listening for it
 		chrome.runtime.onMessage.dispatch(
-			{ message: "settingChanged", key: "showTabCount", value: true },
+			{ message: "applySetting", key: "showTabCount", value: true },
 			{},
 			() => {}
 		);
 		chrome.runtime.onMessage.dispatch(
-			{ message: "settingChanged", key: "hidePopupBehavior", value: "tab" },
+			{ message: "applySetting", key: "hidePopupBehavior", value: "tab" },
 			{},
 			() => {}
 		);

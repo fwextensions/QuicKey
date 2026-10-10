@@ -74,9 +74,9 @@ beforeEach(async () => {
 	});
 
 	await createContext("/background.html", async () => {
-		const initEventController = (await import("@/shared/eventController")).default;
+		const { startController } = await import("@/shared/controller");
 
-		initEventController({
+		startController({
 			popupLink: {
 				isPopupConnected: () => false,
 				isMenuConnected: () => false,
