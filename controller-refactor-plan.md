@@ -56,95 +56,84 @@ implementation differs from the design below in these ways:
 
 ## Control flow, before and after
 
-Solid arrows are calls that happen while the worker holds control. Dashed
-arrows are the paths used when the worker has died and the hidden popup page
-has taken control.
+These diagrams leave out the modules and show only how one context calls
+another. Callers are on the left, receivers on the right, and each
+hexagon is a separate way of making a cross-context call, with its own
+conventions. The port's connect and disconnect events and `closedByEsc`
+aren't shown, since they work the same way before and after.
+
+| | Before | After |
+|---|---:|---:|
+| Ways to call across contexts | 6 | 2 |
+| Receivers that dispatch on a message name with `if`/`switch` | 3 | 0 |
+| `control.isHeld()` checks that choose a message path | 3 | 2 |
+| Return conventions | 3 (response, none, truthy = failed) | 1 (a promise) |
 
 ### Before
 
 ```mermaid
-flowchart TB
-    subgraph Options["Options page"]
-        OPT["app-container.jsx"]
-    end
+flowchart LR
+    APP["Popup page"]
+    OPT["Options page"]
+    CW["Worker's handlers"]
+    CP["Popup's handlers,<br/>when it holds control"]
 
-    subgraph Worker["Service worker"]
-        BG["background.js<br/>ports, sendPopupMessage()<br/>onMessage: reopenPopup"]
-        EC_W["eventController.js<br/>MessageTarget"]
-        H_W["commandHandlers.js + tabEventHandlers.js<br/>module-level lets, copies of ports<br/>handlePopupMessage if/else"]
-        ST_W[("state.js")]
-    end
+    M1{{"sendMessage(name, payload, local)<br/>held: local CustomEvent<br/>else: runtime.sendMessage"}}
+    M2{{"raw runtime.sendMessage<br/>settingChanged"}}
+    M3{{"sendMessage(..., local = false)<br/>reopenPopup"}}
+    M4{{"sendPopupMessage() to port<br/>truthy return = failed"}}
+    M5{{"sendPopupMessage() calls<br/>App.onMessage() directly"}}
+    M6{{"popup-window bridge<br/>held: direct, else: ipc"}}
 
-    subgraph Popup["Popup page"]
-        APP["App<br/>sendMessage(name, payload, local)<br/>onMessage switch"]
-        EC_P["eventController.js<br/>MessageTarget"]
-        H_P["commandHandlers.js + tabEventHandlers.js<br/>ports: { popup: {} } dummy"]
-        ST_P[("state.js")]
-    end
+    R1["handlePopupMessage<br/>if/else on the name"]
+    R2["background.js onMessage<br/>if on the name"]
+    R3["App.onMessage<br/>switch on the name"]
+    R4["popupWindow"]
 
-    BG -- "initEventController(ports, sendPopupMessage)" --> EC_W
-    EC_W -- "init(context) copies ports in" --> H_W
-    H_W <--> ST_W
-    BG <--> ST_W
-    H_W -- "sendPopupMessage(name)<br/>truthy return = failed" --> BG
-    BG -- "port.postMessage" --> APP
-    APP -- "port: closedByEsc" --> BG
+    APP --> M1 --> R1
+    OPT --> M2 --> R1
+    APP --> M3 --> R2
+    CW --> M4 --> R3
+    CP --> M5 --> R3
+    APP --> M6 --> R4
 
-    APP -- "sendMessage(..., local = true)" --> EC_P
-    EC_P -- "not held: runtime.sendMessage" --> EC_W
-    EC_W -- "runtime.onMessage" --> H_W
-    APP -- "sendMessage(reopenPopup, local = false)" --> BG
-    OPT -- "runtime.sendMessage(settingChanged)" --> EC_W
-
-    EC_P -. "held: local CustomEvent" .-> H_P
-    OPT -. "runtime.sendMessage(settingChanged)" .-> EC_P
-    H_P -. "sendPopupMessage() calls this.onMessage()" .-> APP
-    H_P <-.-> ST_P
+    classDef mechanism fill:#fde2e2,stroke:#c0392b,color:#000
+    class M1,M2,M3,M4,M5,M6 mechanism
 ```
 
 ### After
 
 ```mermaid
-flowchart TB
-    subgraph Options["Options page"]
-        OPT["app-container.jsx"]
-        OCL["createControllerClient()"]
-    end
+flowchart LR
+    APP["Popup page"]
+    OPT["Options page"]
+    CTRL["Controller, in whichever<br/>context holds control"]
 
-    subgraph Worker["Service worker"]
-        BG["background.js<br/>ports, popupLink<br/>serveApi: reopenPopup"]
-        C_W["controller<br/>state, api, handlers<br/>start(): serveApi(api)"]
-    end
+    B{{"bindApi() / serveApi()<br/>held: direct call<br/>else: remote call"}}
+    N{{"popupLink.notify(name)<br/>resolves to delivered"}}
 
-    subgraph Popup["Popup page"]
-        APP["App"]
-        PAPI["popupApi<br/>modifySelected, showWindow,<br/>tabActivated, stopNavigatingRecents"]
-        PCL["createControllerClient()<br/>bindApi(ControllerApiNames)"]
-        C_P["controller<br/>state, api, handlers"]
-    end
+    R1["controller.api"]
+    R2["background.js<br/>reopenPopup"]
+    R3["popupApi"]
+    R4["popupWindow"]
 
-    BG -- "startController({ popupLink })" --> C_W
-    C_W -- "popupLink.notify(name)<br/>resolves to delivered" --> BG
-    BG -- "port.postMessage" --> PAPI
-    APP -- "port: closedByEsc,<br/>connect / disconnect" --> BG
+    APP --> B
+    OPT --> B
+    B -- "runtime message" --> R1
+    B -- "runtime message,<br/>always to the worker" --> R2
+    B -- "ipc" --> R4
+    CTRL --> N --> R3
 
-    APP --> PCL
-    PCL -- "not held: runtime message" --> C_W
-    APP -- "sendApiMessage(reopenPopup)" --> BG
-    OPT --> OCL
-    OCL -- "runtime message" --> C_W
-
-    APP -- "startController({ popupLink })" --> C_P
-    PCL -. "held: direct call" .-> C_P
-    OCL -. "runtime message" .-> C_P
-    C_P -. "popupLink.notify() calls popupApi" .-> PAPI
+    classDef mechanism fill:#dff3e4,stroke:#1e8449,color:#000
+    class B,N mechanism
 ```
 
-In the "after" diagram, every arrow into a controller lands on its `api`, and
-every arrow out of one goes through `popupLink`. Which context answers is
-decided in one place: `serveApi()` runs only in the context that holds
-control, and `bindApi()` calls the local controller only when this context is
-that holder.
+Everything that calls into the controller, `reopenPopup` or the popup
+window now goes through one helper pair, and everything the controller
+sends to the popup goes through `popupLink`. In both cases the receiver is a
+plain object of methods, so a new call is a new method, not a new branch in
+a dispatcher. The one `isHeld()` check left outside `bindApi()` is the
+`closedByEsc` port message in `App.closeWindow()`.
 
 
 ## Where things stand
