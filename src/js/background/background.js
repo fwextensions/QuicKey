@@ -10,8 +10,6 @@ import { isPopupWindow } from "@/background/popup-utils";
 import handleStartup from "@/background/startup";
 import log from "@/background/persistent-log";
 import initEventController from "@/shared/eventController";
-import { toggleRecentTabs } from "@/shared/commandHandlers";
-import state from "@/shared/state";
 
 if (globalThis.DEBUG) {
 	globalThis.printTabs = recentTabs.print;
@@ -49,7 +47,6 @@ function delay(
 
 
 const ports = {};
-//let startingUp = false;
 	// handleStartup() reads the reason synchronously to decide whether this
 	// is a cold start, and waits on the promise for the rest of the details
 let installReason = null;
@@ -61,27 +58,37 @@ let installedPromise = new Promise(resolve => {
 });
 
 
-	// this returns a function for sending messages *from* the popup, which we
-	// don't need
-initEventController({
-	sendPopupMessage(
+	// how the controller reaches the popup window or the toolbar menu, through
+	// the ports their pages connect when they load
+const popupLink = {
+	isPopupConnected: () => Boolean(ports.popup),
+	isMenuConnected: () => Boolean(ports.menu),
+
+	async notify(
 		message,
 		payload = {})
 	{
 		try {
-			// default to sending the message to the menu if it's open
+				// default to sending the message to the menu if it's open
 			(ports.menu || ports.popup).postMessage({ message, ...payload });
 
-chrome.runtime.lastError && console.log("==== sendPopupMessage after postMessage", chrome.runtime.lastError);
+			if (chrome.runtime.lastError) {
+DEBUG && console.log("==== popupLink.notify() after postMessage", chrome.runtime.lastError);
+				return false;
+			}
 
-			return chrome.runtime.lastError;
+			return true;
 		} catch (error) {
-console.error("==== sendPopupMessage", error.message);
-			return error;
+console.error("==== popupLink.notify()", error.message);
+			return false;
 		}
-	},
-	ports
-});
+	}
+};
+
+	// the sendMessage function this returns is for sending messages *from* the
+	// popup, which we don't need
+const { controller } = initEventController({ popupLink });
+const { state } = controller;
 
 
 	// Chrome fires this well before the session is restored.  Measured on a
@@ -186,7 +193,7 @@ DEBUG && console.log("== onConnect", port.name, state.startingUp);
 
 		if (!closedByEsc && Date.now() - connectTime < MaxPopupLifetime) {
 				// this was a double-press of alt-Q, so toggle the tabs
-			toggleRecentTabs();
+			controller.toggleRecentTabs();
 		}
 	});
 });

@@ -22,7 +22,7 @@ vi.mock("@/background/recent-tabs", () => ({
 }));
 
 vi.mock("@/shared/addTab", () => ({
-	addTab: { flush: mocks.flush, flushOrNext: mocks.flushOrNext },
+	createAddTab: () => ({ flush: mocks.flush, flushOrNext: mocks.flushOrNext }),
 }));
 
 vi.mock("@/background/toolbar-icon", () => ({
@@ -54,7 +54,15 @@ beforeEach(async () => {
 	vi.restoreAllMocks();
 	vi.clearAllMocks();
 	vi.spyOn(console, "error").mockImplementation(() => {});
-	({ toggleRecentTabs } = await import("@/shared/commandHandlers"));
+	const { createController } = await import("@/shared/controller");
+
+	({ toggleRecentTabs } = createController({
+		popupLink: {
+			isPopupConnected: () => false,
+			isMenuConnected: () => false,
+			notify: () => Promise.resolve(false),
+		},
+	}));
 });
 
 
