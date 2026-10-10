@@ -343,9 +343,9 @@ export default function createCommandHandlers({
 		}
 	}
 
-		// returned below because background.js also calls this when the popup or
-		// menu port disconnects right after connecting, which means the user
-		// double-pressed the open-popup shortcut to switch tabs
+		// returned below because background.js also calls this when the menu's
+		// port disconnects right after connecting, which means the user
+		// double-pressed the menu's shortcut to switch tabs
 	function toggleRecentTabs(
 		fromShortcut)
 	{

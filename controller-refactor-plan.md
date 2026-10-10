@@ -18,12 +18,15 @@ Both are refactors. Behavior shouldn't change, and every phase below leaves
 Phases 0 to 3 are done. Phases 4 and 5 haven't been started. The
 implementation differs from the design below in these ways:
 
-- **Controller to popup still goes over the port, not `ipc`.** The port is
-  connected in `init.js` before React loads, and the worker already knows
-  whether it's talking to the menu or the popup. An `ipc` channel needs an
-  async handshake first, which the open-popup path can't wait on. Phase 2
-  replaced the string switch with a `popupApi` object on top of the port
-  instead.
+- **Controller to popup still goes over the port, not `ipc`.** The port has
+  to stay anyway, for lifecycle: `init.js` connects it before React loads,
+  so the worker sees the toolbar menu close even if it never finished
+  loading, which is how a double-press of the menu's shortcut (alt-E)
+  toggles tabs. Since it exists and already tells the menu and the popup
+  apart, the controller's messages ride on it rather than on a second
+  channel. `ipc` would also work for the popup window, which is normally
+  loaded and hidden, but it wouldn't gain anything. Phase 2 replaced the
+  string switch with a `popupApi` object on top of the port.
 - **Popup and options to controller go over `chrome.runtime.sendMessage`,
   not `ipc`.** Only the context that holds control registers a listener
   (`serveApi()` in `controller.start()`), so exactly one context answers.
@@ -37,7 +40,9 @@ implementation differs from the design below in these ways:
   `serveApi()`. A popup that holds control can't recreate its own window,
   because `create()` closes the existing popup first.
 - **`closedByEsc` stays on the port.** It only matters to the worker's
-  double-press detection, which is tied to the port's lifecycle.
+  double-press detection, which is tied to the port's lifecycle. That
+  detection is for the toolbar menu; the popup window's page is hidden and
+  reused, so its port doesn't connect and disconnect on each use.
 - **The controller still imports its leaf modules** (`popupWindow`,
   `toolbarIcon`, `recentTabs`, `settings`) rather than taking them as
   arguments. Tests replace them with `vi.mock()`. Only `popupLink` is
@@ -47,6 +52,99 @@ implementation differs from the design below in these ways:
   message was removed, since nothing sent it.
 - **Bug fixed along the way:** `reopenPopup` passed `true` as the popup's
   props, which dropped `focusSearch` when the popup reopened itself.
+
+
+## Control flow, before and after
+
+Solid arrows are calls that happen while the worker holds control. Dashed
+arrows are the paths used when the worker has died and the hidden popup page
+has taken control.
+
+### Before
+
+```mermaid
+flowchart TB
+    subgraph Options["Options page"]
+        OPT["app-container.jsx"]
+    end
+
+    subgraph Worker["Service worker"]
+        BG["background.js<br/>ports, sendPopupMessage()<br/>onMessage: reopenPopup"]
+        EC_W["eventController.js<br/>MessageTarget"]
+        H_W["commandHandlers.js + tabEventHandlers.js<br/>module-level lets, copies of ports<br/>handlePopupMessage if/else"]
+        ST_W[("state.js")]
+    end
+
+    subgraph Popup["Popup page"]
+        APP["App<br/>sendMessage(name, payload, local)<br/>onMessage switch"]
+        EC_P["eventController.js<br/>MessageTarget"]
+        H_P["commandHandlers.js + tabEventHandlers.js<br/>ports: { popup: {} } dummy"]
+        ST_P[("state.js")]
+    end
+
+    BG -- "initEventController(ports, sendPopupMessage)" --> EC_W
+    EC_W -- "init(context) copies ports in" --> H_W
+    H_W <--> ST_W
+    BG <--> ST_W
+    H_W -- "sendPopupMessage(name)<br/>truthy return = failed" --> BG
+    BG -- "port.postMessage" --> APP
+    APP -- "port: closedByEsc" --> BG
+
+    APP -- "sendMessage(..., local = true)" --> EC_P
+    EC_P -- "not held: runtime.sendMessage" --> EC_W
+    EC_W -- "runtime.onMessage" --> H_W
+    APP -- "sendMessage(reopenPopup, local = false)" --> BG
+    OPT -- "runtime.sendMessage(settingChanged)" --> EC_W
+
+    EC_P -. "held: local CustomEvent" .-> H_P
+    OPT -. "runtime.sendMessage(settingChanged)" .-> EC_P
+    H_P -. "sendPopupMessage() calls this.onMessage()" .-> APP
+    H_P <-.-> ST_P
+```
+
+### After
+
+```mermaid
+flowchart TB
+    subgraph Options["Options page"]
+        OPT["app-container.jsx"]
+        OCL["createControllerClient()"]
+    end
+
+    subgraph Worker["Service worker"]
+        BG["background.js<br/>ports, popupLink<br/>serveApi: reopenPopup"]
+        C_W["controller<br/>state, api, handlers<br/>start(): serveApi(api)"]
+    end
+
+    subgraph Popup["Popup page"]
+        APP["App"]
+        PAPI["popupApi<br/>modifySelected, showWindow,<br/>tabActivated, stopNavigatingRecents"]
+        PCL["createControllerClient()<br/>bindApi(ControllerApiNames)"]
+        C_P["controller<br/>state, api, handlers"]
+    end
+
+    BG -- "startController({ popupLink })" --> C_W
+    C_W -- "popupLink.notify(name)<br/>resolves to delivered" --> BG
+    BG -- "port.postMessage" --> PAPI
+    APP -- "port: closedByEsc,<br/>connect / disconnect" --> BG
+
+    APP --> PCL
+    PCL -- "not held: runtime message" --> C_W
+    APP -- "sendApiMessage(reopenPopup)" --> BG
+    OPT --> OCL
+    OCL -- "runtime message" --> C_W
+
+    APP -- "startController({ popupLink })" --> C_P
+    PCL -. "held: direct call" .-> C_P
+    OCL -. "runtime message" .-> C_P
+    C_P -. "popupLink.notify() calls popupApi" .-> PAPI
+```
+
+In the "after" diagram, every arrow into a controller lands on its `api`, and
+every arrow out of one goes through `popupLink`. Which context answers is
+decided in one place: `serveApi()` runs only in the context that holds
+control, and `bindApi()` calls the local controller only when this context is
+that holder.
 
 
 ## Where things stand
@@ -322,7 +420,7 @@ setting can't go stale because a message was dropped.
   isn't. Phase 2's `notify()` is fire-and-forget for that reason. The
   regression suite (`toggle-queue`, `toggle-window-limit`, `navigate-rematch`)
   needs to stay green after every phase, along with manual checks of repeated
-  alt-Q, held alt-S, double-press alt-Q, and navigating with the popup.
+  alt-Q, held alt-S, double-press alt-E, and navigating with the popup.
 
 
 ## Files touched

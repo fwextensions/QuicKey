@@ -191,7 +191,10 @@ DEBUG && console.log("== onConnect", port.name, state.startingUp);
 		}
 
 		if (!closedByEsc && Date.now() - connectTime < MaxPopupLifetime) {
-				// this was a double-press of alt-Q, so toggle the tabs
+				// this was a double-press of the toolbar menu's shortcut (alt-E
+				// by default), so toggle the tabs.  the menu's port is connected
+				// before its page finishes loading, so this sees the close even
+				// if the menu never fully opened.
 			controller.toggleRecentTabs();
 		}
 	});
