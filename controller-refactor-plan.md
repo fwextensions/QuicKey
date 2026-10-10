@@ -13,6 +13,42 @@ Both are refactors. Behavior shouldn't change, and every phase below leaves
 `npm run test:all` green and is shippable on its own.
 
 
+## Status
+
+Phases 0 to 3 are done. Phases 4 and 5 haven't been started. The
+implementation differs from the design below in these ways:
+
+- **Controller to popup still goes over the port, not `ipc`.** The port is
+  connected in `init.js` before React loads, and the worker already knows
+  whether it's talking to the menu or the popup. An `ipc` channel needs an
+  async handshake first, which the open-popup path can't wait on. Phase 2
+  replaced the string switch with a `popupApi` object on top of the port
+  instead.
+- **Popup and options to controller go over `chrome.runtime.sendMessage`,
+  not `ipc`.** Only the context that holds control registers a listener
+  (`serveApi()` in `controller.start()`), so exactly one context answers.
+  That avoids the `ipc` broadcast problem described under risks. The client
+  is `createControllerClient()` in `shared/controller-api.js`, built on
+  `bindApi()` in `shared/api.js`.
+- **`popupLink.notify()` resolves to whether the message was delivered,**
+  rather than rejecting, so fire-and-forget callers don't create unhandled
+  rejections.
+- **`reopenPopup` stays in the worker.** `background.js` serves it with
+  `serveApi()`. A popup that holds control can't recreate its own window,
+  because `create()` closes the existing popup first.
+- **`closedByEsc` stays on the port.** It only matters to the worker's
+  double-press detection, which is tied to the port's lifecycle.
+- **The controller still imports its leaf modules** (`popupWindow`,
+  `toolbarIcon`, `recentTabs`, `settings`) rather than taking them as
+  arguments. Tests replace them with `vi.mock()`. Only `popupLink` is
+  injected.
+- **API renames:** `executeAddTab` is now `flushAddTab`, and
+  `settingChanged` is now `applySetting`. The popup's `focusSearch`
+  message was removed, since nothing sent it.
+- **Bug fixed along the way:** `reopenPopup` passed `true` as the popup's
+  props, which dropped `focusSearch` when the popup reopened itself.
+
+
 ## Where things stand
 
 ### Who holds control
@@ -176,16 +212,16 @@ Before moving anything, add the tests that the later phases need to keep
 passing. Most of the coordination story is covered already. These are the
 gaps:
 
-- [ ] With the popup holding control, `getActiveTab` from the popup returns
+- [x] With the popup holding control, `getActiveTab` from the popup returns
       the controller's `activeTab` (local path).
-- [ ] With the popup holding control, a `settingChanged` from the options page
+- [x] With the popup holding control, a `settingChanged` from the options page
       reaches the popup's handler.
-- [ ] `openPopupWindow()` closes the popup when delivering `modifySelected`
+- [x] `openPopupWindow()` closes the popup when delivering `modifySelected`
       fails.
-- [ ] A popup port that connects and disconnects within `MaxPopupLifetime`
+- [x] A popup port that connects and disconnects within `MaxPopupLifetime`
       without `closedByEsc` triggers exactly one toggle, and one that sent
       `closedByEsc` doesn't.
-- [ ] `reopenPopup` still reopens with the same `activeTab`.
+- [x] `reopenPopup` still reopens with the same `activeTab`.
 
 ### Phase 1: introduce the controller (item 1)
 
