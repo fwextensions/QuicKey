@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { resetContexts, createContext } from "../support/context";
 import popupWindow from "@/background/popup-window";
+import toolbarIcon from "@/background/toolbar-icon";
 
 	// the full worker/popup coordination story, driven through the real
 	// eventController graph (control, controlledEvent, tabEventHandlers,
@@ -73,7 +74,18 @@ function loadContext(
 		const sendPopupMessage = vi.fn();
 		const sendMessage = initEventController({ sendPopupMessage, ports: {} });
 
-		return { control, state, sendMessage, sendPopupMessage };
+		return {
+			control,
+			state,
+			sendMessage,
+			sendPopupMessage,
+				// the messages the controller sent to the popup, as [name, payload]
+			popupMessages: () => sendPopupMessage.mock.calls
+				.map(([name, payload = {}]) => [name, payload]),
+				// make the next message to the popup fail to be delivered
+			failNextPopupMessage: () => sendPopupMessage
+				.mockReturnValueOnce(new Error("Attempting to use a disconnected port object")),
+		};
 	});
 }
 
@@ -354,5 +366,80 @@ describe("toolbar menu open", () => {
 		await flush();
 
 		expect(popupWindow.create).toHaveBeenCalledTimes(1);
+	});
+});
+
+
+describe("messages between the popup and the controller", () => {
+	const PopupTab = {
+		id: 9,
+		url: "chrome-extension://quickeyfakeextensionidaaaaaaaaaa/popup.html?props=%7B%7D",
+		windowId: 2,
+		windowType: "popup",
+		active: true,
+	};
+
+	it("a setting changed on the options page reaches a popup that holds control", async () => {
+		const worker = await loadContext("/background.html");
+
+		await flush();
+
+		const popup = await loadContext("/popup.html");
+
+		await flush();
+		worker.destroy();
+		await flush();
+
+		expect(popup.modules.control.isHeld()).toBe(true);
+
+			// the options page broadcasts the change, and only the context
+			// that holds control is listening for it
+		chrome.runtime.onMessage.dispatch(
+			{ message: "settingChanged", key: "showTabCount", value: true },
+			{},
+			() => {}
+		);
+		chrome.runtime.onMessage.dispatch(
+			{ message: "settingChanged", key: "hidePopupBehavior", value: "tab" },
+			{},
+			() => {}
+		);
+		await flush();
+
+		expect(toolbarIcon.showTabCount).toHaveBeenLastCalledWith(true);
+		expect(popupWindow.hideBehavior).toBe("tab");
+
+		popupWindow.hideBehavior = "behind";
+	});
+
+	it("closes the popup window when a selection change can't be delivered to it", async () => {
+			// the popup window is open and focused, so the open-popup shortcut
+			// moves its selection down instead of opening another one
+		resetContexts({ tabs: [PopupTab, { id: 1, url: "https://a.example.com/", windowId: 1 }] });
+		popupWindow.isOpen.mockResolvedValueOnce(true);
+
+		const worker = await loadContext("/background.html");
+
+		await flush();
+		worker.modules.failNextPopupMessage();
+		chrome.commands.onCommand.dispatch(OpenPopupCommand);
+		await flush();
+
+		expect(worker.modules.popupMessages()).toEqual([["modifySelected", { direction: 1 }]]);
+		expect(popupWindow.close).toHaveBeenCalledExactlyOnceWith("modify-selected-failed");
+	});
+
+	it("leaves the popup window open when the selection change is delivered", async () => {
+		resetContexts({ tabs: [PopupTab, { id: 1, url: "https://a.example.com/", windowId: 1 }] });
+		popupWindow.isOpen.mockResolvedValueOnce(true);
+
+		const worker = await loadContext("/background.html");
+
+		await flush();
+		chrome.commands.onCommand.dispatch(OpenPopupCommand);
+		await flush();
+
+		expect(worker.modules.popupMessages()).toEqual([["modifySelected", { direction: 1 }]]);
+		expect(popupWindow.close).not.toHaveBeenCalled();
 	});
 });
