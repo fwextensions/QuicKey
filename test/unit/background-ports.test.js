@@ -183,6 +183,8 @@ describe("reopenPopup", () => {
 
 		expect(popupWindow.create).toHaveBeenCalledTimes(1);
 		expect(popupWindow.create.mock.calls[0][0]).toMatchObject({ id: activeTab.id });
+			// the props the reopened popup is created with
+		expect(popupWindow.create.mock.calls[0][1]).toEqual({ focusSearch: true });
 
 			// the reopened popup asks for the active tab when it loads
 		const responses = [];

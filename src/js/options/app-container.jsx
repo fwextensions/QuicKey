@@ -9,9 +9,13 @@ import { Platform, ShowTabCount, HidePopupBehavior, NavigateRecentsWithPopup,
 import { OptionsProvider } from "./options-provider";
 import { withSearchParams } from "./with-search-params";
 import { utm } from "./utils";
+import { createControllerClient } from "@/shared/controller-api";
 
 
 const PlusPattern = /\+/g;
+	// the options page never holds control, so this always calls the context
+	// that does
+const controller = createControllerClient();
 
 
 class OptionsAppContainer extends React.Component {
@@ -110,11 +114,7 @@ class OptionsAppContainer extends React.Component {
 				if (key == ShowTabCount.Key || key == HidePopupBehavior.Key
 						|| key == NavigateRecentsWithPopup.Key
 						|| key == CurrentWindowLimitRecents.Key) {
-					chrome.runtime.sendMessage({
-						message: "settingChanged",
-						key,
-						value
-					});
+					controller.applySetting({ key, value });
 				}
 
 				return settings;

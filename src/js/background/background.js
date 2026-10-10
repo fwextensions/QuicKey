@@ -9,7 +9,8 @@ import trackers from "@/background/page-trackers";
 import { isPopupWindow } from "@/background/popup-utils";
 import handleStartup from "@/background/startup";
 import log from "@/background/persistent-log";
-import initEventController from "@/shared/eventController";
+import { startController } from "@/shared/controller";
+import { serveApi } from "@/shared/api";
 
 if (globalThis.DEBUG) {
 	globalThis.printTabs = recentTabs.print;
@@ -85,9 +86,7 @@ console.error("==== popupLink.notify()", error.message);
 	}
 };
 
-	// the sendMessage function this returns is for sending messages *from* the
-	// popup, which we don't need
-const { controller } = initEventController({ popupLink });
+const controller = startController({ popupLink });
 const { state } = controller;
 
 
@@ -199,23 +198,25 @@ DEBUG && console.log("== onConnect", port.name, state.startingUp);
 });
 
 
-chrome.runtime.onMessage.addListener(({message, ...payload}) => {
-	if (message === "reopenPopup") {
-		(async () => {
-			const currentActiveTab = state.activeTab;
+	// the popup calls this to close and reopen itself.  it's served only here,
+	// not by the controller, since a popup that holds control can't recreate
+	// its own window.
+serveApi({
+	async reopenPopup({
+		focusSearch})
+	{
+		const currentActiveTab = state.activeTab;
 
-				// instead of closing the popup and then calling
-				// openPopupWindow() to reopen it, we just call create(),
-				// which always closes the window first, and pass the current
-				// activeTab, since the query in openPopupWindow() seems to
-				// not find a last focused window, so we end up with an
-				// undefined activeTab
-			await popupWindow.create(currentActiveTab, payload.focusSearch);
+			// instead of closing the popup and then calling openPopupWindow() to
+			// reopen it, we just call create(), which always closes the window
+			// first, and pass the current activeTab, since the query in
+			// openPopupWindow() seems to not find a last focused window, so we
+			// end up with an undefined activeTab
+		await popupWindow.create(currentActiveTab, { focusSearch });
 
-				// restore activeTab, which gets cleared when the port from
-				// the popup is closed
-			state.activeTab = currentActiveTab;
-		})();
+			// restore activeTab, which gets cleared when the port from the popup
+			// is closed
+		state.activeTab = currentActiveTab;
 	}
 });
 

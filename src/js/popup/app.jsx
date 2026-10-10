@@ -17,8 +17,9 @@ import { getWindowPadding } from "./window-padding";
 import handleRef from "@/lib/handle-ref";
 import copyTextToClipboard from "@/lib/copy-to-clipboard";
 import { connect } from "@/lib/ipc";
-import initEventController from "@/shared/eventController";
-import { createApiDispatcher } from "@/shared/api";
+import { startController } from "@/shared/controller";
+import { createControllerClient } from "@/shared/controller-api";
+import { createApiDispatcher, sendApiMessage } from "@/shared/api";
 import control from "@/shared/control";
 import recentTabs from "@/background/recent-tabs";
 import storage from "@/background/quickey-storage";
@@ -143,7 +144,11 @@ export default class App extends React.Component {
 	lastWindowPadding = undefined;
 	nextFrameRequestID = 0;
 	port = null;
-	sendRuntimeMessage = (...args) => console.error("ERROR: default sendRuntimeMessage() called", args);
+		// the controller this page runs if it takes control from the worker,
+		// which only the popup window does, not the menu
+	localController = null;
+		// calls the api of whichever context's controller holds control
+	controller = createControllerClient(() => this.localController);
 
 
 	constructor(
@@ -270,11 +275,10 @@ export default class App extends React.Component {
 				}
 			});
 
-				// this sendMessage function will trigger a local event when the
-				// popup has control or call runtime.sendMessage() when the
-				// background has control
-			({ sendMessage: this.sendRuntimeMessage } = initEventController({
-					// if this page takes control, its controller reaches the
+				// this page's controller sits idle until the worker dies, and
+				// then this page takes control and runs it
+			this.localController = startController({
+					// once this page has control, its controller reaches the
 					// popup by calling it directly.  this page is the popup, so
 					// it's always connected, and it never sees the menu.
 				popupLink: {
@@ -292,7 +296,7 @@ export default class App extends React.Component {
 						return Promise.resolve(true);
 					},
 				},
-			}));
+			});
 		}
 
 		window.addEventListener("unload", () => {
@@ -723,7 +727,7 @@ export default class App extends React.Component {
 			if (stopNavigatingRecents) {
 					// change the flag before focusing the tab, so that its
 					// activation event will get tracked
-				await this.sendMessage("stopNavigatingRecents");
+				await this.controller.stopNavigatingRecents();
 			}
 
 				// focusing the tab's window blurs the popup, which closes it
@@ -951,7 +955,7 @@ export default class App extends React.Component {
 		} else {
 				// since we're in a popup, get the active tab from the
 				// background, which recorded it before opening this window
-			return this.sendMessage("getActiveTab");
+			return this.controller.getActiveTab();
 		}
 	}
 
@@ -1162,10 +1166,9 @@ export default class App extends React.Component {
 			// ignore the blur event triggered by closing the popup
 		this.ignoreNextBlur = true;
 		this.endSession("reopen");
-			// pass false so that this message is sent to the background rather
-			// than being short-circuited to our own controller, since the
-			// background needs to manage the closing and reopening of the popup
-		this.sendMessage("reopenPopup", { focusSearch: this.openedForSearch }, false);
+			// this always goes to the worker, even when this page holds
+			// control, since the worker needs to close and reopen this window
+		sendApiMessage("reopenPopup", { focusSearch: this.openedForSearch });
 	}
 
 
@@ -1196,16 +1199,6 @@ export default class App extends React.Component {
 			this.ignoreNextBlur = true;
 			await popupWindow.blur();
 		}
-	}
-
-
-	sendMessage(
-		message,
-		payload,
-		local = true)
-	{
-			// return the result so that our caller can await it
-		return this.sendRuntimeMessage(message, payload, local);
 	}
 
 
@@ -1276,7 +1269,7 @@ export default class App extends React.Component {
 						// so tell the background to change its state so that
 						// when the popup closes, the current tab's activation
 						// will be detected
-					this.sendMessage("stopNavigatingRecents");
+					this.controller.stopNavigatingRecents();
 
 						// pass true for closedByEsc so that the background
 						// doesn't interpret a quick open and close as a
@@ -1287,7 +1280,7 @@ export default class App extends React.Component {
 						// tell the background to add the newly focused tab
 						// to recents immediately so the user could quickly
 						// switch to another tab while keeping recents correct
-					this.sendMessage("executeAddTab");
+					this.controller.flushAddTab();
 				} else {
 					await this.openItem(selectedItem);
 				}

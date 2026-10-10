@@ -129,8 +129,8 @@ describe("settings", () => {
 
 	it("applies a changed setting", async () => {
 		await startController();
-		controller.api.settingChanged({ key: "navigateRecentsWithPopup", value: true });
-		controller.api.settingChanged({ key: "hidePopupBehavior", value: "tab" });
+		controller.api.applySetting({ key: "navigateRecentsWithPopup", value: true });
+		controller.api.applySetting({ key: "hidePopupBehavior", value: "tab" });
 
 		expect(controller.state.navigateRecentsWithPopup).toBe(true);
 		expect(popupWindow.hideBehavior).toBe("tab");
