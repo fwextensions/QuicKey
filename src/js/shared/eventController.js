@@ -1,6 +1,5 @@
 import control from "@/shared/control";
-import initTabEvents from "@/shared/tabEventHandlers";
-import initCommandEvents from "@/shared/commandHandlers";
+import { createController } from "@/shared/controller";
 
 class MessageTarget extends EventTarget {
 	static Name = "RuntimeMessage";
@@ -72,25 +71,35 @@ class MessageTarget extends EventTarget {
 	}
 }
 
-export default function initEventController(
-	context)
+	// create this context's controller and start it once this context holds
+	// control.  returns the controller and a function for sending messages to
+	// whichever context holds control.
+export default function initEventController({
+	popupLink })
 {
 	const runtimeMessage = new MessageTarget();
-	const innerContext = {
-		...context,
-		runtimeMessage,
-	};
-	const initFuncs = [
-		initTabEvents,
-		initCommandEvents
-	];
-		// initFuncs can optionally return a function that will be called after
-		// this process takes control
-	const controlHeldFuncs = initFuncs.map((func) => func(innerContext));
+	const controller = createController({ popupLink });
 
+	function handleMessage(
+		{ message, ...payload },
+		sender,
+		sendResponse)
+	{
+		if (Object.hasOwn(controller.api, message)) {
+			sendResponse(controller.api[message](payload));
+		}
+	}
+
+	controller.listen();
 	control.claimWhenAvailable(() => {
-		controlHeldFuncs.forEach((func) => typeof func === "function" && func(innerContext));
+			// don't return start()'s promise, since a task that returns a
+			// promise gives up control when it settles
+		controller.start();
+		runtimeMessage.addListener(handleMessage);
 	});
 
-	return runtimeMessage.sendMessage;
+	return {
+		controller,
+		sendMessage: runtimeMessage.sendMessage
+	};
 }

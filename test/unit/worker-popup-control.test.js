@@ -70,21 +70,33 @@ function loadContext(
 	return createContext(pathname, async () => {
 		const initEventController = (await import("@/shared/eventController")).default;
 		const control = (await import("@/shared/control")).default;
-		const state = (await import("@/shared/state")).default;
-		const sendPopupMessage = vi.fn();
-		const sendMessage = initEventController({ sendPopupMessage, ports: {} });
+		const popupMessages = [];
+		let failNext = false;
+			// no popup or menu is connected in these tests; the messages the
+			// controller sends are recorded instead
+		const popupLink = {
+			isPopupConnected: () => false,
+			isMenuConnected: () => false,
+			notify: async (name, payload = {}) => {
+				popupMessages.push([name, payload]);
+
+				const delivered = !failNext;
+
+				failNext = false;
+
+				return delivered;
+			},
+		};
+		const { controller, sendMessage } = initEventController({ popupLink });
 
 		return {
 			control,
-			state,
+			state: controller.state,
 			sendMessage,
-			sendPopupMessage,
 				// the messages the controller sent to the popup, as [name, payload]
-			popupMessages: () => sendPopupMessage.mock.calls
-				.map(([name, payload = {}]) => [name, payload]),
+			popupMessages: () => popupMessages,
 				// make the next message to the popup fail to be delivered
-			failNextPopupMessage: () => sendPopupMessage
-				.mockReturnValueOnce(new Error("Attempting to use a disconnected port object")),
+			failNextPopupMessage: () => failNext = true,
 		};
 	});
 }

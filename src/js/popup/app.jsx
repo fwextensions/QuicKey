@@ -273,19 +273,26 @@ export default class App extends React.Component {
 				// this sendMessage function will trigger a local event when the
 				// popup has control or call runtime.sendMessage() when the
 				// background has control
-			this.sendRuntimeMessage = initEventController({
-					// this is used in eventController.js to send messages to the
-					// popup.  we don't return the promise from this.onMessage()
-					// because any return value from this function is interpreted
-					// by openPopupWindow() as meaning there was an error.
-				sendPopupMessage: (
-					message,
-					payload = {}) =>
-				{
-					this.onMessage({ message, ...payload });
+			({ sendMessage: this.sendRuntimeMessage } = initEventController({
+					// if this page takes control, its controller reaches the
+					// popup by calling it directly.  this page is the popup, so
+					// it's always connected, and it never sees the menu.
+				popupLink: {
+					isPopupConnected: () => true,
+					isMenuConnected: () => false,
+					notify: (
+						message,
+						payload = {}) =>
+					{
+							// don't wait for the popup to handle the message,
+							// since the controller only needs to know it was
+							// delivered
+						this.onMessage({ message, ...payload });
+
+						return Promise.resolve(true);
+					},
 				},
-				ports: { popup: {} },
-			});
+			}));
 		}
 
 		window.addEventListener("unload", () => {

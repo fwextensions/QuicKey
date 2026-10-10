@@ -76,7 +76,13 @@ beforeEach(async () => {
 	await createContext("/background.html", async () => {
 		const initEventController = (await import("@/shared/eventController")).default;
 
-		initEventController({ sendPopupMessage: vi.fn(), ports: {} });
+		initEventController({
+			popupLink: {
+				isPopupConnected: () => false,
+				isMenuConnected: () => false,
+				notify: vi.fn(() => Promise.resolve(true)),
+			},
+		});
 	});
 
 	await flush();
