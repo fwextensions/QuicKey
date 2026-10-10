@@ -18,6 +18,7 @@ import handleRef from "@/lib/handle-ref";
 import copyTextToClipboard from "@/lib/copy-to-clipboard";
 import { connect } from "@/lib/ipc";
 import initEventController from "@/shared/eventController";
+import { createApiDispatcher } from "@/shared/api";
 import control from "@/shared/control";
 import recentTabs from "@/background/recent-tabs";
 import storage from "@/background/quickey-storage";
@@ -230,8 +231,7 @@ export default class App extends React.Component {
 						// telling us to move the selection to the next tab and
 						// focus it, since the timing on getting a real message
 						// from the background after opening is tricky
-					return this.onMessage({
-						message: "modifySelected",
+					return this.popupApi.modifySelected({
 						navigatingRecents: true,
 						direction: 1
 					});
@@ -287,7 +287,7 @@ export default class App extends React.Component {
 							// don't wait for the popup to handle the message,
 							// since the controller only needs to know it was
 							// delivered
-						this.onMessage({ message, ...payload });
+						this.popupApi[message](payload);
 
 						return Promise.resolve(true);
 					},
@@ -316,13 +316,13 @@ export default class App extends React.Component {
 		this.startSession();
 		this.countBannerDisplay();
 		this.port = this.props.port;
-		this.port.onMessage.addListener(this.onMessage);
+		this.port.onMessage.addListener(this.onPortMessage);
 
 		chrome.runtime.onConnect.addListener((port) => {
 			if (port.name === "popup") {
-				this.port.onMessage.removeListener(this.onMessage);
+				this.port.onMessage.removeListener(this.onPortMessage);
 				this.port = port;
-				this.port.onMessage.addListener(this.onMessage);
+				this.port.onMessage.addListener(this.onPortMessage);
 			}
 		});
 
@@ -1163,7 +1163,7 @@ export default class App extends React.Component {
 		this.ignoreNextBlur = true;
 		this.endSession("reopen");
 			// pass false so that this message is sent to the background rather
-			// than being short-circuited to our onMessage handler, since the
+			// than being short-circuited to our own controller, since the
 			// background needs to manage the closing and reopening of the popup
 		this.sendMessage("reopenPopup", { focusSearch: this.openedForSearch }, false);
 	}
@@ -1359,70 +1359,67 @@ export default class App extends React.Component {
 	};
 
 
-	onMessage = async ({
-		message,
-		...payload}) =>
-	{
-		switch (message) {
-			case "modifySelected":
-				const {navigatingRecents, direction} = payload;
+		// the methods the controller calls on this page, either through the
+		// port, or directly, when this page holds control.  each takes a single
+		// payload object.
+	popupApi = {
+		modifySelected: async ({
+			navigatingRecents,
+			direction}) =>
+		{
+			if (navigatingRecents) {
+				this.navigatingRecents = true;
 
-				if (navigatingRecents) {
-					this.navigatingRecents = true;
-
-					if (!this.visible) {
-							// show the window first, since that resets the
-							// selected state to -1
-						await this.showWindow({ focusSearch: false, activeTab: null });
+				if (!this.visible) {
+						// show the window first, since that resets the
+						// selected state to -1
+					await this.showWindow({ focusSearch: false, activeTab: null });
 
 
-							// set selected based on the direction so that
-							// when modifySelected() is called below, the
-							// direction delta will end up selecting the
-							// correct item: 0 for switch to next, 1 for
-							// switch to previous.  item 0 will be the
-							// current tab if we're opening the popup for
-							// the first time during a navigation flow.
-						await this.setSelectedIndex(direction == 1 ? 0 : 1, true);
-					}
-
-					this.updateMRUModifier(direction);
-
-					const index = await this.modifySelected(direction, true);
-
-					await this.focusTab(this.state.matchingItems[index]);
-					await this.showPopupWindow(null, "right-center");
-				} else {
-					this.updateMRUModifier();
-					await this.modifySelected(direction, true);
+						// set selected based on the direction so that
+						// when modifySelected() is called below, the
+						// direction delta will end up selecting the
+						// correct item: 0 for switch to next, 1 for
+						// switch to previous.  item 0 will be the
+						// current tab if we're opening the popup for
+						// the first time during a navigation flow.
+					await this.setSelectedIndex(direction == 1 ? 0 : 1, true);
 				}
-				break;
 
-			case "tabActivated":
-					// ignore the event when the window is hidden, since
-					// showWindow() reloads the tabs anyway, and reloading on
-					// every tab switch while hidden wastes a lot of work
-				if (!this.navigatingRecents && this.visible) {
-						// loadTabs() calls loadPromisedItems() with a forced
-						// reload, so it'll trigger a render with the new items
-					this.loadTabs();
-				}
-				break;
+				this.updateMRUModifier(direction);
 
-			case "showWindow":
-				await this.showWindow(payload);
-				break;
+				const index = await this.modifySelected(direction, true);
 
-			case "stopNavigatingRecents":
-				this.navigatingRecents = false;
-				break;
+				await this.focusTab(this.state.matchingItems[index]);
+				await this.showPopupWindow(null, "right-center");
+			} else {
+				this.updateMRUModifier();
+				await this.modifySelected(direction, true);
+			}
+		},
 
-			case "focusSearch":
-				this.gotMRUKey = false;
-				this.tabsPromise.then(() => this.setState({ selected: -1 }));
-				break;
-		}
+		tabActivated: () =>
+		{
+				// ignore the event when the window is hidden, since
+				// showWindow() reloads the tabs anyway, and reloading on
+				// every tab switch while hidden wastes a lot of work
+			if (!this.navigatingRecents && this.visible) {
+					// loadTabs() calls loadPromisedItems() with a forced
+					// reload, so it'll trigger a render with the new items
+				this.loadTabs();
+			}
+		},
+
+		showWindow: (payload) => this.showWindow(payload),
+
+		stopNavigatingRecents: () =>
+		{
+			this.navigatingRecents = false;
+		},
 	};
+
+
+	onPortMessage = createApiDispatcher(this.popupApi);
 
 
 	onWindowBlur = async () =>

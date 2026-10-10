@@ -197,3 +197,78 @@ describe("reopenPopup", () => {
 		expect(responses).toEqual([expect.objectContaining({ id: activeTab.id })]);
 	});
 });
+
+
+describe("messages to the popup", () => {
+	const PopupTab = {
+		id: 9,
+		url: "chrome-extension://quickeyfakeextensionidaaaaaaaaaa/popup.html?props=%7B%7D",
+		windowId: 2,
+		windowType: "popup",
+		active: true,
+	};
+
+	beforeEach(() => {
+			// the popup window is open and focused, so the open-popup shortcut
+			// moves its selection down
+		resetContexts({ tabs: [PopupTab, { id: 1, url: "https://a.example.com/", windowId: 1 }] });
+		popupWindow.isOpen.mockResolvedValue(true);
+	});
+
+	it("go over the popup's port, naming the method to call", async () => {
+		await loadBackground();
+		await flush();
+
+		const port = makePort("popup");
+
+		chrome.runtime.onConnect.dispatch(port);
+		chrome.commands.onCommand.dispatch("010-open-popup-window");
+		await flush();
+
+		expect(port.postMessage).toHaveBeenCalledExactlyOnceWith({ message: "modifySelected", direction: 1 });
+		expect(popupWindow.close).not.toHaveBeenCalled();
+	});
+
+	it("go to the menu instead, when it's open", async () => {
+		resetContexts({
+			tabs: [
+				PopupTab,
+				{ id: 1, url: "https://a.example.com/", windowId: 1 },
+				{ id: 3, url: "https://c.example.com/", windowId: 1 },
+			],
+		});
+		await loadBackground();
+		await flush();
+
+		const popupPort = makePort("popup");
+		const menuPort = makePort("menu");
+
+		chrome.runtime.onConnect.dispatch(popupPort);
+		chrome.runtime.onConnect.dispatch(menuPort);
+
+			// activating a different tab tells the open popup to reload its
+			// list, and the menu takes priority over the popup window
+		chrome.tabs.onActivated.dispatch({ tabId: 1, windowId: 1 });
+		await flush();
+
+		expect(menuPort.postMessage).toHaveBeenCalledExactlyOnceWith({ message: "tabActivated" });
+		expect(popupPort.postMessage).not.toHaveBeenCalled();
+	});
+
+	it("close the popup window when its port can't deliver them", async () => {
+		await loadBackground();
+		await flush();
+
+		const port = makePort("popup");
+
+		port.postMessage.mockImplementation(() => {
+			throw new Error("Attempting to use a disconnected port object");
+		});
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		chrome.runtime.onConnect.dispatch(port);
+		chrome.commands.onCommand.dispatch("010-open-popup-window");
+		await flush();
+
+		expect(popupWindow.close).toHaveBeenCalledExactlyOnceWith("modify-selected-failed");
+	});
+});
