@@ -53,18 +53,61 @@ implementation differs from the design below in these ways:
 - **Bug fixed along the way:** `reopenPopup` passed `true` as the popup's
   props, which dropped `focusSearch` when the popup reopened itself.
 
+### Transports in use after phase 3
+
+| Transport | Calls it carries | Between |
+|---|---|---|
+| Port from `init.js` | lifecycle: connect, disconnect and `closedByEsc`, used to detect the menu's double-press and the popup page closing | popup or menu → worker |
+| | `popupApi`: `modifySelected`, `showWindow`, `tabActivated`, `stopNavigatingRecents`, sent by `popupLink.notify()` | worker → popup or menu |
+| Runtime messages | `ControllerApi`: `getActiveTab`, `flushAddTab`, `stopNavigatingRecents`, `applySetting`, via `createControllerClient()` and answered by `serveApi()` in the holder | popup and options → holder |
+| | `reopenPopup` | popup → worker |
+| `ipc` channels (`lib/ipc.js`, over their own ports) | `popup-window`: `show`, `hide`, `blur`, `resize` | popup → worker |
+| | `colorScheme`: `setColorScheme`; `tabCount`: `setTabCount` | popup or menu → worker |
+| Direct calls | everything above, when the popup page holds control and is calling its own controller or `popupWindow` | within the popup page |
+
+Web locks also cross contexts, but they carry state rather than calls:
+`__control__` decides who holds control, `__menu-open__` says whether
+the menu is open, and the storage locks serialize writes.
+
+**Why `ipc` exists alongside runtime messages.** It was added during the
+MV3 migration (2b0852d, June 2024) to route storage through the worker
+over ports, which that commit says was faster than runtime messages.
+Storage moved to web locks in October 2024 (198183d), but by then the
+`popup-window` and `colorScheme` channels were using it. Compared with a
+runtime message, an `ipc` call:
+
+- waits for a cold worker. A call with no open channel connects a port
+  to wake the worker, queues until the worker's channel and receiver
+  exist, then resolves with the real result. A runtime message that
+  wakes the worker is cached by `sw.js` and replayed after
+  `background.js` loads, but its reply channel has already closed by
+  then, because the placeholder listener didn't return `true`. So the
+  caller gets no result. The popup awaits `popupWindow.blur()`, `hide()`
+  and `show()` to sequence window moves, so it needs the real result.
+- rejects with the receiver's error instead of resolving with nothing.
+- goes point to point, while a runtime message is broadcast to every
+  open extension page.
+
+The runtime-message calls mostly avoid the cold-worker gap. When the
+worker dies, the popup page takes control and calls its own controller
+directly. The two calls that do go to a possibly cold worker don't use a
+reply. `reopenPopup` is fire-and-forget. A dropped `applySetting` is
+covered because the controller reads all its settings from storage when
+it starts.
+
 
 ## Control flow, before and after
 
 These diagrams leave out the modules and show only how one context calls
-another. Callers are on the left, receivers on the right, and each
+another. The number of transports didn't change (see the table under
+Status). What changed is the conventions layered on top of them. Callers are on the left, receivers on the right, and each
 hexagon is a separate way of making a cross-context call, with its own
 conventions. The port's connect and disconnect events and `closedByEsc`
 aren't shown, since they work the same way before and after.
 
 | | Before | After |
 |---|---:|---:|
-| Ways to call across contexts | 6 | 2 |
+| Calling conventions (helper, message shape, return value, who answers) | 6 | 2 |
 | Receivers that dispatch on a message name with `if`/`switch` | 3 | 0 |
 | `control.isHeld()` checks that choose a message path | 3 | 2 |
 | Return conventions | 3 (response, none, truthy = failed) | 1 (a promise) |
