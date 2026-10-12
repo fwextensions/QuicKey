@@ -49,6 +49,39 @@ export function createChromeFake(
 
 	let store = structuredClone(storage);
 
+		// fire storage.onChanged the way Chrome does: asynchronously, with an
+		// oldValue and newValue for each key that was written or removed
+	function notifyChanged(
+		changes)
+	{
+		if (Object.keys(changes).length) {
+			Promise.resolve().then(() =>
+				chromeFake.storage.onChanged.dispatch(changes, "local"));
+		}
+	}
+
+	function changeKeys(
+		keys,
+		update)
+	{
+		const changes = {};
+
+		for (const key of keys) {
+			const oldValue = store[key];
+
+			update(key);
+
+			if (oldValue !== undefined || store[key] !== undefined) {
+				changes[key] = {
+					...(oldValue !== undefined && { oldValue: structuredClone(oldValue) }),
+					...(store[key] !== undefined && { newValue: structuredClone(store[key]) }),
+				};
+			}
+		}
+
+		notifyChanged(changes);
+	}
+
 	const local = {
 		get: (keys) => {
 			if (keys === null || keys === undefined) {
@@ -85,21 +118,17 @@ export function createChromeFake(
 			return Promise.resolve(result);
 		},
 		set: (items) => {
-			for (const [key, value] of Object.entries(items)) {
-				store[key] = structuredClone(value);
-			}
+			changeKeys(Object.keys(items), (key) => store[key] = structuredClone(items[key]));
 
 			return Promise.resolve();
 		},
 		remove: (keys) => {
-			for (const key of [].concat(keys)) {
-				delete store[key];
-			}
+			changeKeys([].concat(keys), (key) => delete store[key]);
 
 			return Promise.resolve();
 		},
 		clear: () => {
-			store = {};
+			changeKeys(Object.keys(store), (key) => delete store[key]);
 
 			return Promise.resolve();
 		},

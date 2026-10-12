@@ -7,7 +7,6 @@ export const ControllerApiNames = [
 	"getActiveTab",
 	"flushAddTab",
 	"stopNavigatingRecents",
-	"applySetting",
 ];
 
 

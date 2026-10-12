@@ -127,13 +127,42 @@ describe("settings", () => {
 		expect(controller.state.navigateRecentsWithPopup).toBe(false);
 	});
 
-	it("applies a changed setting", async () => {
+	it("applies the settings it mirrors when they change in storage", async () => {
 		await startController();
-		controller.api.applySetting({ key: "navigateRecentsWithPopup", value: true });
-		controller.api.applySetting({ key: "hidePopupBehavior", value: "tab" });
+		await chrome.storage.local.set({ data: { settings: { ...storedSettings } } });
+		await flush();
+		vi.clearAllMocks();
+
+		await chrome.storage.local.set({
+			data: {
+				settings: {
+					...storedSettings,
+					navigateRecentsWithPopup: true,
+					hidePopupBehavior: "tab",
+				},
+			},
+		});
+		await flush();
 
 		expect(controller.state.navigateRecentsWithPopup).toBe(true);
 		expect(popupWindow.hideBehavior).toBe("tab");
+			// showTabCount didn't change, so it isn't applied again
+		expect(toolbarIcon.showTabCount).not.toHaveBeenCalled();
+	});
+
+	it("ignores storage writes that don't change those settings", async () => {
+		await startController();
+		await chrome.storage.local.set({ data: { settings: { ...storedSettings }, tabIDs: [1] } });
+		await flush();
+		vi.clearAllMocks();
+		popupWindow.hideBehavior = "untouched";
+
+		await chrome.storage.local.set({ data: { settings: { ...storedSettings }, tabIDs: [1, 2] } });
+		await chrome.storage.local.set({ lastSavedFrom: "/popup.html" });
+		await flush();
+
+		expect(toolbarIcon.showTabCount).not.toHaveBeenCalled();
+		expect(popupWindow.hideBehavior).toBe("untouched");
 	});
 });
 
