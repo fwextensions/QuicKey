@@ -15,8 +15,9 @@ Both are refactors. Behavior shouldn't change, and every phase below leaves
 
 ## Status
 
-Phases 0 to 3 are done. Phases 4 and 5 haven't been started. The
-implementation differs from the design below in these ways:
+Phases 0 to 4 are done, and the controller API has moved onto `ipc`.
+Phase 5 hasn't been started. The implementation differs from the design
+below in these ways:
 
 - **Controller to popup still goes over the port, not `ipc`.** The port has
   to stay anyway, for lifecycle: `init.js` connects it before React loads,
@@ -27,18 +28,27 @@ implementation differs from the design below in these ways:
   channel. `ipc` would also work for the popup window, which is normally
   loaded and hidden, but it wouldn't gain anything. Phase 2 replaced the
   string switch with a `popupApi` object on top of the port.
-- **Popup and options to controller go over `chrome.runtime.sendMessage`,
-  not `ipc`.** Only the context that holds control registers a listener
-  (`serveApi()` in `controller.start()`), so exactly one context answers.
-  That avoids the `ipc` broadcast problem described under risks. The client
-  is `createControllerClient()` in `shared/controller-api.js`, built on
-  `bindApi()` in `shared/api.js`.
+- **Popup to controller goes over an `ipc` channel the worker serves.**
+  Phase 3 first used runtime messages, answered only by the holder. Once
+  phase 4 removed the options page's `applySetting`, every remote call
+  comes from the popup and goes to the worker: if the popup doesn't hold
+  control, the worker does. So the worker connects a `controller` channel
+  when `background.js` loads, and registers the API as its receiver once
+  it holds control (`control.onHeld()`). `ipc` queues calls until then.
+  That also avoids the `ipc` broadcast problem described under risks,
+  since only the worker ever receives on that channel. The client is
+  `createControllerClient()` in `shared/controller-api.js`, built on
+  `bindApi()` in `shared/api.js`. It opens its channel on the first
+  remote call.
 - **`popupLink.notify()` resolves to whether the message was delivered,**
   rather than rejecting, so fire-and-forget callers don't create unhandled
   rejections.
-- **`reopenPopup` stays in the worker.** `background.js` serves it with
-  `serveApi()`. A popup that holds control can't recreate its own window,
-  because `create()` closes the existing popup first.
+- **`reopenPopup` stays in the worker,** on its own `worker` `ipc`
+  channel. A popup that holds control can't recreate its own window,
+  because `create()` closes the existing popup first, so the call has to
+  reach the worker even then. It can't share the `popup-window` channel:
+  a second `connect("popup-window")` in the worker would give the popup
+  two matching channels, and `ipc` would send each call to both.
 - **`closedByEsc` stays on the port.** It only matters to the worker's
   double-press detection, which is tied to the port's lifecycle. That
   detection is for the toolbar menu; the popup window's page is hidden and
@@ -47,60 +57,80 @@ implementation differs from the design below in these ways:
   `toolbarIcon`, `recentTabs`, `settings`) rather than taking them as
   arguments. Tests replace them with `vi.mock()`. Only `popupLink` is
   injected.
-- **API renames:** `executeAddTab` is now `flushAddTab`, and
-  `settingChanged` is now `applySetting`. The popup's `focusSearch`
-  message was removed, since nothing sent it.
+- **API renames:** `executeAddTab` is now `flushAddTab`. The popup's
+  `focusSearch` message was removed, since nothing sent it.
+- **Phase 4 as planned:** the controller listens to `storage.onChanged`
+  once it holds control and applies whichever of its four settings
+  changed. `settingChanged` and the key list in `app-container.jsx` are
+  gone, and the options page no longer calls the controller.
 - **Bug fixed along the way:** `reopenPopup` passed `true` as the popup's
   props, which dropped `focusSearch` when the popup reopened itself.
 
-### Transports in use after phase 3
+### Transports in use
 
 | Transport | Calls it carries | Between |
 |---|---|---|
 | Port from `init.js` | lifecycle: connect, disconnect and `closedByEsc`, used to detect the menu's double-press and the popup page closing | popup or menu → worker |
 | | `popupApi`: `modifySelected`, `showWindow`, `tabActivated`, `stopNavigatingRecents`, sent by `popupLink.notify()` | worker → popup or menu |
-| Runtime messages | `ControllerApi`: `getActiveTab`, `flushAddTab`, `stopNavigatingRecents`, `applySetting`, via `createControllerClient()` and answered by `serveApi()` in the holder | popup and options → holder |
-| | `reopenPopup` | popup → worker |
-| `ipc` channels (`lib/ipc.js`, over their own ports) | `popup-window`: `show`, `hide`, `blur`, `resize` | popup → worker |
+| `ipc` channels (`lib/ipc.js`, over their own ports) | `controller`: `getActiveTab`, `flushAddTab`, `stopNavigatingRecents`, via `createControllerClient()` | popup → worker |
+| | `worker`: `reopenPopup` | popup → worker |
+| | `popup-window`: `show`, `hide`, `blur`, `resize` | popup → worker |
 | | `colorScheme`: `setColorScheme`; `tabCount`: `setTabCount` | popup or menu → worker |
-| Direct calls | everything above, when the popup page holds control and is calling its own controller or `popupWindow` | within the popup page |
+| Direct calls | the `controller` and `popup-window` calls, and `popupApi`, when the popup page holds control and is calling itself | within the popup page |
+
+Nothing in the extension sends runtime messages any more. Before this
+refactor they carried the popup's calls to the controller, `reopenPopup`
+and the options page's `settingChanged`.
 
 Web locks also cross contexts, but they carry state rather than calls:
 `__control__` decides who holds control, `__menu-open__` says whether
 the menu is open, and the storage locks serialize writes.
 
-**Why `ipc` exists alongside runtime messages.** It was added during the
+**Why `ipc` instead of runtime messages.** `ipc` was added during the
 MV3 migration (2b0852d, June 2024) to route storage through the worker
 over ports, which that commit says was faster than runtime messages.
 Storage moved to web locks in October 2024 (198183d), but by then the
-`popup-window` and `colorScheme` channels were using it. Compared with a
-runtime message, an `ipc` call:
+`popup-window` and `colorScheme` channels were using it. Waking the
+worker is the same either way, since any `runtime.connect()` or
+`sendMessage()` starts it. The difference is what happens to the request
+while the worker starts up:
 
-- waits for a cold worker. A call with no open channel connects a port
-  to wake the worker, queues until the worker's channel and receiver
-  exist, then resolves with the real result. A runtime message that
-  wakes the worker is cached by `sw.js` and replayed after
-  `background.js` loads, but its reply channel has already closed by
-  then, because the placeholder listener didn't return `true`. So the
-  caller gets no result. The popup awaits `popupWindow.blur()`, `hide()`
-  and `show()` to sequence window moves, so it needs the real result.
-- rejects with the receiver's error instead of resolving with nothing.
-- goes point to point, while a runtime message is broadcast to every
-  open extension page.
+- An `ipc` call made with no open channel stays queued in the caller's
+  page, and the connect that wakes the worker carries no data. Once
+  `background.js` loads, its own `connect()` opens a port back, the queued
+  calls go over it, and the reply comes back on the same port, matched by
+  call ID. The worker's channel also queues calls that arrive before a
+  receiver is registered.
+- A runtime message is itself the event that wakes the worker. `sw.js`
+  caches it and replays it after `background.js` loads, but its reply
+  channel has already closed by then, because the placeholder listener
+  didn't return `true`. So the caller gets no result. The popup awaits
+  `popupWindow.blur()`, `hide()` and `show()` to sequence window moves,
+  so it needs the real result.
+- An `ipc` call rejects with the receiver's error instead of resolving
+  with nothing.
 
-The runtime-message calls mostly avoid the cold-worker gap. When the
-worker dies, the popup page takes control and calls its own controller
-directly. The two calls that do go to a possibly cold worker don't use a
-reply. `reopenPopup` is fire-and-forget. A dropped `applySetting` is
-covered because the controller reads all its settings from storage when
-it starts.
+`ipc` is point to point only by convention. `connect()` opens a port to
+every context that `getContexts()` reports, and if several have a channel
+with the same name, `call()` sends to all of them and returns
+`Promise.allSettled()`. Each channel name currently has one live
+receiver, so calls end up point to point, but the library doesn't enforce
+it.
+
+The reply gap could instead be fixed in `sw.js`, by having the
+`runtime.onMessage` placeholder return `true` and keep the original
+`sendResponse` for the replay. Runtime messages could then replace `ipc`.
+The cost is that a message nothing in the worker answers would leave its
+caller waiting until the worker's context ends, instead of failing right
+away. `ipc` was kept for now.
 
 
 ## Control flow, before and after
 
 These diagrams leave out the modules and show only how one context calls
-another. The number of transports didn't change (see the table under
-Status). What changed is the conventions layered on top of them. Callers are on the left, receivers on the right, and each
+another. The transports went from three to two (see the table under
+Status), but the bigger change is in the conventions layered on top of
+them. Callers are on the left, receivers on the right, and each
 hexagon is a separate way of making a cross-context call, with its own
 conventions. The port's connect and disconnect events and `closedByEsc`
 aren't shown, since they work the same way before and after.
@@ -111,6 +141,7 @@ aren't shown, since they work the same way before and after.
 | Receivers that dispatch on a message name with `if`/`switch` | 3 | 0 |
 | `control.isHeld()` checks that choose a message path | 3 | 2 |
 | Return conventions | 3 (response, none, truthy = failed) | 1 (a promise) |
+| Transports (port, runtime messages, `ipc`) | 3 | 2 |
 
 ### Before
 
@@ -149,10 +180,9 @@ flowchart LR
 ```mermaid
 flowchart LR
     APP["Popup page"]
-    OPT["Options page"]
     CTRL["Controller, in whichever<br/>context holds control"]
 
-    B{{"bindApi() / serveApi()<br/>held: direct call<br/>else: remote call"}}
+    B{{"bindApi()<br/>held: direct call<br/>else: ipc call"}}
     N{{"popupLink.notify(name)<br/>resolves to delivered"}}
 
     R1["controller.api"]
@@ -161,18 +191,19 @@ flowchart LR
     R4["popupWindow"]
 
     APP --> B
-    OPT --> B
-    B -- "runtime message" --> R1
-    B -- "runtime message,<br/>always to the worker" --> R2
-    B -- "ipc" --> R4
+    B -- "controller channel" --> R1
+    APP -- "plain ipc call<br/>on the worker channel" --> R2
+    B -- "popup-window channel" --> R4
     CTRL --> N --> R3
 
     classDef mechanism fill:#dff3e4,stroke:#1e8449,color:#000
     class B,N mechanism
 ```
 
-Everything that calls into the controller, `reopenPopup` or the popup
-window now goes through one helper pair, and everything the controller
+The options page no longer calls anything; it just saves settings, and
+the controller picks them up from `storage.onChanged`. Everything that
+calls into the controller, `reopenPopup` or the popup window now goes
+through `bindApi()` and `ipc`, and everything the controller
 sends to the popup goes through `popupLink`. In both cases the receiver is a
 plain object of methods, so a new call is a new method, not a new branch in
 a dispatcher. The one `isHeld()` check left outside `bindApi()` is the
@@ -405,7 +436,7 @@ Transport stays exactly as it is. Only the ownership moves.
 6. Delete `MessageTarget`, `handlePopupMessage`, `eventController.js`, and
    the `runtime.onMessage` listener in `background.js`.
 
-### Phase 4 (optional): settings through `storage.onChanged`
+### Phase 4 (done): settings through `storage.onChanged`
 
 Item 3 from the review fits here. Instead of `applySetting()`, `start()`
 subscribes to `chrome.storage.onChanged`, compares the old and new
