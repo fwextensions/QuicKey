@@ -19,7 +19,7 @@ import copyTextToClipboard from "@/lib/copy-to-clipboard";
 import { connect } from "@/lib/ipc";
 import { startController } from "@/shared/controller";
 import { createControllerClient } from "@/shared/controller-api";
-import { createApiDispatcher, sendApiMessage } from "@/shared/api";
+import { createApiDispatcher } from "@/shared/api";
 import control from "@/shared/control";
 import recentTabs from "@/background/recent-tabs";
 import storage from "@/background/quickey-storage";
@@ -1167,8 +1167,9 @@ export default class App extends React.Component {
 		this.ignoreNextBlur = true;
 		this.endSession("reopen");
 			// this always goes to the worker, even when this page holds
-			// control, since the worker needs to close and reopen this window
-		sendApiMessage("reopenPopup", { focusSearch: this.openedForSearch });
+			// control, since the worker needs to close and reopen this window.
+			// this page is about to be closed, so there's nothing to await.
+		connect("worker").call("reopenPopup", { focusSearch: this.openedForSearch });
 	}
 
 

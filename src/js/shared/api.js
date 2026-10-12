@@ -13,45 +13,6 @@ export function createApiDispatcher(
 }
 
 
-	// send a runtime message that calls the named method in whichever context
-	// is serving it
-export function sendApiMessage(
-	name,
-	payload = {})
-{
-	return chrome.runtime.sendMessage({ message: name, ...payload });
-}
-
-
-	// answer runtime messages that name one of api's methods with the method's
-	// result.  other messages are left for other listeners to answer.  returns
-	// a function that stops serving the api.
-export function serveApi(
-	api)
-{
-	const dispatch = createApiDispatcher(api);
-	const listener = (message, sender, sendResponse) => {
-		if (!Object.hasOwn(api, message?.message)) {
-			return;
-		}
-
-		Promise.resolve()
-			.then(() => dispatch(message))
-			.then(sendResponse, (error) => {
-				console.error(error);
-				sendResponse();
-			});
-
-			// keep the channel open for the async response
-		return true;
-	};
-
-	chrome.runtime.onMessage.addListener(listener);
-
-	return () => chrome.runtime.onMessage.removeListener(listener);
-}
-
-
 	// return an object with a method for each name, which calls the method on
 	// the object getLocal() returns when this context holds control, or else
 	// calls callRemote(name, ...args).  pass no getLocal for a context that
