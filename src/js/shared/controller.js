@@ -1,5 +1,4 @@
 import control from "@/shared/control";
-import { serveApi } from "@/shared/api";
 import { createAddTab } from "@/shared/addTab";
 import createTabEventHandlers from "@/shared/tabEventHandlers";
 import createCommandHandlers from "@/shared/commandHandlers";
@@ -126,7 +125,6 @@ export function createController({
 			// called once this context holds control
 		start()
 		{
-			serveApi(api);
 			commands.start();
 
 				// update this flag in case the popup gets hidden or closed while

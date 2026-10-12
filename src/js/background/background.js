@@ -10,7 +10,9 @@ import { isPopupWindow } from "@/background/popup-utils";
 import handleStartup from "@/background/startup";
 import log from "@/background/persistent-log";
 import { startController } from "@/shared/controller";
-import { serveApi } from "@/shared/api";
+import { ControllerChannel } from "@/shared/controller-api";
+import control from "@/shared/control";
+import { connect } from "@/lib/ipc";
 
 if (globalThis.DEBUG) {
 	globalThis.printTabs = recentTabs.print;
@@ -88,6 +90,13 @@ console.error("==== popupLink.notify()", error.message);
 
 const controller = startController({ popupLink });
 const { state } = controller;
+	// the popup calls the controller's api over this channel when the worker
+	// holds control.  connect now, so the channel is up when a popup opens,
+	// but only answer once this context holds control.  ipc queues any calls
+	// that arrive before then.
+const controllerChannel = connect(ControllerChannel);
+
+control.onHeld(() => controllerChannel.receive(controller.api));
 
 
 	// Chrome fires this well before the session is restored.  Measured on a
@@ -204,7 +213,7 @@ DEBUG && console.log("== onConnect", port.name, state.startingUp);
 	// the popup calls this to close and reopen itself.  it's served only here,
 	// not by the controller, since a popup that holds control can't recreate
 	// its own window.
-serveApi({
+connect("worker").receive({
 	async reopenPopup({
 		focusSearch})
 	{

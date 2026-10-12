@@ -49,6 +49,21 @@ vi.mock("@/background/settings", () => ({
 	},
 }));
 
+	// record the calls the popup makes to the worker over ipc, since the
+	// chrome fake doesn't connect ports between contexts
+const ipcCalls = vi.hoisted(() => []);
+
+vi.mock("@/lib/ipc", () => ({
+	connect: (channelName) => ({
+		call: (name, ...args) => {
+			ipcCalls.push([channelName, name, ...args]);
+
+			return Promise.resolve();
+		},
+		receive: () => {},
+	}),
+}));
+
 const OpenPopupCommand = "010-open-popup-window";
 
 	// several macrotasks, so multi-step promise chains (storage init, lock
@@ -109,6 +124,7 @@ beforeEach(() => {
 		// instances (popupWindow etc.) are shared by every context and every
 		// test; clear their call history between tests
 	vi.clearAllMocks();
+	ipcCalls.length = 0;
 	resetContexts({
 		tabs: [{ id: 1, url: "https://a.example.com/", windowId: 1, active: true }],
 	});
@@ -116,27 +132,25 @@ beforeEach(() => {
 
 
 describe("worker alone", () => {
-	it("claims control at startup and answers popup messages locally, not via chrome.runtime", async () => {
+	it("claims control at startup and answers its own calls locally, not over ipc", async () => {
 		const worker = await loadContext("/background.html");
 
 		await flush();
 
 		expect(worker.modules.control.isHeld()).toBe(true);
 
-		const sendMessageSpy = vi.spyOn(chrome.runtime, "sendMessage");
-
 		worker.modules.state.activeTab = { id: 42, url: "https://a.example.com/" };
 
 		const response = await worker.modules.client.getActiveTab();
 
 		expect(response).toMatchObject({ id: 42 });
-		expect(sendMessageSpy).not.toHaveBeenCalled();
+		expect(ipcCalls).toEqual([]);
 	});
 });
 
 
 describe("worker and popup", () => {
-	it("a popup that doesn't hold control routes messages through chrome.runtime instead", async () => {
+	it("a popup that doesn't hold control calls the worker over ipc instead", async () => {
 		const worker = await loadContext("/background.html");
 
 		await flush();
@@ -148,11 +162,9 @@ describe("worker and popup", () => {
 		expect(worker.modules.control.isHeld()).toBe(true);
 		expect(popup.modules.control.isHeld()).toBe(false);
 
-		const sendMessageSpy = vi.spyOn(chrome.runtime, "sendMessage");
-
 		await popup.modules.client.getActiveTab();
 
-		expect(sendMessageSpy).toHaveBeenCalledExactlyOnceWith({ message: "getActiveTab" });
+		expect(ipcCalls).toEqual([["controller", "getActiveTab"]]);
 	});
 
 	it("a command is handled exactly once, by the context that holds control", async () => {
@@ -199,14 +211,12 @@ describe("worker and popup", () => {
 		expect(popup.modules.control.isHeld()).toBe(true);
 
 			// the popup now answers messages locally...
-		const sendMessageSpy = vi.spyOn(chrome.runtime, "sendMessage");
-
 		popup.modules.state.activeTab = { id: 7, url: "https://a.example.com/" };
 
 		const response = await popup.modules.client.getActiveTab();
 
 		expect(response).toMatchObject({ id: 7 });
-		expect(sendMessageSpy).not.toHaveBeenCalled();
+		expect(ipcCalls).toEqual([]);
 
 			// ...and handles commands, exactly once, with the dead worker silent
 		chrome.commands.onCommand.dispatch(OpenPopupCommand);

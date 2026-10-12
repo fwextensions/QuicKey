@@ -45,6 +45,18 @@ vi.mock("@/background/settings", () => ({
 	},
 }));
 
+	// the receivers background.js registers on each ipc channel, so a test
+	// can make the calls the popup would, since the chrome fake doesn't
+	// connect ports between contexts
+const ipcReceivers = vi.hoisted(() => ({}));
+
+vi.mock("@/lib/ipc", () => ({
+	connect: (channelName) => ({
+		call: () => Promise.resolve(),
+		receive: (fns) => Object.assign(ipcReceivers[channelName] ??= {}, fns),
+	}),
+}));
+
 	// the global error listeners need a window, and have their own tests
 vi.mock("@/lib/error-handler", () => ({}));
 
@@ -98,6 +110,11 @@ function loadBackground()
 
 beforeEach(() => {
 	vi.clearAllMocks();
+
+	for (const name of Object.keys(ipcReceivers)) {
+		delete ipcReceivers[name];
+	}
+
 	resetContexts({
 		tabs: [
 			{ id: 1, url: "https://a.example.com/", windowId: 1, active: true },
@@ -193,12 +210,7 @@ describe("reopenPopup", () => {
 		expect(popupWindow.create).toHaveBeenCalledTimes(1);
 		popupWindow.create.mockClear();
 
-		chrome.runtime.onMessage.dispatch(
-			{ message: "reopenPopup", focusSearch: true },
-			{},
-			() => {}
-		);
-		await flush();
+		await ipcReceivers.worker.reopenPopup({ focusSearch: true });
 
 		expect(popupWindow.create).toHaveBeenCalledTimes(1);
 		expect(popupWindow.create.mock.calls[0][0]).toMatchObject({ id: activeTab.id });
@@ -206,16 +218,8 @@ describe("reopenPopup", () => {
 		expect(popupWindow.create.mock.calls[0][1]).toEqual({ focusSearch: true });
 
 			// the reopened popup asks for the active tab when it loads
-		const responses = [];
-
-		chrome.runtime.onMessage.dispatch(
-			{ message: "getActiveTab" },
-			{},
-			(response) => responses.push(response)
-		);
-		await flush();
-
-		expect(responses).toEqual([expect.objectContaining({ id: activeTab.id })]);
+		expect(ipcReceivers.controller.getActiveTab())
+			.toMatchObject({ id: activeTab.id });
 	});
 });
 
@@ -291,5 +295,31 @@ describe("messages to the popup", () => {
 		await flush();
 
 		expect(popupWindow.close).toHaveBeenCalledExactlyOnceWith("modify-selected-failed");
+	});
+});
+
+
+describe("the controller channel", () => {
+	it("only answers once the worker holds control", async () => {
+			// another context, like a popup that took over while the worker was
+			// gone, holds control when this worker starts
+		let releaseControl;
+
+		await new Promise((held) => navigator.locks.request("__control__", () => {
+			held();
+
+			return new Promise((release) => releaseControl = release);
+		}));
+
+		await loadBackground();
+		await flush();
+
+		expect(ipcReceivers.controller).toBeUndefined();
+
+		releaseControl();
+		await flush();
+
+		expect(Object.keys(ipcReceivers.controller))
+			.toEqual(["getActiveTab", "flushAddTab", "stopNavigatingRecents"]);
 	});
 });
