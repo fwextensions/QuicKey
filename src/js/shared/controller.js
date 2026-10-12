@@ -9,7 +9,7 @@ import settings from "@/background/settings";
 import * as k from "@/background/constants";
 
 	// the settings the controller mirrors, so it doesn't have to read storage
-	// on every command
+	// on every command.  it picks up changes to them from storage.onChanged.
 const ControllerSettingKeys = [
 	k.ShowTabCount.Key,
 	k.HidePopupBehavior.Key,
@@ -64,9 +64,36 @@ export function createController({
 	}
 
 
-		// the methods the popup and options pages call on whichever context
-		// holds control.  each takes a single payload object.  add any new
-		// ones to ControllerApiNames in controller-api.js.
+	function applySettings(
+		settings,
+		previousSettings = {})
+	{
+		ControllerSettingKeys.forEach(key => {
+			if (settings[key] !== previousSettings[key]) {
+				applySetting(key, settings[key]);
+			}
+		});
+	}
+
+
+		// every storage write fires this in every context, but only the holder
+		// listens, and only the settings it mirrors are applied, and only when
+		// they've changed.  everything is stored under the top-level data key.
+	function handleStorageChanged(
+		{ data },
+		areaName)
+	{
+		const settings = data?.newValue?.settings;
+
+		if (areaName === "local" && settings) {
+			applySettings(settings, data.oldValue?.settings);
+		}
+	}
+
+
+		// the methods the popup calls on whichever context holds control.  each
+		// takes a single payload object.  add any new ones to ControllerApiNames
+		// in controller-api.js.
 	const api = {
 		getActiveTab: () => state.activeTab,
 
@@ -79,7 +106,6 @@ export function createController({
 			state.navigatingRecents = false;
 		},
 
-		applySetting: ({ key, value }) => applySetting(key, value),
 	};
 
 
@@ -108,9 +134,12 @@ export function createController({
 				// releasing the modifier to select the currently focused tab
 			popupWindow.on(["hide", "close"], () => state.navigatingRecents = false);
 
+				// listen before reading the current settings, so a change made
+				// in between isn't missed.  applying a setting twice is harmless.
+			chrome.storage.onChanged.addListener(handleStorageChanged);
+
 			return settings.get()
-				.then(settings => ControllerSettingKeys.forEach(
-					key => applySetting(key, settings[key])));
+				.then(settings => applySettings(settings));
 		}
 	};
 }

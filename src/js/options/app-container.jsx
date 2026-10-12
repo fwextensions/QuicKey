@@ -4,18 +4,13 @@ import OptionsApp from "./app";
 import trackers from "@/background/page-trackers";
 import storage from "@/background/quickey-storage";
 import settings from "@/background/settings";
-import { Platform, ShowTabCount, HidePopupBehavior, NavigateRecentsWithPopup,
-	CurrentWindowLimitRecents } from "@/background/constants";
+import { Platform } from "@/background/constants";
 import { OptionsProvider } from "./options-provider";
 import { withSearchParams } from "./with-search-params";
 import { utm } from "./utils";
-import { createControllerClient } from "@/shared/controller-api";
 
 
 const PlusPattern = /\+/g;
-	// the options page never holds control, so this always calls the context
-	// that does
-const controller = createControllerClient();
 
 
 class OptionsAppContainer extends React.Component {
@@ -109,16 +104,8 @@ class OptionsAppContainer extends React.Component {
 		value,
 		key) =>
 	{
+			// the controller picks up the settings it uses from storage.onChanged
 		settings.set(key, value)
-			.then(settings => {
-				if (key == ShowTabCount.Key || key == HidePopupBehavior.Key
-						|| key == NavigateRecentsWithPopup.Key
-						|| key == CurrentWindowLimitRecents.Key) {
-					controller.applySetting({ key, value });
-				}
-
-				return settings;
-			})
 			.then(this.setSettingsState);
 
 			// first convert the value to a string, since some values are

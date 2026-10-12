@@ -393,6 +393,19 @@ describe("messages between the popup and the controller", () => {
 		active: true,
 	};
 
+		// the options page saves a change to the settings the controller
+		// mirrors, the way settings.set() does
+	async function changeSettings(
+		changes)
+	{
+		const { data } = await chrome.storage.local.get("data");
+
+		await chrome.storage.local.set({
+			data: { ...data, settings: { ...data.settings, ...changes } }
+		});
+		await flush();
+	}
+
 	it("a setting changed on the options page reaches a popup that holds control", async () => {
 		const worker = await loadContext("/background.html");
 
@@ -406,24 +419,31 @@ describe("messages between the popup and the controller", () => {
 
 		expect(popup.modules.control.isHeld()).toBe(true);
 
-			// the options page broadcasts the change, and only the context
-			// that holds control is listening for it
-		chrome.runtime.onMessage.dispatch(
-			{ message: "applySetting", key: "showTabCount", value: true },
-			{},
-			() => {}
-		);
-		chrome.runtime.onMessage.dispatch(
-			{ message: "applySetting", key: "hidePopupBehavior", value: "tab" },
-			{},
-			() => {}
-		);
-		await flush();
+		const { data: { settings } } = await chrome.storage.local.get("data");
 
-		expect(toolbarIcon.showTabCount).toHaveBeenLastCalledWith(true);
+		await changeSettings({
+			showTabCount: !settings.showTabCount,
+			hidePopupBehavior: "tab",
+		});
+
+		expect(toolbarIcon.showTabCount).toHaveBeenLastCalledWith(!settings.showTabCount);
 		expect(popupWindow.hideBehavior).toBe("tab");
 
 		popupWindow.hideBehavior = "behind";
+	});
+
+	it("a setting change is applied once, by the context that holds control", async () => {
+		await loadContext("/background.html");
+		await flush();
+		await loadContext("/popup.html");
+		await flush();
+		vi.clearAllMocks();
+
+		const { data: { settings } } = await chrome.storage.local.get("data");
+
+		await changeSettings({ showTabCount: !settings.showTabCount });
+
+		expect(toolbarIcon.showTabCount).toHaveBeenCalledExactlyOnceWith(!settings.showTabCount);
 	});
 
 	it("closes the popup window when a selection change can't be delivered to it", async () => {
