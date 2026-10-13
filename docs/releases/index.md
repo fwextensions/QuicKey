@@ -8,6 +8,37 @@ comments: true
 # Release history
 
 
+## 2.5.0 - 2026-11-14
+
+### Added
+
+* Added an option to mark tabs that the browser has discarded or frozen to save memory with a dimmed icon and label.  It's off by default and can be turned on in the *General* section of the options.
+* On a fresh install, the recent tabs list is now filled in using the browser's record of when each tab was last active, instead of starting out empty until you've switched tabs a few times.
+
+### Changed
+
+* On new installs, pressing <kbd>space</kbd> now both inserts a space between search terms and selects the next item by default, matching what existing installs were already using.
+* The first shortcut pressed after the extension has been idle is handled faster, so the popup window opens in about half the time it used to in that case.
+* *QuicKey* now requires Chrome/Edge 119 or later.
+
+### Fixed
+
+* Typing a space after <b><kbd>/</kbd><kbd>b</kbd></b> or <b><kbd>/</kbd><kbd>h</kbd></b> to search bookmarks or history didn't work when the <kbd>space</kbd> key was set to only move the selection.
+* The popup window sometimes failed to appear, or appeared too tall for the screen after moving between monitors with different resolutions.
+* After moving between monitors with different scaling, the popup window could end up too wide, or too narrow to show all of the results list.
+* Favicons from some sites, like claude.ai, were missing, and favicons that pages set from script, like Google Sheets and Slides, were replaced by a generic one.
+* Restoring a closed tab from the popup window left the popup centered on the screen, instead of hiding it behind the restored tab's window.
+* The order of recent tabs was sometimes lost after restarting the browser.
+* The tab count on the toolbar icon could show 0 after restarting the browser.
+* Bad data in storage no longer resets all of your settings.
+* Pressing a *QuicKey* shortcut while the toolbar menu was open could open the popup window on top of it, or keep the menu from responding to the shortcut.
+* Shortcuts pressed while the extension was busy could switch tabs many seconds later.  They're now dropped if they can't be handled within a few seconds.
+* The first time you switched to the previous tab after the extension had been idle, it could stay on the current tab, and further presses could stop responding.
+* Switching to the previous tab could fail when *QuicKey* was limited to the current window and the previous tab was in a different one.
+* Chrome's address autofill could pop up over the results while typing in the search box.
+* Fixed a memory leak when the popup window stayed open for a long time.
+
+
 ## 2.0.2 - 2024-10-27
 
 ### Fixed
