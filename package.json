@@ -23,7 +23,6 @@
     "@tanstack/react-virtual": "^3.14.5",
     "fast-memoize": "^2.5.2",
     "goober": "^2.1.14",
-    "pinyin": "^3.1.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router": "^7.18.1"
