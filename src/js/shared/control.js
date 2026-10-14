@@ -51,9 +51,16 @@ function claimWhenAvailable(
 			// whether the lock is held
 		isHeld = true;
 
-			// don't put try/catch around this, since we want to release the lock
-			// if something goes wrong
-		const result = task(lock);
+		let result;
+
+		try {
+			result = task(lock);
+		} catch (e) {
+				// clear the flag but rethrow, so the lock request rejects and the
+				// lock is released for another context to claim
+			isHeld = false;
+			throw e;
+		}
 
 			// fire the onHeld callbacks after the task, so anything the task
 			// sets up is available when queued events are replayed
