@@ -59,8 +59,9 @@ describe("sw.js event caching", () => {
 
 			// events arriving after the import returned, but before the real
 			// listeners exist, including the shortcut that woke the worker.
-			// one of them is long stale.
+			// two of them are long stale.
 		vi.spyOn(Date, "now").mockReturnValue(now - 60 * 1000);
+		chrome.tabs.onActivated.dispatch({ tabId: 6, windowId: 1 });
 		chrome.commands.onCommand.dispatch("stale-command");
 		Date.now.mockReturnValue(now);
 
@@ -76,8 +77,10 @@ describe("sw.js event caching", () => {
 		Date.now.mockRestore();
 
 			// the backlog is replayed once background.js is loaded, in arrival
-			// order, interleaved across events, minus the stale command
+			// order, interleaved across events, minus the stale command.  the
+			// stale tab event is still replayed, since the recents need it.
 		expect(replayed).toEqual([
+			["activated", 6],
 			["activated", 7],
 			["command", "2-open-popup-window"],
 			["activated", 8],
@@ -90,7 +93,7 @@ describe("sw.js event caching", () => {
 
 		chrome.tabs.onActivated.dispatch({ tabId: 9, windowId: 1 });
 
-		expect(replayed.slice(3)).toEqual([["activated", 9]]);
+		expect(replayed.slice(4)).toEqual([["activated", 9]]);
 
 			// except onCommand's, which has to go so the toolbar menu can get
 			// the shortcut keys while it's open
@@ -99,6 +102,6 @@ describe("sw.js event caching", () => {
 			// a second call doesn't replay anything again
 		globalThis.backgroundLoaded();
 
-		expect(replayed.length).toBe(4);
+		expect(replayed.length).toBe(5);
 	});
 });

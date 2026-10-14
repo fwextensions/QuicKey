@@ -41,11 +41,25 @@ if (globalThis.DEBUG) {
 	// write per restored tab, hence the filter.
 const LoggedEvents = new Set(["runtime.onStartup", "runtime.onInstalled", "commands.onCommand"]);
 
-	// cached events older than this are dropped rather than replayed.  a
+	// cached user actions older than this are dropped rather than replayed.  a
 	// command in particular has to run close to when it was pressed or not at
 	// all: replaying a toggle after a long stall flips tabs out from under the
 	// user, which was seen happening 18 minutes late.
 const MaxCachedEventAge = 2000;
+
+	// the events the age limit applies to.  the rest are bookkeeping, which is
+	// still right to apply late, and wrong to lose: a tab opened while the
+	// worker spent 8s waiting on the storage lock had its onCreated and
+	// onActivated dropped as stale, so it never made it into the recents.
+const ExpiringEventNames = new Set(["commands.onCommand", "runtime.onConnect", "runtime.onMessage"]);
+
+	// background.js can sit in a top-level await for minutes when the storage
+	// lock is held, so cap the bookkeeping events by count instead, keeping the
+	// newest
+const MaxCachedEvents = 500;
+
+const isExpired = ([eventName, , time], cutoff) =>
+	ExpiringEventNames.has(eventName) && time < cutoff;
 
 	// the one cached event whose placeholder listener can't stay attached.  the
 	// toolbar menu needs NO onCommand listener anywhere in the extension while
@@ -64,14 +78,16 @@ function cacheEvents(
 		const listener = (...eventArgs) => {
 				// after the replay, this is just a placeholder
 			if (cache) {
-					// background.js can sit in a top-level await for minutes
-					// when the storage lock is held, so drop anything that's
-					// already too old to replay, rather than collecting every
-					// tab event in the meantime
+					// drop anything that's already too old to replay, rather
+					// than collecting it for the whole stall
 				const cutoff = Date.now() - MaxCachedEventAge;
 
-				cache = cache.filter(([, , time]) => time >= cutoff);
+				cache = cache.filter((event) => !isExpired(event, cutoff));
 				cache.push([eventName, eventArgs, Date.now()]);
+
+				if (cache.length > MaxCachedEvents) {
+					cache = cache.slice(-MaxCachedEvents);
+				}
 				LoggedEvents.has(eventName) && log("sw caught:", eventName);
 			}
 		};
@@ -115,8 +131,10 @@ function cacheEvents(
 
 		const cutoff = Date.now() - MaxCachedEventAge;
 
-		for (const [eventName, eventArgs, time] of events) {
-			if (time < cutoff) {
+		for (const event of events) {
+			const [eventName, eventArgs, time] = event;
+
+			if (isExpired(event, cutoff)) {
 				log("sw dropping stale event:", eventName, Date.now() - time, "ms old");
 				continue;
 			}
