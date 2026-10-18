@@ -402,7 +402,9 @@ export function toggleRecentTabs(
 				// then hit the toggle command, reset the icon back to normal
 			return toolbarIcon.setNormalIcon();
 		})
-		.then(() => log("toggle: pending addTab flushed, toggling"))
+			// don't return log()'s promise, which resolves only once the
+			// batched entry is written, a second or more later
+		.then(() => { log("toggle: pending addTab flushed, toggling"); })
 			// the flush above waits on the storage lock, which can be held
 			// for many seconds, so check the age again before switching.
 			// toggle() itself waits on the lock too, so a stall that starts
