@@ -169,7 +169,10 @@ let commandCount = 0;
 	// or more, and every toggle queued behind it would then flip tabs out from
 	// under the user long after they gave up, the same hazard sw.js guards
 	// against with MaxCachedEventAge for events replayed after a worker start.
-const MaxCommandAge = 2000;
+	// it was 2 s, but a toggle pressed right after a cold start could spend
+	// that long just flushing the replayed focus change's addTab, so it was
+	// dropped even though the user was still waiting on it.
+const MaxCommandAge = 5000;
 
 	// log a command's progress through the queue, with the time since it
 	// arrived, so a shortcut that seems to do nothing shows whether it was

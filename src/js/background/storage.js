@@ -13,8 +13,10 @@ const LockNameBase = "storage://";
 const FailedDataKey = "failedStorageData";
 const MaxFailedDataLength = 10000;
 const MaxLoggedKeys = 20;
-	// a task that holds the lock longer than this gets logged
-const SlowTaskThreshold = 1000;
+	// a task that holds the lock longer than this gets logged.  keep it well
+	// under a second, so a wait made of several sub-second holds still names
+	// the tasks that caused it.
+const SlowTaskThreshold = 250;
 
 
 	// a task waiting on the lock can't see what's holding it, since the worker
