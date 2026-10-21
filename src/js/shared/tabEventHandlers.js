@@ -15,6 +15,9 @@ const TabRemovedDelay = 1000;
 let ports = {};
 let lastWindowID;
 let sendPopupMessage;
+	// bumped on every tab activation we add, so a focus change can tell whether a
+	// newer activation came in while it was querying for the window's tab
+let activationCount = 0;
 
 const handleTabRemoved = debounce(
 	(tabId, removeInfo) => !state.startingUp && recentTabs.remove(tabId, removeInfo),
@@ -35,6 +38,9 @@ function handleTabActivated({
 		// by a window in another profile, in which case we can't access any
 		// info about the tabs there.
 	if (Number.isInteger(tabId) && tabId !== popupWindow.tabID && !state.navigatingRecents) {
+			// only count activations we add, so opening the popup right after
+			// focusing a window doesn't stop that window's tab being recorded
+		activationCount++;
 		addTab(tabId);
 
 		if (ports.popup) {
@@ -100,6 +106,8 @@ const EventHandlers = {
 			&& windowID !== chrome.windows.WINDOW_ID_NONE
 			&& windowID != lastWindowID
 		) {
+			const countAtFocus = activationCount;
+
 			lastWindowID = windowID;
 
 			chrome.tabs.query({ active: true, windowId: windowID })
@@ -107,10 +115,21 @@ const EventHandlers = {
 					// different profile, so this instance of QuicKey can't access
 					// any info about it.  we'll just pass undefined to addTab(),
 					// which will ignore it.
-				.then(([tab = {}]) => handleTabActivated({
-					tabId: tab.id,
-					windowId: windowID
-				}));
+				.then(([tab = {}]) => {
+						// if a tab was activated while we were querying, such
+						// as the one a toggle just switched to, its add is
+						// newer than ours.  calling addTab() now would replace
+						// that pending add with this older tab, so the tab the
+						// user is actually on would never reach the recents.
+					if (activationCount !== countAtFocus) {
+						return;
+					}
+
+					handleTabActivated({
+						tabId: tab.id,
+						windowId: windowID
+					});
+				});
 		}
 	}
 };

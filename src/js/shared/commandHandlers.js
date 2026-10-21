@@ -214,7 +214,8 @@ function trackCommand(
 }
 
 async function handleCommand(
-	command)
+	command,
+	tab)
 {
 	const receivedTime = Date.now();
 
@@ -252,7 +253,7 @@ async function handleCommand(
 			break;
 
 		case ToggleTabsCommand:
-			toggleRecentTabs(true, receivedTime);
+			toggleRecentTabs(true, receivedTime, tab);
 			break;
 	}
 }
@@ -369,12 +370,22 @@ async function navigateRecents(
 	}
 }
 
+function isAddableTab(
+	tab)
+{
+	return Number.isInteger(tab?.id)
+		&& !isPopupWindow(tab)
+		&& !state.navigatingRecents;
+}
+
+
 	// exported because background.js also calls this when the popup or menu
 	// port disconnects right after connecting, which means the user
 	// double-pressed the open-popup shortcut to switch tabs
 export function toggleRecentTabs(
 	fromShortcut,
-	receivedTime = Date.now())
+	receivedTime = Date.now(),
+	activeTab)
 {
 		// we have to wait for the last toggle promise chain to resolve before
 		// starting the next one.  otherwise, if the toggle key is held down,
@@ -390,8 +401,20 @@ export function toggleRecentTabs(
 	lastTogglePromise = enqueue(lastTogglePromise, trackCommand(command, (isStale) => Promise.resolve()
 			// if the user navigated to a tab but hasn't waited for the min
 			// dwell time before toggling back, add the current tab before
-			// toggling so it becomes the most recent
-		.then(() => addTab.flush())
+			// toggling so it becomes the most recent.  when the shortcut gave
+			// us the active tab, add that one directly.  flushing isn't enough
+			// after a focus change, since that handler has to query for the
+			// window's active tab before it calls addTab(), so nothing is
+			// pending yet.  on a cold start, the replayed onFocusChanged and
+			// onCommand are dispatched in the same tick, so the flush always
+			// lost that race and toggled to the tab that was already active.
+			// now() also drops any add still scheduled for an older tab.
+			// skip the popup's own tab, which addTab() would ignore, so that
+			// a real pending add still gets flushed, and skip it while
+			// navigating recents, where the active tab is just a preview.
+		.then(() => isAddableTab(activeTab)
+			? addTab.now(activeTab.id)
+			: addTab.flush())
 		.then(() => {
 			if (state.navigatingRecents) {
 					// tell the popup that the user's no longer navigating
@@ -433,7 +456,8 @@ export function toggleRecentTabs(
 			// meantime queued up behind it.
 		.then((switched) => switched && addTab.flushOrNext())
 		.then(() => tracker.event("recents",
-			fromShortcut ? "toggle-shortcut" : "toggle"))),
+			fromShortcut ? "toggle-shortcut" : "toggle")),
+		receivedTime),
 		handleCommandError);
 }
 
