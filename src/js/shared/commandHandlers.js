@@ -230,7 +230,8 @@ async function handleCommand(
 		case FocusPopupCommand:
 				// enqueue() keeps the chain going if a call throws.  we need to
 				// wait for the previous call to openPopupWindow() to settle
-				// before calling it again in case the user is spamming alt-Q.  without waiting, the second key press would find the
+				// before calling it again in case the user is spamming alt-Q.
+				// without waiting, the second key press would find the
 				// first one hadn't finished opening yet and tell the partially
 				// loaded popup to close and open a new one.  rinse and repeat.
 			lastOpenPromise = enqueue(lastOpenPromise,

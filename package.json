@@ -30,6 +30,7 @@
   "devDependencies": {
     "adm-zip": "^0.6.0",
     "rollup-plugin-visualizer": "^7.0.1",
+    "stdout-ext": "file:../../Chrome Extensions/stdout/stdout",
     "vite": "^8.1.4",
     "vite-plugin-static-copy": "^4.1.1",
     "vitest": "^4.1.10"
