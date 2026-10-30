@@ -174,6 +174,10 @@ export default class App extends React.Component {
 			// getting it every time in render, which is normally bad, but
 			// the platform will never change during the life of the app
 		this.className = this.props.platform + (k.IsFirefox ? " firefox" : "");
+			// the menu and the popup window are separate pages, each with its
+			// own tracker, so this stamps every event they send with the UI
+			// it came from
+		props.tracker.set("ui", props.isPopup ? "popup" : "menu");
 
 		if (props.isPopup) {
 				// in showWindow() we set gotMRUKey based on whether the popup
@@ -662,37 +666,46 @@ export default class App extends React.Component {
 				// them, instead of the popup being second on the list.
 			await this.blurPopupWindow();
 
-			if (this.mode == "tabs") {
-				if (item.sessionId) {
-						// this is a closed tab, so restore it
-					tabOrWindow = await chrome.sessions.restore(item.sessionId);
-					this.props.tracker.event("tabs", "restore");
+			try {
+				if (this.mode == "tabs") {
+					if (item.sessionId) {
+							// this is a closed tab, so restore it
+						tabOrWindow = await chrome.sessions.restore(item.sessionId);
+						this.props.tracker.event("tabs", "restore");
+					} else {
+							// switch to the tab.  pass navigatingRecents so that if
+							// we're currently doing that it'll pass true to
+							// focusTab(), which will then cause the handler in the
+							// background to set that flag to false before focusing
+							// the tab.  this is needed so that the tab activation
+							// will get tracked when the popup was opened to navigate
+							// recents, but then the user clicked an item, or hit
+							// enter to select the current one.
+						tabOrWindow = await this.focusTab(item, shiftKey, this.navigatingRecents);
+					}
+				} else if (shiftKey) {
+						// open in a new window
+					tabOrWindow = await chrome.windows.create({ url });
+					this.props.tracker.event(this.mode, "open-new-win");
+				} else if (modKey) {
+						// open in a new tab
+					tabOrWindow = await chrome.tabs.create({ url });
+					this.props.tracker.event(this.mode, "open-new-tab");
 				} else {
-						// switch to the tab.  pass navigatingRecents so that if
-						// we're currently doing that it'll pass true to
-						// focusTab(), which will then cause the handler in the
-						// background to set that flag to false before focusing
-						// the tab.  this is needed so that the tab activation
-						// will get tracked when the popup was opened to navigate
-						// recents, but then the user clicked an item, or hit
-						// enter to select the current one.
-					tabOrWindow = await this.focusTab(item, shiftKey, this.navigatingRecents);
-				}
-			} else if (shiftKey) {
-					// open in a new window
-				tabOrWindow = await chrome.windows.create({ url });
-				this.props.tracker.event(this.mode, "open-new-win");
-			} else if (modKey) {
-					// open in a new tab
-				tabOrWindow = await chrome.tabs.create({ url });
-				this.props.tracker.event(this.mode, "open-new-tab");
-			} else {
-					// open in the active tab, which, in the case of a popup,
-					// is not in the current window (since that's the popup)
-				const {id} = await this.getActiveTab();
+						// open in the active tab, which, in the case of a popup,
+						// is not in the current window (since that's the popup)
+					const {id} = await this.getActiveTab();
 
-				tabOrWindow = await chrome.tabs.update(id, { url })
-				this.props.tracker.event(this.mode, "open");
+					tabOrWindow = await chrome.tabs.update(id, { url })
+					this.props.tracker.event(this.mode, "open");
+				}
+			} catch (error) {
+					// a URL Chrome won't open rejects here.  report it, but
+					// leave the popup open, as it was when this went unhandled.
+				this.props.tracker.exception(error);
+				console.error(error);
+
+				return;
 			}
 
 			await this.closeWindow(false, tabOrWindow, "open");
@@ -1150,7 +1163,6 @@ export default class App extends React.Component {
 				// double-press of the shortcut to toggle tabs, rather than the
 				// user looking at the list
 			this.props.tracker.event("popup-session", {
-				ui: this.props.isPopup ? "popup" : "menu",
 				ms: Math.round(performance.now() - this.sessionStart),
 				reason: this.pendingCloseReason ?? reason
 			});

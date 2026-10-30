@@ -101,3 +101,25 @@ describe("tracker.exception() filtering", () => {
 		expect(() => tracker.exception({})).not.toThrow();
 	});
 });
+
+
+describe("tracker.exception() scrubbing", () => {
+	it("replaces URLs in the description GA gets", () => {
+		const error = new Error('Invalid url: "https://example.com/secret".');
+
+		error.stack = `Error: ${error.message}\n    at open (js/popup.js:9:4)`;
+		tracker.exception(error);
+
+		expect(sentDescriptions()).toEqual([
+			'Error: Invalid url: "<https url>".\n    at open (js/popup.js:9:4)'
+		]);
+	});
+
+	it("replaces URLs in a description passed as a string", () => {
+		tracker.exception("Caught unhandled promise rejection:\nError: No window for https://example.com/x");
+
+		expect(sentDescriptions()).toEqual([
+			"Caught unhandled promise rejection:\nError: No window for <https url>"
+		]);
+	});
+});

@@ -17,6 +17,48 @@ const FrameWithoutFunctionPattern = /^\s*at (?:async )?(.+?)(?::(\d+))?(?::(\d+)
 	// the first line of a stack, like "TypeError: Cannot read properties"
 const ErrorLinePattern = /^\s*(\w*(?:Error|Exception)): ?(.*)$/;
 const UnknownFunction = "?";
+	// Chrome echoes a URL it can't use back in the error, as in tabs.update()'s
+	// 'Invalid url: "…"', and that URL can be a page the user has open.  a
+	// quoted one can contain spaces, so it's matched up to the closing quote.
+	// javascript: and data: URLs hold arbitrary text, so they run to the end of
+	// the line.  everything else stops at whitespace or a quote.  only URLs
+	// are replaced, since the quoted property and setting names in V8's and
+	// our own messages are what make an error debuggable.
+const OpaqueSchemes = "about|blob|file|mailto|view-source";
+const QuotedURLPattern = new RegExp(`"((?:[a-z][a-z0-9+.-]*(?=:\\/\\/))|javascript|data|${OpaqueSchemes}):[^"\\n]*"`, "gi");
+	// a URL has no space after the colon, which keeps prose like "bad data: x"
+	// from matching
+const ScriptURLPattern = /\b(javascript|data):(?=\S).*$/gim;
+const URLPattern = new RegExp(`\\b((?:[a-z][a-z0-9+.-]*(?=:\\/\\/))|${OpaqueSchemes}):[^\\s"'<>]+`, "gi");
+	// our own files are already reduced to bare paths in most places, and
+	// they're not the user's data
+const OwnScheme = "chrome-extension";
+
+
+function replaceURL(
+	match,
+	scheme,
+	quote = "")
+{
+	return scheme.toLowerCase() === OwnScheme
+		? match
+		: `${quote}<${scheme.toLowerCase()} url>${quote}`;
+}
+
+
+	// keeps the scheme, so it's still clear what kind of URL was rejected
+export function scrubURLs(
+	text)
+{
+	if (typeof text != "string") {
+		return text;
+	}
+
+	return text
+		.replace(QuotedURLPattern, (match, scheme) => replaceURL(match, scheme, "\""))
+		.replace(ScriptURLPattern, (match, scheme) => replaceURL(match, scheme))
+		.replace(URLPattern, (match, scheme) => replaceURL(match, scheme));
+}
 
 
 function getExtensionOrigin()
@@ -101,7 +143,7 @@ function createException(
 {
 	const exception = {
 		type: type || "Error",
-		value: value || "",
+		value: scrubURLs(value || ""),
 		mechanism: {
 			handled,
 			synthetic: false

@@ -1,6 +1,6 @@
 import ga4mp from "@/lib/ga4mp";
 import { createPostHogClient } from "@/lib/posthog";
-import { createExceptionList } from "@/lib/exception-list";
+import { createExceptionList, scrubURLs } from "@/lib/exception-list";
 
 
 	// GA event names that PostHog has native equivalents for, which light
@@ -174,6 +174,10 @@ export default class Tracker {
 
 				description = `${error.message}${location}`;
 			}
+
+				// PostHog's copy of the message is scrubbed the same way in
+				// createExceptionList()
+			description = scrubURLs(description);
 
 			if (IgnoredErrors.some((text) => description?.includes(text))) {
 				return;
