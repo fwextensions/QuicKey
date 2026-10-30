@@ -22,8 +22,14 @@ const {
 
 const tracker = trackers.background;
 let lastTogglePromise = Promise.resolve();
+	// when the last command in the lastTogglePromise queue finished.  those
+	// commands switch tabs, so the active tab a shortcut was pressed on is
+	// out of date once one of them finishes after the press.
+let lastRecentsCommandEnd = 0;
 let lastOpenPromise = Promise.resolve();
 let currentWindowLimitRecents = false;
+	// resolves once the settings that commands depend on have been loaded
+let settingsLoaded = Promise.resolve();
 let ports = {};
 let sendPopupMessage;
 
@@ -173,6 +179,11 @@ let commandCount = 0;
 	// that long just flushing the replayed focus change's addTab, so it was
 	// dropped even though the user was still waiting on it.
 const MaxCommandAge = 5000;
+	// how long a toggle waits for the activation of the tab it switched to.
+	// the activation normally lands within ~250 ms.  if the tab was already
+	// active, none is coming, and without a limit the wait would hold up every
+	// command queued behind it until the user switched tabs some other way.
+const MaxActivationWait = 1000;
 
 	// log a command's progress through the queue, with the time since it
 	// arrived, so a shortcut that seems to do nothing shows whether it was
@@ -180,7 +191,10 @@ const MaxCommandAge = 5000;
 	// lock.  the age is measured from receivedTime, not from being queued,
 	// since handleCommand() can itself wait seconds on isMenuOpen() before
 	// queuing.  fn gets a function that returns whether the command is now
-	// too old, so it can bail out before a late side effect.
+	// too old, so it can bail out before a late side effect.  fn also gets an
+	// endPhase(name) function, like the storage tasks', that records the time
+	// since the previous phase.  the phases are logged with the finished line,
+	// so a slow command shows which step the time went to.
 function trackCommand(
 	command,
 	fn,
@@ -188,6 +202,14 @@ function trackCommand(
 {
 	const id = ++commandCount;
 	const elapsed = () => `${Date.now() - receivedTime} ms`;
+	const phases = {};
+	let phaseStart;
+	const endPhase = (phase) => {
+		const now = Date.now();
+
+		phases[phase] = now - phaseStart;
+		phaseStart = now;
+	};
 	const isStale = () => {
 		const stale = Date.now() - receivedTime > MaxCommandAge;
 
@@ -205,12 +227,31 @@ function trackCommand(
 			return;
 		}
 
+		phaseStart = Date.now();
+
 		try {
-			return await fn(isStale);
+			return await fn(isStale, endPhase);
 		} finally {
-			log(`command #${id} finished after`, elapsed());
+			log(`command #${id} finished after`, elapsed(),
+				...(Object.keys(phases).length ? [phases] : []));
 		}
 	};
+}
+
+
+	// queue a command that can switch tabs behind the previous one, and record
+	// when it finishes, so a later command can tell whether its shortcut's
+	// tab is still the active one
+function enqueueRecentsCommand(
+	task)
+{
+	lastTogglePromise = enqueue(lastTogglePromise, async () => {
+		try {
+			return await task();
+		} finally {
+			lastRecentsCommandEnd = Date.now();
+		}
+	}, handleCommandError);
 }
 
 async function handleCommand(
@@ -237,19 +278,24 @@ async function handleCommand(
 				// loaded popup to close and open a new one.  rinse and repeat.
 			lastOpenPromise = enqueue(lastOpenPromise,
 				trackCommand(command,
-					() => openPopupWindow(command === FocusPopupCommand),
+					(isStale, endPhase) => openPopupWindow(command === FocusPopupCommand,
+						isStale, endPhase, tab),
 					receivedTime),
 				handleCommandError);
 			break;
 
 		case PreviousTabCommand:
 		case NextTabCommand:
-			lastTogglePromise = enqueue(lastTogglePromise,
-				trackCommand(command, () => navigateRecents(
+			enqueueRecentsCommand(trackCommand(command, (isStale, endPhase) => settingsLoaded.then(() => {
+				endPhase("settings");
+
+				return navigateRecents(
 					command === PreviousTabCommand ? -1 : 1,
-					currentWindowLimitRecents
-				), receivedTime),
-				handleCommandError);
+					currentWindowLimitRecents,
+					endPhase,
+					tab
+				);
+			}), receivedTime));
 			break;
 
 		case ToggleTabsCommand:
@@ -258,9 +304,24 @@ async function handleCommand(
 	}
 }
 
+	// commandTab is the active tab that onCommand passed, if any
 async function openPopupWindow(
-	focusSearch = false)
+	focusSearch = false,
+	isStale = () => false,
+	endPhase = () => {},
+	commandTab)
 {
+	const isOpen = await popupWindow.isOpen();
+
+	endPhase("isOpen");
+
+		// when there's no popup to show, use the tab the shortcut was pressed
+		// in, which saves a tabs.query() that took 140-600 ms on a cold start
+		// with a couple thousand tabs open.  if the popup is open, though,
+		// query for the tab now.  commandTab is from when the key was pressed,
+		// so for an alt-Q pressed again before the popup got focus, it'd be
+		// the tab behind the popup, and we'd send showWindow, resetting the
+		// selection instead of moving it down.
 		// we used to set activeTab directly here, and then change it back to the
 		// previous value in the last branch below.  that caused issues when we
 		// were also awaiting popupWindow.isOpen().  if the user pressed alt-Q
@@ -268,21 +329,40 @@ async function openPopupWindow(
 		// awaiting isOpen().  the second invocation would then cache the previous
 		// tab as the popup as well, causing it to send showWindow, which would
 		// then reset the selection, making it impossible to move down quickly.
-	const [currentActiveTab] = await chrome.tabs.query({
-		active: true,
-		lastFocusedWindow: true
-	});
+	const [currentActiveTab] = (!isOpen && commandTab)
+		? [commandTab]
+		: await chrome.tabs.query({
+			active: true,
+			lastFocusedWindow: true
+		});
 
-	if (!(await popupWindow.isOpen())) {
+	endPhase("activeTab");
+
+	if (!isOpen) {
+			// create() needs the stored popup size, which waits on the storage
+			// lock the first time.  that can take seconds on a cold start, so
+			// read it here and check the command's age before opening a window
+			// the user may have given up on.
+		await popupWindow.seedSize();
+		endPhase("seed");
+
+		if (isStale()) {
+			return;
+		}
+
 		state.activeTab = currentActiveTab;
 
 			// the popup window isn't open, so create a new one.  tell it whether
 			// to focus the search box or navigate recents.
-		return popupWindow.create(
+		const result = await popupWindow.create(
 			state.activeTab,
 			{ focusSearch, navigatingRecents: state.navigatingRecents },
 			state.navigatingRecents ? "right-center" : "center-center"
 		);
+
+		endPhase("create");
+
+		return result;
 	}
 
 	if (ports.menu) {
@@ -316,7 +396,9 @@ async function openPopupWindow(
 
 async function navigateRecents(
 	direction,
-	limitToCurrentWindow)
+	limitToCurrentWindow,
+	endPhase = () => {},
+	commandTab)
 {
 		// track whether the user is navigating farther back in the stack
 	const label = toolbarIcon.isNormal ? "single" : "repeated";
@@ -342,13 +424,14 @@ async function navigateRecents(
 					// list is up-to-date before we start navigating.  we have to
 					// do this regardless of whether the popup is open or not.
 				await addTab.flush();
+				endPhase("flush");
 
 				if (!ports.popup) {
 						// since the popup isn't currently open, we rely on it
 						// to detect that it's being opened to navigate recents
 						// and then change the selection instead of sending it
 						// the modifySelected message below
-					await openPopupWindow();
+					await openPopupWindow(false, undefined, endPhase, commandTab);
 				} else {
 					sendPopupMessage("modifySelected", {
 						direction: -direction,
@@ -362,6 +445,7 @@ async function navigateRecents(
 				// the cooldown ends
 			await toolbarIcon.invertFor(k.MinTabDwellTime);
 			await recentTabs.navigate(direction, limitToCurrentWindow);
+			endPhase("navigate");
 		}
 
 			// this will record an event if the user hits alt-S when they're
@@ -397,25 +481,45 @@ export function toggleRecentTabs(
 		// event handler would keep starting new chains.  seems cleanest to
 		// keep the promise chain handling just within this function.
 	const command = fromShortcut ? ToggleTabsCommand : "toggle from double-press";
+		// the shortcut's active tab, if we should add it before toggling
+	let tabToAdd = null;
 
-	lastTogglePromise = enqueue(lastTogglePromise, trackCommand(command, (isStale) => Promise.resolve()
+	enqueueRecentsCommand(trackCommand(command, (isStale, endPhase) => settingsLoaded
 			// if the user navigated to a tab but hasn't waited for the min
-			// dwell time before toggling back, add the current tab before
-			// toggling so it becomes the most recent.  when the shortcut gave
-			// us the active tab, add that one directly.  flushing isn't enough
-			// after a focus change, since that handler has to query for the
-			// window's active tab before it calls addTab(), so nothing is
-			// pending yet.  on a cold start, the replayed onFocusChanged and
-			// onCommand are dispatched in the same tick, so the flush always
-			// lost that race and toggled to the tab that was already active.
-			// now() also drops any add still scheduled for an older tab.
-			// skip the popup's own tab, which addTab() would ignore, so that
-			// a real pending add still gets flushed, and skip it while
-			// navigating recents, where the active tab is just a preview.
-		.then(() => isAddableTab(activeTab)
-			? addTab.now(activeTab.id)
-			: addTab.flush())
+			// dwell time before toggling back, the current tab has to become
+			// the most recent before we toggle.  when the shortcut gave us the
+			// active tab, toggle() adds it in the same storage task as the
+			// switch, which on a cold start saves a separate read and write.
+			// flushing isn't enough after a focus change, since that handler
+			// has to query for the window's active tab before it calls
+			// addTab(), so nothing is pending yet.  on a cold start, the
+			// replayed onFocusChanged and onCommand are dispatched in the same
+			// tick, so the flush always lost that race and toggled to the tab
+			// that was already active.  cancel any add still scheduled for an
+			// older tab, so it can't land after the switch.  skip the popup's
+			// own tab, which addTab() would ignore, so that a real pending add
+			// still gets flushed, and skip it while navigating recents, where
+			// the active tab is just a preview.  also skip it if an earlier
+			// command finished after this shortcut was pressed, since that
+			// command may have switched tabs.  a toggle pressed while the
+			// previous one was still running added the tab it had just left
+			// back on top, then toggled to the tab that was already active, so
+			// no activation came and every later toggle queued up behind it.
 		.then(() => {
+			endPhase("settings");
+			tabToAdd = isAddableTab(activeTab) && receivedTime > lastRecentsCommandEnd
+				? activeTab
+				: null;
+
+			if (tabToAdd) {
+				addTab.cancel();
+			} else {
+				return addTab.flush();
+			}
+		})
+		.then(() => {
+			endPhase("flush");
+
 			if (state.navigatingRecents) {
 					// tell the popup that the user's no longer navigating
 					// recents, so that when it gets blurred after we toggle
@@ -435,9 +539,25 @@ export function toggleRecentTabs(
 			// the flush above waits on the storage lock, which can be held
 			// for many seconds, so check the age again before switching.
 			// toggle() itself waits on the lock too, so a stall that starts
-			// after this point can still make the switch land late.
-		.then(() => !isStale() && recentTabs.toggle(currentWindowLimitRecents))
+			// after this point can still make the switch land late.  if it's
+			// stale, still record the tab the user is on, since we canceled
+			// any add that would have.
+		.then(() => {
+			if (isStale()) {
+				return tabToAdd
+					? addTab.now(tabToAdd.id).then(() => false)
+					: false;
+			}
+
+			if (tabToAdd) {
+					// addTab() would have set this when adding the tab
+				state.activeTab = tabToAdd;
+			}
+
+			return recentTabs.toggle(currentWindowLimitRecents, tabToAdd);
+		})
 		.then((switched) => {
+			endPhase("toggle");
 			log("toggle: switched:", switched,
 				switched ? "waiting for the activation" : "");
 
@@ -453,12 +573,34 @@ export function toggleRecentTabs(
 			// only wait if we actually switched, though.  otherwise no
 			// activation is coming, and this chain would stall until the user
 			// switched tabs some other way, with every toggle pressed in the
-			// meantime queued up behind it.
-		.then((switched) => switched && addTab.flushOrNext())
-		.then(() => tracker.event("recents",
-			fromShortcut ? "toggle-shortcut" : "toggle")),
-		receivedTime),
-		handleCommandError);
+			// meantime queued up behind it.  switched only means the target
+			// differs from the top of the stored recents, though, and if
+			// those are out of date, the target can be the tab that's already
+			// active.  so give up on the activation after MaxActivationWait,
+			// and cancel the wait so the next add isn't rushed through.
+		.then((switched) => switched && waitForActivation())
+		.then(() => {
+			endPhase("activation");
+			tracker.event("recents",
+				fromShortcut ? "toggle-shortcut" : "toggle");
+		}),
+		receivedTime));
+}
+
+
+function waitForActivation()
+{
+	let timer;
+	const timeout = new Promise((resolve) => {
+		timer = setTimeout(() => {
+			log("toggle: no activation after", MaxActivationWait, "ms, giving up");
+			addTab.cancel();
+			resolve();
+		}, MaxActivationWait);
+	});
+
+	return Promise.race([addTab.flushOrNext(), timeout])
+		.finally(() => clearTimeout(timer));
 }
 
 function handlePopupMessage(
@@ -488,6 +630,23 @@ function handlePopupMessage(
 	}
 }
 
+	// the recents commands wait on settingsLoaded, since on a cold start the
+	// command that woke the worker is handled before a settings read could
+	// finish.  otherwise they'd see the defaults in state.js, and the first
+	// alt-shift-A would navigate without the popup.  catch errors so a failed
+	// load doesn't break every command.
+function loadSettings()
+{
+	settingsLoaded = settings.get()
+		.then(settings => {
+			toolbarIcon.showTabCount(settings[k.ShowTabCount.Key]);
+			popupWindow.hideBehavior = settings[k.HidePopupBehavior.Key];
+			currentWindowLimitRecents = settings[k.CurrentWindowLimitRecents.Key];
+			state.navigateRecentsWithPopup = settings[k.NavigateRecentsWithPopup.Key];
+		})
+		.catch(error => tracker.exception(error));
+}
+
 export default function init(
 	context)
 {
@@ -495,6 +654,13 @@ export default function init(
 
 	enableCommands("init");
 	checkMenuNotAlreadyOpen();
+
+		// the worker handles commands from here on, so start loading the
+		// settings now.  the control callback below waits for a lock, so on a
+		// cold start it can run after the replayed command is handled.
+	if (isBackgroundContext) {
+		loadSettings();
+	}
 
 	return (context) => {
 			// this runs when the context takes control, which is the point
@@ -510,13 +676,10 @@ export default function init(
 			// to select the currently focused tab
 		popupWindow.on(["hide", "close"], () => state.navigatingRecents = false);
 
-		settings.get()
-			.then(settings => {
-				toolbarIcon.showTabCount(settings[k.ShowTabCount.Key]);
-				popupWindow.hideBehavior = settings[k.HidePopupBehavior.Key];
-				currentWindowLimitRecents = settings[k.CurrentWindowLimitRecents.Key];
-				state.navigateRecentsWithPopup = settings[k.NavigateRecentsWithPopup.Key];
-			});
+			// a page context only starts handling commands now
+		if (!isBackgroundContext) {
+			loadSettings();
+		}
 	};
 
 // TODO: get this to work so the startup case is handled

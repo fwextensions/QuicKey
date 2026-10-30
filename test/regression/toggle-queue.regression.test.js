@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
 	toggle: vi.fn(),
 	flush: vi.fn(() => Promise.resolve()),
 	flushOrNext: vi.fn(),
+	cancel: vi.fn(),
 	exception: vi.fn(),
 }));
 
@@ -22,7 +23,7 @@ vi.mock("@/background/recent-tabs", () => ({
 }));
 
 vi.mock("@/shared/addTab", () => ({
-	addTab: { flush: mocks.flush, flushOrNext: mocks.flushOrNext },
+	addTab: { flush: mocks.flush, flushOrNext: mocks.flushOrNext, cancel: mocks.cancel },
 }));
 
 vi.mock("@/background/toolbar-icon", () => ({
@@ -140,5 +141,56 @@ describe("the toggle queue", () => {
 
 		expect(mocks.toggle).not.toHaveBeenCalled();
 		expect(mocks.flushOrNext).not.toHaveBeenCalled();
+	});
+
+		// seen 2026-10-29: the stored recents were out of date, so a toggle
+		// "switched" to the tab that was already active, and every later press
+		// queued up behind its wait for an activation
+	it("gives up waiting for an activation that never comes", async () => {
+		vi.useFakeTimers();
+
+		try {
+			mocks.toggle.mockResolvedValue(true);
+			mocks.flushOrNext.mockReturnValue(new Promise(() => {}));
+
+			toggleRecentTabs(true);
+			toggleRecentTabs(true);
+			await vi.advanceTimersByTimeAsync(10);
+			expect(mocks.toggle).toHaveBeenCalledTimes(1);
+
+			await vi.advanceTimersByTimeAsync(1000);
+
+			expect(mocks.cancel).toHaveBeenCalled();
+			expect(mocks.toggle).toHaveBeenCalledTimes(2);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+		// how the recents got out of date: the second press's tab was the one
+		// the first toggle was leaving, so adding it put that tab back on top
+		// and sent the second toggle to the tab the first had just activated
+	it("doesn't add the shortcut's tab if an earlier toggle finished after the press", async () => {
+		const tab = { id: 1, windowId: 1, url: "https://one.example.com/" };
+		let releaseActivation;
+
+		mocks.toggle.mockResolvedValue(true);
+		mocks.flushOrNext
+			.mockReturnValueOnce(new Promise((resolve) => releaseActivation = resolve))
+			.mockResolvedValue(undefined);
+
+		toggleRecentTabs(true, Date.now(), tab);
+		await settle();
+		toggleRecentTabs(true, Date.now(), tab);
+		await settle();
+
+		expect(mocks.toggle).toHaveBeenNthCalledWith(1, false, tab);
+
+			// make sure the first toggle finishes after the second press
+		vi.spyOn(Date, "now").mockReturnValue(Date.now() + 10);
+		releaseActivation();
+		await settle();
+
+		expect(mocks.toggle).toHaveBeenNthCalledWith(2, false, null);
 	});
 });
