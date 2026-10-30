@@ -231,73 +231,91 @@ DEBUG && console.log("updateFromFreshTabs result", result);
 }
 
 
+	// the body of add(), split out so navigate() can add the active tab inside
+	// its own storage task.  it updates data's tabIDs and tabsByID in place and
+	// returns the keys that changed.
+function addToData(
+	{tabIDs, tabsByID},
+	tab,
+	penultimately)
+{
+	const {id} = tab;
+	const lastID = last(tabIDs);
+	const lastTab = tabsByID[lastID];
+	let tabData;
+
+	if ((lastTab && lastTab.url == tab.url && lastTab.id == tab.id &&
+			lastTab.windowId == tab.windowId)) {
+			// this is the same tab getting refocused, which could
+			// happen just from opening the extension and then
+			// closing it without doing anything, so update its
+			// lastVisit time to now
+		addVisit(lastTab);
+
+		return { tabsByID };
+	}
+
+		// copy just the keys we need from the tab object
+	tabData = createRecent(tab, tabsByID[id]);
+	addVisit(tabData);
+	tabsByID[id] = tabData;
+
+		// make sure the new tab's ID isn't currently in the list
+	removeItem(tabIDs, id);
+
+	if (penultimately) {
+			// this is a tab that was opened in an inactive state, so we
+			// want to insert it before the last item in the array, which
+			// is the current tab, so that the new tab becomes the
+			// "most recent" one before the current one.
+		tabIDs.splice(-1, 0, id);
+
+		if (lastTab) {
+				// update the current tab so its lastVisit is later than
+				// the inactive tab we just added.  that way, if the user
+				// opens 5 tabs from a bookmark folder and switches to
+				// the 5th, the MRU menu will show the current tab as
+				// one they were most recently on, rather than the 4th
+				// newly opened tab, since the menu is sorted by
+				// lastVisit times.
+			lastTab.lastVisit = tabData.lastVisit + 1;
+		}
+	} else {
+			// this is now the frontmost tab, so add it at the end
+		tabIDs.push(id);
+	}
+
+DEBUG && console.log("add", `${tab.id}|${tab.windowId}`, getRecentStackString(tabIDs), titleOrURL(tab));
+
+		// remove any older tabs that are over the max limit.  splice the
+		// array in place, since navigate() keeps using the same one.
+	tabIDs.splice(0, Math.max(tabIDs.length - MaxTabsLength, 0)).forEach(id => {
+		delete tabsByID[id];
+	});
+
+	return { tabIDs, tabsByID };
+}
+
+
+	// ignore the extension's own popups.  a tab we can't see a URL for
+	// definitely isn't one of ours, so let it through rather than throwing
+	// here, the same way isPopupWindow() treats a missing URL.
+function isAddable(
+	tab)
+{
+	return tab && !tab.url?.includes(PopupURL);
+}
+
+
 function add(
 	tab,
 	penultimately)
 {
-		// ignore the extension's own popups.  a tab we can't see a URL for
-		// definitely isn't one of ours, so let it through rather than throwing
-		// here, the same way isPopupWindow() treats a missing URL.
-	if (!tab || tab.url?.includes(PopupURL)) {
+	if (!isAddable(tab)) {
 		return Promise.resolve();
 	}
 
-	return storage.set(({tabIDs, tabsByID}) => {
-		const {id} = tab;
-		const lastID = last(tabIDs);
-		const lastTab = tabsByID[lastID];
-		let tabData;
-
-		if ((lastTab && lastTab.url == tab.url && lastTab.id == tab.id &&
-				lastTab.windowId == tab.windowId)) {
-				// this is the same tab getting refocused, which could
-				// happen just from opening the extension and then
-				// closing it without doing anything, so update its
-				// lastVisit time to now
-			addVisit(lastTab);
-
-			return { tabsByID };
-		}
-
-			// copy just the keys we need from the tab object
-		tabData = createRecent(tab, tabsByID[id]);
-		addVisit(tabData);
-		tabsByID[id] = tabData;
-
-			// make sure the new tab's ID isn't currently in the list
-		removeItem(tabIDs, id);
-
-		if (penultimately) {
-				// this is a tab that was opened in an inactive state, so we
-				// want to insert it before the last item in the array, which
-				// is the current tab, so that the new tab becomes the
-				// "most recent" one before the current one.
-			tabIDs.splice(-1, 0, id);
-
-			if (lastTab) {
-					// update the current tab so its lastVisit is later than
-					// the inactive tab we just added.  that way, if the user
-					// opens 5 tabs from a bookmark folder and switches to
-					// the 5th, the MRU menu will show the current tab as
-					// one they were most recently on, rather than the 4th
-					// newly opened tab, since the menu is sorted by
-					// lastVisit times.
-				lastTab.lastVisit = tabData.lastVisit + 1;
-			}
-		} else {
-				// this is now the frontmost tab, so add it at the end
-			tabIDs.push(id);
-		}
-
-DEBUG && console.log("add", `${tab.id}|${tab.windowId}`, getRecentStackString(tabIDs), titleOrURL(tab));
-
-			// remove any older tabs that are over the max limit
-		tabIDs.splice(0, Math.max(tabIDs.length - MaxTabsLength, 0)).forEach(id => {
-			delete tabsByID[id];
-		});
-
-		return { tabIDs, tabsByID };
-	}, "addTab");
+	return storage.set((data) => addToData(data, tab, penultimately), "addTab");
 }
 
 
@@ -689,9 +707,13 @@ function updateAll(
 }
 
 
+	// when activeTab is passed, it's made the most recent tab before we pick
+	// where to go, in the same storage task.  that saves a separate read and
+	// write for the add, which was the slowest part of a cold-start toggle.
 function navigate(
 	direction,
-	limitToCurrentWindow)
+	limitToCurrentWindow,
+	activeTab)
 {
 	const now = Date.now();
 	const newData = {
@@ -917,15 +939,25 @@ DEBUG && console.error(error);
 
 		// we break the tab switching into a function so it can call itself
 		// recursively if it hits a bad tab while navigating
-	return storage.set(switchTabs, "navigate")
+	return storage.set((data) => {
+			if (isAddable(activeTab)) {
+					// switchTabs() works on the same arrays, so it sees the
+					// add, and newData makes sure the add is written even if
+					// there's nowhere to switch to
+				Object.assign(newData, addToData(data, activeTab));
+			}
+
+			return switchTabs(data);
+		}, "navigate")
 		.then(() => switched);
 }
 
 
 function toggle(
-	limitToCurrentWindow)
+	limitToCurrentWindow,
+	activeTab)
 {
-	return navigate("toggle", limitToCurrentWindow);
+	return navigate("toggle", limitToCurrentWindow, activeTab);
 }
 
 

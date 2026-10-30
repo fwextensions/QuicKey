@@ -14,6 +14,7 @@ vi.mock("@/background/popup-window", () => ({
 		tabID: 0,
 		isVisible: false,
 		hideBehavior: "behind",
+		seedSize: vi.fn(() => Promise.resolve()),
 		isOpen: vi.fn(() => Promise.resolve(false)),
 		create: vi.fn(() => Promise.resolve({})),
 		close: vi.fn(() => Promise.resolve()),

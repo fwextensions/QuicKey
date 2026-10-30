@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { resetContexts, createContext } from "../support/context";
 import popupWindow from "@/background/popup-window";
 import toolbarIcon from "@/background/toolbar-icon";
+import settings from "@/background/settings";
 
 	// the full worker/popup coordination story, driven through the real
 	// controller graph (control, controlledEvent, tabEventHandlers,
@@ -17,6 +18,7 @@ vi.mock("@/background/popup-window", () => ({
 		tabID: 0,
 		isVisible: false,
 		hideBehavior: "behind",
+		seedSize: vi.fn(() => Promise.resolve()),
 		isOpen: vi.fn(() => Promise.resolve(false)),
 		create: vi.fn(() => Promise.resolve({})),
 		close: vi.fn(() => Promise.resolve()),
@@ -38,14 +40,16 @@ vi.mock("@/background/toolbar-icon", () => ({
 
 	// the real settings module derives chrome shortcut info that's irrelevant
 	// here; commandHandlers only reads these four keys once it takes control
+const DefaultSettings = {
+	showTabCount: false,
+	hidePopupBehavior: "behind",
+	currentWindowLimitRecents: false,
+	navigateRecentsWithPopup: false,
+};
+
 vi.mock("@/background/settings", () => ({
 	default: {
-		get: () => Promise.resolve({
-			showTabCount: false,
-			hidePopupBehavior: "behind",
-			currentWindowLimitRecents: false,
-			navigateRecentsWithPopup: false,
-		}),
+		get: vi.fn(() => Promise.resolve(DefaultSettings)),
 	},
 }));
 
@@ -65,6 +69,7 @@ vi.mock("@/lib/ipc", () => ({
 }));
 
 const OpenPopupCommand = "010-open-popup-window";
+const PreviousTabCommand = "1-previous-tab";
 
 	// several macrotasks, so multi-step promise chains (storage init, lock
 	// grants, controlHeldFuncs) fully settle
@@ -145,6 +150,43 @@ describe("worker alone", () => {
 
 		expect(response).toMatchObject({ id: 42 });
 		expect(ipcCalls).toEqual([]);
+	});
+
+	it("opens a new popup for the shortcut's tab without querying for the active tab", async () => {
+		const worker = await loadContext("/background.html");
+
+		await flush();
+
+		const querySpy = vi.spyOn(chrome.tabs, "query");
+		const commandTab = { id: 7, url: "https://b.example.com/", windowId: 2, active: true };
+
+		chrome.commands.onCommand.dispatch(OpenPopupCommand, commandTab);
+		await flush();
+
+		expect(popupWindow.create).toHaveBeenCalledOnce();
+		expect(popupWindow.create.mock.calls[0][0]).toBe(commandTab);
+		expect(worker.modules.state.activeTab).toBe(commandTab);
+		expect(querySpy).not.toHaveBeenCalledWith(expect.objectContaining({ lastFocusedWindow: true }));
+	});
+
+	it("a cold-start alt-shift-A waits for the settings before choosing to open the popup", async () => {
+			// hold the settings read open, the way a cold start's slow first
+			// storage read does, while the command that woke the worker arrives
+		const { promise, resolve } = Promise.withResolvers();
+
+		settings.get.mockImplementationOnce(() => promise);
+
+		await loadContext("/background.html");
+
+		chrome.commands.onCommand.dispatch(PreviousTabCommand);
+		await flush();
+
+		expect(popupWindow.create).not.toHaveBeenCalled();
+
+		resolve({ ...DefaultSettings, navigateRecentsWithPopup: true });
+		await flush();
+
+		expect(popupWindow.create).toHaveBeenCalledOnce();
 	});
 });
 

@@ -5,7 +5,11 @@ import createCommandHandlers from "@/shared/commandHandlers";
 import popupWindow from "@/background/popup-window";
 import toolbarIcon from "@/background/toolbar-icon";
 import settings from "@/background/settings";
+import trackers from "@/background/page-trackers";
 import * as k from "@/background/constants";
+
+const tracker = trackers.background;
+const isBackgroundContext = typeof document === "undefined";
 
 	// the settings the controller mirrors, so it doesn't have to read storage
 	// on every command.  it picks up changes to them from storage.onChanged.
@@ -42,7 +46,14 @@ export function createController({
 		currentWindowLimitRecents: false,
 	};
 	const addTab = createAddTab(state);
-	const internals = { state, addTab, popupLink };
+		// resolves once the settings the commands depend on have been loaded
+	let settingsLoaded = Promise.resolve();
+	const internals = {
+		state,
+		addTab,
+		popupLink,
+		whenSettingsLoaded: () => settingsLoaded,
+	};
 	const tabEvents = createTabEventHandlers(internals);
 	const commands = createCommandHandlers(internals);
 
@@ -72,6 +83,21 @@ export function createController({
 				applySetting(key, settings[key]);
 			}
 		});
+	}
+
+
+		// the recents commands wait on this, since on a cold start the command
+		// that woke the worker is handled before a settings read could finish.
+		// otherwise they'd see the defaults above, and the first alt-shift-A
+		// would navigate without the popup.  catch errors so a failed load
+		// doesn't break every command.
+	function loadSettings()
+	{
+		settingsLoaded = settings.get()
+			.then(settings => applySettings(settings))
+			.catch(error => tracker.exception(error));
+
+		return settingsLoaded;
 	}
 
 
@@ -120,6 +146,13 @@ export function createController({
 		{
 			tabEvents.listen();
 			commands.listen();
+
+				// the worker handles commands from here on, so start loading
+				// the settings now.  taking control waits for a lock, so on a
+				// cold start that can come after the replayed command is handled.
+			if (isBackgroundContext) {
+				loadSettings();
+			}
 		},
 
 			// called once this context holds control
@@ -136,8 +169,8 @@ export function createController({
 				// in between isn't missed.  applying a setting twice is harmless.
 			chrome.storage.onChanged.addListener(handleStorageChanged);
 
-			return settings.get()
-				.then(settings => applySettings(settings));
+				// a page context only starts handling commands now
+			return isBackgroundContext ? settingsLoaded : loadSettings();
 		}
 	};
 }

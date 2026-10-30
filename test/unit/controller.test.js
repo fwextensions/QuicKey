@@ -16,6 +16,7 @@ vi.mock("@/background/popup-window", () => ({
 		tabID: 0,
 		isVisible: false,
 		hideBehavior: "behind",
+		seedSize: vi.fn(() => Promise.resolve()),
 		isOpen: vi.fn(() => Promise.resolve(false)),
 		create: vi.fn(() => Promise.resolve({})),
 		close: vi.fn(() => Promise.resolve()),
@@ -243,6 +244,8 @@ describe("the toggle", () => {
 
 		expect(popupLink.notify).toHaveBeenCalledExactlyOnceWith("stopNavigatingRecents");
 		expect(controller.state.navigatingRecents).toBe(false);
-		expect(recentTabs.toggle).toHaveBeenCalledExactlyOnceWith(true);
+			// no tab to add in the same task, since the toggle wasn't from a
+			// shortcut that passed one
+		expect(recentTabs.toggle).toHaveBeenCalledExactlyOnceWith(true, null);
 	});
 });

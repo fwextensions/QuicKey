@@ -24,20 +24,48 @@ let isHiddenInTab = false;
 let hideBehavior = Behind;
 let { windowID, tabID } = await getExistingPopupID();
 let lastActiveTab;
+let sizeSeeded = null;
 
 
-await storage.get((data = {}) => {
-	({ popupAdjustmentWidth = 0, popupAdjustmentHeight = 0 } = data);
-	currentWidth = PopupInnerWidth + popupAdjustmentWidth;
-	currentHeight = PopupInnerHeight + popupAdjustmentHeight;
+	// read the stored size adjustments the first time something needs the
+	// popup's size, rather than in a top-level await.  this module is
+	// imported by background.js, so a top-level read held up every listener
+	// registration and the replay of cached events until it finished, and it
+	// needs the storage lock, which another context can hold for seconds.  a
+	// cold-start alt-W was dropped as stale that way, after this read waited
+	// 4.3 s for the lock.  the popup page imports this module too, so its
+	// startup paid the same cost.  every function that reads or sets
+	// currentWidth/currentHeight awaits this first, so a late seed can't
+	// overwrite a newer size from resize() or create().
+	//
+	// the read doesn't take the lock.  a cold-start alt-shift-A spent 300-400 ms
+	// waiting for it behind tasks too short to log, just to read two numbers.
+	// if another context is changing them at the same moment, the worst case
+	// is a popup that's a few pixels off, which create() measures and fixes.
+function seedSize()
+{
+	sizeSeeded ??= storage.peek((data = {}) => {
+		({ popupAdjustmentWidth = 0, popupAdjustmentHeight = 0 } = data);
+		currentWidth = PopupInnerWidth + popupAdjustmentWidth;
+		currentHeight = PopupInnerHeight + popupAdjustmentHeight;
 
-		// TEMPORARY INSTRUMENTATION -- the adjustments outlive the worker, so
-		// log what we start from.  a bad one persists across restarts and would
-		// otherwise look like the popup being wrong for no reason.
-	(popupAdjustmentWidth || popupAdjustmentHeight) &&
-		log("popup size seeded from storage:", `${currentWidth}x${currentHeight}`,
-			"adjustment:", `${popupAdjustmentWidth}x${popupAdjustmentHeight}`);
-}, "seedPopupSize");
+			// TEMPORARY INSTRUMENTATION -- the adjustments outlive the worker, so
+			// log what we start from.  a bad one persists across restarts and would
+			// otherwise look like the popup being wrong for no reason.
+		(popupAdjustmentWidth || popupAdjustmentHeight) &&
+			log("popup size seeded from storage:", `${currentWidth}x${currentHeight}`,
+				"adjustment:", `${popupAdjustmentWidth}x${popupAdjustmentHeight}`);
+	})
+			// let the next call retry, instead of every later create() or
+			// show() rejecting on the same failed read
+		.catch((error) => {
+			sizeSeeded = null;
+
+			throw error;
+		});
+
+	return sizeSeeded;
+}
 
 
 async function getWindow(
@@ -148,6 +176,8 @@ async function create(
 	props = {},
 	alignment)
 {
+	await seedSize();
+
 		// close any existing window, in case one was still open
 	await close("create");
 
@@ -347,6 +377,8 @@ async function show(
 	activeTab,
 	alignment)
 {
+	await seedSize();
+
 	const targetWindow = await getWindow(activeTab);
 	const bounds = calcBounds(
 		targetWindow,
@@ -407,6 +439,8 @@ async function hide(
 	targetTabOrWindow)
 {
 	isVisible = false;
+
+	await seedSize();
 
 	if (hideBehavior == Tab
 		|| (hideBehavior == Behind && (!targetTabOrWindow || targetTabOrWindow.id === tabID))) {
@@ -505,6 +539,9 @@ async function resize(
 	if (height < 0) {
 		return;
 	}
+
+		// seed first, so the stored size can't land after this and replace it
+	await seedSize();
 
 		// resize() is the one path to chrome.windows that doesn't go through
 		// calcBounds(), and it's where the fractional values originate -- the
@@ -615,6 +652,7 @@ if (isBackgroundContext) {
 
 
 export default {
+	seedSize,
 	create,
 	show,
 	hide,
@@ -631,6 +669,14 @@ export default {
 	},
 
 	async isOpen() {
+			// a tabID of 0 means getExistingPopupID() found no popup when this
+			// module loaded and we haven't created one since, so getContexts()
+			// can't match anything.  skip the call, which took up to 200 ms on
+			// a cold start.
+		if (!tabID) {
+			return false;
+		}
+
 		const [popupWindowTab] = await chrome.runtime.getContexts({ tabIds: [tabID] });
 
 		return !!popupWindowTab;

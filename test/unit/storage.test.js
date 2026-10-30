@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createStorage } from "@/background/storage";
+import log from "@/background/persistent-log";
+
+vi.mock("@/background/persistent-log", () => ({ default: vi.fn() }));
 
 	// createStorage() kicks off initialize() without awaiting it, since it has
 	// to return the storage object synchronously.  get()/set() block on it
@@ -93,6 +96,90 @@ describe("storage locking", () => {
 			// resolved, proving the two sets were serialized
 		expect(order).toEqual(["task1-start", "task1-end", "task2-start"]);
 		expect(chrome.storage.local._dump().data).toEqual({ a: 1, b: 1 });
+	});
+
+	it("logs a long hold and a long wait while they're still going", async () => {
+		chrome.storage.local._seed({
+			version: 1,
+			data: { a: 0 },
+			lastSavedFrom: "/x.html",
+		});
+
+		const storage = createStorage({ name: "long-hold", version: 1 });
+
+		await flush();
+
+		const { promise: release, resolve } = Promise.withResolvers();
+		const holder = storage.set(async () => {
+			await release;
+
+			return { a: 1 };
+		}, "slowHolder");
+		const waiter = storage.get(undefined, "patientWaiter");
+
+			// past LongLockTime, but before either task has finished
+		await new Promise((r) => setTimeout(r, 1100));
+
+		const messages = log.mock.calls.map((args) => args.join(" "));
+
+		expect(messages).toContainEqual(expect.stringMatching(
+			/^storage task "slowHolder" still holding the lock after/));
+		expect(messages).toContainEqual(expect.stringMatching(
+			/^storage task "patientWaiter" still waiting for the lock after .* this context is running: slowHolder/));
+
+		resolve();
+		await Promise.all([holder, waiter]);
+	});
+
+	it("peek() reads the data without waiting for a task holding the lock", async () => {
+		chrome.storage.local._seed({
+			version: 1,
+			data: { a: 0 },
+			lastSavedFrom: "/x.html",
+		});
+
+		const storage = createStorage({ name: "peek", version: 1 });
+		const { promise: release, resolve } = Promise.withResolvers();
+		const holder = storage.set(async () => {
+			await release;
+
+			return { a: 1 };
+		}, "holder");
+
+		expect(await storage.peek(({ a }) => a)).toBe(0);
+
+		resolve();
+		await holder;
+
+		expect(await storage.peek()).toEqual({ a: 1 });
+	});
+
+	it("names this context's running and queued tasks when logging the lock state", async () => {
+		chrome.storage.local._seed({
+			version: 1,
+			data: { a: 0 },
+			lastSavedFrom: "/x.html",
+		});
+
+		const storage = createStorage({ name: "lock-state", version: 1 });
+		const { promise: release, resolve } = Promise.withResolvers();
+		const { promise: started, resolve: start } = Promise.withResolvers();
+		const holder = storage.set(async () => {
+			start();
+			await release;
+		}, "holder");
+		const waiter = storage.get(undefined, "waiter");
+
+		await started;
+		await storage.logLockState("checking:");
+
+		const messages = log.mock.calls.map((args) => args.join(" "));
+
+		expect(messages).toContainEqual(expect.stringMatching(
+			/^checking: this context is running: holder queued here: waiter/));
+
+		resolve();
+		await Promise.all([holder, waiter]);
 	});
 });
 

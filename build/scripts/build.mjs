@@ -104,6 +104,17 @@ function finishBuild(
 	};
 }
 
+	// react-router marks its bundle "use client" for React Server Components,
+	// which don't apply here, so the directive being dropped is harmless
+function ignoreDirectiveWarnings(
+	warning,
+	warn)
+{
+	if (warning.code !== "MODULE_LEVEL_DIRECTIVE") {
+		warn(warning);
+	}
+}
+
 function baseConfig()
 {
 	return {
@@ -133,8 +144,6 @@ function baseConfig()
 				// preloaded chunk unclaimed.
 			modulePreload: false,
 		},
-			// silence "Module level directives cause errors when bundled"
-			// style warnings from deps
 		logLevel: "info",
 	};
 }
@@ -173,6 +182,7 @@ function pagesConfig()
 			popup: join(srcDir, "popup.html"),
 			options: join(srcDir, "options.html"),
 		},
+		onwarn: ignoreDirectiveWarnings,
 		output: {
 			entryFileNames: "js/[name].js",
 			chunkFileNames: "js/[name]-[hash].js",
@@ -213,6 +223,7 @@ function scriptConfig(
 	);
 	config.build.rollupOptions = {
 		input: join(srcDir, entry),
+		onwarn: ignoreDirectiveWarnings,
 		output: {
 				// a single self-contained classic script, loadable via
 				// importScripts().  it's built as one ES chunk wrapped in an

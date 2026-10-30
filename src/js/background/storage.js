@@ -17,6 +17,11 @@ const MaxLoggedKeys = 20;
 	// under a second, so a wait made of several sub-second holds still names
 	// the tasks that caused it.
 const SlowTaskThreshold = 250;
+	// a hold or wait that's still going after this long gets logged while it's
+	// happening, rather than only once it ends.  a 10 s wait was logged with no
+	// slow holder before it, so whatever held the lock either never finished
+	// or wasn't one of our tasks.
+const LongLockTime = 1000;
 
 
 	// a task waiting on the lock can't see what's holding it, since the worker
@@ -24,7 +29,9 @@ const SlowTaskThreshold = 250;
 	// puts a line naming the culprit just before the waiter's long wait.  the
 	// waiter logs its own wait too, and both break the hold down by phase, so
 	// a slow task shows whether the time went to Chrome's storage or to the
-	// task's own work.
+	// task's own work.  a hold that runs past LongLockTime also logs while
+	// it's still going, in case it never ends, such as when the context is
+	// frozen or killed.
 async function logIfSlow(
 	name,
 	requestTime,
@@ -39,12 +46,18 @@ async function logIfSlow(
 		phases[phase] = Math.round(now - phaseStart);
 		phaseStart = now;
 	};
+		// the phases logged so far show which one it's stuck in: the next one
+		// after the last that's listed
+	const stillHeldTimer = setTimeout(() => log(`storage task "${name}" still holding the lock after`,
+		Math.round(performance.now() - startTime), "ms", { ...phases }), LongLockTime);
 
 	try {
 		return await callback(endPhase);
 	} finally {
 		const duration = performance.now() - startTime;
 		const wait = startTime - requestTime;
+
+		clearTimeout(stillHeldTimer);
 
 		if (duration > SlowTaskThreshold || wait > SlowTaskThreshold) {
 			log(`storage task "${name}" held the lock`, Math.round(duration), "ms",
@@ -192,6 +205,11 @@ export function createStorage({
 		// waits on before touching storage.  null means it hasn't been started,
 		// or that the last attempt failed and the next task should retry.
 	let initPromise = null;
+		// the name of the task holding the lock in this context, if any
+	let runningTask = null;
+		// the names of this context's tasks still waiting for the lock, in the
+		// order they asked for it
+	const queuedTasks = [];
 
 
 		// createStorage() has to return synchronously, so the initial load runs
@@ -393,59 +411,95 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 	}
 
 
+		// log who holds the lock and who's queued for it, from the lock
+		// manager rather than from our own tasks.  the clientIds tell the
+		// worker and the popup apart, and a holder with no matching "still
+		// holding" line means the lock is held by something other than a
+		// running task.  the queued names cover only this context's tasks.
+	async function logLockState(
+		...message)
+	{
+		try {
+			const { held, pending } = await navigator.locks.query();
+			const describe = ({ clientId, mode }) => `${clientId?.slice(0, 8)} ${mode}`;
+
+			log(...message,
+				"this context is running:", runningTask ?? "nothing",
+				"queued here:", [...queuedTasks],
+				"held by:", held.filter((lock) => lock.name === lockName).map(describe),
+				"pending:", pending.filter((lock) => lock.name === lockName).map(describe));
+		} catch (error) {
+			log(...message, "couldn't query the locks:", error?.message);
+		}
+	}
+
+
 	function doTask(
 		task,
 		saveResult,
 		name = task.name || "anonymous")
 	{
 		const requestTime = performance.now();
+		const waitTimer = setTimeout(() => logLockState(
+			`storage task "${name}" still waiting for the lock after`,
+			Math.round(performance.now() - requestTime), "ms,"), LongLockTime);
 
-		return navigator.locks.request(lockName, () => logIfSlow(name, requestTime, async (endPhase) => {
-				// don't read until the initial load or reset has finished
-				// writing, so the first task on a new install sees the
-				// defaults instead of undefined
-			await ensureInitialized();
-			endPhase("init");
+		queuedTasks.push(name);
 
-				// we read from storage on every task rather than keeping an
-				// in-memory copy the way the MV2 persistent background page
-				// could, since the worker and the popup each get their own
-				// copy of this module and have to see each other's writes.
-				// only get the data key, since that's all the tasks operate
-				// on, so we don't deserialize the other keys on every call
-			const { data } = await chrome.storage.local.get("data");
-			let result;
+		return navigator.locks.request(lockName, () => {
+			clearTimeout(waitTimer);
+			queuedTasks.splice(queuedTasks.indexOf(name), 1);
+			runningTask = name;
 
-			endPhase("read");
+			return logIfSlow(name, requestTime, async (endPhase) => {
+					// don't read until the initial load or reset has finished
+					// writing, so the first task on a new install sees the
+					// defaults instead of undefined
+				await ensureInitialized();
+				endPhase("init");
 
-			try {
-				result = await task(data);
-				endPhase("task");
+					// we read from storage on every task rather than keeping an
+					// in-memory copy the way the MV2 persistent background page
+					// could, since the worker and the popup each get their own
+					// copy of this module and have to see each other's writes.
+					// only get the data key, since that's all the tasks operate
+					// on, so we don't deserialize the other keys on every call
+				const { data } = await chrome.storage.local.get("data");
+				let result;
 
-				if (saveResult && result) {
-						// the task will probably return only the changed keys,
-						// so merge the existing data with the new data, so that
-						// we don't lose anything, since everything is stored in
-						// a top-level `data` key.  we also want to return the
-						// complete set of updated data below.
-					result = {
-						...data,
-						...result
-					};
-					await chrome.storage.local.set({
-						lastSavedFrom: storageLocation,
-						data: result
-					});
-					endPhase("write");
+				endPhase("read");
+
+				try {
+					result = await task(data);
+					endPhase("task");
+
+					if (saveResult && result) {
+							// the task will probably return only the changed keys,
+							// so merge the existing data with the new data, so that
+							// we don't lose anything, since everything is stored in
+							// a top-level `data` key.  we also want to return the
+							// complete set of updated data below.
+						result = {
+							...data,
+							...result
+						};
+						await chrome.storage.local.set({
+							lastSavedFrom: storageLocation,
+							data: result
+						});
+						endPhase("write");
+					}
+				} catch (error) {
+					console.error(error);
+
+					throw error;
 				}
-			} catch (error) {
-				console.error(error);
 
-				throw error;
-			}
-
-			return result;
-		}));
+				return result;
+			})
+				.finally(() => runningTask = null);
+		})
+			.finally(() => clearTimeout(waitTimer));
 	}
 
 
@@ -468,6 +522,21 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 	}
 
 
+		// read the data without taking the lock, for a caller that can live
+		// with a value another context is about to change, and can't afford to
+		// wait behind whatever holds the lock.  it still waits for the initial
+		// load, so it never sees data from before an update or reset.
+	async function peek(
+		task = returnData)
+	{
+		await ensureInitialized();
+
+		const { data } = await chrome.storage.local.get("data");
+
+		return task(data);
+	}
+
+
 	function reset()
 	{
 			// doTask() passes the current data to the task, but an explicit
@@ -487,6 +556,8 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 		get version() { return version; },
 		get,
 		set,
-		reset
+		peek,
+		reset,
+		logLockState
 	};
 }
