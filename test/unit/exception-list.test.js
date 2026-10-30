@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { createExceptionList, parseStackFrames } from "@/lib/exception-list";
+import { createExceptionList, parseStackFrames, scrubURLs } from "@/lib/exception-list";
 
 	// what PostHog's error tracking gets from tracker.exception().  it names
 	// issues after the exception type and fingerprints them on the in-app
@@ -124,5 +124,67 @@ describe("createExceptionList", () => {
 		expect(createExceptionList(undefined)[0].value).toBe("Generic error");
 		expect(createExceptionList(42)[0].value).toBe("42");
 		expect(createExceptionList({})[0].value).toBe("");
+	});
+});
+
+
+	// Chrome echoes a URL it won't open back in the error, and that can be a
+	// page the user has open, so URLs are replaced before anything is sent.
+	// the quoted names in these messages are what make them debuggable, so
+	// they have to come through untouched.
+describe("scrubURLs", () => {
+	it.each([
+		["Chrome's quoted invalid URL",
+			'Invalid url: "https://example.com/a page?q=secret".',
+			'Invalid url: "<https url>".'],
+		["a bare URL",
+			"Error: Cannot navigate to http://intranet/report?id=7 now",
+			"Error: Cannot navigate to <http url> now"],
+		["a chrome:// page",
+			'Invalid url: "chrome://settings/passwords".',
+			'Invalid url: "<chrome url>".'],
+		["a bookmarklet, to the end of the line",
+			"Failed for javascript:(function(){alert('x y')})()\n    at open (js/popup.js:1:1)",
+			"Failed for <javascript url>\n    at open (js/popup.js:1:1)"],
+		["an opaque URL",
+			"Error: about:blank#private and mailto:someone@example.com",
+			"Error: <about url> and <mailto url>"],
+		["a view-source URL, along with the page it wraps",
+			"Error: view-source:https://example.com/x",
+			"Error: <view-source url>"],
+	])("replaces %s, keeping the scheme", (label, text, expected) => {
+		expect(scrubURLs(text)).toBe(expected);
+	});
+
+	it.each([
+		"Cannot destructure property 'tabIDs' of 'undefined'",
+		"Cannot destructure property 'lastUsedVersion' of 'e'",
+		"Failed to set icon '/img/icon-16.png': Failed to fetch",
+		'addDefaultSetting(): no default value for "hideBehavior"',
+		"Error at property 'left': Invalid type: expected integer, found number",
+		"Unable to read data: the store is busy",
+		"TypeError: x is not a function\n    at fn (js/background.js:12:3)\n    at extensions::setIcon:38:5",
+	])("leaves %j alone", (text) => {
+		expect(scrubURLs(text)).toBe(text);
+	});
+
+	it("leaves the extension's own URLs alone", () => {
+		const text = `Failed to load ${Origin}/js/popup.js`;
+
+		expect(scrubURLs(text)).toBe(text);
+	});
+
+	it("scrubs the message PostHog gets but not the stack frames", () => {
+		const error = new Error('Invalid url: "https://example.com/secret".');
+
+		error.stack = `Error: ${error.message}\n    at open (${Origin}/js/popup.js:9:4)`;
+
+		const [exception] = createExceptionList(error);
+
+		expect(exception.value).toBe('Invalid url: "<https url>".');
+		expect(exception.stacktrace.frames[0]).toMatchObject({
+			filename: "js/popup.js",
+			in_app: true
+		});
 	});
 });
