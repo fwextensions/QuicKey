@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getWindowPadding } from "@/popup/window-padding";
+import { createFitBudget, getWindowPadding } from "@/popup/window-padding";
 
 // Moving the popup from two 1440p monitors to a 2.25x laptop display left it
 // tall enough to run off the bottom of the screen, and it stayed that way until
@@ -60,5 +60,57 @@ describe("getWindowPadding", () => {
 		const tall = { outerWidth: 516, outerHeight: 588, innerWidth: 500, innerHeight: 488 };
 
 		expect(getWindowPadding(tall, 39)).toEqual({ settled: true, padding: 100 });
+	});
+
+		// the popup opened 17px too tall on the same 2.25x display, because this
+		// reading was only slightly off, so the sanity check can't catch it.
+		// that's why the resize handler has to check the fit again:
+		//
+		//   [fit-content] outer: 517x528  inner: 488x476  target: 516x540  windowPadding: 52
+		//   [fit-content] outer: 517x540  inner: 504x505  target: 516x523  windowPadding: 35
+	it("corrects a plausible mid-transition reading on the next measurement", () => {
+		const plausible = { outerWidth: 517, outerHeight: 528, innerWidth: 488, innerHeight: 476 };
+		const afterSettling = { outerWidth: 517, outerHeight: 540, innerWidth: 504, innerHeight: 505 };
+
+		expect(getWindowPadding(plausible, 39)).toEqual({ settled: true, padding: 52 });
+		expect(getWindowPadding(afterSettling, 52)).toEqual({ settled: true, padding: 35 });
+	});
+});
+
+
+describe("createFitBudget", () => {
+	function spendUntilEmpty(
+		budget)
+	{
+		let resizes = 0;
+
+			// the limit on this loop is just so a broken budget fails the test
+			// instead of hanging it
+		while (resizes < 100 && budget.spend()) {
+			resizes++;
+		}
+
+		return resizes;
+	}
+
+
+	it("stops a resize loop", () => {
+		expect(spendUntilEmpty(createFitBudget(3))).toBe(3);
+	});
+
+	it("allows enough resizes to settle after a scale change", () => {
+		expect(spendUntilEmpty(createFitBudget())).toBeGreaterThanOrEqual(2);
+	});
+
+	it("stays empty until it's reset", () => {
+		const budget = createFitBudget(1);
+
+		expect(budget.spend()).toBe(true);
+		expect(budget.spend()).toBe(false);
+		expect(budget.spend()).toBe(false);
+
+		budget.reset();
+
+		expect(budget.spend()).toBe(true);
 	});
 });
