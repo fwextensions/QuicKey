@@ -2,6 +2,10 @@
 	// are around 16 wide and 35-39 tall, so this is loose on purpose -- it only
 	// has to be tight enough to catch a measurement taken mid-transition.
 const MaxWindowChrome = 100;
+	// how many times the popup can resize itself to fit its content without a
+	// render or a measurement that already fits.  settling after a scale change
+	// takes one or two, so this leaves room for that but stops a real loop quickly.
+const MaxFitResizes = 3;
 
 
 	// the difference between the outer and inner window size is the chrome, and
@@ -35,5 +39,35 @@ export function getWindowPadding(
 			// with no believable measurement yet, the current one is still the
 			// best guess we have
 		padding: settled || typeof lastPadding !== "number" ? height : lastPadding,
+	};
+}
+
+
+	// fitting the window to its content causes a resize event, and the resize
+	// handler fits the window again, so a measurement that never lands on the
+	// content height, like one that alternates between two values on a fractional
+	// scale factor, would keep the window resizing forever.  this caps how many
+	// of those fits can happen in a row.
+export function createFitBudget(
+	maxResizes = MaxFitResizes)
+{
+	let used = 0;
+
+	return {
+		spend()
+		{
+			if (used < maxResizes) {
+				used++;
+
+				return true;
+			}
+
+			return false;
+		},
+
+		reset()
+		{
+			used = 0;
+		}
 	};
 }

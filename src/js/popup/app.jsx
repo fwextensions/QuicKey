@@ -13,7 +13,7 @@ import getHistory from "./data/get-history";
 import addURLs from "./data/add-urls";
 import { loadPinyin } from "./data/add-pinyin";
 import shortcuts from "./shortcuts/popup-shortcuts";
-import { getWindowPadding } from "./window-padding";
+import { createFitBudget, getWindowPadding } from "./window-padding";
 import handleRef from "@/lib/handle-ref";
 import copyTextToClipboard from "@/lib/copy-to-clipboard";
 import { connect } from "@/lib/ipc";
@@ -142,6 +142,7 @@ export default class App extends React.Component {
 		// the last outer-minus-inner measurement that made sense; see
 		// getWindowPadding()
 	lastWindowPadding = undefined;
+	fitBudget = createFitBudget();
 	nextFrameRequestID = 0;
 	port = null;
 		// the controller this page runs if it takes control from the worker,
@@ -354,45 +355,67 @@ export default class App extends React.Component {
 			// height, but only in the popup case, since the toolbar menu does
 			// this automatically.  and only if the current mode's promise is
 			// loaded, so that the window doesn't flicker while loading items.
-		if (this.props.isPopup && this[this.mode].length) {
-				// since we want to measure the body and window heights only after
-				// the browser paints, do the check in a requestAnimationFrame.
-				// cancel any pending requests first, since we sometimes get
-				// multiple React updates in one frame.
-			cancelAnimationFrame(this.nextFrameRequestID);
-			this.nextFrameRequestID = requestAnimationFrame(() => {
-				const bodyHeight = document.body.offsetHeight;
-					// outerWidth/outerHeight and innerWidth/innerHeight don't
-					// update in the same frame when the window moves to a display
-					// with a different scale factor, so subtracting one from the
-					// other can span two coordinate spaces and produce nonsense.
-					// getWindowPadding() falls back to the last believable value
-					// rather than baking that into the target height.
-				const {settled, padding: windowPadding} =
-					getWindowPadding(window, this.lastWindowPadding);
-
-				if (settled) {
-					this.lastWindowPadding = windowPadding;
-				}
-
-				if (notEqual(innerHeight, bodyHeight)) {
-						// don't fight with the onResize handler, and use the Chrome
-						// API to resize the popup, since it can make the window
-						// shorter than window.resizeTo() can.  pass the saved
-						// outerWidth in this.popupW, in case the actual outerWidth
-						// has changed for some reason.
-					this.ignoreNextResize = true;
-					this.popupH = bodyHeight + windowPadding;
-						// the other place popupH is assigned, and the one that
-						// could bake a bad measurement into the target
-					this.logSize("fit-content",
-						"bodyHeight:", bodyHeight,
-						"windowPadding:", windowPadding,
-						settled ? "" : "(measurement unsettled, reused)");
-					popupWindow.resize(this.popupW, this.popupH);
-				}
-			});
+		if (this.props.isPopup) {
+				// a render may have changed the content, so it always has to be
+				// able to fit the window to it.  that means the budget only limits
+				// fits that the resize handler kicks off, not a loop that goes
+				// through a render, like a resize selecting the item under the mouse.
+			this.fitBudget.reset();
+			this.fitToContent();
 		}
+	}
+
+
+	fitToContent()
+	{
+		if (!this[this.mode].length) {
+			return;
+		}
+
+			// since we want to measure the body and window heights only after
+			// the browser paints, do the check in a requestAnimationFrame.
+			// cancel any pending requests first, since we sometimes get
+			// multiple React updates in one frame.
+		cancelAnimationFrame(this.nextFrameRequestID);
+		this.nextFrameRequestID = requestAnimationFrame(() => {
+			const bodyHeight = document.body.offsetHeight;
+				// outerWidth/outerHeight and innerWidth/innerHeight don't
+				// update in the same frame when the window moves to a display
+				// with a different scale factor, so subtracting one from the
+				// other can span two coordinate spaces and produce nonsense.
+				// getWindowPadding() falls back to the last believable value
+				// rather than baking that into the target height.
+			const {settled, padding: windowPadding} =
+				getWindowPadding(window, this.lastWindowPadding);
+
+			if (settled) {
+				this.lastWindowPadding = windowPadding;
+			}
+
+			if (!notEqual(innerHeight, bodyHeight)) {
+				this.fitBudget.reset();
+			} else if (this.fitBudget.spend()) {
+					// don't fight with the onResize handler, and use the Chrome
+					// API to resize the popup, since it can make the window
+					// shorter than window.resizeTo() can.  pass the saved
+					// outerWidth in this.popupW, in case the actual outerWidth
+					// has changed for some reason.
+				this.ignoreNextResize = true;
+				this.popupH = bodyHeight + windowPadding;
+					// the other place popupH is assigned, and the one that
+					// could bake a bad measurement into the target
+				this.logSize("fit-content",
+					"bodyHeight:", bodyHeight,
+					"windowPadding:", windowPadding,
+					settled ? "" : "(measurement unsettled, reused)");
+				popupWindow.resize(this.popupW, this.popupH);
+			} else {
+				log("popup fit: giving up until the next render",
+					"inner:", `${innerWidth}x${innerHeight}`,
+					"target:", `${this.popupW}x${this.popupH}`,
+					"bodyHeight:", bodyHeight);
+			}
+		});
 	}
 
 
@@ -1508,6 +1531,14 @@ export default class App extends React.Component {
 		}
 
 		this.ignoreNextResize = false;
+
+			// a chrome measurement taken during a scale change can be wrong but
+			// still look plausible, so check the fit again now that the window
+			// has stopped changing size.  otherwise, it stays wrong until
+			// something happens to trigger a render.
+		if (this.visible) {
+			this.fitToContent();
+		}
 	}, 250);
 
 
