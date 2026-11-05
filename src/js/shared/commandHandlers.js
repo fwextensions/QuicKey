@@ -146,6 +146,11 @@ export default function createCommandHandlers({
 			port.onDisconnect.addListener(() => {
 				menuOpen = false;
 				enableCommands("menu disconnected");
+
+					// the menu closes when the user picks a tab, so add that tab to
+					// recents now, or quickly switching away would drop it.  only
+					// the context with control can have an add pending.
+				addTab.flush();
 			});
 		}
 	}

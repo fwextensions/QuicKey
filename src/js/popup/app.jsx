@@ -731,9 +731,24 @@ export default class App extends React.Component {
 				return;
 			}
 
+				// focusTab() already did this for its branch, but the others can
+				// also activate a tab, and flushing again is harmless
+			this.executeAddTab();
 			await this.closeWindow(false, tabOrWindow, "open");
 		}
 	};
+
+
+		// the user picked this tab, so add it to recents now instead of waiting
+		// for the dwell time, or quickly switching away would drop it.  the menu
+		// may not survive long enough to send this, so the controller flushes
+		// when its port disconnects instead.
+	executeAddTab()
+	{
+		if (this.props.isPopup) {
+			this.controller.flushAddTab();
+		}
+	}
 
 
 	async focusTab (
@@ -775,6 +790,11 @@ export default class App extends React.Component {
 				// 10.12).  then focus the tab, which should fix any focus issues.
 			return chrome.windows.update(tab.windowId, { focused: true })
 				.then(() => chrome.tabs.update(tab.id, { active: true, ...options }))
+				.then((focusedTab) => {
+					this.executeAddTab();
+
+					return focusedTab;
+				})
 				.catch(error => {
 					this.props.tracker.exception(error);
 					console.error(error);
