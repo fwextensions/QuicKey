@@ -101,7 +101,7 @@ let pendingHandoff = null;
 	// the page already has a request queued for the lock, so it's granted the
 	// moment this worker lets go.  this worker then queues for it again, and
 	// takes control back when the page goes away.
-function handOffControl(
+async function handOffControl(
 	port)
 {
 	if (!control.isHeld()) {
@@ -111,6 +111,15 @@ function handOffControl(
 	}
 
 	pendingHandoff = null;
+
+		// deliver anything held for the page first, so the snapshot has
+		// nothing pending and the page starts from a settled session
+	await controller.pageReady();
+
+	if (!control.isHeld() || ports.popup !== port) {
+			// something changed while that ran
+		return;
+	}
 
 	try {
 		port.postMessage({ message: "takeControl", snapshot: controller.snapshot() });
@@ -259,19 +268,21 @@ DEBUG && console.log("== onConnect", port.name, state.startingUp);
 	});
 
 	port.onDisconnect.addListener(port => {
-		ports[port.name] = null;
+			// a reopened popup's port can connect before the old one's
+			// disconnect arrives, so only forget the port this is about
+		if (ports[port.name] === port) {
+			ports[port.name] = null;
+		}
+
 		state.activeTab = null;
 
 		if (pendingHandoff === port) {
 			pendingHandoff = null;
 		}
-//console.log("---- background: onDisconnect", port.name);
 
 		if (port.name == "popup") {
-// TODO: remove popupWindow.isOpen?
-//			if (popupWindow.isOpen) {
-				popupWindow.close("popup-port-disconnected");
-//			}
+			popupWindow.close("popup-port-disconnected");
+			controller.popupClosed();
 		}
 
 		if (!closedByEsc && Date.now() - connectTime < MaxPopupLifetime) {

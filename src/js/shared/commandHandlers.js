@@ -1,5 +1,6 @@
 import { enqueue } from "@/shared/enqueue";
 import control from "@/shared/control";
+import { transition, describeSession } from "@/shared/popupSession";
 import { addListener, removeListener } from "@/shared/controlledEvent";
 import popupWindow from "@/background/popup-window";
 import toolbarIcon from "@/background/toolbar-icon";
@@ -287,8 +288,11 @@ export default function createCommandHandlers({
 					// loaded popup to close and open a new one.  rinse and repeat.
 				lastOpenPromise = enqueue(lastOpenPromise,
 					trackCommand(command,
-						(isStale, endPhase) => openPopupWindow(command === FocusPopupCommand,
-							isStale, endPhase, tab),
+						(isStale, endPhase) => runSession({
+							type: "open",
+							focusSearch: command === FocusPopupCommand,
+							menuOpen: popupLink.isMenuConnected(),
+						}, { isStale, endPhase, commandTab: tab }),
 						receivedTime),
 					handleCommandError);
 				break;
@@ -298,12 +302,13 @@ export default function createCommandHandlers({
 				enqueueRecentsCommand(trackCommand(command, (isStale, endPhase) => whenSettingsLoaded().then(() => {
 					endPhase("settings");
 
-					return navigateRecents(
-						command === PreviousTabCommand ? -1 : 1,
-						state.currentWindowLimitRecents,
-						endPhase,
-						tab
-					);
+					return runSession({
+						type: "navigate",
+						direction: command === PreviousTabCommand ? -1 : 1,
+						menuOpen: popupLink.isMenuConnected(),
+						withPopup: state.navigateRecentsWithPopup,
+						iconNormal: toolbarIcon.isNormal,
+					}, { isStale, endPhase, commandTab: tab });
 				}), receivedTime));
 				break;
 
@@ -313,162 +318,126 @@ export default function createCommandHandlers({
 		}
 	}
 
-		// commandTab is the active tab that onCommand passed, if any
-	async function openPopupWindow(
-		focusSearch = false,
-		isStale = () => false,
-		endPhase = () => {},
-		commandTab)
+		// run a popup session event: apply the transition, then carry out its
+		// effects in order.  context carries what the effects need from the
+		// command that caused them: isStale() and endPhase() from
+		// trackCommand(), and the active tab onCommand passed, if any.
+	async function runSession(
+		event,
+		context = {})
 	{
-		const isOpen = await popupWindow.isOpen();
+		const before = state.session;
+		const [next, effects] = transition(before, event);
 
-		endPhase("isOpen");
+		state.session = next;
 
-			// when there's no popup to show, use the tab the shortcut was pressed
-			// in, which saves a tabs.query() that took 140-600 ms on a cold start
-			// with a couple thousand tabs open.  if the popup is open, though,
-			// query for the tab now.  commandTab is from when the key was pressed,
-			// so for an alt-Q pressed again before the popup got focus, it'd be
-			// the tab behind the popup, and we'd send showWindow, resetting the
-			// selection instead of moving it down.
-			// we used to set activeTab directly here, and then change it back to the
-			// previous value in the last branch below.  that caused issues when we
-			// were also awaiting popupWindow.isOpen().  if the user pressed alt-Q
-			// quickly, a second command event could get handled while we were
-			// awaiting isOpen().  the second invocation would then cache the previous
-			// tab as the popup as well, causing it to send showWindow, which would
-			// then reset the selection, making it impossible to move down quickly.
-		const [currentActiveTab] = (!isOpen && commandTab)
-			? [commandTab]
-			: await chrome.tabs.query({
-				active: true,
-				lastFocusedWindow: true
-			});
+		if (next !== before || effects.length) {
+			log("popup session:", event.type,
+				`${describeSession(before)} -> ${describeSession(next)}`,
+				effects.map(({ effect, name }) => name ? `${effect} ${name}` : effect).join(", "));
+		}
 
-		endPhase("activeTab");
+		for (const effect of effects) {
+			await performEffect(effect, context);
+		}
+	}
 
-		if (!isOpen) {
-				// create() needs the stored popup size, which waits on the storage
-				// lock the first time.  that can take seconds on a cold start, so
-				// read it here and check the command's age before opening a window
-				// the user may have given up on.
-			await popupWindow.seedSize();
-			endPhase("seed");
 
-			if (isStale()) {
+	async function performEffect(
+		effect,
+		{ isStale = () => false, endPhase = () => {}, commandTab } = {})
+	{
+		switch (effect.effect) {
+			case "create": {
+					// use the tab the shortcut was pressed in, which saves a
+					// tabs.query() that took 140-600 ms on a cold start with a
+					// couple thousand tabs open.  there's no popup for it to be
+					// the tab behind, since we're creating one.
+				const [activeTab] = commandTab
+					? [commandTab]
+					: await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+
+				endPhase("activeTab");
+
+					// create() needs the stored popup size, which waits on the
+					// storage lock the first time.  that can take seconds on a
+					// cold start, so read it here and check the command's age
+					// before opening a window the user may have given up on.
+				await popupWindow.seedSize();
+				endPhase("seed");
+
+				if (isStale()) {
+					state.session = transition(state.session, { type: "createAborted" })[0];
+
+					return;
+				}
+
+				state.activeTab = activeTab;
+
+				await popupWindow.create(
+					activeTab,
+					{ focusSearch: effect.focusSearch, navigatingRecents: effect.navigatingRecents },
+					effect.alignment
+				);
+				endPhase("create");
+
 				return;
 			}
 
-			state.activeTab = currentActiveTab;
+			case "notify": {
+				let { payload } = effect;
 
-				// the popup window isn't open, so create a new one.  tell it whether
-				// to focus the search box or navigate recents.
-			const result = await popupWindow.create(
-				state.activeTab,
-				{ focusSearch, navigatingRecents: state.navigatingRecents },
-				state.navigatingRecents ? "right-center" : "center-center"
-			);
+				if (effect.name === "showWindow") {
+						// the popup is hidden, so query for the tab to show it
+						// over.  commandTab is from when the key was pressed, so
+						// it could be the popup's own tab.  if there's no active
+						// tab (such as when the shortcut is pressed with a devtools
+						// window in the foreground), the popup will appear
+						// aligned to the screen.
+					const [activeTab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
 
-			endPhase("create");
-
-			return result;
-		}
-
-		if (popupLink.isMenuConnected()) {
-				// the menu is open, so route the shortcut to it as a selection
-				// change instead of showing the popup window.  popupLink.notify()
-				// prefers the menu, and the menu can't handle showWindow (it has
-				// no popupWindow connection), so sending it would just throw in
-				// the menu and nothing would appear.
-			return popupLink.notify("modifySelected", { direction: 1 });
-		}
-
-		if (!isPopupWindow(currentActiveTab)) {
-			state.activeTab = currentActiveTab;
-
-				// the popup window is open but not focused, so tell it to show
-				// itself centered on the current browser window, and whether to
-				// select the first item.  if there's no activeTab (such as when
-				// the shortcut is pressed and a devtools window is in the
-				// foreground), the popup will appear aligned to the screen.
-			return popupLink.notify("showWindow", { focusSearch, activeTab: state.activeTab });
-		}
-
-			// the popup is open and focused, so use the shortcut to move the
-			// selection DOWN
-		if (!(await popupLink.notify("modifySelected", { direction: 1 }))) {
-				// the message couldn't be delivered, so close the popup
-			return popupWindow.close("modify-selected-failed");
-		}
-	}
-
-	async function navigateRecents(
-		direction,
-		limitToCurrentWindow,
-		endPhase = () => {},
-		commandTab)
-	{
-			// track whether the user is navigating farther back in the stack
-		const label = toolbarIcon.isNormal ? "single" : "repeated";
-		const action = direction == -1 ? "previous" : "next";
-
-		if ((popupLink.isPopupConnected() && popupWindow.isVisible && !state.navigatingRecents)
-				|| popupLink.isMenuConnected()) {
-				// for recentTabs.navigate(), -1 is further back in the stack,
-				// but for the menu, 1 is moving the selection down, which is
-				// equivalent to going further back in the stack, so negate
-				// the value
-			popupLink.notify("modifySelected", {
-				direction: -direction
-			});
-		} else {
-			if (state.navigateRecentsWithPopup) {
-					// when navigating with recents, we want to ignore the "next"
-					// direction if the window isn't currently visible, since that
-					// would just mean navigating to the currently active tab
-				if (direction == -1 || popupWindow.isVisible) {
-					state.navigatingRecents = true;
-
-						// execute any pending tab activation event so the recents
-						// list is up-to-date before we start navigating.  we have to
-						// do this regardless of whether the popup is open or not.
-					await addTab.flush();
-					endPhase("flush");
-
-					if (!popupLink.isPopupConnected()) {
-							// since the popup isn't currently open, we rely on it
-							// to detect that it's being opened to navigate recents
-							// and then change the selection instead of sending it
-							// the modifySelected message below
-						await openPopupWindow(false, undefined, endPhase, commandTab);
-					} else {
-						popupLink.notify("modifySelected", {
-							direction: -direction,
-							navigatingRecents: true
-						});
-					}
+					endPhase("activeTab");
+					state.activeTab = activeTab;
+					payload = { ...payload, activeTab };
 				}
-			} else if (direction == -1 || !toolbarIcon.isNormal) {
-					// we only want to invert the icon and start navigating if
-					// the user is going backwards or is going forwards before
-					// the cooldown ends
-				await toolbarIcon.invertFor(k.MinTabDwellTime);
-				await recentTabs.navigate(direction, limitToCurrentWindow);
-				endPhase("navigate");
+
+				const delivered = await popupLink.notify(effect.name, payload);
+
+				if (!delivered && effect.closeIfUndelivered) {
+						// the message couldn't be delivered, so close the popup
+					await popupWindow.close("modify-selected-failed");
+				}
+
+				return;
 			}
 
-				// this will record an event if the user hits alt-S when they're
-				// not currently navigating, but probably not worth worrying about
-			tracker.event("recents", action, label);
+			case "flushAddTab":
+				await addTab.flush();
+				endPhase("flush");
+
+				return;
+
+			case "navigateRecents":
+				await toolbarIcon.invertFor(k.MinTabDwellTime);
+				await recentTabs.navigate(effect.direction, state.currentWindowLimitRecents);
+				endPhase("navigate");
+
+				return;
+
+			case "track":
+				tracker.event("recents", effect.action, effect.label);
+
+				return;
 		}
 	}
+
 
 	function isAddableTab(
 		tab)
 	{
 		return Number.isInteger(tab?.id)
 			&& !isPopupWindow(tab)
-			&& !state.navigatingRecents;
+			&& !state.session.navigatingRecents;
 	}
 
 
@@ -529,19 +498,14 @@ export default function createCommandHandlers({
 			.then(() => {
 				endPhase("flush");
 
-				if (state.navigatingRecents) {
-						// tell the popup that the user's no longer navigating
-						// recents, so that when it gets blurred after we toggle
-						// to the previous tab, it'll close itself
-					popupLink.notify("stopNavigatingRecents");
-				}
-
-				state.navigatingRecents = false;
-
+					// tell the popup that the user's no longer navigating
+					// recents, so that when it gets blurred after we toggle
+					// to the previous tab, it'll close itself
+				return runSession({ type: "stopNavigating", notify: true });
+			})
 					// in case the user was navigating recents during a cooldown and
 					// then hit the toggle command, reset the icon back to normal
-				return toolbarIcon.setNormalIcon();
-			})
+			.then(() => toolbarIcon.setNormalIcon())
 				// don't return log()'s promise, which resolves only once the
 				// batched entry is written, a second or more later
 			.then(() => { log("toggle: pending addTab flushed, toggling"); })
@@ -631,6 +595,7 @@ export default function createCommandHandlers({
 			checkMenuNotAlreadyOpen();
 		},
 
-		toggleRecentTabs
+		toggleRecentTabs,
+		runSession,
 	};
 }

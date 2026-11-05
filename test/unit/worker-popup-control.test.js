@@ -73,6 +73,20 @@ vi.mock("@/lib/ipc", () => ({
 const OpenPopupCommand = "010-open-popup-window";
 const PreviousTabCommand = "1-previous-tab";
 
+	// fire one of the popup window's own events at every controller that
+	// subscribed to it through the popupWindow mock, the way popup-window.js
+	// does when the window is created, shown, hidden or closed.  "show" puts
+	// the session in the visible phase, and "hide" after it in hidden.
+function emitPopupWindowEvent(
+	type)
+{
+	for (const [types, listener] of popupWindow.on.mock.calls) {
+		if ([].concat(types).includes(type)) {
+			listener({ type });
+		}
+	}
+}
+
 	// several macrotasks, so multi-step promise chains (storage init, lock
 	// grants, controlHeldFuncs) fully settle
 async function flush(
@@ -550,11 +564,11 @@ describe("messages between the popup and the controller", () => {
 			// the popup window is open and focused, so the open-popup shortcut
 			// moves its selection down instead of opening another one
 		resetContexts({ tabs: [PopupTab, { id: 1, url: "https://a.example.com/", windowId: 1 }] });
-		popupWindow.isOpen.mockResolvedValueOnce(true);
 
 		const worker = await loadContext("/background.html");
 
 		await flush();
+		emitPopupWindowEvent("show");
 		worker.modules.failNextPopupMessage();
 		chrome.commands.onCommand.dispatch(OpenPopupCommand);
 		await flush();
@@ -565,11 +579,11 @@ describe("messages between the popup and the controller", () => {
 
 	it("leaves the popup window open when the selection change is delivered", async () => {
 		resetContexts({ tabs: [PopupTab, { id: 1, url: "https://a.example.com/", windowId: 1 }] });
-		popupWindow.isOpen.mockResolvedValueOnce(true);
 
 		const worker = await loadContext("/background.html");
 
 		await flush();
+		emitPopupWindowEvent("show");
 		chrome.commands.onCommand.dispatch(OpenPopupCommand);
 		await flush();
 

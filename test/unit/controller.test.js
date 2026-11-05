@@ -83,6 +83,22 @@ async function flush(
 	}
 }
 
+
+	// fire one of the popup window's own events at every controller that
+	// subscribed to it through the popupWindow mock, the way popup-window.js
+	// does when the window is created, shown, hidden or closed.  "show" puts
+	// the session in the visible phase, and "hide" after it in hidden.
+function emitPopupWindowEvent(
+	type)
+{
+	for (const [types, listener] of popupWindow.on.mock.calls) {
+		if ([].concat(types).includes(type)) {
+			listener({ type });
+		}
+	}
+}
+
+
 	// create a controller in a fresh module graph with the given tabs, the
 	// active one listed first, and give it control
 async function startController({
@@ -176,14 +192,14 @@ describe("handing over control", () => {
 
 		controller.state.startingUp = true;
 		controller.state.activeTab = { ...BrowserTab };
-		controller.state.navigatingRecents = true;
+		controller.state.session = { ...controller.state.session, navigatingRecents: true };
 
 		const snapshot = controller.snapshot();
 
 		expect(snapshot).toEqual({
 			state: {
 				activeTab: BrowserTab,
-				navigatingRecents: true,
+				session: { phase: "closed", navigatingRecents: true, pending: null },
 				navigateRecentsWithPopup: false,
 				currentWindowLimitRecents: true,
 			},
@@ -248,7 +264,6 @@ describe("the open-popup command", () => {
 
 	it("moves the menu's selection down when the menu is open", async () => {
 		await startController({ menuConnected: true });
-		popupWindow.isOpen.mockResolvedValueOnce(true);
 		chrome.commands.onCommand.dispatch(OpenPopupCommand);
 		await flush();
 
@@ -261,7 +276,8 @@ describe("the open-popup command", () => {
 			tabs: [{ ...BrowserTab, active: true }, PopupTab],
 			popupConnected: true,
 		});
-		popupWindow.isOpen.mockResolvedValueOnce(true);
+		emitPopupWindowEvent("show");
+		emitPopupWindowEvent("hide");
 		chrome.commands.onCommand.dispatch(OpenPopupCommand);
 		await flush();
 
@@ -269,6 +285,63 @@ describe("the open-popup command", () => {
 			focusSearch: false,
 			activeTab: expect.objectContaining({ id: BrowserTab.id }),
 		});
+		expect(controller.state.session.phase).toBe("hidden");
+	});
+
+	it("moves a focused popup's selection down, and closes it if that can't be delivered", async () => {
+		await startController({ popupConnected: true });
+		emitPopupWindowEvent("show");
+		chrome.commands.onCommand.dispatch(OpenPopupCommand);
+		await flush();
+
+		expect(popupLink.notify).toHaveBeenCalledExactlyOnceWith("modifySelected", { direction: 1 });
+		expect(popupWindow.close).not.toHaveBeenCalled();
+
+		popupLink.notify.mockResolvedValueOnce(false);
+		chrome.commands.onCommand.dispatch(OpenPopupCommand);
+		await flush();
+
+		expect(popupWindow.close).toHaveBeenCalledExactlyOnceWith("modify-selected-failed");
+	});
+
+	it("holds a press that lands while the page is loading, and delivers it when the page is ready", async () => {
+		await startController({ popupConnected: true });
+		chrome.commands.onCommand.dispatch(OpenPopupCommand);
+		await flush();
+
+		expect(popupWindow.create).toHaveBeenCalledTimes(1);
+		expect(controller.state.session.phase).toBe("creating");
+
+		chrome.commands.onCommand.dispatch(OpenPopupCommand);
+		await flush();
+
+		expect(popupWindow.create).toHaveBeenCalledTimes(1);
+		expect(popupLink.notify).not.toHaveBeenCalled();
+
+		await controller.pageReady();
+
+		expect(controller.state.session.phase).toBe("visible");
+		expect(popupLink.notify).toHaveBeenCalledExactlyOnceWith("modifySelected", { direction: 1 });
+	});
+
+	it("doesn't open the popup for a press that went stale waiting for the size", async () => {
+		await startController();
+
+		let releaseSeed;
+
+		popupWindow.seedSize.mockReturnValueOnce(new Promise((resolve) => releaseSeed = resolve));
+		chrome.commands.onCommand.dispatch(OpenPopupCommand);
+		await flush();
+
+		expect(controller.state.session.phase).toBe("creating");
+
+		vi.spyOn(Date, "now").mockReturnValue(Date.now() + 6000);
+		releaseSeed();
+		await flush();
+		vi.mocked(Date.now).mockRestore();
+
+		expect(popupWindow.create).not.toHaveBeenCalled();
+		expect(controller.state.session.phase).toBe("closed");
 	});
 });
 
@@ -285,18 +358,50 @@ describe("the previous-tab command", () => {
 		expect(popupLink.notify).not.toHaveBeenCalled();
 	});
 
-	it("moves the open popup's selection when navigating with the popup", async () => {
+	it("moves the hidden popup's selection when navigating with the popup", async () => {
 		storedSettings.navigateRecentsWithPopup = true;
 		await startController({ popupConnected: true });
+		emitPopupWindowEvent("show");
+		emitPopupWindowEvent("hide");
 		chrome.commands.onCommand.dispatch(PreviousTabCommand);
 		await flush();
 
-		expect(controller.state.navigatingRecents).toBe(true);
+		expect(controller.state.session.navigatingRecents).toBe(true);
 		expect(popupLink.notify).toHaveBeenCalledExactlyOnceWith("modifySelected", {
 			direction: 1,
 			navigatingRecents: true,
 		});
 		expect(recentTabs.navigate).not.toHaveBeenCalled();
+	});
+
+	it("opens the popup to navigate when there is none", async () => {
+		storedSettings.navigateRecentsWithPopup = true;
+		await startController();
+		chrome.commands.onCommand.dispatch(PreviousTabCommand);
+		await flush();
+
+		expect(controller.state.session).toMatchObject({ phase: "creating", navigatingRecents: true });
+		expect(popupWindow.create).toHaveBeenCalledTimes(1);
+		expect(popupWindow.create.mock.calls[0].slice(1)).toEqual([
+			{ focusSearch: false, navigatingRecents: true },
+			"right-center",
+		]);
+		expect(popupLink.notify).not.toHaveBeenCalled();
+	});
+
+	it("ends navigating when the popup is hidden", async () => {
+		storedSettings.navigateRecentsWithPopup = true;
+		await startController({ popupConnected: true });
+		emitPopupWindowEvent("show");
+		emitPopupWindowEvent("hide");
+		chrome.commands.onCommand.dispatch(PreviousTabCommand);
+		await flush();
+
+		expect(controller.state.session.navigatingRecents).toBe(true);
+
+		emitPopupWindowEvent("hide");
+
+		expect(controller.state.session.navigatingRecents).toBe(false);
 	});
 });
 
@@ -304,12 +409,12 @@ describe("the previous-tab command", () => {
 describe("the toggle", () => {
 	it("tells the popup to stop navigating recents before toggling", async () => {
 		await startController({ popupConnected: true });
-		controller.state.navigatingRecents = true;
+		controller.state.session = { ...controller.state.session, navigatingRecents: true };
 		controller.toggleRecentTabs(true);
 		await flush();
 
-		expect(popupLink.notify).toHaveBeenCalledExactlyOnceWith("stopNavigatingRecents");
-		expect(controller.state.navigatingRecents).toBe(false);
+		expect(popupLink.notify).toHaveBeenCalledExactlyOnceWith("stopNavigatingRecents", {});
+		expect(controller.state.session.navigatingRecents).toBe(false);
 			// no tab to add in the same task, since the toggle wasn't from a
 			// shortcut that passed one
 		expect(recentTabs.toggle).toHaveBeenCalledExactlyOnceWith(true, null);

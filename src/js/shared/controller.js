@@ -2,6 +2,7 @@ import control from "@/shared/control";
 import { createAddTab } from "@/shared/addTab";
 import createTabEventHandlers from "@/shared/tabEventHandlers";
 import createCommandHandlers from "@/shared/commandHandlers";
+import { createSession } from "@/shared/popupSession";
 import popupWindow from "@/background/popup-window";
 import toolbarIcon from "@/background/toolbar-icon";
 import settings from "@/background/settings";
@@ -47,7 +48,9 @@ export function createController({
 		startingUp: false,
 			// the tab that was active when the popup was opened
 		activeTab: null,
-		navigatingRecents: false,
+			// where the popup window is in its lifecycle, and whether the user
+			// is navigating recents with it.  see popupSession.js.
+		session: createSession(),
 		navigateRecentsWithPopup: false,
 		currentWindowLimitRecents: false,
 	};
@@ -137,6 +140,43 @@ export function createController({
 	}
 
 
+		// the popup page has mounted and can take messages.  the worker calls
+		// this when the page reports ready, before handing it the snapshot, so
+		// anything held for the page is delivered from here.  a page calls it
+		// for itself when it takes control, in case it inherited the lock
+		// without a handoff and its session still says there's no popup.
+	function pageReady()
+	{
+		return commands.runSession({ type: "pageReady" });
+	}
+
+
+		// the popup page's port disconnected, so its window is gone.  only the
+		// worker sees this; the page it's about is dead.
+	function popupClosed()
+	{
+		return commands.runSession({ type: "closed" });
+	}
+
+
+		// the popup window's own events, from whichever context's copy of
+		// popup-window.js is being driven, which is this one's while this
+		// context holds control
+	const PopupWindowEvents = {
+		create: "created",
+		show: "shown",
+		hide: "hidden",
+		blur: "blurred",
+		close: "closed",
+	};
+
+	function handlePopupWindowEvent(
+		{ type })
+	{
+		commands.runSession({ type: PopupWindowEvents[type] });
+	}
+
+
 	function adopt(
 		snapshot)
 	{
@@ -213,9 +253,7 @@ export function createController({
 			addTab.flush();
 		},
 
-		stopNavigatingRecents: () => {
-			state.navigatingRecents = false;
-		},
+		stopNavigatingRecents: () => commands.runSession({ type: "stopNavigating" }),
 
 	};
 
@@ -244,16 +282,20 @@ export function createController({
 		if (!started) {
 			started = true;
 
-				// update this flag in case the popup gets hidden or closed while
-				// the user is navigating recents by some mechanism other than
-				// releasing the modifier to select the currently focused tab
-			popupWindow.on(["hide", "close"], () => state.navigatingRecents = false);
+				// follow the popup window through its lifecycle, which among
+				// other things ends navigating recents if the popup gets hidden
+				// or closed by some mechanism other than releasing the modifier
+			popupWindow.on(Object.keys(PopupWindowEvents), handlePopupWindowEvent);
 
 				// listen before reading the current settings, so a change made
 				// in between isn't missed.  applying a setting twice is
 				// harmless.  this stays attached after a yield, so the mirror is
 				// current when control comes back.
 			chrome.storage.onChanged.addListener(handleStorageChanged);
+		}
+
+		if (!isBackgroundContext) {
+			pageReady();
 		}
 
 			// a page context only starts handling commands now
@@ -268,6 +310,8 @@ export function createController({
 		toggleRecentTabs: commands.toggleRecentTabs,
 		snapshot,
 		adopt,
+		pageReady,
+		popupClosed,
 		listen,
 		start,
 		claim,

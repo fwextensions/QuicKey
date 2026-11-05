@@ -135,6 +135,21 @@ function queueForControl()
 	return () => granted;
 }
 
+
+	// fire one of the popup window's own events at every controller that
+	// subscribed to it through the popupWindow mock, the way popup-window.js
+	// does when the window is created, shown, hidden or closed.  "show" puts
+	// the session in the visible phase, and "hide" after it in hidden.
+function emitPopupWindowEvent(
+	type)
+{
+	for (const [types, listener] of popupWindow.on.mock.calls) {
+		if ([].concat(types).includes(type)) {
+			listener({ type });
+		}
+	}
+}
+
 	// disconnect a port after the double-press window, so the disconnect isn't
 	// taken as a double-press of the shortcut
 function disconnectLater(
@@ -289,10 +304,7 @@ describe("messages to the popup", () => {
 	};
 
 	beforeEach(() => {
-			// the popup window is open and focused, so the open-popup shortcut
-			// moves its selection down
 		resetContexts({ tabs: [PopupTab, { id: 1, url: "https://a.example.com/", windowId: 1 }] });
-		popupWindow.isOpen.mockResolvedValue(true);
 	});
 
 	it("go over the popup's port, naming the method to call", async () => {
@@ -302,6 +314,9 @@ describe("messages to the popup", () => {
 		const port = makePort("popup");
 
 		chrome.runtime.onConnect.dispatch(port);
+			// the popup window is open and focused, so the open-popup shortcut
+			// moves its selection down
+		emitPopupWindowEvent("show");
 		chrome.commands.onCommand.dispatch("010-open-popup-window");
 		await flush();
 
@@ -346,6 +361,7 @@ describe("messages to the popup", () => {
 		});
 		vi.spyOn(console, "error").mockImplementation(() => {});
 		chrome.runtime.onConnect.dispatch(port);
+		emitPopupWindowEvent("show");
 		chrome.commands.onCommand.dispatch("010-open-popup-window");
 		await flush();
 
@@ -390,6 +406,61 @@ describe("control handoff", () => {
 		await flush();
 
 		expect(popupWindow.create).not.toHaveBeenCalled();
+	});
+
+	it("delivers what was held for the page before handing it the snapshot", async () => {
+		const background = await loadBackground();
+
+		await flush();
+
+		const port = makePort("popup");
+
+		chrome.runtime.onConnect.dispatch(port);
+			// the first press creates the window, the second lands while its
+			// page is loading
+		chrome.commands.onCommand.dispatch("010-open-popup-window");
+		chrome.commands.onCommand.dispatch("010-open-popup-window");
+		await flush();
+
+		expect(popupWindow.create).toHaveBeenCalledTimes(1);
+		expect(port.postMessage).not.toHaveBeenCalled();
+
+		const pageHasControl = queueForControl();
+
+		port.send("ready");
+		await flush();
+
+		expect(port.postMessage.mock.calls.map(([message]) => message.message))
+			.toEqual(["modifySelected", "takeControl"]);
+		expect(pageHasControl()).toBe(true);
+		expect(port.postMessage.mock.calls[1][0].snapshot.state.session)
+			.toEqual({ phase: "visible", navigatingRecents: false, pending: null });
+		expect(background.modules.control.isHeld()).toBe(false);
+	});
+
+	it("marks the popup closed when its page's port disconnects", async () => {
+		const background = await loadBackground();
+
+		await flush();
+
+		const port = makePort("popup");
+
+		chrome.runtime.onConnect.dispatch(port);
+		chrome.commands.onCommand.dispatch("010-open-popup-window");
+		await flush();
+
+		expect(popupWindow.create).toHaveBeenCalledTimes(1);
+
+		disconnectLater(port);
+		await flush();
+
+			// so the next press creates a new one rather than messaging a
+			// page that's gone
+		chrome.commands.onCommand.dispatch("010-open-popup-window");
+		await flush();
+
+		expect(popupWindow.create).toHaveBeenCalledTimes(2);
+		expect(port.postMessage).not.toHaveBeenCalled();
 	});
 
 	it("takes control back when the popup page goes away", async () => {

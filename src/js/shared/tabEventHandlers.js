@@ -36,7 +36,7 @@ export default function createTabEventHandlers({
 			// valid, since we may be getting called from an event that was triggered
 			// by a window in another profile, in which case we can't access any
 			// info about the tabs there.
-		if (Number.isInteger(tabId) && tabId !== popupWindow.tabID && !state.navigatingRecents) {
+		if (Number.isInteger(tabId) && tabId !== popupWindow.tabID && !state.session.navigatingRecents) {
 				// only count activations we add, so opening the popup right after
 				// focusing a window doesn't stop that window's tab being recorded
 			activationCount++;
