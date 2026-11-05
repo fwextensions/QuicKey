@@ -10,6 +10,8 @@ export default defineConfig({
 			"@": resolve(__dirname, "src/js"),
 			lodash: resolve(__dirname, "src/js/lib/lodont"),
 			cp: resolve(__dirname, "src/js/lib/cp"),
+				// a file: dependency on a sibling checkout, which CI doesn't have
+			"stdout-ext": resolve(__dirname, "test/support/stdout-ext.js"),
 		},
 	},
 	test: {
