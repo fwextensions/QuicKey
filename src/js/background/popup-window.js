@@ -622,6 +622,55 @@ async function close(
 }
 
 
+	// the state another context needs to carry on managing the same window.
+	// this module is loaded by both the worker and the popup page, and each
+	// context's copy starts from what the browser reports, which is wrong
+	// about visibility (always false) and the stored size (not yet seeded)
+	// right after the window is created.  the worker hands this to the page
+	// when it yields control, so the page takes over from the live state
+	// rather than re-deriving it.
+function snapshot()
+{
+	return {
+		windowID,
+		tabID,
+		isVisible,
+		isHiddenInTab,
+		hideBehavior,
+		currentWidth,
+		currentHeight,
+		popupAdjustmentWidth,
+		popupAdjustmentHeight,
+		lastActiveTab,
+	};
+}
+
+
+	// hideBehavior is set directly, not through the setter below, which closes
+	// the popup when the value changes.  this isn't a change, it's the value
+	// the window was created with, which this context just hadn't seen yet.
+function adopt(
+	data)
+{
+	({
+		windowID,
+		tabID,
+		isVisible,
+		isHiddenInTab,
+		hideBehavior,
+		currentWidth,
+		currentHeight,
+		popupAdjustmentWidth,
+		popupAdjustmentHeight,
+		lastActiveTab,
+	} = data);
+
+		// the size came with the snapshot, so a seed that's still pending, or
+		// one that runs later, must not replace it with the stored one
+	sizeSeeded = Promise.resolve();
+}
+
+
 	// listen for calls to these functions from the popup.html page
 if (isBackgroundContext) {
 	const { receive } = connect("popup-window");
@@ -653,6 +702,8 @@ if (isBackgroundContext) {
 
 export default {
 	seedSize,
+	snapshot,
+	adopt,
 	create,
 	show,
 	hide,

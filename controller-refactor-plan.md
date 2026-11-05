@@ -66,11 +66,84 @@ below in these ways:
 - **Bug fixed along the way:** `reopenPopup` passed `true` as the popup's
   props, which dropped `focusSearch` when the popup reopened itself.
 
+### Control handoff (added after phase 4)
+
+The worker no longer holds the control lock until it dies. Once the popup
+page has mounted and can handle commands, it sends `ready` over its
+lifecycle port, and the worker answers with `takeControl` and lets go of
+the lock. The page's own request for the lock, queued when it loaded, is
+granted at once. An open, warm page handles a shortcut noticeably faster
+than a worker that may have to be started for it, and in practice the page
+ended up with control a minute or two after opening anyway, when the idle
+worker was reaped; this just makes it happen on purpose, while both
+contexts are alive to hand the state over.
+
+- `takeControl` carries `controller.snapshot()`: the controller state
+  (minus `startingUp`, which is the worker's to track) and the popup
+  window's per-context state (`windowID`, `isVisible`, `hideBehavior`, the
+  current size and adjustments). The page's `controller.adopt()` applies
+  it. That answers the "per-context `popupWindow` state" question below for
+  the handoff case: the page starts from the live state rather than what
+  the browser reports, which was wrong about visibility, the hide
+  behavior (the page's default of "behind" made applying a different
+  stored setting close the popup) and the size.
+- `controller.claim()` loops: after each yield, the worker queues for the
+  lock again, so it takes control back when the page goes away, and still
+  inherits it if the page dies without a handoff. `start()` is called on
+  each grant, with its one-time listeners guarded.
+- A `ready` that arrives while another context holds the lock (the
+  previous page, during a reopen) is remembered and acted on as soon as
+  the worker gets control.
+- `reopenPopup` takes the active tab from the page, since the worker's
+  copy is from before the handoff.
+- A frozen page would hold the lock without being able to run anything.
+  When a command reaches the worker while it doesn't hold control
+  (`controlledEvent.onEventQueued`), it checks the popup tab's `frozen`
+  flag (Chrome 132+) and closes the tab if set, which releases the lock to
+  the worker and replays the command. A page that's only busy isn't
+  frozen and is left alone, so a popup scoring a large tab list can't be
+  killed by a second press.
+
+### Popup session (added after the handoff)
+
+`shared/popupSession.js` is a pure transition function for the popup
+window's lifecycle: `transition(session, event)` returns the next session
+and a list of effects, and touches nothing else. The session is
+`controller.state.session`, so it travels with the snapshot, and
+`test/unit/popup-session.test.js` covers it as a table.
+
+- Phases: `closed`, `creating` (a window was asked for, but its page
+  hasn't reported ready), `visible`, `hidden`. `navigatingRecents` lives
+  on the session, instead of as its own field written from six places.
+- The open and previous/next shortcuts are events; what they do in each
+  phase is in `handleOpen()` and `handleNavigate()`, not spread over
+  `openPopupWindow()`'s and `navigateRecents()`'s branches. The effects
+  (`create`, `notify`, `flushAddTab`, `navigateRecents`, `track`) are
+  carried out by `performEffect()` in commandHandlers.js, in order, which
+  is also where the chrome queries and the stale check live.
+- The session is fed by the popup window's own events (`popup-window.js`'s
+  emitter), the page's `ready`, and the popup port disconnecting, so the
+  controller no longer asks `popupWindow.isOpen()` or queries for whether
+  the popup is the active tab on every press. `isOpen()` is now unused.
+- A press that lands while the page is still loading is held in
+  `session.pending` and delivered on `pageReady`, instead of being posted
+  to a port whose app hasn't mounted yet, which dropped it. The worker
+  delivers pending messages before taking the snapshot for the handoff.
+- Each transition that changes something or has effects is logged as one
+  line in the persistent log, after the "command #n" lines.
+
+The open and toggle promise queues are unchanged: they still serialize
+the commands, and the toggle chain only uses the session for
+`stopNavigating`. A navigate-with-popup press that goes stale waiting
+for the popup size now aborts the create like the open shortcut does,
+instead of opening a window late.
+
 ### Transports in use
 
 | Transport | Calls it carries | Between |
 |---|---|---|
-| Port from `init.js` | lifecycle: connect, disconnect and `closedByEsc`, used to detect the menu's double-press and the popup page closing | popup or menu → worker |
+| Port from `init.js` | lifecycle: connect, disconnect, `closedByEsc`, used to detect the menu's double-press and the popup page closing, and `ready`, the popup page asking for control | popup or menu → worker |
+| | `takeControl` with the controller's snapshot, when the worker hands control to the popup page | worker → popup |
 | | `popupApi`: `modifySelected`, `showWindow`, `tabActivated`, `stopNavigatingRecents`, sent by `popupLink.notify()` | worker → popup or menu |
 | `ipc` channels (`lib/ipc.js`, over their own ports) | `controller`: `getActiveTab`, `flushAddTab`, `stopNavigatingRecents`, via `createControllerClient()` | popup → worker |
 | | `worker`: `reopenPopup` | popup → worker |
@@ -476,9 +549,13 @@ setting can't go stale because a message was dropped.
   storage, so it's correct in either context?
 - **Per-context `popupWindow` state.** Each context has its own instance of
   `background/popup-window.js`, so its `windowID` and `isVisible` exist once
-  per context (see `popup-window-resync.test.js`). Passing `popupWindow` into
-  the controller makes this dependency visible but doesn't change it. Making
-  the controller the only owner is a candidate for a later pass.
+  per context (see `popup-window-resync.test.js`). The handoff snapshot now
+  carries that state to the page, and the controller reads the popup's
+  phase from its session rather than from `popupWindow.isVisible`. The
+  module's own copies still exist for its chrome calls, and
+  `retryAfterResync()` still covers a page that inherited control without
+  a handoff. Making the controller the only owner is a candidate for a
+  later pass.
 - **Timing.** The open and toggle queues depend on what is awaited and what
   isn't. Phase 2's `notify()` is fire-and-forget for that reason. The
   regression suite (`toggle-queue`, `toggle-window-limit`, `navigate-rematch`)

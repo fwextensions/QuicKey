@@ -11,6 +11,7 @@ import handleStartup from "@/background/startup";
 import log from "@/background/persistent-log";
 import { startController } from "@/shared/controller";
 import { ControllerChannel } from "@/shared/controller-api";
+import { onEventQueued } from "@/shared/controlledEvent";
 import control from "@/shared/control";
 import { connect } from "@/lib/ipc";
 
@@ -90,6 +91,80 @@ console.error("==== popupLink.notify()", error.message);
 
 const controller = startController({ popupLink });
 const { state } = controller;
+	// the popup port that reported ready while this worker didn't hold
+	// control, so the handoff happens as soon as it does
+let pendingHandoff = null;
+
+
+	// hand control to the popup page, along with the state it needs to carry
+	// on from, now if this worker holds control, or else as soon as it does.
+	// the page already has a request queued for the lock, so it's granted the
+	// moment this worker lets go.  this worker then queues for it again, and
+	// takes control back when the page goes away.
+async function handOffControl(
+	port)
+{
+	if (!control.isHeld()) {
+		pendingHandoff = port;
+
+		return;
+	}
+
+	pendingHandoff = null;
+
+		// deliver anything held for the page first, so the snapshot has
+		// nothing pending and the page starts from a settled session
+	await controller.pageReady();
+
+	if (!control.isHeld() || ports.popup !== port) {
+			// something changed while that ran
+		return;
+	}
+
+	try {
+		port.postMessage({ message: "takeControl", snapshot: controller.snapshot() });
+	} catch (error) {
+			// the page is already gone, so keep control
+		log("handoff to the popup failed:", error.message);
+
+		return;
+	}
+
+	controller.yieldControl("popup ready");
+}
+
+
+control.onHeld(() => {
+	if (pendingHandoff && pendingHandoff === ports.popup) {
+		handOffControl(pendingHandoff);
+	}
+});
+
+
+	// a command arrived while another context holds control, which can only
+	// be the popup page.  Chrome can freeze a hidden page, and a frozen page
+	// still holds its lock but can't run the command, so every shortcut would
+	// be dead until something closed it.  closing its tabs releases the lock
+	// to this worker, which replays the command from its queue.  a page that's
+	// merely busy isn't frozen, and will handle the command itself when it
+	// gets to it, so leave it be; on a Chrome too old to report frozen (132),
+	// nothing is closed.
+onEventQueued((eventName) => {
+	if (eventName !== "commands.onCommand" || !popupWindow.tabID) {
+		return;
+	}
+
+	chrome.tabs.get(popupWindow.tabID)
+		.then((tab) => {
+			if (tab.frozen === true || tab.discarded === true) {
+				log("command arrived while the popup page holds control, but it's",
+					tab.frozen ? "frozen" : "discarded", "-- closing it");
+
+				return popupWindow.close("holder-frozen");
+			}
+		})
+		.catch(() => {});
+});
 	// the popup calls the controller's api over this channel when the worker
 	// holds control.  connect now, so the channel is up when a popup opens,
 	// but only answer once this context holds control.  ipc queues any calls
@@ -181,22 +256,33 @@ DEBUG && console.log("== onConnect", port.name, state.startingUp);
 	state.startingUp = false;
 	ports[port.name] = port;
 
-// TODO: this only needs to be done for the menu case
+		// the page's lifecycle messages are plain strings.  everything the
+		// controller sends the other way is an object naming a popupApi method.
 	port.onMessage.addListener(message => {
-//console.log("---- background: onMessage", port.name, message);
-		closedByEsc = (message == "closedByEsc");
+		if (message === "closedByEsc") {
+			closedByEsc = true;
+		} else if (message === "ready" && port.name === "popup") {
+				// the popup page is up and has asked for control
+			handOffControl(port);
+		}
 	});
 
 	port.onDisconnect.addListener(port => {
-		ports[port.name] = null;
+			// a reopened popup's port can connect before the old one's
+			// disconnect arrives, so only forget the port this is about
+		if (ports[port.name] === port) {
+			ports[port.name] = null;
+		}
+
 		state.activeTab = null;
-//console.log("---- background: onDisconnect", port.name);
+
+		if (pendingHandoff === port) {
+			pendingHandoff = null;
+		}
 
 		if (port.name == "popup") {
-// TODO: remove popupWindow.isOpen?
-//			if (popupWindow.isOpen) {
-				popupWindow.close("popup-port-disconnected");
-//			}
+			popupWindow.close("popup-port-disconnected");
+			controller.popupClosed();
 		}
 
 		if (!closedByEsc && Date.now() - connectTime < MaxPopupLifetime) {
@@ -215,9 +301,13 @@ DEBUG && console.log("== onConnect", port.name, state.startingUp);
 	// its own window.
 connect("worker").receive({
 	async reopenPopup({
-		focusSearch})
+		focusSearch,
+		activeTab})
 	{
-		const currentActiveTab = state.activeTab;
+			// the page passes the tab it knows to be active, since it usually
+			// holds control by now and this worker's copy is from before the
+			// handoff.  fall back to that copy for an older page.
+		const currentActiveTab = activeTab ?? state.activeTab;
 
 			// instead of closing the popup and then calling openPopupWindow() to
 			// reopen it, we just call create(), which always closes the window

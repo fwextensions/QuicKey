@@ -24,6 +24,8 @@ vi.mock("@/background/popup-window", () => ({
 		close: vi.fn(() => Promise.resolve()),
 		show: vi.fn(() => Promise.resolve({})),
 		on: vi.fn(),
+		snapshot: vi.fn(() => ({ windowID: 2, tabID: 9, isVisible: true })),
+		adopt: vi.fn(),
 	},
 }));
 
@@ -71,6 +73,20 @@ vi.mock("@/lib/ipc", () => ({
 const OpenPopupCommand = "010-open-popup-window";
 const PreviousTabCommand = "1-previous-tab";
 
+	// fire one of the popup window's own events at every controller that
+	// subscribed to it through the popupWindow mock, the way popup-window.js
+	// does when the window is created, shown, hidden or closed.  "show" puts
+	// the session in the visible phase, and "hide" after it in hidden.
+function emitPopupWindowEvent(
+	type)
+{
+	for (const [types, listener] of popupWindow.on.mock.calls) {
+		if ([].concat(types).includes(type)) {
+			listener({ type });
+		}
+	}
+}
+
 	// several macrotasks, so multi-step promise chains (storage init, lock
 	// grants, controlHeldFuncs) fully settle
 async function flush(
@@ -112,6 +128,7 @@ function loadContext(
 
 		return {
 			control,
+			controller,
 			state: controller.state,
 				// what the popup and options pages use to call the controller
 			client: createControllerClient(() => controller),
@@ -230,6 +247,51 @@ describe("worker and popup", () => {
 		await flush();
 
 		expect(popupWindow.create).toHaveBeenCalledTimes(1);
+	});
+
+	it("the worker hands control to the ready popup, which carries on from its state", async () => {
+		const worker = await loadContext("/background.html");
+
+		await flush();
+
+		const popup = await loadContext("/popup.html");
+
+		await flush();
+
+		worker.modules.state.activeTab = { id: 7, url: "https://a.example.com/" };
+
+			// what background.js does when the popup page reports ready
+		popup.modules.controller.adopt(worker.modules.controller.snapshot());
+		worker.modules.controller.yieldControl("popup ready");
+		await flush();
+
+		expect(worker.modules.control.isHeld()).toBe(false);
+		expect(popup.modules.control.isHeld()).toBe(true);
+		expect(popup.modules.state.activeTab).toMatchObject({ id: 7 });
+		expect(popupWindow.adopt).toHaveBeenCalledWith({ windowID: 2, tabID: 9, isVisible: true });
+
+			// the popup handles commands, exactly once, with the worker queued
+		chrome.commands.onCommand.dispatch(OpenPopupCommand);
+		await flush();
+
+		expect(popupWindow.create).toHaveBeenCalledTimes(1);
+
+			// the popup page goes away later, and the worker is next in line.
+			// let the worker's queued copy of the command above age out first,
+			// so it isn't replayed when the worker takes control back.
+		const now = Date.now();
+
+		vi.spyOn(Date, "now").mockReturnValue(now + 2000);
+		popup.destroy();
+		await flush();
+		vi.mocked(Date.now).mockRestore();
+
+		expect(worker.modules.control.isHeld()).toBe(true);
+
+		chrome.commands.onCommand.dispatch(OpenPopupCommand);
+		await flush();
+
+		expect(popupWindow.create).toHaveBeenCalledTimes(2);
 	});
 
 	it("when the worker dies, the queued popup inherits control and takes over both roles", async () => {
@@ -502,11 +564,11 @@ describe("messages between the popup and the controller", () => {
 			// the popup window is open and focused, so the open-popup shortcut
 			// moves its selection down instead of opening another one
 		resetContexts({ tabs: [PopupTab, { id: 1, url: "https://a.example.com/", windowId: 1 }] });
-		popupWindow.isOpen.mockResolvedValueOnce(true);
 
 		const worker = await loadContext("/background.html");
 
 		await flush();
+		emitPopupWindowEvent("show");
 		worker.modules.failNextPopupMessage();
 		chrome.commands.onCommand.dispatch(OpenPopupCommand);
 		await flush();
@@ -517,11 +579,11 @@ describe("messages between the popup and the controller", () => {
 
 	it("leaves the popup window open when the selection change is delivered", async () => {
 		resetContexts({ tabs: [PopupTab, { id: 1, url: "https://a.example.com/", windowId: 1 }] });
-		popupWindow.isOpen.mockResolvedValueOnce(true);
 
 		const worker = await loadContext("/background.html");
 
 		await flush();
+		emitPopupWindowEvent("show");
 		chrome.commands.onCommand.dispatch(OpenPopupCommand);
 		await flush();
 

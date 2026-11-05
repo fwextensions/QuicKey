@@ -12,6 +12,10 @@ const MaxQueuedEventAge = 1000;
 const MaxQueuedEvents = 50;
 
 let queuedEvents = [];
+	// told about each event that was queued rather than handled, with the
+	// event's name.  the worker uses this to notice a command arriving while
+	// another context holds control, and check that the holder is alive.
+const queuedCallbacks = new Set();
 
 	// walk down the dot path specified in name, starting from chrome
 const getEvent = (name) => name.split(".").reduce((res, key) => res[key], chrome);
@@ -25,6 +29,7 @@ function pruneQueuedEvents()
 }
 
 function createControlledListener(
+	name,
 	listener)
 {
 	if (controlledListeners.has(listener)) {
@@ -40,6 +45,14 @@ function createControlledListener(
 				// it'll expire out of the queue.
 			pruneQueuedEvents();
 			queuedEvents.push({ listener, eventArgs, time: Date.now() });
+
+			for (const callback of queuedCallbacks) {
+				try {
+					callback(name, eventArgs);
+				} catch (e) {
+					console.error(e);
+				}
+			}
 		};
 
 		controlledListeners.set(listener, controlledListener);
@@ -52,7 +65,7 @@ function addListener(
 	name,
 	listener)
 {
-	getEvent(name).addListener(createControlledListener(listener));
+	getEvent(name).addListener(createControlledListener(name, listener));
 }
 
 function removeListener(
@@ -111,9 +124,16 @@ control.onHeld(() => {
 	}
 });
 
+function onEventQueued(
+	callback)
+{
+	queuedCallbacks.add(callback);
+}
+
 export {
 	addListener,
 	removeListener,
 	addListeners,
 	removeListeners,
+	onEventQueued,
 };
