@@ -21,6 +21,8 @@ vi.mock("@/background/popup-window", () => ({
 		create: vi.fn(() => Promise.resolve({})),
 		close: vi.fn(() => Promise.resolve()),
 		on: vi.fn(),
+		snapshot: vi.fn(() => ({ windowID: 2, tabID: 9, isVisible: true })),
+		adopt: vi.fn(),
 	},
 }));
 
@@ -164,6 +166,70 @@ describe("settings", () => {
 
 		expect(toolbarIcon.showTabCount).not.toHaveBeenCalled();
 		expect(popupWindow.hideBehavior).toBe("untouched");
+	});
+});
+
+
+describe("handing over control", () => {
+	it("snapshots everything but startingUp, and adopts it", async () => {
+		await startController();
+
+		controller.state.startingUp = true;
+		controller.state.activeTab = { ...BrowserTab };
+		controller.state.navigatingRecents = true;
+
+		const snapshot = controller.snapshot();
+
+		expect(snapshot).toEqual({
+			state: {
+				activeTab: BrowserTab,
+				navigatingRecents: true,
+				navigateRecentsWithPopup: false,
+				currentWindowLimitRecents: true,
+			},
+			popupWindow: { windowID: 2, tabID: 9, isVisible: true },
+		});
+
+		const other = (await import("@/shared/controller")).createController({ popupLink });
+
+		other.adopt(snapshot);
+
+		expect(other.state).toEqual({ ...snapshot.state, startingUp: false });
+		expect(popupWindow.adopt).toHaveBeenCalledExactlyOnceWith(snapshot.popupWindow);
+	});
+
+	it("yields the lock and takes it again once it's free", async () => {
+		vi.resetModules();
+		vi.stubGlobal("chrome", createChromeFake({ tabs: [{ ...BrowserTab, active: true }] }));
+		navigator.locks = createLocksFake();
+
+		const control = (await import("@/shared/control")).default;
+		const { startController } = await import("@/shared/controller");
+
+		controller = startController({ popupLink });
+		await flush();
+
+		expect(control.isHeld()).toBe(true);
+		expect(controller.yieldControl("test")).toBe(true);
+
+			// the page's request was queued before the yield, so it gets the
+			// lock before the controller's new request
+		let releasePage;
+
+		navigator.locks.request("__control__", () => new Promise((release) => releasePage = release));
+		await flush();
+
+		expect(control.isHeld()).toBe(false);
+		expect(controller.yieldControl("again")).toBe(false);
+
+		releasePage();
+		await flush();
+
+		expect(control.isHeld()).toBe(true);
+
+			// taking control again doesn't attach the one-time listeners twice
+		expect(popupWindow.on).toHaveBeenCalledTimes(1);
+		expect(chrome.storage.onChanged.listenerCount()).toBe(1);
 	});
 });
 

@@ -280,8 +280,8 @@ export default class App extends React.Component {
 				}
 			});
 
-				// this page's controller sits idle until the worker dies, and
-				// then this page takes control and runs it
+				// this page's controller takes over from the worker's once
+				// the page is ready, below, or when the worker dies
 			this.localController = startController({
 					// once this page has control, its controller reaches the
 					// popup by calling it directly.  this page is the popup, so
@@ -334,6 +334,16 @@ export default class App extends React.Component {
 				this.port.onMessage.addListener(this.onPortMessage);
 			}
 		});
+
+		if (this.props.isPopup) {
+				// ask the worker for control, now that this page can handle
+				// commands.  it answers with takeControl and lets go of the
+				// lock.  the worker may already be gone, in which case this
+				// page inherits the lock without it, and the port throws.
+			try {
+				this.port.postMessage("ready");
+			} catch (e) {}
+		}
 
 			// annoyingly, there seems to be a bug in Chrome where the
 			// closed tab is still around when the callback passed to
@@ -1216,15 +1226,20 @@ export default class App extends React.Component {
 	}
 
 
-	reopenWindow()
+	async reopenWindow()
 	{
 			// ignore the blur event triggered by closing the popup
 		this.ignoreNextBlur = true;
 		this.endSession("reopen");
+
 			// this always goes to the worker, even when this page holds
 			// control, since the worker needs to close and reopen this window.
-			// this page is about to be closed, so there's nothing to await.
-		connect("worker").call("reopenPopup", { focusSearch: this.openedForSearch });
+			// pass the active tab, since this page usually holds control by
+			// now, and the worker's own copy is from before the handoff.  this
+			// page is about to be closed, so there's nothing to await.
+		const activeTab = await this.controller.getActiveTab();
+
+		connect("worker").call("reopenPopup", { focusSearch: this.openedForSearch, activeTab });
 	}
 
 
@@ -1464,6 +1479,15 @@ export default class App extends React.Component {
 		stopNavigatingRecents: () =>
 		{
 			this.navigatingRecents = false;
+		},
+
+			// the worker is handing this page control, and this is the state
+			// to carry on from.  the lock itself arrives separately, once the
+			// worker lets go of it.
+		takeControl: ({
+			snapshot}) =>
+		{
+			this.localController?.adopt(snapshot);
 		},
 	};
 

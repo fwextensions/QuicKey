@@ -66,11 +66,50 @@ below in these ways:
 - **Bug fixed along the way:** `reopenPopup` passed `true` as the popup's
   props, which dropped `focusSearch` when the popup reopened itself.
 
+### Control handoff (added after phase 4)
+
+The worker no longer holds the control lock until it dies. Once the popup
+page has mounted and can handle commands, it sends `ready` over its
+lifecycle port, and the worker answers with `takeControl` and lets go of
+the lock. The page's own request for the lock, queued when it loaded, is
+granted at once. An open, warm page handles a shortcut noticeably faster
+than a worker that may have to be started for it, and in practice the page
+ended up with control a minute or two after opening anyway, when the idle
+worker was reaped; this just makes it happen on purpose, while both
+contexts are alive to hand the state over.
+
+- `takeControl` carries `controller.snapshot()`: the controller state
+  (minus `startingUp`, which is the worker's to track) and the popup
+  window's per-context state (`windowID`, `isVisible`, `hideBehavior`, the
+  current size and adjustments). The page's `controller.adopt()` applies
+  it. That answers the "per-context `popupWindow` state" question below for
+  the handoff case: the page starts from the live state rather than what
+  the browser reports, which was wrong about visibility, the hide
+  behavior (the page's default of "behind" made applying a different
+  stored setting close the popup) and the size.
+- `controller.claim()` loops: after each yield, the worker queues for the
+  lock again, so it takes control back when the page goes away, and still
+  inherits it if the page dies without a handoff. `start()` is called on
+  each grant, with its one-time listeners guarded.
+- A `ready` that arrives while another context holds the lock (the
+  previous page, during a reopen) is remembered and acted on as soon as
+  the worker gets control.
+- `reopenPopup` takes the active tab from the page, since the worker's
+  copy is from before the handoff.
+- A frozen page would hold the lock without being able to run anything.
+  When a command reaches the worker while it doesn't hold control
+  (`controlledEvent.onEventQueued`), it checks the popup tab's `frozen`
+  flag (Chrome 132+) and closes the tab if set, which releases the lock to
+  the worker and replays the command. A page that's only busy isn't
+  frozen and is left alone, so a popup scoring a large tab list can't be
+  killed by a second press.
+
 ### Transports in use
 
 | Transport | Calls it carries | Between |
 |---|---|---|
-| Port from `init.js` | lifecycle: connect, disconnect and `closedByEsc`, used to detect the menu's double-press and the popup page closing | popup or menu → worker |
+| Port from `init.js` | lifecycle: connect, disconnect, `closedByEsc`, used to detect the menu's double-press and the popup page closing, and `ready`, the popup page asking for control | popup or menu → worker |
+| | `takeControl` with the controller's snapshot, when the worker hands control to the popup page | worker → popup |
 | | `popupApi`: `modifySelected`, `showWindow`, `tabActivated`, `stopNavigatingRecents`, sent by `popupLink.notify()` | worker → popup or menu |
 | `ipc` channels (`lib/ipc.js`, over their own ports) | `controller`: `getActiveTab`, `flushAddTab`, `stopNavigatingRecents`, via `createControllerClient()` | popup → worker |
 | | `worker`: `reopenPopup` | popup → worker |
