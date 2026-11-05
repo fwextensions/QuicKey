@@ -142,6 +142,11 @@ chrome.runtime.onConnect.addListener((port) => {
 		port.onDisconnect.addListener(() => {
 			menuOpen = false;
 			enableCommands("menu disconnected");
+
+				// the menu closes when the user picks a tab, so add that tab to
+				// recents now, or quickly switching away would drop it.  only
+				// the context with control can have an add pending.
+			addTab.flush();
 		});
 	}
 });
@@ -609,7 +614,6 @@ function handlePopupMessage(
 	sendResponse)
 {
 	if (message === "executeAddTab") {
-// TODO: this seems to not get called when quickly switching between tabs without waiting for the dwell time to expire and then hitting alt-Q.  the wrong tab is at the top of the list.
 		addTab.flush();
 	} else if (message === "stopNavigatingRecents") {
 		state.navigatingRecents = false;
