@@ -61,6 +61,9 @@ async function mruTabIDs()
 }
 
 
+let sendMessage;
+
+
 beforeEach(async () => {
 	vi.clearAllMocks();
 	vi.useFakeTimers();
@@ -76,7 +79,7 @@ beforeEach(async () => {
 	await createContext("/background.html", async () => {
 		const initEventController = (await import("@/shared/eventController")).default;
 
-		initEventController({ sendPopupMessage: vi.fn(), ports: {} });
+		sendMessage = initEventController({ sendPopupMessage: vi.fn(), ports: {} });
 	});
 
 	await flush();
@@ -119,6 +122,42 @@ describe("tab activity drives the persisted MRU order", () => {
 		await flush(Dwell);
 
 		expect(await mruTabIDs()).toEqual([4, 1, 3, 2]);
+	});
+
+		// the popup asks for this after focusing the tab the user picked, so a
+		// pick that's left within the dwell time still counts as a visit
+	it("keeps a tab picked in the popup when the user quickly switches away", async () => {
+		await chrome.tabs.update(2, { active: true });
+		await flush(100);
+		await sendMessage("executeAddTab", {}, true);
+		await flush();
+		await chrome.tabs.update(3, { active: true });
+		await flush(Dwell);
+
+		expect(await mruTabIDs()).toEqual([4, 1, 2, 3]);
+	});
+
+		// the menu may be gone before it could send a message, so its port
+		// disconnecting is the signal
+	it("keeps a tab picked in the menu when the user quickly switches away", async () => {
+		const disconnectListeners = [];
+		const menuPort = {
+			name: "menu",
+			postMessage: () => {},
+			onMessage: { addListener: () => {} },
+			onDisconnect: { addListener: (fn) => disconnectListeners.push(fn) },
+		};
+
+		chrome.runtime.onConnect.dispatch(menuPort);
+		await flush();
+		await chrome.tabs.update(2, { active: true });
+		await flush(100);
+		disconnectListeners.forEach((fn) => fn());
+		await flush();
+		await chrome.tabs.update(3, { active: true });
+		await flush(Dwell);
+
+		expect(await mruTabIDs()).toEqual([4, 1, 2, 3]);
 	});
 
 	it("drops closed tabs from the MRU list after the removal debounce", async () => {
