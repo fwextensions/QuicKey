@@ -695,8 +695,14 @@ export default class App extends React.Component {
 			try {
 				if (this.mode == "tabs") {
 					if (item.sessionId) {
-							// this is a closed tab, so restore it
-						tabOrWindow = await chrome.sessions.restore(item.sessionId);
+							// this is a closed tab, so restore it.  restore() resolves
+							// to a Session that wraps the tab or window, and has no
+							// bounds of its own.  so unwrap it, or hide() would have
+							// nothing to position against, and would center the popup
+							// on the screen instead of behind the restored tab's window.
+						const session = await chrome.sessions.restore(item.sessionId);
+
+						tabOrWindow = session.tab ?? session.window;
 						this.props.tracker.event("tabs", "restore");
 					} else {
 							// switch to the tab.  pass navigatingRecents so that if
