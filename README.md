@@ -207,7 +207,7 @@ When first installed, *QuicKey* asks for these permissions:
 
     *QuicKey* uses this permission to let you search the titles and URLs of your bookmarked pages. The only time it changes your bookmarks is when you choose to delete one.
 
-*QuicKey* can't access or manipulate the content of any pages you visit and doesn't transmit any information other than some anonymized diagnostic data.
+*QuicKey* can't access or manipulate the content of any pages you visit.  It never sends the titles or URLs of your tabs, bookmarks or history anywhere, and transmits only anonymized performance metrics to Google Analytics and Posthog.
 
 If you right-click the *QuicKey* icon on the toolbar, there's a message saying *Can't read or change site's data*, which is a bit misleading, since it can't read or change *any* site's data, not just the current one.
 

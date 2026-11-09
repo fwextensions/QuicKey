@@ -227,17 +227,7 @@ You can also copy the URL and title of the selected tab, bookmark or history ite
 
 ## Privacy policy
 
-When first installed, *QuicKey* asks for these permissions:
-
-- *Read and change your browsing history on all your signed-in devices*
-
-    *QuicKey* uses this permission to let you search the titles and URLs of the open tabs, as well as pages from your history. The *"all your signed-in devices"* part is there only so that recently closed tabs can be restored with their full history. The only time *QuicKey* changes your browsing history is when you choose to delete a history item. 
-
-- *Read and change your bookmarks*
-
-    *QuicKey* uses this permission to let you search the titles and URLs of your bookmarked pages. The only time it changes your bookmarks is when you choose to delete one.
-
-*QuicKey* can't access or manipulate the content of any pages you visit and doesn't transmit any information other than some anonymized diagnostic data. It never sends anything about the pages you visit.
+*QuicKey* can't access or manipulate the content of any pages you visit, and doesn't transmit any information other than some anonymized performance metrics to Google Analytics and Posthog.  See the [privacy policy](./privacy) for details.
 
 For the technically-minded, you can inspect *QuicKey*'s code on [GitHub](https://github.com/fwextensions/QuicKey).
 

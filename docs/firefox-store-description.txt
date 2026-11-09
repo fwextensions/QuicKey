@@ -278,7 +278,7 @@ When first installed, QuicKey asks for these permissions:
       pages in your favorites. The only time it changes your favorites is
       when you choose to delete one.
 
-QuicKey can't access or manipulate the content of any pages you visit and doesn't transmit any information other than some anonymized diagnostic data.
+QuicKey can't access or manipulate the content of any pages you visit.  It never sends the titles or URLs of your tabs, bookmarks or history anywhere, and transmits only anonymized performance metrics to Google Analytics and Posthog.
 
 
 ★ Support and source code
