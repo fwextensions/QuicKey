@@ -13,7 +13,7 @@ import getHistory from "./data/get-history";
 import addURLs from "./data/add-urls";
 import { loadPinyin } from "./data/add-pinyin";
 import shortcuts from "./shortcuts/popup-shortcuts";
-import { createFitBudget, getWindowPadding } from "./window-padding";
+import { createFitBudget, getFitWidth, getWindowPadding } from "./window-padding";
 import handleRef from "@/lib/handle-ref";
 import copyTextToClipboard from "@/lib/copy-to-clipboard";
 import { connect } from "@/lib/ipc";
@@ -251,7 +251,9 @@ export default class App extends React.Component {
 				// seed the chrome measurement while we know the window isn't
 				// mid-transition, so the first fit-content has something to fall
 				// back on if it lands during one
-			this.lastWindowPadding = getWindowPadding(window).padding;
+			const {width, height} = getWindowPadding(window);
+
+			this.lastWindowPadding = {width, height};
 			this.logSize("mount");
 			window.addEventListener("resize", this.onWindowResize);
 
@@ -367,42 +369,54 @@ export default class App extends React.Component {
 			// multiple React updates in one frame.
 		cancelAnimationFrame(this.nextFrameRequestID);
 		this.nextFrameRequestID = requestAnimationFrame(() => {
+			const bodyWidth = document.body.offsetWidth;
 			const bodyHeight = document.body.offsetHeight;
 				// outerWidth/outerHeight and innerWidth/innerHeight don't
 				// update in the same frame when the window moves to a display
 				// with a different scale factor, so subtracting one from the
 				// other can span two coordinate spaces and produce nonsense.
 				// getWindowPadding() falls back to the last believable value
-				// rather than baking that into the target height.
-			const {settled, padding: windowPadding} =
+				// rather than baking that into the target size.
+			const {settled, width: paddingWidth, height: paddingHeight} =
 				getWindowPadding(window, this.lastWindowPadding);
+				// the page's width says nothing about the popup's when it's
+				// minimized or sitting in a tab, so only fit the width while
+				// it's showing.  if the fit already asked for this width and
+				// didn't get there, asking again won't help.
+			const fitWidth = this.visible
+				? getFitWidth({
+					innerWidth,
+					contentWidth: bodyWidth,
+					paddingWidth,
+					currentWidth: this.popupW
+				})
+				: this.popupW;
 
 			if (settled) {
-				this.lastWindowPadding = windowPadding;
+				this.lastWindowPadding = { width: paddingWidth, height: paddingHeight };
 			}
 
-			if (!notEqual(innerHeight, bodyHeight)) {
+			if (!notEqual(innerHeight, bodyHeight) && fitWidth === this.popupW) {
 				this.fitBudget.reset();
 			} else if (this.fitBudget.spend()) {
 					// don't fight with the onResize handler, and use the Chrome
 					// API to resize the popup, since it can make the window
-					// shorter than window.resizeTo() can.  pass the saved
-					// outerWidth in this.popupW, in case the actual outerWidth
-					// has changed for some reason.
+					// shorter than window.resizeTo() can
 				this.ignoreNextResize = true;
-				this.popupH = bodyHeight + windowPadding;
-					// the other place popupH is assigned, and the one that
-					// could bake a bad measurement into the target
+				this.popupW = fitWidth;
+				this.popupH = bodyHeight + paddingHeight;
+					// the other place popupW and popupH are assigned, and the one
+					// that could bake a bad measurement into the target
 				this.logSize("fit-content",
-					"bodyHeight:", bodyHeight,
-					"windowPadding:", windowPadding,
+					"body:", `${bodyWidth}x${bodyHeight}`,
+					"windowPadding:", `${paddingWidth}x${paddingHeight}`,
 					settled ? "" : "(measurement unsettled, reused)");
 				popupWindow.resize(this.popupW, this.popupH);
 			} else {
 				log("popup fit: giving up until the next render",
 					"inner:", `${innerWidth}x${innerHeight}`,
 					"target:", `${this.popupW}x${this.popupH}`,
-					"bodyHeight:", bodyHeight);
+					"body:", `${bodyWidth}x${bodyHeight}`);
 			}
 		});
 	}
