@@ -26,6 +26,7 @@ comments: true
 * Typing a space after <b><kbd>/</kbd><kbd>b</kbd></b> or <b><kbd>/</kbd><kbd>h</kbd></b> to search bookmarks or history didn't work when the <kbd>space</kbd> key was set to only move the selection.
 * The popup window sometimes failed to appear, or appeared too tall for the screen after moving between monitors with different resolutions.
 * After moving between monitors with different scaling, the popup window could end up too wide, or too narrow to show all of the results list.
+* Improved handling of multiple monitors when navigating recent tabs with the popup open.
 * Favicons from some sites, like claude.ai, were missing, and favicons that pages set from script, like Google Sheets and Slides, were replaced by a generic one.
 * Restoring a closed tab from the popup window left the popup centered on the screen, instead of hiding it behind the restored tab's window.
 * The order of recent tabs was sometimes lost after restarting the browser.
