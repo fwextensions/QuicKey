@@ -9,10 +9,11 @@ if (chrome.system) {
 function updateScreenInfo()
 {
 	chrome.system.display.getInfo().then((screenInfo) => {
-		screens = screenInfo.map(({ workArea }) => ({
+		screens = screenInfo.map(({ workArea, isPrimary }) => ({
 			...workArea,
 			right: workArea.left + workArea.width,
-			bottom: workArea.top + workArea.height
+			bottom: workArea.top + workArea.height,
+			isPrimary
 		}));
 	});
 }
@@ -52,8 +53,15 @@ export function getScreenFromWindow(
 		return targetWindow ? boundsToScreen(targetWindow) : DefaultScreen;
 	}
 
-	if (!targetWindow || screens.length === 1) {
+	if (screens.length === 1) {
 		return screens[0];
+	}
+
+	if (!targetWindow) {
+			// Chrome doesn't list the primary display first.  with the primary
+			// monitor on the right, the left one came first, so a popup with no
+			// window to go by opened on a monitor the user wasn't looking at.
+		return screens.find(({ isPrimary }) => isPrimary) || screens[0];
 	}
 
 	const { left, top, width, height } = targetWindow;

@@ -440,7 +440,10 @@ async function navigateRecents(
 				} else {
 					sendPopupMessage("modifySelected", {
 						direction: -direction,
-						navigatingRecents: true
+						navigatingRecents: true,
+							// so the popup can show itself on the screen
+							// the shortcut was pressed on
+						screenTab: commandTab
 					});
 				}
 			}

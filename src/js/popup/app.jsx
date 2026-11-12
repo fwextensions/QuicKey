@@ -119,6 +119,8 @@ export default class App extends React.Component {
 	ignoreNextBlur = false;
 	ignoreNextResize = false;
 	navigatingRecents = false;
+		// the tab whose monitor the popup stays on while navigating recents
+	recentsScreenTab = null;
 	gotModifierUp = false;
 	gotMRUKey = false;
 		// where the selection should land on the setQuery() that a keystroke is
@@ -1089,7 +1091,8 @@ export default class App extends React.Component {
 
 	async showWindow({
 		focusSearch,
-		activeTab})
+		activeTab,
+		screenTab})
 	{
 			// only count this as a banner display if the window was hidden,
 			// so that showing an already visible window doesn't burn one of
@@ -1132,7 +1135,7 @@ export default class App extends React.Component {
 			// the tab list should already be correct in most cases, but
 			// load them again just to make sure
 		return this.loadTabs()
-			.then(() => this.showPopupWindow(activeTab));
+			.then(() => this.showPopupWindow(activeTab, screenTab));
 	}
 
 
@@ -1176,6 +1179,7 @@ export default class App extends React.Component {
 			this.resultsList.scrollToRow(0);
 			this.visible = false;
 			this.navigatingRecents = false;
+			this.recentsScreenTab = null;
 
 				// clear any bookmarks or history we might have loaded while
 				// the window was open, since they may be different the next
@@ -1237,13 +1241,21 @@ export default class App extends React.Component {
 	}
 
 
+		// with an activeTab, the popup is centered on that tab's window.
+		// otherwise, it goes at the right side of a screen, which is screenTab's
+		// screen if there is one, or the primary screen if not.
 	showPopupWindow(
-		activeTab)
+		activeTab,
+		screenTab)
 	{
 		if (!popupWindow) {
 				// we're the menu, which never connects popupWindow, so a
 				// misrouted showWindow message would otherwise throw here
 			return;
+		}
+
+		if (!activeTab && screenTab) {
+			return popupWindow.show(screenTab, "right-center", true);
 		}
 
 		return popupWindow.show(activeTab, activeTab ? "center-center" : "right-center");
@@ -1433,16 +1445,20 @@ export default class App extends React.Component {
 	{
 		switch (message) {
 			case "modifySelected":
-				const {navigatingRecents, direction} = payload;
+				const {navigatingRecents, direction, screenTab} = payload;
 
 				if (navigatingRecents) {
 					this.navigatingRecents = true;
 
 					if (!this.visible) {
+							// keep the popup on the monitor of the window the
+							// navigation started in, rather than following each
+							// tab it previews from one monitor to another
+						this.recentsScreenTab = screenTab;
+
 							// show the window first, since that resets the
 							// selected state to -1
-						await this.showWindow({ focusSearch: false, activeTab: null });
-
+						await this.showWindow({ focusSearch: false, activeTab: null, screenTab });
 
 							// set selected based on the direction so that
 							// when modifySelected() is called below, the
@@ -1452,6 +1468,10 @@ export default class App extends React.Component {
 							// current tab if we're opening the popup for
 							// the first time during a navigation flow.
 						await this.setSelectedIndex(direction == 1 ? 0 : 1, true);
+					} else if (!this.recentsScreenTab) {
+							// the popup was just created for this navigation, so
+							// the background recorded the tab it was opened from
+						this.recentsScreenTab = await this.getActiveTab();
 					}
 
 					this.updateMRUModifier(direction);
@@ -1459,7 +1479,7 @@ export default class App extends React.Component {
 					const index = await this.modifySelected(direction, true);
 
 					await this.focusTab(this.state.matchingItems[index]);
-					await this.showPopupWindow(null, "right-center");
+					await this.showPopupWindow(null, this.recentsScreenTab);
 				} else {
 					this.updateMRUModifier();
 					await this.modifySelected(direction, true);

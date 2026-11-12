@@ -28,6 +28,11 @@ export function calcBounds(
 		alignment = "center-center",
 		width,
 		height,
+			// align within the screen that holds targetWindow, rather than
+			// within the window itself.  navigating recents puts the popup at
+			// the side of the screen, but it still has to be the browser's
+			// screen, not whichever display Chrome happens to list first.
+		alignToScreen = false,
 	} = {})
 {
 	const [horizontal, vertical] = alignment.split("-");
@@ -49,7 +54,7 @@ export function calcBounds(
 		top: targetY,
 		width: targetW,
 		height: targetH
-	} = targetWindow || screen;
+	} = (!alignToScreen && targetWindow) || screen;
 		// chrome.windows throws "Invalid value for bounds" if any of these is a
 		// float.  that happens on fractional display scaling, where the popup
 		// page measures its own outerWidth/outerHeight as non-integers and hands

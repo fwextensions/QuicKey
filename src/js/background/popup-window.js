@@ -188,12 +188,16 @@ async function create(
 		// we won't have an activeTab if the user is opening the popup with
 		// a devtools window in the foreground
 	const targetWindow = await getWindow(activeTab);
+		// when navigating recents, the popup goes at the side of the screen
+		// the browser window is on.  passing no window here used to put it on
+		// the first screen Chrome listed, which may not be the one in use.
 	const bounds = calcBounds(
-		props.navigatingRecents ? null : targetWindow,
+		targetWindow,
 		{
 			alignment,
 			width: currentWidth,
 			height: currentHeight,
+			alignToScreen: !!props.navigatingRecents,
 		}
 	);
 	let window;
@@ -373,9 +377,12 @@ async function showInWindow(
 }
 
 
+	// alignToScreen aligns the popup within activeTab's screen instead of
+	// within its window.  see calcBounds().
 async function show(
 	activeTab,
-	alignment)
+	alignment,
+	alignToScreen = false)
 {
 	await seedSize();
 
@@ -386,6 +393,7 @@ async function show(
 			alignment,
 			width: currentWidth,
 			height: currentHeight,
+			alignToScreen,
 		}
 	);
 	let window;

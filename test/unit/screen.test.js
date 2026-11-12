@@ -127,6 +127,17 @@ describe("getScreenFromWindow", () => {
 		expect(screen.width).toBeGreaterThan(0);
 	});
 
+		// Chrome listed a non-primary monitor on the left first, so a popup with
+		// no window to go by opened on a monitor the user wasn't looking at
+	it("returns the primary screen when there's no window, even if it's listed second", async () => {
+		const getScreenFromWindow = await loadScreen([
+			{ workArea: { left: -2560, top: 0, width: 2560, height: 1392 }, isPrimary: false },
+			{ workArea: { left: 0, top: 0, width: 2560, height: 1392 }, isPrimary: true },
+		]);
+
+		expect(getScreenFromWindow(undefined)).toMatchObject({ left: 0, isPrimary: true });
+	});
+
 	it("handles a single screen", async () => {
 		const getScreenFromWindow = await loadScreen(display(Left));
 
