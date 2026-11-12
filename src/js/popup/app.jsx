@@ -335,6 +335,11 @@ export default class App extends React.Component {
 			// also handles the edge case where the menu is open and a tab
 			// in another window is closed.
 		chrome.tabs.onRemoved.addListener(this.onTabRemoved);
+
+			// Chrome sometimes fills in a tab's icon after we've loaded the
+			// list, like when hovering a tab whose icon was dropped from
+			// memory.  pick that up so the row doesn't keep a stale fallback.
+		chrome.tabs.onUpdated.addListener(this.onTabUpdated);
 	}
 
 
@@ -1320,6 +1325,27 @@ export default class App extends React.Component {
 	};
 
 
+	onTabUpdated = (
+		tabID,
+		{favIconUrl}) =>
+	{
+			// ignore updates while hidden, since showWindow() reloads the tabs
+			// when it's shown again.  closed tabs can share an ID with an open
+			// one, so skip anything with a sessionId.
+		const item = favIconUrl && this.visible
+			&& this.tabs.find(({id, sessionId}) => id === tabID && !sessionId);
+
+		if (item && item.favIconUrl !== favIconUrl) {
+			item.favIconUrl = favIconUrl;
+				// recompute faviconURL and fallbackFaviconURL from the new icon.
+				// the rows render from these same objects, so re-rendering the
+				// list with a fresh array is enough to swap the img's src.
+			addURLs(item);
+			this.setState(({matchingItems}) => ({ matchingItems: matchingItems.slice() }));
+		}
+	};
+
+
 	onQueryChange = (
 		event) =>
 	{
@@ -1576,7 +1602,7 @@ export default class App extends React.Component {
 				// Windows.  on macOS, the inner and outer widths are
 				// always the same.
 			this.reopenWindow();
-			warn("=== borders collapsed");
+			log("=== borders collapsed");
 		} else if (!this.ignoreNextResize &&
 				(notEqual(outerWidth, this.popupW) || notEqual(outerHeight, this.popupH))) {
 				// prevent the window from resizing, but only if the width
