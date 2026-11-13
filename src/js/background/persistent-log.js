@@ -96,7 +96,7 @@ export default function log(
 	...args)
 {
 		// only write the log in dev.  DEBUG defaults to IsDev, so this is on for
-		// an unpacked extension and off for anything installed from the store,
+		// a development build and off for a production one, even loaded unpacked,
 		// and can still be flipped by hand in the console.  it has to be read
 		// here rather than at module scope, since error-handler.js is what
 		// assigns it and may not have run by the time this module is imported.

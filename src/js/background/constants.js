@@ -14,11 +14,10 @@ export const IsEdge = /Edg\//i.test(userAgent);
 export const IsFirefox = /Firefox\//i.test(userAgent);
 export const Platform = IsMac ? "mac" : "win";
 export const Language = languageMatch && languageMatch.groups.lang || primaryLanguage;
-	// unpacked extensions don't have an update_url in the manifest, so use
-	// that as a synchronous stand-in for checking installType === "development"
-	// via chrome.management.getSelf(), which requires a top-level await that
-	// rollup can't bundle into the iife-format background script
-export const IsDev = !("update_url" in chrome.runtime.getManifest());
+	// key off the build mode rather than whether the extension is unpacked, so
+	// that dist/prod loaded unpacked to check a production build behaves like
+	// the shipped one.  vite replaces this at build time; vitest sets it true.
+export const IsDev = import.meta.env.DEV;
 export const IncognitoNameUC = IsFirefox
 	? "Private"
 	: IsEdge

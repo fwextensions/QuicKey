@@ -3,7 +3,7 @@ import { IsDev } from "@/background/constants";
 //import stdout from "@/lib/stdout";
 import stdout from "stdout-ext";
 
-	// default DEBUG to true when we're running as an unpacked extension
+	// default DEBUG to true in a development build
 globalThis.DEBUG = typeof globalThis.DEBUG !== "boolean"
 //	? false
 	? IsDev
