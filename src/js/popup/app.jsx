@@ -1260,7 +1260,7 @@ export default class App extends React.Component {
 		}
 
 		if (!activeTab && screenTab) {
-			return popupWindow.show(screenTab, "right-center", true);
+			return popupWindow.show(screenTab, "right-center-screen");
 		}
 
 		return popupWindow.show(activeTab, activeTab ? "center-center" : "right-center");

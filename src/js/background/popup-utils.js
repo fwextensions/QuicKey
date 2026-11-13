@@ -25,17 +25,18 @@ function getAlignedPosition(
 export function calcBounds(
 	targetWindow,
 	{
-		alignment = "center-center",
-		width,
-		height,
-			// align within the screen that holds targetWindow, rather than
+			// "<horizontal>-<vertical>", optionally followed by "-screen" to
+			// align within the screen that holds targetWindow rather than
 			// within the window itself.  navigating recents puts the popup at
 			// the side of the screen, but it still has to be the browser's
 			// screen, not whichever display Chrome happens to list first.
-		alignToScreen = false,
+		alignment = "center-center",
+		width,
+		height,
 	} = {})
 {
-	const [horizontal, vertical] = alignment.split("-");
+	const [horizontal, vertical, relativeTo] = alignment.split("-");
+	const alignToScreen = relativeTo === "screen";
 
 		// hide() is handed the tab that was just focused and swaps it for its
 		// window, but if that lookup fails, the tab itself arrives here.  a tab

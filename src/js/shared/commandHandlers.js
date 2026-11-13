@@ -362,7 +362,7 @@ async function openPopupWindow(
 		const result = await popupWindow.create(
 			state.activeTab,
 			{ focusSearch, navigatingRecents: state.navigatingRecents },
-			state.navigatingRecents ? "right-center" : "center-center"
+			state.navigatingRecents ? "right-center-screen" : "center-center"
 		);
 
 		endPhase("create");
