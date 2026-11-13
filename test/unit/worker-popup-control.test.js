@@ -233,6 +233,74 @@ describe("worker and popup", () => {
 });
 
 
+describe("settings changed while the popup holds control", () => {
+		// on macOS, switching hidePopupBehavior to minimize was ignored the
+		// first time: the popup held control and handled the settingChanged,
+		// then closed itself, handing control back to a worker that had read
+		// the settings before the change and never heard about it
+	async function popupInControlWithWaitingWorker()
+	{
+		const oldWorker = await loadContext("/background.html");
+
+		await flush();
+
+		const popup = await loadContext("/popup.html");
+
+		await flush();
+
+		oldWorker.destroy();
+		await flush();
+
+			// a tab event wakes a new worker, which reads the settings at init
+			// and then waits for control behind the popup
+		const worker = await loadContext("/background.html");
+
+		await flush();
+
+		expect(popup.modules.control.isHeld()).toBe(true);
+		expect(worker.modules.control.isHeld()).toBe(false);
+		expect(popupWindow.hideBehavior).toBe("behind");
+
+		return { popup, worker };
+	}
+
+	it("the worker rereads the settings when it takes control after missing a change", async () => {
+		const { popup, worker } = await popupInControlWithWaitingWorker();
+		const changed = { ...DefaultSettings, hidePopupBehavior: "minimize" };
+
+		settings.get.mockImplementation(() => Promise.resolve(changed));
+
+		try {
+			chrome.runtime.onMessage.dispatch({ message: "settingChanged",
+				key: "hidePopupBehavior", value: "minimize" }, {}, () => {});
+			await flush();
+
+				// the popup closes itself after a hidePopupBehavior change.  reset
+				// the shared mock, so only the worker can set it back.
+			popupWindow.hideBehavior = "behind";
+			popup.destroy();
+			await flush();
+
+			expect(worker.modules.control.isHeld()).toBe(true);
+			expect(popupWindow.hideBehavior).toBe("minimize");
+		} finally {
+			settings.get.mockImplementation(() => Promise.resolve(DefaultSettings));
+			popupWindow.hideBehavior = "behind";
+		}
+	});
+
+	it("the worker doesn't reread the settings if nothing changed", async () => {
+		const { popup } = await popupInControlWithWaitingWorker();
+		const calls = settings.get.mock.calls.length;
+
+		popup.destroy();
+		await flush();
+
+		expect(settings.get).toHaveBeenCalledTimes(calls);
+	});
+});
+
+
 describe("toolbar menu open", () => {
 	const MenuContext = {
 		contextType: "POPUP",

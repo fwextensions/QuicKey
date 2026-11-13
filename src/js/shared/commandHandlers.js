@@ -30,6 +30,7 @@ let lastOpenPromise = Promise.resolve();
 let currentWindowLimitRecents = false;
 	// resolves once the settings that commands depend on have been loaded
 let settingsLoaded = Promise.resolve();
+let missedSettingChange = false;
 let ports = {};
 let sendPopupMessage;
 
@@ -637,6 +638,14 @@ function handlePopupMessage(
 	}
 }
 
+function noteMissedSettingChange(
+	request)
+{
+	if (request?.message === "settingChanged" && !control.isHeld()) {
+		missedSettingChange = true;
+	}
+}
+
 	// the recents commands wait on settingsLoaded, since on a cold start the
 	// command that woke the worker is handled before a settings read could
 	// finish.  otherwise they'd see the defaults in state.js, and the first
@@ -667,6 +676,16 @@ export default function init(
 		// cold start it can run after the replayed command is handled.
 	if (isBackgroundContext) {
 		loadSettings();
+
+			// handlePopupMessage() isn't added until this context takes
+			// control, so a worker that starts while the popup holds control
+			// never hears about a settingChanged.  the popup handles it, and a
+			// hidePopupBehavior change makes it close itself, which hands
+			// control straight back to this worker and its stale settings.
+			// that's how switching to minimize could be ignored until the
+			// option was changed again.  so note any change that arrives
+			// before we have control, and reload when we get it.
+		chrome.runtime.onMessage.addListener(noteMissedSettingChange);
 	}
 
 	return (context) => {
@@ -683,8 +702,12 @@ export default function init(
 			// to select the currently focused tab
 		popupWindow.on(["hide", "close"], () => state.navigatingRecents = false);
 
-			// a page context only starts handling commands now
-		if (!isBackgroundContext) {
+			// a page context only starts handling commands now, so it hasn't
+			// read the settings yet.  a worker read them at init, but if a
+			// setting changed while it was waiting for control, its copy is
+			// stale, so read them again.
+		if (!isBackgroundContext || missedSettingChange) {
+			missedSettingChange = false;
 			loadSettings();
 		}
 	};
