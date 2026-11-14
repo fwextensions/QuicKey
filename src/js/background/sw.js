@@ -8,7 +8,7 @@ globalThis.onactivate = () => clients.claim();
 	// persistent-log gates on DEBUG, which error-handler.js sets -- but that
 	// doesn't run until background.js is imported below, which is too late for
 	// anything logged from here.  same default it uses.
-globalThis.DEBUG ??= import.meta.env.DEV;
+globalThis.DEBUG ??= import.meta.env.MODE !== "production";
 
 	// in dev, stamp the toolbar icon's tooltip with when this worker started.
 	// the title doesn't survive a browser restart, so if it still reads just

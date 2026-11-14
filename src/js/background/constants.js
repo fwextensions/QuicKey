@@ -16,8 +16,10 @@ export const Platform = IsMac ? "mac" : "win";
 export const Language = languageMatch && languageMatch.groups.lang || primaryLanguage;
 	// key off the build mode rather than whether the extension is unpacked, so
 	// that dist/prod loaded unpacked to check a production build behaves like
-	// the shipped one.  vite replaces this at build time; vitest sets it true.
-export const IsDev = import.meta.env.DEV;
+	// the shipped one.  check MODE rather than import.meta.env.DEV: vite build
+	// sets NODE_ENV to production even with --mode development, so DEV is false
+	// in both builds.  vitest's mode is "test", which counts as dev.
+export const IsDev = import.meta.env.MODE !== "production";
 export const IncognitoNameUC = IsFirefox
 	? "Private"
 	: IsEdge
