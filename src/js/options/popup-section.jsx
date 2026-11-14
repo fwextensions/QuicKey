@@ -205,7 +205,8 @@ export default class PopupSection extends React.Component {
 							<div className="con">An extra tab is added to the last window</div>
 						</div>
 						<div id={k.HidePopupBehavior.Minimize}>
-							<div className="pro">Popup is at the bottom of the {SwitchWindowShortcut} list</div>
+							<div className="pro">Popup will not be visible if other windows are moved</div>
+							<div className="con">Popup is left near the top of the {SwitchWindowShortcut} list</div>
 							<div className="con">Popup shows/hides the slowest, due to window animations</div>
 						</div>
 					</ProsCons>
