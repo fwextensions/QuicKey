@@ -502,7 +502,11 @@ async function hide(
 				// get the target window's current state after updating the popup
 			targetWindow = await getWindow(targetTabOrWindow);
 
-			if (unfocus && !targetWindow.focused) {
+				// there may be no target: the popup page only knows the active
+				// tab if it handled the command that opened the popup, so esc
+				// right after it takes control from the worker passes null.
+				// minimizing doesn't need one, and focus moves on by itself.
+			if (unfocus && targetWindow && !targetWindow.focused) {
 					// we just unfocused the popup, but the targetWindow
 					// didn't become focused, probably because we're on
 					// macOS, so force it into focus
@@ -697,6 +701,15 @@ export default {
 				// awaiting the call
 			close("hide-behavior-changed");
 		}
+	},
+
+		// set the behavior read from storage, without the setter's close().
+		// each context starts with the default, so loading the stored value
+		// when one takes control isn't a change the user made.  going through
+		// the setter there closed the popup whenever the worker went idle and
+		// the popup took over with minimize or tab set, even while visible.
+	loadHideBehavior(value) {
+		hideBehavior = value;
 	},
 
 	get id() {

@@ -656,7 +656,7 @@ function loadSettings()
 	settingsLoaded = settings.get()
 		.then(settings => {
 			toolbarIcon.showTabCount(settings[k.ShowTabCount.Key]);
-			popupWindow.hideBehavior = settings[k.HidePopupBehavior.Key];
+			popupWindow.loadHideBehavior(settings[k.HidePopupBehavior.Key]);
 			currentWindowLimitRecents = settings[k.CurrentWindowLimitRecents.Key];
 			state.navigateRecentsWithPopup = settings[k.NavigateRecentsWithPopup.Key];
 		})

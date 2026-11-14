@@ -23,6 +23,7 @@ vi.mock("@/background/popup-window", () => ({
 		close: vi.fn(() => Promise.resolve()),
 		show: vi.fn(() => Promise.resolve({})),
 		on: vi.fn(),
+		loadHideBehavior: vi.fn(function(value) { this.hideBehavior = value; }),
 	},
 }));
 
@@ -283,6 +284,35 @@ describe("settings changed while the popup holds control", () => {
 
 			expect(worker.modules.control.isHeld()).toBe(true);
 			expect(popupWindow.hideBehavior).toBe("minimize");
+		} finally {
+			settings.get.mockImplementation(() => Promise.resolve(DefaultSettings));
+			popupWindow.hideBehavior = "behind";
+		}
+	});
+
+	it("loading the settings when the popup takes control doesn't close it", async () => {
+		const stored = { ...DefaultSettings, hidePopupBehavior: "minimize" };
+
+		settings.get.mockImplementation(() => Promise.resolve(stored));
+
+		try {
+			const worker = await loadContext("/background.html");
+
+			await flush();
+
+			const popup = await loadContext("/popup.html");
+
+			await flush();
+			popupWindow.close.mockClear();
+
+				// the worker goes idle, so the popup takes control and loads
+				// the settings
+			worker.destroy();
+			await flush();
+
+			expect(popup.modules.control.isHeld()).toBe(true);
+			expect(popupWindow.loadHideBehavior).toHaveBeenLastCalledWith("minimize");
+			expect(popupWindow.close).not.toHaveBeenCalled();
 		} finally {
 			settings.get.mockImplementation(() => Promise.resolve(DefaultSettings));
 			popupWindow.hideBehavior = "behind";

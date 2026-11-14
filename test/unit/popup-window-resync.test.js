@@ -138,3 +138,19 @@ describe("popup-window show() resync", () => {
 		await expect(popupWindow.show(activeTab)).resolves.toBeUndefined();
 	});
 });
+
+
+describe("popup-window hide()", () => {
+		// esc in a popup page that took control from the worker after the popup
+		// opened has no active tab to pass as the target.  the window was
+		// minimized, but then reading target.focused threw, and the catch
+		// closed the popup instead of leaving it hidden.
+	it("minimizes without a target window instead of closing", async () => {
+		const popupWindow = await loadPopupWindow();
+
+		popupWindow.loadHideBehavior("minimize");
+		await popupWindow.hide(true, null);
+
+		expect(chrome.tabs._dump().tabs.some(({ url }) => url === popupURL())).toBe(true);
+	});
+});
