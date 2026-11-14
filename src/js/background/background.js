@@ -150,6 +150,9 @@ chrome.runtime.onConnect.addListener(port => {
 //console.log("---- background: onConnect", port?.name);
 
 	const connectTime = Date.now();
+		// the port this worker made for itself at startup, below, rather than
+		// one a page opened in init.js
+	const isStandIn = port.isStandIn === true;
 	let closedByEsc = false;
 
 DEBUG && console.log("== onConnect", port.name, state.startingUp);
@@ -184,7 +187,11 @@ DEBUG && console.log("== onConnect", port.name, state.startingUp);
 //			}
 		}
 
-		if (!closedByEsc && Date.now() - connectTime < MaxPopupLifetime) {
+			// a stand-in port can't be a double-press: it's made when the worker
+			// starts, not when the user opens anything.  it drops right away if
+			// the popup page was already closing, such as after a hide behavior
+			// change, which woke the worker and then switched to the previous tab.
+		if (!isStandIn && !closedByEsc && Date.now() - connectTime < MaxPopupLifetime) {
 				// this was a double-press of alt-Q, so toggle the tabs
 			toggleRecentTabs();
 		}
@@ -239,6 +246,8 @@ chrome.runtime.getContexts({ contextTypes: [chrome.runtime.ContextType.TAB] })
 			// check that the popup window is open, and not just the Options tab
 		if (initialViews.some(isPopupWindow)) {
 			const popupPort = chrome.runtime.connect({ name: "popup" });
+
+			popupPort.isStandIn = true;
 
 				// generate a connect event with this new port.  if there's no popup
 				// window for it connect to, it'll immediately close.
