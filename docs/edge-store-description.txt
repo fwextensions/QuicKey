@@ -90,17 +90,10 @@ Any open tab can be searched immediately after installation.  The list of recent
 
 No mouse needed!
 
-🆕  New options in QuicKey 2.0
-
-Now you can press a single shortcut key (ALT-Q by default) to navigate recent tabs in a popup window, just like the ALT-TAB menu! Keep holding ALT while pressing Q to move the selection, then release ALT to switch to the selected tab.
-
 
 *️⃣  Switch between the most recently used tabs
 
-⚠️ NOTE: If you've been using QuicKey before 2.0, you'll need to set keyboard shortcuts for
-       the new commands that show the popup window, as they won't be set by default.
-
-Opening QuicKey displays a list of the last 50 tabs you've visited, in order of recency. (When you first start using QuicKey, though, it won't know what's recent, so the list will be empty.) Click a tab to switch to it, or use one of the keyboard shortcuts below to navigate the recently used tab history.
+Opening QuicKey displays a popup window with a list of the last 50 tabs you've visited, in order of recency. (When you first start using QuicKey, it will use the browser's history to generate the list, which may not be entirely accurate.) Click a tab to switch to it, or use one of the keyboard shortcuts below to navigate the recently used tab history.
 
 🔶 To pick a recent tab from the MRU list in the popup window:
     • Press ALT-Q (CTRL-Q on macOS) but keep holding the modifier key.
@@ -146,6 +139,10 @@ List navigation shortcuts:
 
 Recently used tabs get a slight boost in the search results ranking, so getting back to a tab you were just using should require typing fewer letters.
 
+Typing a space lets you enter multiple tokens in the query, all of which must match either the tab's title or URL, in any order.
+
+If you type more than 28 letters, which should be plenty to find the right tab, QuicKey switches to an exact string search to stay fast.
+
 
 *️⃣  Customize shortcuts and other options
 
@@ -158,6 +155,7 @@ To customize how QuicKey behaves, click the gear icon in the popup window or men
  • Mark tabs in other browser windows with an icon
  • Show the number of open tabs
  • Restore the last search query when reopening the popup window or menu
+ • Mark tabs the browser has discarded or frozen with a dimmed icon
  • Use pinyin to search for Chinese characters
 
 When a QuicKey update adds new settings, the gear icon will display a red dot to let you know.
@@ -174,7 +172,7 @@ You can also limit searching for tabs to the current browser window.
 
 To close the selected tab, press CTRL-W (CMD-CTRL-W on macOS, CTRL-ALT-W on Linux). Or hover over a tab and click the X button on the right side of the list.
 
-When you open QuicKey, the 25 most recently closed tabs are listed below the recent tabs and shown in a faded state with a clock icon. They are also returned when you type a query, though their rank in the list of results is lower than open tabs. Click a closed tab to reopen it in its original location and with all of its browsing history intact.
+When you open QuicKey, the 25 most recently closed tabs are listed below the recent tabs and shown in a dimmed state with a clock icon. They are also returned when you type a query, though their rank in the list of results is lower than open tabs. Click a closed tab to reopen it in its original location and with all of its browsing history intact.
 
 If you don't want any closed tabs to be shown, open the QuicKey options page, then uncheck "Include recently closed tabs in the search results" in the General section. You can also remove the selected closed tab from the browser's history by pressing CTRL-W (CMD-CTRL-W on macOS) or by clicking its X button on the right side of the list.
 
@@ -187,6 +185,11 @@ You can move tabs to the left or right of the current tab, making it easy to pul
  • Press CTRL-] to move it to the right.
 
 The CTRL key should be used on both Windows and macOS. Note that you cannot move tabs between normal and incognito windows.
+
+
+*️⃣  Distinguish tabs with identical titles
+
+A tab that has the same title as other open tabs will display a number to indicate its left-to-right position among those other tabs. For instance, if you open tabs for two different Google Drive accounts, they'll both be titled "My Drive - Google Drive". But the one on the left will show a "1" next to its title in the list and the one on the right will show a "2". This makes it easier for you to select the tab you want when you know how they're organized in your window.
 
 
 *️⃣  Search bookmarks
@@ -208,6 +211,7 @@ To find something in the last 2000 pages of your browser history, type "/h" and 
 The same CTRL-ENTER (CMD-ENTER on macOS) and SHIFT-ENTER shortcuts will open the visited page in a new tab or window.
 
 As soon as you type "/h ", the pages from your history will be listed in order of recency, so you can get back to a page you had recently visited without having to remember its name.
+
 
 *️⃣  Delete bookmarks and history items
 
@@ -248,7 +252,7 @@ When first installed, QuicKey asks for these permissions:
       pages in your favorites. The only time it changes your favorites is
       when you choose to delete one.
 
-QuicKey can't access or manipulate the content of any pages you visit.  It never sends the titles or URLs of your tabs, bookmarks or history anywhere, and transmits only anonymized performance metrics to Google Analytics and Posthog.
+QuicKey can't access or manipulate the content of any pages you visit.  It never sends the titles or URLs of your tabs, bookmarks or history anywhere, and transmits only anonymized performance metrics to Google Analytics and PostHog.
 
 
 *️⃣  Support and source code
