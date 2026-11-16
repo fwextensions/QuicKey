@@ -21,7 +21,7 @@ const ClientIDKey = "clientID";
 	// this is a workaround so that createTracker() doesn't have to be async.
 const createTracker = await (async () => {
 	const { version, installType } = await chrome.management.getSelf();
-	const browserInfo = getBrowserInfo();
+	const browserInfo = await getBrowserInfo();
 	let { [ClientIDKey]: client_id } = await chrome.storage.local.get(ClientIDKey);
 
 	if (!client_id) {
