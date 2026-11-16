@@ -757,8 +757,8 @@ export default class App extends React.Component {
 
 		// the user picked this tab, so add it to recents now instead of waiting
 		// for the dwell time, or quickly switching away would drop it.  the menu
-		// may not survive long enough to send this, and doesn't have a
-		// sendRuntimeMessage, so the background flushes when its port disconnects.
+		// may not survive long enough to send this, so the background flushes
+		// after it finishes activating a tab selected from the menu.
 	executeAddTab()
 	{
 		if (this.props.isPopup) {
@@ -799,6 +799,20 @@ export default class App extends React.Component {
 
 				// focusing the tab's window blurs the popup, which closes it
 			this.pendingCloseReason = "select";
+
+			if (!this.props.isPopup) {
+					// The toolbar menu can be destroyed as soon as the window is
+					// focused, so let the background finish activating the tab.
+				return chrome.runtime.sendMessage({
+					message: "focusMenuTab",
+					tabId: tab.id,
+					windowId: tab.windowId,
+					options,
+				}).catch(error => {
+					this.props.tracker.exception(error);
+					console.error(error);
+				});
+			}
 
 				// bring the tab's window forward *before* focusing the tab, since
 				// activating the window can sometimes put keyboard focus on the
