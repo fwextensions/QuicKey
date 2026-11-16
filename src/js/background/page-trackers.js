@@ -1,5 +1,6 @@
 import Tracker from "./tracker";
 import { IsEdge } from "./constants";
+import { getBrowserInfo } from "@/lib/browser-info";
 
 
 const GA4ID = IsEdge
@@ -20,6 +21,7 @@ const ClientIDKey = "clientID";
 	// this is a workaround so that createTracker() doesn't have to be async.
 const createTracker = await (async () => {
 	const { version, installType } = await chrome.management.getSelf();
+	const browserInfo = getBrowserInfo();
 	let { [ClientIDKey]: client_id } = await chrome.storage.local.get(ClientIDKey);
 
 	if (!client_id) {
@@ -30,7 +32,13 @@ const createTracker = await (async () => {
 
 	return (name) => new Tracker({
 		id: GA4ID,
-		posthog: PostHogSettings,
+		posthog: {
+			...PostHogSettings,
+				// GA already splits Chrome from Edge with separate IDs, but
+				// PostHog gets both under one key, and neither one could tell
+				// a fork like Brave or Vivaldi from Chrome
+			superProperties: browserInfo
+		},
 		name,
 		settings: {
 			client_id,

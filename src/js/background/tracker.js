@@ -60,6 +60,9 @@ export default class Tracker {
 			...posthog,
 			distinctID: mergedSettings.client_id,
 			superProperties: {
+					// properties only PostHog gets, like the browser name, so
+					// they don't show up in GA as unregistered parameters
+				...posthog.superProperties,
 				...persistentEventParameters,
 					// PostHog's web analytics UI keys off $current_url
 				$current_url: persistentEventParameters.page_location

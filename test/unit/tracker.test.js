@@ -123,3 +123,37 @@ describe("tracker.exception() scrubbing", () => {
 		]);
 	});
 });
+
+
+describe("PostHog-only super properties", () => {
+	it("sends posthog.superProperties to PostHog but not to GA", async () => {
+		vi.resetModules();
+
+		const createPostHogClient = vi.fn(() => ({ capture: vi.fn(), register: vi.fn() }));
+
+		vi.doMock("@/lib/posthog", () => ({ createPostHogClient }));
+
+		const FreshTracker = (await import("@/background/tracker")).default;
+
+		new FreshTracker({
+			id: "G-TEST",
+			posthog: {
+				apiKey: "phc_test",
+				superProperties: { $browser: "Brave", $browser_version: 131 }
+			},
+			settings: {
+				persistentEventParameters: { page_location: "/background.html", version: "2.5.1" }
+			}
+		});
+
+		expect(createPostHogClient.mock.calls[0][0].superProperties).toEqual({
+			$browser: "Brave",
+			$browser_version: 131,
+			page_location: "/background.html",
+			version: "2.5.1",
+			$current_url: "/background.html"
+		});
+
+		vi.doUnmock("@/lib/posthog");
+	});
+});
