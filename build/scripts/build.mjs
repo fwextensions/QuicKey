@@ -6,10 +6,18 @@
 	//   3. the service worker itself, which must stay a classic script so it
 	//      can register event listeners synchronously before pulling in the
 	//      big background bundle
-	// it also generates the production manifest.json and zips the output,
-	// which used to be handled by webpack plugins.
+	// it also generates the production manifest.json and, with --zip, zips the
+	// output into release/, which used to be handled by webpack plugins.
 	//
 	// usage: node build/scripts/build.mjs [production|development] [--watch]
+	//   [--zip [--force]]
+	//
+	// --zip is only for a build that's going to the store (npm run
+	// build:release).  the zip is named for the manifest version, which stays
+	// the same between releases, so zipping on every production build would
+	// replace the copy of the release that was submitted with whatever happens
+	// to be checked out.  for the same reason it won't overwrite an existing
+	// zip without --force.
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 import fs from "node:fs";
@@ -25,6 +33,8 @@ const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const srcDir = join(rootDir, "src");
 const mode = process.argv[2] === "development" ? "development" : "production";
 const watch = process.argv.includes("--watch");
+const zip = process.argv.includes("--zip");
+const force = process.argv.includes("--force");
 const isProduction = mode === "production";
 	// both builds land under dist/, so build/ holds only the scripts that
 	// produce them.  they're kept in separate directories so that building for
@@ -42,6 +52,17 @@ const tempDir = join(rootDir, "dist/temp");
 function buildTime()
 {
 	return new Date().toLocaleString();
+}
+
+if (zip && (!isProduction || watch)) {
+	console.error("--zip only works with a one-off production build.");
+	process.exit(1);
+}
+
+	// check before anything is cleaned or built, so a refused zip doesn't
+	// cost a full build or leave dist/prod wiped for nothing
+if (zip) {
+	checkZipTarget();
 }
 
 	// vite would normally empty outDir itself, but with three passes writing
@@ -269,22 +290,35 @@ function zipOutput(
 	manifest)
 {
 	const zipPath = join(rootDir, `release/${manifest.version}/${ShortName}.zip`);
-	const zip = new AdmZip();
+	const archive = new AdmZip();
 
 	fs.mkdirSync(dirname(zipPath), { recursive: true });
-	zip.addLocalFolder(outDir);
-	zip.writeZip(zipPath);
+	archive.addLocalFolder(outDir);
+	archive.writeZip(zipPath);
 	console.log(`Created ${zipPath}`);
+}
+
+
+function checkZipTarget()
+{
+	const { version } = JSON.parse(fs.readFileSync(join(srcDir, "manifest.json"), "utf8"));
+	const zipPath = join(rootDir, `release/${version}/${ShortName}.zip`);
+
+	if (fs.existsSync(zipPath) && !force) {
+		console.error(`${zipPath} already exists.  Bump the version in ` +
+			"src/manifest.json, or pass --force to replace it.");
+		process.exit(1);
+	}
 }
 
 console.log(`Build mode: ${mode}${watch ? " (watch)" : ""} (${buildTime()})`);
 
 	// each pass writes the manifest as it finishes, so there's nothing left to
-	// do here but zip up what they produced
+	// do here but zip up what they produced, if asked to
 await build(pagesConfig());
 await build(scriptConfig("js/background/background.js", "background"));
 await build(scriptConfig("js/background/sw.js", "sw"));
 
-if (isProduction && !watch) {
+if (zip) {
 	zipOutput(JSON.parse(fs.readFileSync(join(outDir, "manifest.json"), "utf8")));
 }
