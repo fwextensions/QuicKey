@@ -1,5 +1,6 @@
 import trackers from "./page-trackers";
 import log from "./persistent-log";
+import { scrubPaths, scrubURLs } from "@/lib/exception-list";
 
 
 const StorageKeys = [
@@ -22,6 +23,21 @@ const SlowTaskThreshold = 250;
 	// slow holder before it, so whatever held the lock either never finished
 	// or wasn't one of our tasks.
 const LongLockTime = 1000;
+const MaxReportedErrorLength = 200;
+
+
+	// the error that failed the init, as a label short and clean enough to
+	// send.  storage errors can carry the profile path, which names the user.
+function describeInitError(
+	error)
+{
+	const message = error?.message ?? String(error);
+	const description = error?.name && error.name !== "Error"
+		? `${error.name}: ${message}`
+		: message;
+
+	return scrubPaths(scrubURLs(description)).slice(0, MaxReportedErrorLength);
+}
 
 
 	// a task waiting on the lock can't see what's holding it, since the worker
@@ -205,6 +221,12 @@ export function createStorage({
 		// waits on before touching storage.  null means it hasn't been started,
 		// or that the last attempt failed and the next task should retry.
 	let initPromise = null;
+		// whether this context has reported a failed init yet.  the init is
+		// retried on every task, so a profile that can never load would
+		// otherwise send one event per task -- 289 overnight from one install
+		// in the 2.5.0 rollout -- while the first one says all there is to say.
+		// a new worker reports again, which still shows it's ongoing.
+	let initFailureReported = false;
 		// the name of the task holding the lock in this context, if any
 	let runningTask = null;
 		// the names of this context's tasks still waiting for the lock, in the
@@ -232,7 +254,17 @@ export function createStorage({
 
 DEBUG && console.error("Storage error: failed-init", error);
 					log("STORAGE ERROR: failed-init", error?.message);
-					trackers.background.event("storage", "failed-init");
+
+					if (!initFailureReported) {
+						initFailureReported = true;
+							// send the message as the label.  the same error also
+							// reaches tracker.exception() through the task that
+							// failed, but that drops FILE_ERROR_NO_SPACE as
+							// noise, so without this a dead profile says nothing
+							// about why.
+						trackers.background.event("storage", "failed-init",
+							describeInitError(error));
+					}
 
 					throw error;
 				});

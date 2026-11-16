@@ -61,6 +61,30 @@ export function scrubURLs(
 }
 
 
+	// absolute file paths, which Chrome puts in storage errors, like "IO error:
+	// C:\Users\<name>\AppData\...\000123.log: FILE_ERROR_NO_SPACE".  the
+	// profile path names the user, so it can't go into a report.  a path runs
+	// to the next colon, which Windows doesn't allow in a path after the drive,
+	// so a path with spaces, like "User Data", is still taken whole.  the POSIX
+	// pattern only matches the roots user data lives under, so it won't touch
+	// "/img/icon-16.png" or our own chrome-extension:// URLs.
+const WindowsPathPattern = /\b[A-Za-z]:[\\/][^:*?"<>|\n]*/g;
+const POSIXPathPattern = /(^|[\s"'(=])\/(?:Users|home|root|var|tmp|private|Volumes|mnt|media|opt|run|data)\/[^:"'\n)]*/g;
+
+
+export function scrubPaths(
+	text)
+{
+	if (typeof text != "string") {
+		return text;
+	}
+
+	return text
+		.replace(WindowsPathPattern, "<path>")
+		.replace(POSIXPathPattern, "$1<path>");
+}
+
+
 function getExtensionOrigin()
 {
 	const origin = globalThis.location?.origin;

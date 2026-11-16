@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { createExceptionList, parseStackFrames, scrubURLs } from "@/lib/exception-list";
+import { createExceptionList, parseStackFrames, scrubPaths, scrubURLs } from "@/lib/exception-list";
 
 	// what PostHog's error tracking gets from tracker.exception().  it names
 	// issues after the exception type and fingerprints them on the in-app
@@ -186,5 +186,32 @@ describe("scrubURLs", () => {
 			filename: "js/popup.js",
 			in_app: true
 		});
+	});
+});
+
+
+describe("scrubPaths", () => {
+		// what Chrome's storage errors look like.  the profile path names the
+		// user, and it has a space in it
+	it("replaces a Windows profile path, spaces and all", () => {
+		expect(scrubPaths(String.raw`IO error: C:\Users\someone\AppData\Local\Google\Chrome\User Data\Default\Local Extension Settings\abc/000123.log: FILE_ERROR_NO_SPACE (ChromeMethodBFE: 15::WritableFileAppend::8)`))
+			.toBe("IO error: <path>: FILE_ERROR_NO_SPACE (ChromeMethodBFE: 15::WritableFileAppend::8)");
+	});
+
+	it("replaces macOS and Linux profile paths", () => {
+		expect(scrubPaths("IO error: /Users/someone/Library/Application Support/Google/Chrome/Default/LOCK: File currently in use."))
+			.toBe("IO error: <path>: File currently in use.");
+		expect(scrubPaths("Corruption: /home/someone/.config/vivaldi/Default/Local Extension Settings/abc/MANIFEST-000001: bad record"))
+			.toBe("Corruption: <path>: bad record");
+	});
+
+	it("leaves extension-relative paths and our own URLs alone", () => {
+		const message = "Failed to set icon '/img/icon-16.png': Failed to fetch at chrome-extension://abc/js/background.js";
+
+		expect(scrubPaths(message)).toBe(message);
+	});
+
+	it("passes through anything that isn't a string", () => {
+		expect(scrubPaths(undefined)).toBeUndefined();
 	});
 });
