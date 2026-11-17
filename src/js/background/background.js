@@ -61,9 +61,8 @@ let installedPromise = new Promise(resolve => {
 });
 
 
-	// this returns a function for sending messages *from* the popup, which we
-	// don't need
-initEventController({
+	// Send messages to whichever context currently controls tab events.
+const sendRuntimeMessage = initEventController({
 	sendPopupMessage(
 		message,
 		payload = {})
@@ -191,7 +190,8 @@ DEBUG && console.log("== onConnect", port.name, state.startingUp);
 			// starts, not when the user opens anything.  it drops right away if
 			// the popup page was already closing, such as after a hide behavior
 			// change, which woke the worker and then switched to the previous tab.
-		if (!isStandIn && !closedByEsc && Date.now() - connectTime < MaxPopupLifetime) {
+		if (!isStandIn && !closedByEsc && !port.selectedTab &&
+				Date.now() - connectTime < MaxPopupLifetime) {
 				// this was a double-press of alt-Q, so toggle the tabs
 			toggleRecentTabs();
 		}
@@ -199,8 +199,39 @@ DEBUG && console.log("== onConnect", port.name, state.startingUp);
 });
 
 
-chrome.runtime.onMessage.addListener(({message, ...payload}) => {
-	if (message === "reopenPopup") {
+chrome.runtime.onMessage.addListener(({message, ...payload}, sender, sendResponse) => {
+	if (message === "focusMenuTab") {
+			// Focusing a window dismisses the toolbar menu. Run the complete
+			// window-then-tab sequence here so the menu's destruction cannot
+			// interrupt it between the two Chrome API calls.
+		if (ports.menu) {
+				// A quick selection is not a double press of the menu shortcut.
+			ports.menu.selectedTab = true;
+		}
+
+		(async () => {
+			try {
+				await chrome.windows.update(payload.windowId, { focused: true });
+
+				const tab = await chrome.tabs.update(payload.tabId, {
+					active: true,
+					...payload.options,
+				});
+
+					// The controller may live in this worker or in the popup page.
+					// Flush after activation, since the menu disconnects earlier.
+				sendRuntimeMessage("executeAddTab", {}, true)
+					.catch(error => tracker.exception(error));
+				sendResponse(tab);
+			} catch (error) {
+				tracker.exception(error);
+				console.error(error);
+				sendResponse();
+			}
+		})();
+
+		return true;
+	} else if (message === "reopenPopup") {
 		(async () => {
 			const currentActiveTab = state.activeTab;
 
