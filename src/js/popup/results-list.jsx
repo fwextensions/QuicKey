@@ -1,6 +1,7 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { IsFirefox, ResultsListRowHeight } from "@/background/constants";
+import log from "@/background/persistent-log";
 
 
 	// in FF, the scrollbar appears inside the right edge of the scrolling
@@ -105,9 +106,90 @@ export default forwardRef(function ResultsList(
 		// used to handle via its scrollToIndex prop
 	useEffect(() => {
 		if (selectedIndex >= 0 && selectedIndex < itemCount) {
+				// log any scroll this selection change asks for, since a row
+				// that's already visible shouldn't move the list at all
+			const from = virtualizer.scrollOffset;
+			const [to] = virtualizer.getOffsetForIndex(selectedIndex) ?? [];
+
+			if (to !== undefined && to !== from) {
+				log("results list scrollToIndex",
+					"index:", selectedIndex,
+					"from:", from,
+					"to:", to,
+					"size:", virtualizer.getSize(),
+					"clientHeight:", scrollElementRef.current?.clientHeight,
+					"height:", height,
+					"dpr:", devicePixelRatio);
+			}
+
 			virtualizer.scrollToIndex(selectedIndex);
 		}
 	}, [selectedIndex, itemCount]);
+
+
+		// the list's rows are 45px, and keyboard navigation scrolls by whole
+		// rows, so an offset a px or two off a row boundary is the shift we're
+		// chasing.  log those, but not every offset a wheel scroll passes through.
+	useEffect(() => {
+		const element = scrollElementRef.current;
+
+		if (!element) {
+			return;
+		}
+
+		const handleScroll = () => {
+			const {scrollTop} = element;
+			const remainder = scrollTop % ResultsListRowHeight;
+			const offGrid = Math.min(remainder, ResultsListRowHeight - remainder);
+
+			if (offGrid > 0 && offGrid <= 3) {
+				log("results list off-grid scroll",
+					"scrollTop:", scrollTop,
+					"clientHeight:", element.clientHeight,
+					"size:", virtualizer.getSize(),
+					"dpr:", devicePixelRatio);
+			}
+		};
+
+		element.addEventListener("scroll", handleScroll);
+
+		return () => element.removeEventListener("scroll", handleScroll);
+	}, []);
+
+
+		// after each render, record where the list sits in the window, so a
+		// shift caused by something above it changing height shows up too.
+		// deduped, since this runs on every keystroke and arrow press.
+	const lastLayout = useRef("");
+
+	useEffect(() => {
+		const element = scrollElementRef.current;
+
+		if (!element || !visible) {
+			return;
+		}
+
+		const frame = requestAnimationFrame(() => {
+			const {top} = element.getBoundingClientRect();
+				// use only the part of scrollTop that's off a row boundary, so
+				// scrolling a row at a time with the arrow keys doesn't log
+			const layout = [top, element.scrollTop % ResultsListRowHeight,
+				element.clientHeight, height, devicePixelRatio].join();
+
+			if (layout !== lastLayout.current) {
+				lastLayout.current = layout;
+				log("results list layout",
+					"top:", top,
+					"scrollTop:", element.scrollTop,
+					"clientHeight:", element.clientHeight,
+					"height:", height,
+					"dpr:", devicePixelRatio,
+					"selected:", selectedIndex);
+			}
+		});
+
+		return () => cancelAnimationFrame(frame);
+	});
 
 
 	useImperativeHandle(ref, () => ({

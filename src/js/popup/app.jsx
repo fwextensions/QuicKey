@@ -258,6 +258,10 @@ export default class App extends React.Component {
 			this.lastWindowPadding = {width, height};
 			this.logSize("mount");
 			window.addEventListener("resize", this.onWindowResize);
+				// onWindowResize is debounced, so it misses a resize that
+				// bounces back within 250ms.  log every raw event, to see if a
+				// list that shifts by a px or two is the window being resized.
+			window.addEventListener("resize", this.logResizeEvent);
 
 				// hide the window if it loses focus
 			window.addEventListener("blur", this.onWindowBlur);
@@ -348,6 +352,9 @@ export default class App extends React.Component {
 			// we only want these flags to be true through one render cycle
 		this.forceUpdate = false;
 		this.selectAllSearchBoxText = false;
+			// deduped, so this only logs when a render finds the window at a
+			// different size than last time
+		this.logSize("render", "body:", `${document.body.offsetWidth}x${document.body.offsetHeight}`);
 
 			// when the number of matched items is < MaxItems, shrink the window
 			// height, but only in the popup case, since the toolbar menu does
@@ -1591,6 +1598,20 @@ export default class App extends React.Component {
 				...details);
 		}
 	}
+
+
+	logResizeEvent = () =>
+	{
+		log("popup resize event",
+			"dpr:", devicePixelRatio,
+			"outer:", `${outerWidth}x${outerHeight}`,
+			"inner:", `${innerWidth}x${innerHeight}`,
+			"body:", `${document.body.offsetWidth}x${document.body.offsetHeight}`,
+			"target:", `${this.popupW}x${this.popupH}`,
+			"pos:", `${screenX},${screenY}`,
+			"ignoreNext:", this.ignoreNextResize,
+			"visible:", this.visible);
+	};
 
 
 	onWindowResize = debounce(() => {
