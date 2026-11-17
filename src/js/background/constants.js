@@ -14,7 +14,12 @@ export const IsEdge = /Edg\//i.test(userAgent);
 export const IsFirefox = /Firefox\//i.test(userAgent);
 export const Platform = IsMac ? "mac" : "win";
 export const Language = languageMatch && languageMatch.groups.lang || primaryLanguage;
-export const IsDev = (await chrome.management.getSelf()).installType === "development";
+	// key off the build mode rather than whether the extension is unpacked, so
+	// that dist/prod loaded unpacked to check a production build behaves like
+	// the shipped one.  check MODE rather than import.meta.env.DEV: vite build
+	// sets NODE_ENV to production even with --mode development, so DEV is false
+	// in both builds.  vitest's mode is "test", which counts as dev.
+export const IsDev = import.meta.env.MODE !== "production";
 export const IncognitoNameUC = IsFirefox
 	? "Private"
 	: IsEdge
@@ -28,6 +33,11 @@ export const IncognitoPermission = IsFirefox
 	: `Allow in ${IncognitoNameLC}`;
 export const Homepage = "https://fwextensions.github.io/QuicKey/";
 export const MinTabDwellTime = 1250;
+	// the most tabs we keep in the recents list
+export const MaxRecentTabs = 50;
+	// how many times the banner explaining the seeded recents order is shown
+	// before it hides itself for good
+export const MaxSeededRecentsBannerDisplays = 5;
 export const PopupURL = chrome.runtime.getURL("popup.html");
 export const PopupInnerWidth = 500;
 export const PopupInnerHeight = 488;
@@ -65,6 +75,9 @@ export const HidePopupBehavior = {
 };
 export const MarkTabsInOtherWindows = {
 	Key: "markTabsInOtherWindows"
+};
+export const MarkSuspendedTabs = {
+	Key: "markSuspendedTabs"
 };
 export const IncludeClosedTabs = {
 	Key: "includeClosedTabs"

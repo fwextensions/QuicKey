@@ -1,0 +1,84 @@
+const LockName = "__control__";
+
+let isHeld = false;
+const heldCallbacks = [];
+
+function notifyHeld()
+{
+	for (const callback of heldCallbacks) {
+		try {
+			callback();
+		} catch (e) {
+			console.error(e);
+		}
+	}
+}
+
+	// register a callback that will be fired when this context takes control.
+	// if control is already held, the callback fires immediately.
+function onHeld(
+	callback)
+{
+	if (isHeld) {
+		callback();
+	} else {
+		heldCallbacks.push(callback);
+	}
+}
+
+function claimWhenAvailable(
+	name,
+	task)
+{
+	if (typeof name === "function") {
+		task = name;
+		name = LockName;
+	}
+
+	return navigator.locks.request(name, (lock) => {
+			// reloading the extension invalidates a page left open from the old
+			// build, and the old worker exiting grants that page's pending lock
+			// request.  every chrome API call from there throws "Extension
+			// context invalidated", so don't take control: let the lock go to a
+			// live context, and close the orphaned page if it's a window.
+		if (!chrome.runtime?.id) {
+			globalThis.document && globalThis.close?.();
+
+			return;
+		}
+
+			// make sure this is set before calling the task, in case that checks
+			// whether the lock is held
+		isHeld = true;
+
+		let result;
+
+		try {
+			result = task(lock);
+		} catch (e) {
+				// clear the flag but rethrow, so the lock request rejects and the
+				// lock is released for another context to claim
+			isHeld = false;
+			throw e;
+		}
+
+			// fire the onHeld callbacks after the task, so anything the task
+			// sets up is available when queued events are replayed
+		notifyHeld();
+
+		if (typeof result?.then === "function") {
+				// the task returned a promise, so it controls how long this
+				// context keeps the lock.  clear isHeld when it settles.
+			return result.finally(() => isHeld = false);
+		}
+
+			// the caller wants to keep control until the process exits
+		return new Promise(() => {});
+	});
+}
+
+export default {
+	claimWhenAvailable,
+	onHeld,
+	isHeld: () => isHeld
+}

@@ -1,7 +1,71 @@
+import log from "@/background/persistent-log";
+
 	// recommended by wOxxOm for avoiding service worker install issues
 	// https://groups.google.com/a/chromium.org/g/chromium-extensions/c/yo_2j-N0-Vg/m/kMDVdhaIAAAJ
 globalThis.oninstall = () => skipWaiting();
 globalThis.onactivate = () => clients.claim();
+
+	// persistent-log gates on DEBUG, which error-handler.js sets -- but that
+	// doesn't run until background.js is imported below, which is too late for
+	// anything logged from here.  same default it uses.
+globalThis.DEBUG ??= import.meta.env.MODE !== "production";
+
+	// in dev, stamp the toolbar icon's tooltip with when this worker started.
+	// the title doesn't survive a browser restart, so if it still reads just
+	// "QuicKey" hours after one, no worker has run since.  unlike the
+	// persistent log, this doesn't depend on chrome.storage answering, and
+	// unlike opening devtools, checking it doesn't start the worker.
+	//
+	// replace any earlier worker's stamp rather than the whole title: a worker
+	// that starts while the popup holds control never writes the badge, so it
+	// would otherwise wipe out the tab count the popup put in the title.
+if (globalThis.DEBUG) {
+		// include the date, since a stamp from a previous day's launch would
+		// otherwise look like it's from today
+	const now = new Date();
+	const date = now.toLocaleDateString("en-US",
+		{ month: "2-digit", day: "2-digit", year: "numeric" });
+
+	globalThis.workerStartMarker = `(worker started ${date} ${now.toLocaleTimeString()})`;
+	chrome.action.getTitle({})
+		.then((title) => chrome.action.setTitle({
+			title: `${title.replace(/ \(worker started [^)]*\)$/, "")} ${globalThis.workerStartMarker}`
+		}))
+		.catch(() => {});
+}
+
+	// these are the ones worth a persistent record, at the earliest point we
+	// can take one.  the worker console is lost when the worker is replaced, so
+	// a startup handled by an earlier worker instance would leave no trace
+	// there; this survives.  logging every cached event would mean a storage
+	// write per restored tab, hence the filter.
+const LoggedEvents = new Set(["runtime.onStartup", "runtime.onInstalled", "commands.onCommand"]);
+
+	// cached user actions older than this are dropped rather than replayed.  a
+	// command in particular has to run close to when it was pressed or not at
+	// all: replaying a toggle after a long stall flips tabs out from under the
+	// user, which was seen happening 18 minutes late.
+const MaxCachedEventAge = 2000;
+
+	// the events the age limit applies to.  the rest are bookkeeping, which is
+	// still right to apply late, and wrong to lose: a tab opened while the
+	// worker spent 8s waiting on the storage lock had its onCreated and
+	// onActivated dropped as stale, so it never made it into the recents.
+const ExpiringEventNames = new Set(["commands.onCommand", "runtime.onConnect", "runtime.onMessage"]);
+
+	// background.js can sit in a top-level await for minutes when the storage
+	// lock is held, so cap the bookkeeping events by count instead, keeping the
+	// newest
+const MaxCachedEvents = 500;
+
+const isExpired = ([eventName, , time], cutoff) =>
+	ExpiringEventNames.has(eventName) && time < cutoff;
+
+	// the one cached event whose placeholder listener can't stay attached.  the
+	// toolbar menu needs NO onCommand listener anywhere in the extension while
+	// it's open, so Chrome passes alt-W and the rest to it as key events --
+	// see enableCommands() in commandHandlers.js.
+const DetachedEventNames = new Set(["commands.onCommand"]);
 
 function cacheEvents(
 	eventNames)
@@ -10,38 +74,86 @@ function cacheEvents(
 	const getEvent = (name) => name.split(".").reduce((res, key) => res[key], chrome);
 
 	let cache = [];
-	let listeners = eventNames.map((eventName) => {
-		const listener = (...eventArgs) => cache.push([eventName, eventArgs]);
+	const listeners = eventNames.map((eventName) => {
+		const listener = (...eventArgs) => {
+				// after the replay, this is just a placeholder
+			if (cache) {
+					// drop anything that's already too old to replay, rather
+					// than collecting it for the whole stall
+				const cutoff = Date.now() - MaxCachedEventAge;
+
+				cache = cache.filter((event) => !isExpired(event, cutoff));
+				cache.push([eventName, eventArgs, Date.now()]);
+
+				if (cache.length > MaxCachedEvents) {
+					cache = cache.slice(-MaxCachedEvents);
+				}
+				LoggedEvents.has(eventName) && log("sw caught:", eventName);
+			}
+		};
 
 		getEvent(eventName).addListener(listener);
 
 		return [eventName, listener];
 	});
 
-	return function dispatchCachedEvents()
+	return function dispatchCachedEvents(
+		loaded)
 	{
-		for (const [eventName, listener] of listeners) {
-			getEvent(eventName).removeListener(listener);
+		const events = cache;
+
+		if (!events) {
+				// already dispatched
+			return;
 		}
 
-		for (const [eventName, eventArgs] of cache) {
+			// stop caching, but leave the listeners attached.  Chrome drops an
+			// event's wake-up registration when a worker removes the last
+			// listener for it, and then that event never starts the worker
+			// again, until something like devtools does.  removing these after
+			// background.js threw on import, before adding its own listeners,
+			// wiped every registration but the one an earlier module had made,
+			// causing the shortcuts, tab events and onStartup to all go dead.
+		cache = null;
+
+		if (!loaded) {
+				// there are no real handlers to replay to.  keeping every
+				// placeholder, including onCommand's, means the next event
+				// starts a fresh worker that can try the import again.
+			return;
+		}
+
+		for (const [eventName, listener] of listeners) {
+			if (DetachedEventNames.has(eventName)) {
+				getEvent(eventName).removeListener(listener);
+			}
+		}
+
+		const cutoff = Date.now() - MaxCachedEventAge;
+
+		for (const event of events) {
+			const [eventName, eventArgs, time] = event;
+
+			if (isExpired(event, cutoff)) {
+				log("sw dropping stale event:", eventName, Date.now() - time, "ms old");
+				continue;
+			}
+
 			globalThis.DEBUG && console.log("◆ dispatching", eventName, eventArgs);
+			LoggedEvents.has(eventName) && log("◆ sw dispatching:", eventName);
 			getEvent(eventName).dispatch(...eventArgs);
 		}
-
-		cache = null;
-		listeners = null;
 	}
 }
 
-globalThis.dispatchCachedEvents = cacheEvents([
+const dispatchCachedEvents = cacheEvents([
+	"alarms.onAlarm",
 	"commands.onCommand",
 	"runtime.onConnect",
 	"runtime.onInstalled",
 	"runtime.onMessage",
 	"runtime.onStartup",
 	"runtime.onUpdateAvailable",
-	"storage.onChanged",
 	"tabs.onActivated",
 	"tabs.onCreated",
 	"tabs.onRemoved",
@@ -49,4 +161,28 @@ globalThis.dispatchCachedEvents = cacheEvents([
 	"windows.onFocusChanged",
 ]);
 
-importScripts("./background.js");
+	// background.js calls this once all of its listeners are registered, and
+	// from then on every event reaches a real handler, so stop caching and
+	// replay the backlog.  importScripts() returning isn't that point: the
+	// bundle is wrapped in an async iife for the modules that use top-level
+	// await (page-trackers.js, popup-window.js), so everything after the first await,
+	// including every listener in background.js, registers asynchronously.
+	// replaying when the import returned removed the onCommand placeholder
+	// before the real listener existed, so the shortcut that woke the worker
+	// went nowhere, and only the second press opened the popup.
+	//
+	// it's also not after startup's storage task: that task needs the storage
+	// lock, which the popup can hold for many minutes when Chrome is
+	// struggling, and every event that arrived in the meantime was both
+	// handled live and then replayed a second time once it finished.
+globalThis.backgroundLoaded = () => dispatchCachedEvents(true);
+
+try {
+	importScripts("./background.js");
+} catch (error) {
+	console.error(error);
+		// the console is gone once the worker stops, so keep a record.  the
+		// stack says which module threw.
+	log("background.js failed to load:", error?.stack || String(error));
+	dispatchCachedEvents(false);
+}

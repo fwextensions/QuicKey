@@ -3,12 +3,18 @@ import {HidePopupBehavior, IsFirefox, PopupInnerHeight, PopupInnerWidth, PopupUR
 import {calcBounds} from "@/background/popup-utils";
 import {popupEmitter} from "@/background/popup-emitter";
 import {connect} from "@/lib/ipc";
+import log, { flushLog } from "@/background/persistent-log";
 
 
 const {Behind, Tab, Minimize} = HidePopupBehavior;
 
 
-const { receive } = connect("popup-window");
+	// only the background context should host the ipc channel for popup
+	// window calls.  the menu page also loads this module (via popup/app.js),
+	// and if it called connect() here, its channel would displace the
+	// worker <-> popup channel in ipc.js handleConnect(), leaving the popup's
+	// show/hide calls queued forever after the menu closes.
+const isBackgroundContext = typeof document === "undefined";
 let popupAdjustmentWidth = 0;
 let popupAdjustmentHeight = 0;
 let currentWidth = PopupInnerWidth;
@@ -18,13 +24,48 @@ let isHiddenInTab = false;
 let hideBehavior = Behind;
 let { windowID, tabID } = await getExistingPopupID();
 let lastActiveTab;
+let sizeSeeded = null;
 
 
-await storage.get((data = {}) => {
-	({ popupAdjustmentWidth = 0, popupAdjustmentHeight = 0 } = data);
-	currentWidth = PopupInnerWidth + popupAdjustmentWidth;
-	currentHeight = PopupInnerHeight + popupAdjustmentHeight;
-});
+	// read the stored size adjustments the first time something needs the
+	// popup's size, rather than in a top-level await.  this module is
+	// imported by background.js, so a top-level read held up every listener
+	// registration and the replay of cached events until it finished, and it
+	// needs the storage lock, which another context can hold for seconds.  a
+	// cold-start alt-W was dropped as stale that way, after this read waited
+	// 4.3 s for the lock.  the popup page imports this module too, so its
+	// startup paid the same cost.  every function that reads or sets
+	// currentWidth/currentHeight awaits this first, so a late seed can't
+	// overwrite a newer size from resize() or create().
+	//
+	// the read doesn't take the lock.  a cold-start alt-shift-A spent 300-400 ms
+	// waiting for it behind tasks too short to log, just to read two numbers.
+	// if another context is changing them at the same moment, the worst case
+	// is a popup that's a few pixels off, which create() measures and fixes.
+function seedSize()
+{
+	sizeSeeded ??= storage.peek((data = {}) => {
+		({ popupAdjustmentWidth = 0, popupAdjustmentHeight = 0 } = data);
+		currentWidth = PopupInnerWidth + popupAdjustmentWidth;
+		currentHeight = PopupInnerHeight + popupAdjustmentHeight;
+
+			// TEMPORARY INSTRUMENTATION -- the adjustments outlive the worker, so
+			// log what we start from.  a bad one persists across restarts and would
+			// otherwise look like the popup being wrong for no reason.
+		(popupAdjustmentWidth || popupAdjustmentHeight) &&
+			log("popup size seeded from storage:", `${currentWidth}x${currentHeight}`,
+				"adjustment:", `${popupAdjustmentWidth}x${popupAdjustmentHeight}`);
+	})
+			// let the next call retry, instead of every later create() or
+			// show() rejecting on the same failed read
+		.catch((error) => {
+			sizeSeeded = null;
+
+			throw error;
+		});
+
+	return sizeSeeded;
+}
 
 
 async function getWindow(
@@ -95,10 +136,32 @@ async function createPopup(
 		focused: true
 	};
 
-	const window = await chrome.windows.create({
+	const createData = {
 		...defaultOptions,
 		...options,
-	});
+	};
+
+		// chrome.windows.create() rejects a non-integer bound, which takes the
+		// popup out entirely -- seen 2026-09-04 as "Error at property 'left':
+		// Invalid type: expected integer, found number".  calcBounds() rounds
+		// everything it returns, and Math.round() can only produce a non-integer
+		// from NaN, so a bad value here means some input to the position math was
+		// undefined rather than that something forgot to round.  the likeliest
+		// source is a screen with missing bounds, which getScreenFromWindow()
+		// can hand back before chrome.system.display has populated.
+		//
+		// log what arrived and drop it, rather than throwing: an unpositioned
+		// window in Chrome's default spot still gives the user a working popup.
+	const badBounds = ["left", "top", "width", "height"]
+		.filter(key => key in createData && !Number.isInteger(createData[key]));
+
+	if (badBounds.length) {
+		log("popup create: dropping non-integer bounds:",
+			badBounds.map(key => [key, createData[key]]));
+		badBounds.forEach(key => delete createData[key]);
+	}
+
+	const window = await chrome.windows.create(createData);
 
 	windowID = window.id;
 	tabID = window.tabs[0].id;
@@ -113,8 +176,10 @@ async function create(
 	props = {},
 	alignment)
 {
+	await seedSize();
+
 		// close any existing window, in case one was still open
-	await close();
+	await close("create");
 
 	const propsJSON = JSON.stringify(props);
 		// get the full URL with the extension ID in it so that we can
@@ -123,8 +188,12 @@ async function create(
 		// we won't have an activeTab if the user is opening the popup with
 		// a devtools window in the foreground
 	const targetWindow = await getWindow(activeTab);
+		// when navigating recents, the alignment is "right-center-screen", so
+		// the popup goes at the side of the screen the browser window is on.
+		// passing no window here used to put it on the first screen Chrome
+		// listed, which may not be the one in use.
 	const bounds = calcBounds(
-		props.navigatingRecents ? null : targetWindow,
+		targetWindow,
 		{
 			alignment,
 			width: currentWidth,
@@ -159,6 +228,20 @@ async function create(
 	const widthDelta = PopupInnerWidth - innerWidth;
 	const heightDelta = PopupInnerHeight - innerHeight;
 
+		// TEMPORARY INSTRUMENTATION -- see logSize() in popup/app.jsx.  these
+		// adjustments persist to storage and seed currentWidth/currentHeight on
+		// every later show(), so a bad measurement here follows the popup
+		// around until something recreates the window.  window chrome is a few
+		// tens of px; an adjustment anywhere near PopupInnerHeight means a
+		// device-pixel value got recorded as the CSS-pixel target.
+	log("popup create: measured",
+		`${innerWidth}x${innerHeight}`,
+		"wanted", `${PopupInnerWidth}x${PopupInnerHeight}`,
+		"delta", `${widthDelta}x${heightDelta}`,
+		"adjustment now",
+		`${popupAdjustmentWidth + widthDelta}x${popupAdjustmentHeight + heightDelta}`,
+		"bounds", `${bounds.width}x${bounds.height}`);
+
 	if (widthDelta || heightDelta) {
 			// the current adjustments weren't enough to hit the target size,
 			// so update them with the latest deltas, and then adjust the
@@ -176,7 +259,7 @@ async function create(
 		bounds.top += -Math.floor(heightDelta / 2);
 
 		await chrome.windows.update(window.id, bounds);
-		await storage.set(() => ({ popupAdjustmentWidth, popupAdjustmentHeight }));
+		await storage.set(() => ({ popupAdjustmentWidth, popupAdjustmentHeight }), "savePopupAdjustment");
 	}
 
 	lastActiveTab = activeTab;
@@ -192,10 +275,114 @@ async function create(
 }
 
 
+	// re-derive windowID/tabID/isHiddenInTab from what the browser currently
+	// reports.  this module is loaded by both the worker and the popup page,
+	// and each context gets its own copy of that state, so whichever context
+	// didn't create the current popup window holds a stale windowID until its
+	// page reloads.  getExistingPopupID() only ever sets isHiddenInTab, so
+	// clear it first to avoid latching it on from a previous call.
+async function refreshPopupID()
+{
+		// we only get here because showing failed, so the popup certainly isn't
+		// visible.  that matters because showInWindow() checks isVisible before
+		// isHiddenInTab, so a stale true would send us back to the windows
+		// .update() branch even after we've learned the tab is stashed in a
+		// normal window and has no popup window ID to update.
+	isVisible = false;
+	isHiddenInTab = false;
+	({ windowID, tabID } = await getExistingPopupID());
+}
+
+
+	// run a chrome.windows call that depends on this context's cached windowID,
+	// and if it throws -- most likely "No window with id", because some other
+	// context has since replaced the popup window -- re-derive the IDs from live
+	// browser state and try once more, rather than staying wedged until this
+	// context's page happens to reload.  see the note on getExistingPopupID().
+	//
+	// fn has to read windowID/tabID when it's called, not close over them, so
+	// the retry picks up the resynced values.
+	//
+	// keepVisible is for resize(), which can legitimately run while the popup is
+	// showing.  every other caller has already given up on the window being
+	// visible, which is what refreshPopupID() assumes.
+async function retryAfterResync(
+	name,
+	fn,
+	{ keepVisible, details } = {})
+{
+	try {
+		return await fn();
+	} catch (e) {
+		log(`popup ${name} failed, resyncing:`, e.message,
+			"windowID:", windowID, "tabID:", tabID,
+			"isVisible:", isVisible, "isHiddenInTab:", isHiddenInTab,
+			"hideBehavior:", hideBehavior,
+			...(details ? [details] : []));
+
+		const wasVisible = isVisible;
+
+		await refreshPopupID();
+
+		if (keepVisible) {
+			isVisible = wasVisible;
+		}
+
+		try {
+			const result = await fn();
+
+			log(`popup ${name} resynced to windowID:`, windowID);
+
+			return result;
+		} catch (retryError) {
+			log(`popup ${name} FAILED after resync:`, retryError.message,
+				"windowID:", windowID, "tabID:", tabID,
+				"isHiddenInTab:", isHiddenInTab);
+
+				// let the caller decide what a second failure means.  hide()
+				// falls back to close(); the others give up quietly.
+			throw retryError;
+		}
+	}
+}
+
+
+	// the body of show()'s attempt, factored out so it can be retried after a
+	// resync without duplicating the branch logic
+async function showInWindow(
+	bounds)
+{
+		// if we're already visible and show() is being called again, that
+		// means the user is navigating recent tabs while keeping the popup
+		// open, so focus the existing window even if it's in tab mode
+	if (isVisible || !isHiddenInTab) {
+			// to get a minimized window to change position, we seem to have
+			// to make an additional update() call with the position, but
+			// only if the window is currently not visible.  otherwise, it
+			// won't move back to the focused window after it's shown while
+			// navigating recents.
+		if (hideBehavior == "minimize" && !isVisible) {
+			await chrome.windows.update(windowID, { focused: true, left: bounds.left, top: bounds.top });
+		}
+
+			// we seem to have to pass width and height here, even if they
+			// haven't changed, to keep the window from shifting size
+		return chrome.windows.update(windowID, { focused: true, ...bounds });
+	}
+
+		// create a popup window with the tab that's hiding in another
+		// window, instead of passing in a URL.  that will move the
+		// existing tab into the new popup.
+	return createPopup({ tabId: tabID, ...bounds });
+}
+
+
 async function show(
 	activeTab,
 	alignment)
 {
+	await seedSize();
+
 	const targetWindow = await getWindow(activeTab);
 	const bounds = calcBounds(
 		targetWindow,
@@ -208,29 +395,12 @@ async function show(
 	let window;
 
 	try {
-			// if we're already visible and show() is being called again, that
-			// means the user is navigating recent tabs while keeping the popup
-			// open, so focus the existing window even if it's in tab mode
-		if (isVisible || !isHiddenInTab) {
-				// to get a minimized window to change position, we seem to have
-				// to make an additional update() call with the position, but
-				// only if the window is currently not visible.  otherwise, it
-				// won't move back to the focused window after it's shown while
-				// navigating recents.
-			if (hideBehavior == "minimize" && !isVisible) {
-				await chrome.windows.update(windowID, { focused: true, left: bounds.left, top: bounds.top });
-			}
-
-				// we seem to have to pass width and height here, even if they
-				// haven't changed, to keep the window from shifting size
-			window = await chrome.windows.update(windowID, { focused: true, ...bounds });
-		} else {
-				// create a popup window with the tab that's hiding in another
-				// window, instead of passing in a URL.  that will move the
-				// existing tab into the new popup.
-			window = await createPopup({ tabId: tabID, ...bounds });
-		}
-	} catch (e) {}
+		window = await retryAfterResync("show", () => showInWindow(bounds),
+			{ details: { bounds } });
+	} catch (e) {
+			// both attempts failed and retryAfterResync() has already logged
+			// why.  fall through and emit "show" anyway, as before.
+	}
 
 	lastActiveTab = activeTab;
 	isVisible = true;
@@ -262,7 +432,7 @@ async function hideInTab()
 	} else {
 			// there's no window in which to stash the tab, so just
 			// close it
-		await close();
+		await close("hide-in-tab-no-window");
 		isHiddenInTab = false;
 	}
 }
@@ -273,6 +443,8 @@ async function hide(
 	targetTabOrWindow)
 {
 	isVisible = false;
+
+	await seedSize();
 
 	if (hideBehavior == Tab
 		|| (hideBehavior == Behind && (!targetTabOrWindow || targetTabOrWindow.id === tabID))) {
@@ -312,10 +484,11 @@ async function hide(
 			options.state = "minimized";
 		}
 
-DEBUG && hideBehavior == Behind && (!Number.isInteger(options.left) || !Number.isInteger(options.top)) && console.error("==== bad popup options", options, targetWindow);
 
 		try {
-			const {state} = await chrome.windows.update(windowID, options);
+			const {state} = await retryAfterResync("hide",
+				() => chrome.windows.update(windowID, options),
+				{ details: { options } });
 
 			if (hideBehavior == Minimize && state !== "minimized") {
 					// for some irritating reason, minimizing the popup after it
@@ -329,7 +502,11 @@ DEBUG && hideBehavior == Behind && (!Number.isInteger(options.left) || !Number.i
 				// get the target window's current state after updating the popup
 			targetWindow = await getWindow(targetTabOrWindow);
 
-			if (unfocus && !targetWindow.focused) {
+				// there may be no target: the popup page only knows the active
+				// tab if it handled the command that opened the popup, so esc
+				// right after it takes control from the worker passes null.
+				// minimizing doesn't need one, and focus moves on by itself.
+			if (unfocus && targetWindow && !targetWindow.focused) {
 					// we just unfocused the popup, but the targetWindow
 					// didn't become focused, probably because we're on
 					// macOS, so force it into focus
@@ -338,10 +515,12 @@ DEBUG && hideBehavior == Behind && (!Number.isInteger(options.left) || !Number.i
 
 			popupEmitter.emit("hide", { hideBehavior });
 		} catch (e) {
-DEBUG && console.error("Failed to hide popup", e);
+			log("popup hide failed, closing it:", e.message, "options:", options,
+				"target:", targetWindow && ["id", "windowId", "left", "top", "width", "height"]
+					.map(key => [key, targetWindow[key]]));
 
 				// we couldn't move the window for some reason, so close it
-			await close();
+			await close("hide-failed");
 		}
 	}
 }
@@ -353,7 +532,8 @@ async function blur()
 	isVisible = false;
 
 	try {
-		await chrome.windows.update(windowID, { focused: false });
+		await retryAfterResync("blur",
+			() => chrome.windows.update(windowID, { focused: false }));
 	} catch (e) {}
 
 	popupEmitter.emit("blur", { windowID });
@@ -368,21 +548,68 @@ async function resize(
 		return;
 	}
 
-	currentWidth = width;
-	currentHeight = height;
+		// seed first, so the stored size can't land after this and replace it
+	await seedSize();
+
+		// resize() is the one path to chrome.windows that doesn't go through
+		// calcBounds(), and it's where the fractional values originate -- the
+		// popup page derives these from outerWidth/outerHeight, which aren't
+		// integers on fractional display scaling.  round here so the stored
+		// size stays integral for every later calcBounds() call too.
+	currentWidth = Math.round(width);
+	currentHeight = Math.round(height);
+
+		// TEMPORARY INSTRUMENTATION -- every size the popup page asks for lands
+		// here, so this is the single choke point for seeing a bad target
+		// arrive, whichever call site sent it
+	log("popup resize:", `${currentWidth}x${currentHeight}`);
+
+	const size = {
+		width: currentWidth,
+		height: currentHeight
+	};
 
 	try {
-		await chrome.windows.update(windowID, { width, height });
+			// keepVisible, since resize() is normally called on a popup that's
+			// showing, and refreshPopupID() would otherwise clear isVisible and
+			// send the next show() down the wrong branch
+		await retryAfterResync("resize",
+			() => chrome.windows.update(windowID, size),
+			{ keepVisible: true, details: size });
 	} catch (e) {}
 }
 
 
-async function close()
+	// close() deliberately doesn't use retryAfterResync().  it doesn't act on
+	// the cached windowID at all -- it queries for the popup tabs by URL and
+	// removes those -- so a stale ID can't wedge it.  windowID is only read to
+	// decide whether to emit "close".
+	//
+	// reason is logged so a background-initiated close can be told apart from
+	// the user clicking the close box, which never comes through here.
+async function close(
+	reason = "unknown")
 {
 		// look for any open popup tabs.  there should only ever be one, but
 		// at least one time, two got opened, so get them all to be safe.
 	const openTabs = await chrome.tabs.query({ url: `${PopupURL}*` });
 	const originalWindowID = windowID;
+
+	if (openTabs.length) {
+			// TEMPORARY INSTRUMENTATION -- when the popup page holds control,
+			// this runs in the page itself, and removing the tabs below kills
+			// it.  log() buffers its entries for a second before writing them,
+			// so without flushing and waiting, this line and anything logged
+			// just before it, like hide()'s "closing it", die with the page.
+			// cap the wait in case storage is stalled.
+		log("popup close:", reason,
+			"tabs:", openTabs.map(({ id }) => id),
+			"windowID:", windowID, "isVisible:", isVisible);
+		await Promise.race([
+			flushLog(),
+			new Promise(resolve => setTimeout(resolve, 1000))
+		]);
+	}
 
 		// set the IDs to 0 before calling remove(), so that if someone
 		// calls isOpen() before the tab is fully closed, isOpen will
@@ -404,15 +631,36 @@ async function close()
 
 
 	// listen for calls to these functions from the popup.html page
-receive({
-	show,
-	hide,
-	blur,
-	resize,
-});
+if (isBackgroundContext) {
+	const { receive } = connect("popup-window");
+
+	receive({
+		show,
+		hide,
+		blur,
+		resize,
+	});
+
+		// these are all module-local, so there's no way to see from the service
+		// worker console which branch show() will take.  dump them with:
+		// popupState()
+	if (globalThis.DEBUG) {
+		globalThis.popupState = () => ({
+			windowID,
+			tabID,
+			isVisible,
+			isHiddenInTab,
+			hideBehavior,
+			currentWidth,
+			currentHeight,
+			lastActiveTab,
+		});
+	}
+}
 
 
 export default {
+	seedSize,
 	create,
 	show,
 	hide,
@@ -429,6 +677,14 @@ export default {
 	},
 
 	async isOpen() {
+			// a tabID of 0 means getExistingPopupID() found no popup when this
+			// module loaded and we haven't created one since, so getContexts()
+			// can't match anything.  skip the call, which took up to 200 ms on
+			// a cold start.
+		if (!tabID) {
+			return false;
+		}
+
 		const [popupWindowTab] = await chrome.runtime.getContexts({ tabIds: [tabID] });
 
 		return !!popupWindowTab;
@@ -443,8 +699,17 @@ export default {
 
 				// do this after updating hideBehavior, since we're not
 				// awaiting the call
-			close();
+			close("hide-behavior-changed");
 		}
+	},
+
+		// set the behavior read from storage, without the setter's close().
+		// each context starts with the default, so loading the stored value
+		// when one takes control isn't a change the user made.  going through
+		// the setter there closed the popup whenever the worker went idle and
+		// the popup took over with minimize or tab set, even while visible.
+	loadHideBehavior(value) {
+		hideBehavior = value;
 	},
 
 	get id() {

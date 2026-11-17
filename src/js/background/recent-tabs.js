@@ -2,11 +2,26 @@ import addURLs from "@/popup/data/add-urls";
 import {getRelativeTime} from "@/lib/get-relative-time";
 import storage from "./quickey-storage";
 import pageTrackers from "./page-trackers";
-import {MinTabDwellTime, PopupURL} from "./constants";
+import {MaxRecentTabs as MaxTabsLength, MinTabDwellTime, PopupURL} from "./constants";
+import log from "./persistent-log";
 
 
-const MaxTabsLength = 50;
 const TabKeys = ["id", "url", "windowId"];
+	// how many unmatched recents updateFromFreshTabs() names individually in the
+	// persistent log before falling back to just the count
+const MaxMissingToLog = 3;
+	// how many changed titles to name individually before falling back to the count
+const MaxTitleChangesToLog = 10;
+	// the fraction of stored recents whose tab IDs have to be gone before we
+	// treat the list as belonging to a dead session rather than as normal churn
+const StaleRecentsRatio = 0.9;
+	// and the least time between two rebuilds triggered that way, so a list that
+	// stays stale -- because those tabs really are gone -- can't make every
+	// popup open pay for a rebuild
+const MinRematchInterval = 5 * 60 * 1000;
+	// how many dead tab IDs navigate() will step over before it stops deleting
+	// them one at a time and rematches the whole list
+const MaxNavigationMisses = 3;
 
 
 function titleOrURL(
@@ -78,12 +93,31 @@ function addVisit(
 }
 
 
+	// when retainUnmatched is true, recents that don't match any fresh tab are
+	// kept under their old IDs instead of being dropped.  that's used during
+	// Chrome's startup, where a restored tab that hasn't been loaded yet may
+	// not have its URL populated, so an unmatched recent doesn't necessarily
+	// mean the tab is gone -- it may just not be ready to match yet.  a later
+	// pass with retainUnmatched false drops whatever's still unmatched.
 function updateFromFreshTabs(
 	data,
-	freshTabs)
+	freshTabs,
+	retainUnmatched)
 {
 DEBUG && console.log("=== updateFromFreshTabs", data, freshTabs);
+		// ...except that an empty tab list is never evidence that the tabs are
+		// gone -- it means the browser hasn't restored the session yet, which
+		// on a big profile can be a minute or more after runtime.onStartup.
+		// callers guard this, but the one that didn't wiped 50 recents in one
+		// call: the startup loop's deadline had already passed by the time its
+		// first pass ran, so pass one was treated as the last one and dropped
+		// everything against a query that had returned nothing.  the invariant
+		// belongs here, where it can't be forgotten again.
+	if (!freshTabs.length) {
+		retainUnmatched = true;
+	}
 	const {tabIDs, tabsByID} = data;
+	const freshTabIDs = new Set(freshTabs.map(({id}) => id));
 	const freshTabsByURL = {};
 		// start with an empty object so if there are old tabs lying around
 		// that aren't listed in tabIDs they'll get dropped
@@ -91,6 +125,7 @@ DEBUG && console.log("=== updateFromFreshTabs", data, freshTabs);
 	const newTabIDs = [];
 	const tracker = pageTrackers.background;
 	let missingCount = 0;
+	let retainedCount = 0;
 DEBUG && console.log("=== existing tabs", tabIDs.length, Object.keys(tabsByID).length, "fresh", freshTabs.length);
 
 		// create a dictionary of the new tabs by the URL and
@@ -122,10 +157,37 @@ DEBUG && console.log("=== existing tabs", tabIDs.length, Object.keys(tabsByID).l
 			delete freshTabsByURL[oldTab.url];
 		} else {
 			missingCount++;
-DEBUG && console.log("=== missing", tabID, oldTab && oldTab.lastVisit, oldTab && oldTab.url);
+
+				// log only the first few.  a failed startup match misses every
+				// recent, so this was emitting 50 lines a pass -- two restarts
+				// filled a quarter of the log's 400 entries with one fact and
+				// pushed out the surrounding history.  the summary below carries
+				// the totals; these are just for a sense of what didn't match.
+			if (missingCount <= MaxMissingToLog) {
+				log("updateFromFreshTabs: no fresh tab matches recent",
+					tabID, oldTab?.lastVisit, oldTab?.url?.slice(0, 100));
+			}
+
+				// hang on to the old recent so a later pass can still match it
+				// once the tab finishes restoring.  skip it if a fresh tab has
+				// already claimed this ID, since reusing it would overwrite a
+				// real tab's entry with stale data.
+			if (retainUnmatched && oldTab && !freshTabIDs.has(tabID)) {
+				newTabsByID[tabID] = oldTab;
+				newTabIDs.push(tabID);
+				retainedCount++;
+			}
 		}
 	});
-DEBUG && console.log("=== newTabIDs", newTabIDs.length);
+	log("updateFromFreshTabs:",
+		"old recents:", tabIDs.length,
+		"fresh tabs:", freshTabs.length,
+		"matched:", newTabIDs.length - retainedCount,
+		"missing:", missingCount,
+		...(missingCount > MaxMissingToLog
+			? [`(${missingCount - MaxMissingToLog} not listed above)`]
+			: []),
+		"retained:", retainedCount);
 
 		// use timing() instead of event() so that we can get a histogram in
 		// GA of the different values, which is hard with events
@@ -133,10 +195,35 @@ DEBUG && console.log("=== newTabIDs", newTabIDs.length);
 	tracker.event("update", "new-tabs", freshTabs.length);
 	tracker.event("update", "missing-recents", missingCount);
 
-	var result = {
-		tabIDs: newTabIDs,
-		tabsByID: newTabsByID,
-		lastUpdateTime: Date.now()
+		// the storage update and the caller-facing counts are returned as two
+		// separate objects, so that a caller can't persist the counts by
+		// forgetting to strip one off.  they used to be mixed into one object
+		// with a comment saying to strip them: getAll()'s rebuild stripped
+		// missingCount and missed pendingCount, which then landed in storage as
+		// a 16th top-level key, failed validation, and reset the profile.
+	const result = {
+		update: {
+			tabIDs: newTabIDs,
+			tabsByID: newTabsByID,
+				// only claim we've reconciled the recents if we had a real tab
+				// list to reconcile them against.  an empty freshTabs means
+				// Chrome hasn't restored the session yet, not that every recent
+				// is gone, and getAll() keys its rebuild off lastStartupTime >
+				// lastUpdateTime -- so leaving this unwritten is what lets a
+				// later pass retry.  a populated list that matched nothing IS a
+				// real answer: those tabs are closed, and running again won't
+				// bring them back.
+			...(freshTabs.length > 0 ? { lastUpdateTime: Date.now() } : {}),
+		},
+			// how the startup sequence tells whether another pass is worthwhile.
+			// pendingCount is the one that matters there: a recent can be
+			// missing simply because its tab was closed before the restart, and
+			// no amount of retrying will bring it back, but a tab with no URL
+			// yet is one we genuinely can't match until it's finished loading.
+		stats: {
+			missingCount,
+			pendingCount: freshTabs.filter(({url}) => !url).length
+		}
 	};
 DEBUG && console.log("updateFromFreshTabs result", result);
 
@@ -144,71 +231,91 @@ DEBUG && console.log("updateFromFreshTabs result", result);
 }
 
 
+	// the body of add(), split out so navigate() can add the active tab inside
+	// its own storage task.  it updates data's tabIDs and tabsByID in place and
+	// returns the keys that changed.
+function addToData(
+	{tabIDs, tabsByID},
+	tab,
+	penultimately)
+{
+	const {id} = tab;
+	const lastID = last(tabIDs);
+	const lastTab = tabsByID[lastID];
+	let tabData;
+
+	if ((lastTab && lastTab.url == tab.url && lastTab.id == tab.id &&
+			lastTab.windowId == tab.windowId)) {
+			// this is the same tab getting refocused, which could
+			// happen just from opening the extension and then
+			// closing it without doing anything, so update its
+			// lastVisit time to now
+		addVisit(lastTab);
+
+		return { tabsByID };
+	}
+
+		// copy just the keys we need from the tab object
+	tabData = createRecent(tab, tabsByID[id]);
+	addVisit(tabData);
+	tabsByID[id] = tabData;
+
+		// make sure the new tab's ID isn't currently in the list
+	removeItem(tabIDs, id);
+
+	if (penultimately) {
+			// this is a tab that was opened in an inactive state, so we
+			// want to insert it before the last item in the array, which
+			// is the current tab, so that the new tab becomes the
+			// "most recent" one before the current one.
+		tabIDs.splice(-1, 0, id);
+
+		if (lastTab) {
+				// update the current tab so its lastVisit is later than
+				// the inactive tab we just added.  that way, if the user
+				// opens 5 tabs from a bookmark folder and switches to
+				// the 5th, the MRU menu will show the current tab as
+				// one they were most recently on, rather than the 4th
+				// newly opened tab, since the menu is sorted by
+				// lastVisit times.
+			lastTab.lastVisit = tabData.lastVisit + 1;
+		}
+	} else {
+			// this is now the frontmost tab, so add it at the end
+		tabIDs.push(id);
+	}
+
+DEBUG && console.log("add", `${tab.id}|${tab.windowId}`, getRecentStackString(tabIDs), titleOrURL(tab));
+
+		// remove any older tabs that are over the max limit.  splice the
+		// array in place, since navigate() keeps using the same one.
+	tabIDs.splice(0, Math.max(tabIDs.length - MaxTabsLength, 0)).forEach(id => {
+		delete tabsByID[id];
+	});
+
+	return { tabIDs, tabsByID };
+}
+
+
+	// ignore the extension's own popups.  a tab we can't see a URL for
+	// definitely isn't one of ours, so let it through rather than throwing
+	// here, the same way isPopupWindow() treats a missing URL.
+function isAddable(
+	tab)
+{
+	return tab && !tab.url?.includes(PopupURL);
+}
+
+
 function add(
 	tab,
 	penultimately)
 {
-		// ignore the extension's own popups
-	if (!tab || tab.url.includes(PopupURL)) {
+	if (!isAddable(tab)) {
 		return Promise.resolve();
 	}
 
-	return storage.set(({tabIDs, tabsByID}) => {
-		const {id} = tab;
-		const lastID = last(tabIDs);
-		const lastTab = tabsByID[lastID];
-		let tabData;
-
-		if ((lastTab && lastTab.url == tab.url && lastTab.id == tab.id &&
-				lastTab.windowId == tab.windowId)) {
-				// this is the same tab getting refocused, which could
-				// happen just from opening the extension and then
-				// closing it without doing anything, so update its
-				// lastVisit time to now
-			addVisit(lastTab);
-
-			return { tabsByID };
-		}
-
-			// copy just the keys we need from the tab object
-		tabData = createRecent(tab, tabsByID[id]);
-		addVisit(tabData);
-		tabsByID[id] = tabData;
-
-			// make sure the new tab's ID isn't currently in the list
-		removeItem(tabIDs, id);
-
-		if (penultimately) {
-				// this is a tab that was opened in an inactive state, so we
-				// want to insert it before the last item in the array, which
-				// is the current tab, so that the new tab becomes the
-				// "most recent" one before the current one.
-			tabIDs.splice(-1, 0, id);
-
-			if (lastTab) {
-					// update the current tab so its lastVisit is later than
-					// the inactive tab we just added.  that way, if the user
-					// opens 5 tabs from a bookmark folder and switches to
-					// the 5th, the MRU menu will show the current tab as
-					// one they were most recently on, rather than the 4th
-					// newly opened tab, since the menu is sorted by
-					// lastVisit times.
-				lastTab.lastVisit = tabData.lastVisit + 1;
-			}
-		} else {
-				// this is now the frontmost tab, so add it at the end
-			tabIDs.push(id);
-		}
-
-DEBUG && console.log("add", `${tab.id}|${tab.windowId}`, getRecentStackString(tabIDs), titleOrURL(tab));
-
-			// remove any older tabs that are over the max limit
-		tabIDs.splice(0, Math.max(tabIDs.length - MaxTabsLength, 0)).forEach(id => {
-			delete tabsByID[id];
-		});
-
-		return { tabIDs, tabsByID };
-	}, "addTab");
+	return storage.set((data) => addToData(data, tab, penultimately), "addTab");
 }
 
 
@@ -255,8 +362,13 @@ function replace(
 		if (index > -1) {
 DEBUG && console.log("tab replaced", oldID, "index", index, getRecentStackString(tabIDs), titleOrURL(oldTab));
 			tabIDs[index] = newID;
-			tabsByID[newID] = oldTab;
-			tabsByID[newID].id = newID;
+
+				// tabIDs can list an ID that tabsByID has lost, so there may
+				// be no record to move
+			if (oldTab) {
+				tabsByID[newID] = oldTab;
+				oldTab.id = newID;
+			}
 
 			newData.tabIDs = tabIDs;
 			newData.tabsByID = tabsByID;
@@ -267,22 +379,206 @@ DEBUG && console.log("tab replaced", oldID, "index", index, getRecentStackString
 }
 
 
+	// the reported failure is a tab that silently stops matching the title
+	// Chrome shows for it, then starts matching again on a later pass with no
+	// navigation in between.  the first attempt at catching that looked for
+	// empty or hostname-only titles, which turned out to be a stable population
+	// of ~22 tabs that were never loaded this session -- they match fine, and
+	// none of them was the tab that failed.
+	//
+	// so watch for the thing itself instead: a title that changed while the URL
+	// did not.  that needs no guess about what Chrome substitutes, which is what
+	// the first attempt got wrong -- the suspect title was neither empty nor a
+	// hostname.  a page that rewrites its own title (Gmail's unread count) trips
+	// this too, so the log is noisy by design; a corruption should still read
+	// differently from a count ticking up, and the URLs are there to tell them
+	// apart.
+	//
+	// the map lives as long as the popup page, which survives being hidden and
+	// reshown -- the window the failure was seen in.  the service worker restarts
+	// far too often to hold this, but every getAll() runs in the popup anyway.
+const lastTitlesByID = new Map();
+
+
+function logTitleChanges(
+	freshTabs)
+{
+		// this walks every tab on each getAll(), 2200+ on a big profile, so keep
+		// it to the dev builds that can actually read the log
+	if (!globalThis.DEBUG) {
+		return;
+	}
+
+	const changes = [];
+
+	freshTabs.forEach(({id, url, title, status}) => {
+		const previous = lastTitlesByID.get(id);
+
+			// only a title that moved under an unchanged URL is evidence of
+			// anything.  a new URL for this ID is just navigation, or an ID
+			// reused after a restart.
+		if (previous && previous.url === url && previous.title !== title) {
+			changes.push([id, status, previous.title, "->", title]);
+		}
+
+		lastTitlesByID.set(id, { url, title });
+	});
+
+		// drop tabs that are gone, so this doesn't grow across a long-lived
+		// popup and can't match a recycled ID against a dead tab's title
+	if (lastTitlesByID.size > freshTabs.length) {
+		const liveIDs = new Set(freshTabs.map(({id}) => id));
+
+		lastTitlesByID.forEach((value, id) =>
+			liveIDs.has(id) || lastTitlesByID.delete(id));
+	}
+
+	if (changes.length) {
+		log("getAll: titles changed under an unchanged URL:", changes.length,
+			changes.slice(0, MaxTitleChangesToLog));
+	}
+}
+
+
+	// the in-flight loadAll() for each value of includeClosedTabs
+const pendingLoads = new Map();
+
+
+	// every popup open calls this, and when Chrome is backed up the opens queue
+	// behind one another, each one then querying 2200+ tabs of its own -- seven
+	// in a row once a stall cleared, adding seconds of work to a browser that
+	// was already struggling.  so a call made while another is still loading
+	// just shares its result.
+	//
+	// onTabCount, if passed, gets the length of the full tabs.query() result,
+	// so the caller can pass it on without querying again.  it's called per
+	// caller, since a caller sharing another's load still wants the count.
 function getAll(
+	includeClosedTabs,
+	onTabCount)
+{
+	const key = Boolean(includeClosedTabs);
+	let load = pendingLoads.get(key);
+
+	if (!load) {
+		load = loadAll(key)
+			.finally(() => pendingLoads.delete(key));
+		pendingLoads.set(key, load);
+	}
+
+		// initTabs() decorates the tab objects in place, so give each caller
+		// its own copies, or a second caller would see the first one's changes
+	return load.then(({ tabs, tabCount }) => {
+		onTabCount?.(tabCount);
+
+		return tabs.map(tab => ({ ...tab }));
+	});
+}
+
+
+	// resolves to { tabs, tabCount }, where tabCount is the length of the full
+	// tabs.query() result, for getAll()'s onTabCount
+function loadAll(
 	includeClosedTabs)
 {
 const t = performance.now();
 
-	return storage.get(data => {
-		return Promise.all([
-			chrome.tabs.query({}),
-			includeClosedTabs ? chrome.sessions.getRecentlyClosed() : []
-		])
-			.then(([freshTabs, closedTabs]) => {
-				const {tabIDs} = data;
+		// query the tabs before taking the storage lock, rather than inside
+		// it.  tabs.query() takes a second or more with 2200+ tabs, and far
+		// longer when Chrome is backed up, and holding the lock through it
+		// blocked every other storage task in the worker and the popup for
+		// that long.  the recents can still change while the query is out,
+		// but they already could between this read and the unlocked write
+		// at the end.
+	return Promise.all([
+		chrome.tabs.query({}),
+		includeClosedTabs
+			? chrome.sessions.getRecentlyClosed()
+			: []
+	])
+		.then(([freshTabs, closedTabs]) => {
+				// only the total of the calls is worth logging: tabs.query() is
+				// nearly all of it, and a reply to getRecentlyClosed() can't be
+				// processed until the huge tabs.query() result has been, so
+				// timing it separately just repeats the query's time
+			const queryDuration = performance.now() - t;
+			const lockTime = performance.now();
+
+			return storage.get(data => {
+				log("getAll:",
+					"tabs.query and getRecentlyClosed:",
+					Math.round(queryDuration), "ms for",
+					freshTabs.length, "tabs,",
+					"storage lock:", Math.round(performance.now() - lockTime), "ms");
+				logTitleChanges(freshTabs);
+
+				const {lastStartupTime = 0, lastUpdateTime = 0} = data;
 				const tabsByURL = {};
-				const {tabsByID} = data;
+				let {tabIDs, tabsByID} = data;
+				let rebuilt;
+
+					// a Chrome restart regenerates every tab ID, so the stored
+					// recents have to be rematched to the restored tabs by URL.
+					// onStartup does that, but it can finish having matched
+					// nothing -- most often because the worker woke before Chrome
+					// restored any tabs -- and nothing else ever retries, so the
+					// recents stay pointed at dead IDs until the next restart.
+					// lastUpdateTime is only written once a pass had a real tab
+					// list, so this stays true until a rebuild actually happens.
+				const rematchOwed = lastStartupTime > lastUpdateTime;
+				const liveIDs = new Set(freshTabs.map(({id}) => id));
+				const staleCount =
+					tabIDs.filter(id => !liveIDs.has(id)).length;
+					// ...but that only fires if onStartup ran at all, and it
+					// doesn't always: it's been seen not firing across days of
+					// restarts, leaving both times at 0 and the check inert in
+					// exactly the case it exists for.  so also notice the state
+					// itself.  nearly every ID being gone means the list belongs
+					// to a dead session -- ordinary churn retires a few at a time
+					// -- and this needs no event to have fired, so it covers an
+					// extension reload and a missed onStartup alike.
+					//
+					// rate-limited because a rebuild retains what it couldn't
+					// match, so a list that stays stale (those tabs really are
+					// closed) would otherwise keep the ratio high and make every
+					// popup open pay.  lastUpdateTime doubles as that clock,
+					// which is why this needs no new stored key.
+				const staleRatio = tabIDs.length ? staleCount / tabIDs.length : 0;
+				const looksStale = staleRatio >= StaleRecentsRatio
+					&& Date.now() - lastUpdateTime > MinRematchInterval;
+
+					// the freshTabs guard is the invariant both share: an empty
+					// query is not evidence that the recents are gone, and
+					// rebuilding against it would drop all of them.
+				if ((rematchOwed || looksStale) && freshTabs.length > 0) {
+						// always retain what didn't match.  a recent with no fresh
+						// tab may belong to a tab Chrome hasn't restored yet, and
+						// there's no telling that apart from a tab that's really
+						// closed: an unrestored tab is *absent* from the query,
+						// not present without a URL, so counting URL-less tabs
+						// doesn't detect it.  dropping a live recent can't be
+						// undone, while keeping a dead one costs a slot in tabIDs
+						// and is invisible in the menu, which is built from the
+						// fresh tabs.  navigate() clears out dead entries anyway,
+						// and you're far likelier to open the menu looking for a
+						// tab mid-restore than to be paging through the MRU stack.
+					const {update, stats: {missingCount}} =
+						updateFromFreshTabs(data, freshTabs, true);
+
+					log("getAll: rebuilt recents,",
+						"triggered by:", rematchOwed ? "startup" : "staleness",
+						"stale:", `${staleCount}/${tabIDs.length}`,
+						"lastStartupTime:", lastStartupTime,
+						"lastUpdateTime:", lastUpdateTime,
+						"fresh tabs:", freshTabs.length,
+						"missing:", missingCount);
+
+					rebuilt = update;
+					({tabIDs, tabsByID} = update);
+				}
+
 // TODO: should use startsWith
-				let tabs = freshTabs.filter(({url}) => !url.includes(PopupURL));
+				let tabs = freshTabs.filter(({url}) => !url?.includes(PopupURL));
 
 					// update the fresh tabs with any recent data we have
 				tabs = tabs.map(tab => {
@@ -303,7 +599,11 @@ const t = performance.now();
 					}
 
 					tab.lastVisit = lastVisit;
-					tabsByURL[url] = true;
+
+						// don't key the dedupe hash off a tab we have no URL
+						// for, or every closed tab that's also missing one
+						// would dedupe against the "undefined" key below
+					url && (tabsByURL[url] = true);
 
 						// if the tab is suspended, also store it with the
 						// unsuspendURL so that we can dedupe it against
@@ -319,6 +619,16 @@ const t = performance.now();
 					// new install or after closing a window, the current tab
 					// will be in the list, but is then removed from the list
 					// in getTabs().
+				if (includeClosedTabs) {
+						// tabIDs.length <= 1 suppresses closed tabs below, so
+						// log it to correlate "closed tabs not shown" reports
+						// with an empty/reset recents list after a restart
+					log("getAll:",
+						"recents:", tabIDs.length,
+						"closed sessions:", closedTabs.length,
+						"showing closed:", tabIDs.length > 1);
+				}
+
 				if (tabIDs.length > 1) {
 					const uniqueClosedTabs = [];
 
@@ -330,7 +640,7 @@ const t = performance.now();
 						const lastVisit = session.lastModified * 1000;
 
 						[].concat(session.tab || session.window.tabs).forEach(tab => {
-							if (!(tab.url in tabsByURL) && !tab.url.includes(PopupURL)) {
+							if (!(tab.url in tabsByURL) && !tab.url?.includes(PopupURL)) {
 								tabsByURL[tab.url] = true;
 								tab.lastVisit = lastVisit;
 								addURLs(tab);
@@ -342,35 +652,68 @@ const t = performance.now();
 					tabs = tabs.concat(uniqueClosedTabs);
 				}
 
-					// save off the updated recent data.  we don't call
-					// storage.set() for getAll() so that the popup doesn't
-					// have to wait for the data to get stored before it's
-					// returned, to make the recents menu render faster.
-				storage.set(() => { tabsByID });
+					// save off the updated recent data.  we don't await this
+					// storage.set() so that the popup doesn't have to wait
+					// for the data to get stored before it's returned, to
+					// make the recents menu render faster.  when we rebuilt
+					// above, the new tabIDs and lastUpdateTime have to go with
+					// it -- lastUpdateTime is what stops the rebuild from
+					// running again on the next open.
+				storage.set(() => ({ ...rebuilt, tabsByID }), "saveGetAll");
 
 DEBUG && console.log("getAll took", performance.now() - t, "ms");
-				return tabs;
-			});
-	});
+				return { tabs, tabCount: freshTabs.length };
+			}, "getAll");
+		});
 }
 
 
-function updateAll()
+	// resolves to { missingCount, pendingCount }: how many stored recents
+	// didn't match an open tab, and how many open tabs have no URL to match
+	// against yet.  pass retainUnmatched to keep unmatched recents around for
+	// a later pass, rather than dropping them.
+function updateAll(
+	retainUnmatched)
 {
-	return storage.set(data => chrome.tabs.query({})
-		.then(freshTabs => {
-DEBUG && console.log("=== updateAll");
-			return {
-				lastStartupTime: Date.now(),
-				...updateFromFreshTabs(data, freshTabs),
-			};
-		}), "updateAll");
+	let stats = { missingCount: 0, pendingCount: 0 };
+
+	return storage.set(data => {
+		const queryTime = performance.now();
+
+		return chrome.tabs.query({})
+			.then(freshTabs => {
+					// tabs.query() is the expensive part of the startup passes
+					// on a machine with a lot of tabs, so log what it costs
+				log("updateAll: tabs.query took",
+					Math.round(performance.now() - queryTime), "ms for",
+					freshTabs.length, "tabs",
+					retainUnmatched ? "(retaining unmatched)" : "");
+
+				const {update, stats: newStats} =
+					updateFromFreshTabs(data, freshTabs, retainUnmatched);
+
+				stats = newStats;
+
+					// lastStartupTime is written by the onStartup handler before
+					// any of this runs, so that a startup whose passes all fail
+					// still leaves lastStartupTime > lastUpdateTime for getAll()
+					// to notice.  writing it here would defeat that: it would
+					// always land alongside lastUpdateTime and the two could
+					// never disagree.
+				return update;
+			});
+	}, "updateAll")
+		.then(() => stats);
 }
 
 
+	// when activeTab is passed, it's made the most recent tab before we pick
+	// where to go, in the same storage task.  that saves a separate read and
+	// write for the add, which was the slowest part of a cold-start toggle.
 function navigate(
 	direction,
-	limitToCurrentWindow)
+	limitToCurrentWindow,
+	activeTab)
 {
 	const now = Date.now();
 	const newData = {
@@ -379,6 +722,68 @@ function navigate(
 		lastShortcutTime: direction == "toggle" ? 0 : now,
 		previousTabIndex: -1
 	};
+		// how many stored IDs switchTabs() has found dead in a row, and whether
+		// we've already rematched during this navigation.  see the catch() in
+		// switchTabs().
+	let missCount = 0;
+	let rematched = false;
+		// tabIDs/tabsByID as they were before the first deletion below
+	let unprunedData = null;
+		// whether we actually activated a tab.  a toggle with nowhere to go,
+		// like one limited to a window with no other recents, switches nothing,
+		// and the caller mustn't then wait for a tab activation that won't come.
+	let switched = false;
+
+
+		// the catch() below throws away one dead tab ID per attempt, which is
+		// right when the user closed a tab behind our back, and useless after a
+		// restart: every stored ID is dead, so a single keypress walks the whole
+		// list, deletes all of it, and switches to nothing -- discarding
+		// recents that a URL rematch would have recovered, since the tabs are
+		// still open under new IDs.
+		//
+		// so once a few IDs in a row have missed, stop guessing and rematch.
+		// this can't call getAll(), which is the obvious way to do it: we're
+		// inside storage.set(switchTabs, "navigate") and therefore already hold
+		// the storage lock, and getAll() requests it again through storage.get().
+		// web locks aren't reentrant, so that deadlocks.  the matching itself
+		// needs no lock -- just the tab list -- so do that part inline and let
+		// the enclosing set() persist it.
+	async function rematchInPlace(
+		data)
+	{
+		const freshTabs = await chrome.tabs.query({});
+
+			// an empty query means the browser isn't ready, not that every tab
+			// is gone -- the same invariant getAll() and updateAll() follow.
+			// put back what the misses deleted and stop, rather than walking
+			// the rest of the list and deleting all of it on the way
+		if (!freshTabs.length) {
+			log("navigate: no tabs to rematch against, restoring",
+				unprunedData.tabIDs.length, "recents");
+			Object.assign(data, unprunedData);
+			Object.assign(newData, unprunedData);
+
+			return false;
+		}
+
+			// match against the list as it was before the misses started
+			// deleting from it, or the entries already dropped stay dropped --
+			// and those are exactly the ones the rematch exists to recover
+		const {update} = updateFromFreshTabs(unprunedData, freshTabs, true);
+
+		log("navigate: rematched after", missCount, "misses,",
+			"recents:", unprunedData.tabIDs.length, "->", update.tabIDs.length);
+
+			// switchTabs() re-reads these from data on each recursion, and
+			// newData is what the enclosing storage.set() writes
+		Object.assign(data, update);
+		Object.assign(newData, update);
+			// the indexes we'd walked to refer to the pruned list, so start over
+		data.previousTabIndex = -1;
+
+		return true;
+	}
 
 
 	function calcNavigationIndex(
@@ -410,6 +815,22 @@ function navigate(
 
 		if (direction == "toggle") {
 			previousTabIndex = maxIndex - 1;
+
+			if (limitToCurrentWindow) {
+					// the window check below recurses expecting the next pass
+					// to move farther back via data.previousTabIndex, but toggle
+					// always starts from the penultimate tab, so it would recurse
+					// until the stack overflows.  walk back to the most recent
+					// tab in this window here instead.  a tab with no data still
+					// counts as a match, so the catch() below can prune it.
+				const currentWindowID = tabsByID[tabIDs[maxIndex]]?.windowId;
+
+				while (previousTabIndex >= 0 && currentWindowID !== undefined
+						&& tabsByID[tabIDs[previousTabIndex]]
+						&& tabsByID[tabIDs[previousTabIndex]].windowId !== currentWindowID) {
+					previousTabIndex--;
+				}
+			}
 		} else if (now - data.lastShortcutTime < MinTabDwellTime && data.previousTabIndex > -1) {
 			if (direction == -1) {
 					// when going backwards, wrap around if necessary
@@ -471,6 +892,7 @@ DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabInde
 				.then(() => chrome.windows.update(tabsByID[previousTabID].windowId,
 					{ focused: true }))
 				.then(() => chrome.tabs.update(previousTabID, { active: true }))
+				.then(() => switched = true)
 				.catch(error => {
 						// we got an error either because the previous
 						// tab is no longer around or its data is not in
@@ -480,6 +902,13 @@ DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabInde
 						// so set data.previousTabIndex to that so when we
 						// recurse below, the next iteration will calculate
 						// the previous tab starting from there.
+						// snapshot before the first deletion, so the rematch
+						// below can work from the whole list
+					unprunedData ||= {
+						tabIDs: [...tabIDs],
+						tabsByID: {...tabsByID}
+					};
+
 					tabIDs.splice(previousTabIndex, 1);
 					delete tabsByID[previousTabID];
 					data.previousTabIndex = previousTabIndex;
@@ -487,6 +916,17 @@ DEBUG && console.log("navigate previousTabIndex", previousTabID, previousTabInde
 					newData.tabIDs = tabIDs;
 					newData.tabsByID = tabsByID;
 DEBUG && console.error(error);
+
+						// one miss is an ordinary closed tab; a run of them says
+						// the whole list is from a dead session.  rematch once
+						// per navigation, then fall back to deleting as before,
+						// so a genuinely gone tab still gets dropped.
+					if (++missCount >= MaxNavigationMisses && !rematched) {
+						rematched = true;
+
+						return rematchInPlace(data)
+							.then((matched) => matched ? switchTabs(data) : newData);
+					}
 
 					return switchTabs(data);
 				})
@@ -499,14 +939,25 @@ DEBUG && console.error(error);
 
 		// we break the tab switching into a function so it can call itself
 		// recursively if it hits a bad tab while navigating
-	return storage.set(switchTabs, "navigate");
+	return storage.set((data) => {
+			if (isAddable(activeTab)) {
+					// switchTabs() works on the same arrays, so it sees the
+					// add, and newData makes sure the add is written even if
+					// there's nowhere to switch to
+				Object.assign(newData, addToData(data, activeTab));
+			}
+
+			return switchTabs(data);
+		}, "navigate")
+		.then(() => switched);
 }
 
 
 function toggle(
-	limitToCurrentWindow)
+	limitToCurrentWindow,
+	activeTab)
 {
-	return navigate("toggle", limitToCurrentWindow);
+	return navigate("toggle", limitToCurrentWindow, activeTab);
 }
 
 
@@ -534,6 +985,11 @@ function print(
 					console.log("\n" + rows.join("\n"));
 				})
 		);
+}
+
+
+if (DEBUG) {
+	globalThis.printTabs = print;
 }
 
 

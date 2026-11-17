@@ -42,9 +42,7 @@ You can customize the shortcut key by right-clicking the *QuicKey* icon and sele
 
 ## <a name="mru"></a>Switch between the most recently used tabs
 
-> **Note:** If you've been using *QuicKey* before 2.0, you'll need to set keyboard shortcuts for the new commands that show the popup window, as they won't be set by default. 
-
-Opening *QuicKey* displays a list of the last 50 tabs you've visited, in order of recency.  (When you first start using *QuicKey*, though, it won't know what's recent, so the list will be empty.)  Click a tab to switch to it, or use one of the keyboard shortcuts below to navigate the recently used tab history:
+Opening *QuicKey* displays a popup window with a list of the last 50 tabs you've visited, in order of recency.  (When you first start using *QuicKey*, it will use the browser's history to generate the list, which may not be entirely accurate.)  Click a tab to switch to it, or use one of the keyboard shortcuts below to navigate the recently used tab history:
 
 <p style="margin-bottom: 0;">&nbsp;</p>
 
@@ -83,7 +81,7 @@ With a little extra work, you can even make *QuicKey* respond to the Holy Grail 
 
 ## Search for a tab quickly
 
-Unlike other tab switchers, *QuicKey* uses a [Quicksilver](https://qsapp.com/)-style search algorithm to rank the results, where contiguous matches at the beginning of words are higher in the list, as are matches against capital letters.  So you only have to type a few letters to quickly find the right tab.
+Unlike other tab switchers, *QuicKey* uses a [Quicksilver](https://qsapp.com)-style search algorithm to rank the results, where contiguous matches at the beginning of words are higher in the list, as are matches against capital letters.  So you only have to type a few letters to quickly find the right tab.
 
   * **To search for a recent tab in the popup window:**
     * Press and release <b><kbd>alt</kbd><kbd>W</kbd></b> (<b><kbd>ctrl</kbd><kbd>W</kbd></b> on macOS). 
@@ -106,7 +104,7 @@ Recently used tabs get a slight boost in the search results ranking, so getting 
 
 Typing a space lets you enter multiple tokens in the query, all of which must match either the tab's title or URL, in any order.
 
-If you type more than 25 letters, which should be plenty to find the right tab, *QuicKey* switches to an exact string search to stay fast.
+If you type more than 28 letters, which should be plenty to find the right tab, *QuicKey* switches to an exact string search to stay fast.
 
 
 ## Customize shortcuts and other options
@@ -124,6 +122,7 @@ There you can:
   * Mark tabs in other browser windows with an icon
   * Show the number of open tabs
   * Restore the last search query when reopening the popup window or menu
+  * Mark tabs the browser has discarded or frozen with a dimmed icon
   * Use pinyin to search for Chinese characters
 
 When a *QuicKey* update adds new settings, the <img src="img/gear.svg" style="height: 1em"> icon will display a red dot to let you know.
@@ -227,17 +226,7 @@ You can also copy the URL and title of the selected tab, bookmark or history ite
 
 ## Privacy policy
 
-When first installed, *QuicKey* asks for these permissions:
-
-- *Read and change your browsing history on all your signed-in devices*
-
-    *QuicKey* uses this permission to let you search the titles and URLs of the open tabs, as well as pages from your history. The *"all your signed-in devices"* part is there only so that recently closed tabs can be restored with their full history. The only time *QuicKey* changes your browsing history is when you choose to delete a history item. 
-
-- *Read and change your bookmarks*
-
-    *QuicKey* uses this permission to let you search the titles and URLs of your bookmarked pages. The only time it changes your bookmarks is when you choose to delete one.
-
-*QuicKey* can't access or manipulate the content of any pages you visit and doesn't transmit any information other than some anonymized diagnostic data. It never sends anything about the pages you visit.
+*QuicKey* can't access or manipulate the content of any pages you visit, and doesn't transmit any information other than some anonymized performance metrics to Google Analytics and PostHog.  See the [privacy policy](./privacy) for details.
 
 For the technically-minded, you can inspect *QuicKey*'s code on [GitHub](https://github.com/fwextensions/QuicKey).
 

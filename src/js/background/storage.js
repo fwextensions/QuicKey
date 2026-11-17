@@ -1,4 +1,5 @@
 import trackers from "./page-trackers";
+import log from "./persistent-log";
 
 
 const StorageKeys = [
@@ -7,6 +8,136 @@ const StorageKeys = [
 	"lastSavedFrom"
 ];
 const LockNameBase = "storage://";
+	// deliberately not in StorageKeys, so a reset doesn't wipe the evidence of
+	// what caused it
+const FailedDataKey = "failedStorageData";
+const MaxFailedDataLength = 10000;
+const MaxLoggedKeys = 20;
+	// a task that holds the lock longer than this gets logged.  keep it well
+	// under a second, so a wait made of several sub-second holds still names
+	// the tasks that caused it.
+const SlowTaskThreshold = 250;
+	// a hold or wait that's still going after this long gets logged while it's
+	// happening, rather than only once it ends.  a 10 s wait was logged with no
+	// slow holder before it, so whatever held the lock either never finished
+	// or wasn't one of our tasks.
+const LongLockTime = 1000;
+
+
+	// a task waiting on the lock can't see what's holding it, since the worker
+	// and the popup share it, so the holder logs itself when it's slow.  that
+	// puts a line naming the culprit just before the waiter's long wait.  the
+	// waiter logs its own wait too, and both break the hold down by phase, so
+	// a slow task shows whether the time went to Chrome's storage or to the
+	// task's own work.  a hold that runs past LongLockTime also logs while
+	// it's still going, in case it never ends, such as when the context is
+	// frozen or killed.
+async function logIfSlow(
+	name,
+	requestTime,
+	callback)
+{
+	const startTime = performance.now();
+	const phases = {};
+	let phaseStart = startTime;
+	const endPhase = (phase) => {
+		const now = performance.now();
+
+		phases[phase] = Math.round(now - phaseStart);
+		phaseStart = now;
+	};
+		// the phases logged so far show which one it's stuck in: the next one
+		// after the last that's listed
+	const stillHeldTimer = setTimeout(() => log(`storage task "${name}" still holding the lock after`,
+		Math.round(performance.now() - startTime), "ms", { ...phases }), LongLockTime);
+
+	try {
+		return await callback(endPhase);
+	} finally {
+		const duration = performance.now() - startTime;
+		const wait = startTime - requestTime;
+
+		clearTimeout(stillHeldTimer);
+
+		if (duration > SlowTaskThreshold || wait > SlowTaskThreshold) {
+			log(`storage task "${name}" held the lock`, Math.round(duration), "ms",
+				phases, "after waiting", Math.round(wait), "ms for it");
+		}
+	}
+}
+
+
+	// describe the data we're about to throw away.  when it isn't the object we
+	// expect, its keys are just indexes, which say nothing and can run to
+	// thousands of entries, so report the type and a sample instead of dumping
+	// the whole thing into the log.
+function describeData(
+	data)
+{
+	const type = Object.prototype.toString.call(data);
+
+	if (!data || typeof data !== "object") {
+		return `${type} ${JSON.stringify(String(data).slice(0, 200))}`;
+	}
+
+	const keys = Object.keys(data);
+	const sample = keys.length > MaxLoggedKeys
+		? `${JSON.stringify(keys.slice(0, MaxLoggedKeys))}...`
+		: JSON.stringify(keys);
+
+	return `${type} ${keys.length} keys: ${sample}`;
+}
+
+
+	// the bad data is the only evidence of what went wrong, and the
+	// globalThis.FAILED_STORAGE below dies with the context that saw it, which
+	// is almost always the popup.  so keep a copy in storage, where it survives
+	// the popup closing and the reset we're about to do.
+function saveFailedData(
+	storage)
+{
+	let json;
+
+	try {
+		json = JSON.stringify(storage.data);
+	} catch (e) {
+		json = String(storage.data);
+	}
+
+	return chrome.storage.local.set({
+		[FailedDataKey]: {
+			time: Date.now(),
+			from: globalThis.location.pathname,
+			version: storage.version,
+			description: describeData(storage.data),
+				// this can be the whole recents list, so store just enough to
+				// tell what the value actually was
+			json: String(json).slice(0, MaxFailedDataLength)
+		}
+	})
+			// we're already in a failure path, so a failure to record it
+			// shouldn't stop us from resetting to something usable
+		.catch(console.error);
+}
+
+
+	// dump the saved data from the service worker console with: printFailedStorage()
+export async function printFailedStorage()
+{
+	const { [FailedDataKey]: failure } = await chrome.storage.local.get(FailedDataKey);
+
+	if (!failure) {
+		console.log("No failed storage data has been recorded.");
+	} else {
+		console.log(`${new Date(failure.time).toISOString()} ${failure.from} `
+			+ `version: ${failure.version}\n${failure.description}\n${failure.json}`);
+	}
+
+	return failure;
+}
+
+
+globalThis.printFailedStorage = printFailedStorage;
 
 
 function emptyDefaultData()
@@ -21,10 +152,37 @@ function alwaysValidate()
 }
 
 
+function neverRepair()
+{
+	return Promise.resolve();
+}
+
+
 function returnData(
 	data)
 {
 	return Promise.resolve(data);
+}
+
+
+	// the updaters assume they've been handed an object with the keys their own
+	// version had, and validateUpdate() can only check the shape once they've
+	// all run, so there's nothing between corrupt storage and code that walks
+	// it.  an updater that throws on bad data surfaces as failed-init, which
+	// retries forever rather than resetting, since a throw there is normally a
+	// transient API failure -- so a profile can wedge instead of recovering.
+	//
+	// this only asserts what's true at every version: that the data is
+	// something the updaters can walk at all.  it can't check the shape,
+	// because changing the shape is what the updaters are for -- v4 data has no
+	// settings key, and v3 data has two keys the current version doesn't.
+function isUpdatable(
+	data)
+{
+	return !!data && typeof data == "object" && !Array.isArray(data)
+			// settings didn't exist before v5, so only check it if it's there
+		&& (!("settings" in data)
+			|| (!!data.settings && typeof data.settings == "object"));
 }
 
 
@@ -33,12 +191,55 @@ export function createStorage({
 	version = 1,
 	getDefaultData = emptyDefaultData,
 	validateUpdate = alwaysValidate,
+		// given data that failed validateUpdate(), return a repaired copy, or
+		// nothing if the damage isn't the kind this can fix.  the repair is
+		// re-validated before it's accepted, so a bad one costs a reset, not
+		// corruption.  the default never repairs anything.
+	repairUpdate = neverRepair,
 	updaters = {} })
 {
 	const storageLocation = globalThis.location.pathname;
 	const lockName = LockNameBase + name;
-	let dataPromise = initialize();
 	let lastSavedFrom;
+		// the in-flight load/update/reset of the stored data, which every task
+		// waits on before touching storage.  null means it hasn't been started,
+		// or that the last attempt failed and the next task should retry.
+	let initPromise = null;
+		// the name of the task holding the lock in this context, if any
+	let runningTask = null;
+		// the names of this context's tasks still waiting for the lock, in the
+		// order they asked for it
+	const queuedTasks = [];
+
+
+		// createStorage() has to return synchronously, so the initial load runs
+		// in the background and doTask() blocks on it.  otherwise a set() called
+		// during startup can read chrome.storage.local before the initial write
+		// lands and get undefined, which is what happens on a new install.
+	function ensureInitialized()
+	{
+		if (!initPromise) {
+			initPromise = initialize()
+				.catch(error => {
+						// the storage APIs can fail for reasons that have nothing
+						// to do with us and may not last -- a full disk is the
+						// common one -- and in MV3 the worker is short-lived
+						// enough that giving up for its whole lifetime is a big
+						// hammer.  so clear the promise to let the next task try
+						// again, and reject this one so the caller sees the
+						// failure instead of a task running against no data.
+					initPromise = null;
+
+DEBUG && console.error("Storage error: failed-init", error);
+					log("STORAGE ERROR: failed-init", error?.message);
+					trackers.background.event("storage", "failed-init");
+
+					throw error;
+				});
+		}
+
+		return initPromise;
+	}
 
 
 	function initialize()
@@ -48,6 +249,16 @@ export function createStorage({
 			.then(storage => {
 				lastSavedFrom = storage?.lastSavedFrom;
 
+				log("storage init:",
+					"hasData:", !!storage?.data,
+					"version:", storage?.version,
+					"lastSavedFrom:", lastSavedFrom,
+					"tabIDs:", storage?.data?.tabIDs?.length,
+						// log both times, since lastStartupTime > lastUpdateTime
+						// is what tells getAll() a startup rematch is still owed
+					"lastStartupTime:", storage?.data?.lastStartupTime,
+					"lastUpdateTime:", storage?.data?.lastUpdateTime);
+
 				if (!storage || !storage.data) {
 						// this is likely a new install, so reset the storage
 						// to the default.  we need to do this without locking
@@ -55,6 +266,12 @@ export function createStorage({
 						// this promise, so if we called the locking reset
 						// from here, it would never complete.
 					return resetWithoutLocking();
+				} else if (!isUpdatable(storage.data)) {
+						// there's no version of this we can update, so don't
+						// hand it to the updaters just to have one of them
+						// throw somewhere in the middle
+					return reportBadData("failed-precheck", storage)
+						.then(() => resetWithoutLocking(storage.data));
 				} else {
 						// update the existing storage to the latest version,
 						// if necessary
@@ -64,10 +281,35 @@ export function createStorage({
 	}
 
 
+		// report the data we're about to throw away, and keep a copy of it, so
+		// the reset that follows can be traced back to what caused it
+	async function reportBadData(
+		failure,
+		storage)
+	{
+DEBUG && console.error(`Storage error: ${failure}`, storage);
+			// include the version we expected, since a failed-update means the
+			// two disagree, and knowing only the stored one doesn't say whether
+			// the storage is ahead of the code or behind it
+		log("STORAGE ERROR:", failure,
+			"version:", storage.version, "expected:", version,
+			"tabIDs:", storage.data?.tabIDs?.length,
+			"data:", describeData(storage.data));
+		trackers.background.event("storage", failure);
+
+			// store a global reference to the bad data object so we can
+			// examine it and recover data in devtools
+		globalThis.FAILED_STORAGE = storage;
+
+		await saveFailedData(storage);
+	}
+
+
 	async function update(
 		storage)
 	{
-		let updated = false;
+		const originalVersion = storage.version;
+		let valid = false;
 		let updater = updaters[storage.version];
 
 		while (updater) {
@@ -81,28 +323,54 @@ export function createStorage({
 			updater = updaters[storage.version];
 		}
 
+		let repaired = false;
+
 		if (storage.version === version) {
-			updated = await validateUpdate(storage.data);
+			valid = await validateUpdate(storage.data);
+
+			if (!valid) {
+					// before resetting -- which throws away every recent tab the
+					// user has -- give the config a chance to salvage the data.
+					// the repair is validated again below, so a bad one just
+					// falls through to the reset we were about to do anyway.
+				const repair = await repairUpdate(storage.data);
+
+				if (repair) {
+					valid = await validateUpdate(repair);
+
+					if (valid) {
+						log("REPAIRED STORAGE instead of resetting:",
+							describeData(storage.data), "->", describeData(repair));
+						trackers.background.event("storage", "repaired-validation");
+						storage.data = repair;
+						repaired = true;
+					}
+				}
+			}
 		}
 
-		if (updated) {
-				// save the updated data and version to storage
-			return saveWithVersion(storage.data);
+		if (valid) {
+			if (storage.version !== originalVersion || repaired) {
+					// save the updated data and version to storage.  a repair
+					// has to be written even at the same version, or the bad
+					// keys stay on disk and every later load repairs again
+				return saveWithVersion(storage.data);
+			}
+
+				// the stored data is already at the current version, so don't
+				// rewrite the whole storage, which would otherwise happen on
+				// every startup of the service worker or popup
+			return storage.data;
 		} else {
 			const failure = storage.version === version ?
 				"failed-validation" : "failed-update";
 
-DEBUG && console.error(`Storage error: ${failure}`, storage);
-			trackers.background.event("storage", failure);
-
-				// store a global reference to the bad data object so we can
-				// examine it and recover data in devtools
-			globalThis.FAILED_STORAGE = storage;
+			await reportBadData(failure, storage);
 
 				// we couldn't find a way to update the existing storage to
 				// the new version or the update resulted in invalid data,
 				// so just reset it to the default
-			return resetWithoutLocking();
+			return resetWithoutLocking(storage.data);
 		}
 	}
 
@@ -110,7 +378,6 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 	function saveWithVersion(
 		data)
 	{
-		dataPromise = Promise.resolve(data);
 		lastSavedFrom = storageLocation;
 
 		return chrome.storage.local.set({ version, data, lastSavedFrom: storageLocation })
@@ -118,85 +385,179 @@ DEBUG && console.error(`Storage error: ${failure}`, storage);
 	}
 
 
-	function resetWithoutLocking()
+		// pass the data being replaced when this is a recovery reset, so
+		// getDefaultData() can decide whether any of it is worth carrying over.
+		// a reset with nothing passed in is a clean slate.
+	function resetWithoutLocking(
+		previousData)
 	{
-			// remove just the storage keys we actually use, rather than clearing everything
-		return chrome.storage.local.remove(StorageKeys)
-			.then(getDefaultData)
-			.then(saveWithVersion)
-				// normally, dataPromise points to the resolved promise from
-				// getAll() that was created when createStorage() was first
-				// called and returns the in-memory copy of the data from
-				// storage.  but since we just cleared that, we need to
-				// update the promise to point to the fresh data in memory.
-			.then(data => dataPromise = Promise.resolve(data));
+			// this wipes tabIDs/tabsByID, so any recent tab history is lost.
+			// log it so we can tell whether a missing history after a restart
+			// was caused by a reset vs. a failed match in updateFromFreshTabs().
+		log("RESETTING STORAGE to defaults");
+
+			// build the replacement data before clearing anything.  it means
+			// querying every tab, which takes seconds on a machine with
+			// thousands of them, and clearing first would leave storage with no
+			// data for that whole window -- long enough for another context to
+			// start up, see the empty storage as a new install, and reset again
+			// on top of us.
+		return getDefaultData(previousData)
+				// remove just the storage keys we actually use, rather than
+				// clearing everything
+			.then(data => chrome.storage.local.remove(StorageKeys)
+				.then(() => data))
+			.then(saveWithVersion);
+	}
+
+
+		// log who holds the lock and who's queued for it, from the lock
+		// manager rather than from our own tasks.  the clientIds tell the
+		// worker and the popup apart, and a holder with no matching "still
+		// holding" line means the lock is held by something other than a
+		// running task.  the queued names cover only this context's tasks.
+	async function logLockState(
+		...message)
+	{
+		try {
+			const { held, pending } = await navigator.locks.query();
+			const describe = ({ clientId, mode }) => `${clientId?.slice(0, 8)} ${mode}`;
+
+			log(...message,
+				"this context is running:", runningTask ?? "nothing",
+				"queued here:", [...queuedTasks],
+				"held by:", held.filter((lock) => lock.name === lockName).map(describe),
+				"pending:", pending.filter((lock) => lock.name === lockName).map(describe));
+		} catch (error) {
+			log(...message, "couldn't query the locks:", error?.message);
+		}
 	}
 
 
 	function doTask(
 		task,
-		saveResult)
+		saveResult,
+		name = task.name || "anonymous")
 	{
-		return navigator.locks.request(lockName, async () => {
-			const { data } = await chrome.storage.local.get(null);
-			let result;
+		const requestTime = performance.now();
+		const waitTimer = setTimeout(() => logLockState(
+			`storage task "${name}" still waiting for the lock after`,
+			Math.round(performance.now() - requestTime), "ms,"), LongLockTime);
 
-			try {
-				result = await task(data);
+		queuedTasks.push(name);
 
-				if (saveResult && result) {
-						// the task will probably return only the changed keys,
-						// so merge the existing data with the new data, so that
-						// we don't lose anything, since everything is stored in
-						// a top-level `data` key.  we also want to return the
-						// complete set of updated data below.
-					result = {
-						...data,
-						...result
-					};
-					await chrome.storage.local.set({
-						lastSavedFrom: storageLocation,
-						data: result
-					});
+		return navigator.locks.request(lockName, () => {
+			clearTimeout(waitTimer);
+			queuedTasks.splice(queuedTasks.indexOf(name), 1);
+			runningTask = name;
+
+			return logIfSlow(name, requestTime, async (endPhase) => {
+					// don't read until the initial load or reset has finished
+					// writing, so the first task on a new install sees the
+					// defaults instead of undefined
+				await ensureInitialized();
+				endPhase("init");
+
+					// we read from storage on every task rather than keeping an
+					// in-memory copy the way the MV2 persistent background page
+					// could, since the worker and the popup each get their own
+					// copy of this module and have to see each other's writes.
+					// only get the data key, since that's all the tasks operate
+					// on, so we don't deserialize the other keys on every call
+				const { data } = await chrome.storage.local.get("data");
+				let result;
+
+				endPhase("read");
+
+				try {
+					result = await task(data);
+					endPhase("task");
+
+					if (saveResult && result) {
+							// the task will probably return only the changed keys,
+							// so merge the existing data with the new data, so that
+							// we don't lose anything, since everything is stored in
+							// a top-level `data` key.  we also want to return the
+							// complete set of updated data below.
+						result = {
+							...data,
+							...result
+						};
+						await chrome.storage.local.set({
+							lastSavedFrom: storageLocation,
+							data: result
+						});
+						endPhase("write");
+					}
+				} catch (error) {
+					console.error(error);
+
+					throw error;
 				}
-			} catch (error) {
-				console.error(error);
 
-				throw error;
-			}
-
-			return result;
-		});
+				return result;
+			})
+				.finally(() => runningTask = null);
+		})
+			.finally(() => clearTimeout(waitTimer));
 	}
 
 
 	function set(
-		task)
+		task,
+		name)
 	{
-		return doTask(task, true);
+		return doTask(task, true, name);
 	}
 
 
 	function get(
-		task = returnData)
+		task = returnData,
+		name)
 	{
 			// if a function isn't passed in, use a noop function that will
 			// just return the data as a promise, so the caller can handle
 			// it in a then() chain
-		return doTask(task, false);
+		return doTask(task, false, name);
+	}
+
+
+		// read the data without taking the lock, for a caller that can live
+		// with a value another context is about to change, and can't afford to
+		// wait behind whatever holds the lock.  it still waits for the initial
+		// load, so it never sees data from before an update or reset.
+	async function peek(
+		task = returnData)
+	{
+		await ensureInitialized();
+
+		const { data } = await chrome.storage.local.get("data");
+
+		return task(data);
 	}
 
 
 	function reset()
 	{
-		return doTask(resetWithoutLocking);
+			// doTask() passes the current data to the task, but an explicit
+			// reset is asking for a clean slate, not a recovery, so drop it
+		return doTask(() => resetWithoutLocking(), false, "reset");
 	}
 
+
+		// start loading now rather than waiting for the first task, since the
+		// popup needs the data as soon as it can get it.  swallow the rejection
+		// here so a failed load isn't an unhandled rejection -- ensureInitialized()
+		// has already reported it, and the task that retries will surface it to
+		// a caller that can actually respond.
+	ensureInitialized().catch(() => {});
 
 	return {
 		get version() { return version; },
 		get,
 		set,
-		reset
+		peek,
+		reset,
+		logLockState
 	};
 }

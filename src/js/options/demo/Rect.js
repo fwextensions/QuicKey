@@ -14,7 +14,7 @@ function scaledValue(
 	}
 }
 
-export const Rect = styled.div`
+export const Rect = styled("div")`
 	${(props) => scaledValue(props, "left")};
 	${(props) => scaledValue(props, "top")};
 	${(props) => scaledValue(props, "width")};

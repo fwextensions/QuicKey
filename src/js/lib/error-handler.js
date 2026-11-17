@@ -1,16 +1,17 @@
 import trackers from "@/background/page-trackers";
-//import { IsDev } from "@/background/constants";
+import { IsDev } from "@/background/constants";
 //import stdout from "@/lib/stdout";
+import stdout from "stdout-ext";
 
-	// default DEBUG to true when we're running as an unpacked extension
+	// default DEBUG to true in a development build
 globalThis.DEBUG = typeof globalThis.DEBUG !== "boolean"
-	? false
-//	? IsDev
+//	? false
+	? IsDev
 	: globalThis.DEBUG;
 
-//if (globalThis.DEBUG) {
-//	stdout("diohkfkdnhkijfjdjcmdbpemmapfgpgg");
-//}
+if (globalThis.DEBUG) {
+	stdout("lnkfeennpkaoelponfafleomlmgjfjok");
+}
 
 function getStack(
 	error)
@@ -30,17 +31,49 @@ function handleError(
 		return;
 	}
 
+	if (!chrome.runtime?.id) {
+			// reloading the extension invalidated this context, so it's a page
+			// left over from the old build, and every chrome API call it makes
+			// will throw "Extension context invalidated".  there's nothing to
+			// report -- the tracker can't send from here anyway -- so close the
+			// page on its first failure.  control.js does the same if the page
+			// is still waiting to claim control, but a page that already held
+			// it, like the hidden popup, only finds out when it next calls an
+			// API, such as getting the active tab when the window blurs.
+		event.preventDefault?.();
+		globalThis.document && globalThis.close?.();
+
+		return;
+	}
+
 	try {
-		const timestamp = new Date().toLocaleString();
 		const {detail, reason = ((detail && detail.reason) || "")} = event;
-		const stack = getStack(event.error) || getStack(reason);
+			// fall back to the reason itself when there's no stack to report,
+			// as with a promise rejected with a string, so that we send
+			// something more useful than the bare "Caught unhandled" prefix
+		const stack = getStack(event.error) || getStack(reason) ||
+			String(reason ?? "");
 		const type = event.type == "unhandledrejection"
 			? "promise rejection"
 			: "exception";
-		const errorMessage = `Caught unhandled ${type} at ${timestamp}:\n${stack}`;
+		const description = `Caught unhandled ${type}:\n${stack}`;
 
-		globalThis.DEBUG && console.error(errorMessage);
-		tracker.exception(errorMessage, true);
+			// the timestamp stays in the console but is deliberately kept out
+			// of what we send to GA.  it made every report a unique string, so
+			// two users hitting the same error never aggregated into one row,
+			// and it used up room in a field that's truncated long before a
+			// useful amount of the stack fits.
+		globalThis.DEBUG &&
+			console.error(new Date().toLocaleString(), description);
+			// pass the original error too, so PostHog gets its real type and
+			// stack frames rather than our prefixed description.  an error
+			// event may not have an error object, but it still has the message
+			// and location.
+		const source = event.type == "unhandledrejection"
+			? reason
+			: (event.error ?? event);
+
+		tracker.exception(description, true, source);
 
 		if (event.preventDefault) {
 			event.preventDefault();

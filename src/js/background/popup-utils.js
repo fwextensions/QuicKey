@@ -1,5 +1,5 @@
-import {PopupPadding} from "@/background/constants";
-import {getScreenFromWindow} from "@/background/screen";
+import { PopupPadding, PopupURL } from "@/background/constants";
+import { getScreenFromWindow } from "@/background/screen";
 
 function getAlignedPosition(
 	alignment,
@@ -25,36 +25,99 @@ function getAlignedPosition(
 export function calcBounds(
 	targetWindow,
 	{
+			// "<horizontal>-<vertical>", optionally followed by "-screen" to
+			// align within the screen that holds targetWindow rather than
+			// within the window itself.  navigating recents puts the popup at
+			// the side of the screen, but it still has to be the browser's
+			// screen, not whichever display Chrome happens to list first.
 		alignment = "center-center",
 		width,
 		height,
 	} = {})
 {
-	const [horizontal, vertical] = alignment.split("-");
+	const [horizontal, vertical, relativeTo] = alignment.split("-");
+	const alignToScreen = relativeTo === "screen";
+
+		// hide() is handed the tab that was just focused and swaps it for its
+		// window, but if that lookup fails, the tab itself arrives here.  a tab
+		// has a width and height but no left or top, so positioning against it
+		// produced NaN, which Chrome rejects as "expected integer, found
+		// number".  anything without a full set of finite bounds is treated as
+		// no target, which centers the popup on the screen instead.
+	if (targetWindow && !["left", "top", "width", "height"]
+			.every(key => Number.isFinite(targetWindow[key]))) {
+		targetWindow = null;
+	}
+
 	const screen = getScreenFromWindow(targetWindow);
 	const {
 		left: targetX,
 		top: targetY,
 		width: targetW,
 		height: targetH
-	} = targetWindow || screen;
+	} = (!alignToScreen && targetWindow) || screen;
+		// chrome.windows throws "Invalid value for bounds" if any of these is a
+		// float.  that happens on fractional display scaling, where the popup
+		// page measures its own outerWidth/outerHeight as non-integers and hands
+		// them to resize().  round the size before positioning, so the centering
+		// math and the off-screen clamp below both work from the same values
+		// Chrome will actually be given.
+	const w = Math.round(width);
+	const h = Math.round(height);
 		// Chrome will throw an error if the popup is more than 50% off-screen,
 		// which can happen if the target window has been dragged mostly off-
 		// screen.  so clamp the top/left to keep it fully on-screen, with padding.
+		// the far edges are right/bottom, not width/height, so the clamp still
+		// works on a screen that doesn't start at 0,0.
 	const left = Math.max(
 		screen.left + PopupPadding,
 		Math.min(
-			getAlignedPosition(horizontal, width, targetX, targetW, PopupPadding),
-			screen.width - width - PopupPadding
+			getAlignedPosition(horizontal, w, targetX, targetW, PopupPadding),
+			screen.right - w - PopupPadding
 		)
 	);
 	const top = Math.max(
 		screen.top + PopupPadding,
 		Math.min(
-			getAlignedPosition(vertical, height, targetY, targetH, PopupPadding),
-			screen.height - height - PopupPadding
+			getAlignedPosition(vertical, h, targetY, targetH, PopupPadding),
+			screen.bottom - h - PopupPadding
 		)
 	);
 
-	return { left, top, width, height };
+		// the target window's bounds can be fractional too, so the aligned
+		// position needs rounding even after the size has been rounded
+	return { left: Math.round(left), top: Math.round(top), width: w, height: h };
+}
+
+	// get the URL from either a tab object or what's returned from getContexts()
+export function isPopupWindow(
+	tab)
+{
+	return (tab?.url || tab?.documentUrl)?.startsWith(PopupURL);
+}
+
+	// the menu holds this web lock for as long as it's open.  it's acquired
+	// in public/js/popup/init.js, which must use the same literal name.  we use a lock
+	// instead of getContexts() because getContexts() can keep returning a
+	// stale POPUP context after the menu has closed, whereas the browser
+	// releases a lock the instant its page dies, even if the page is frozen.
+export const MenuOpenLockName = "__menu-open__";
+
+	// the menu on the toolbar icon is the only context that holds the lock,
+	// so a held lock with that name means the menu is currently open.  this
+	// is true regardless of whether the background or the popup window
+	// currently has control, unlike tracking the menu's port connections.
+export async function isMenuOpen()
+{
+	const { held } = await navigator.locks.query();
+
+	return held.some(({ name }) => name === MenuOpenLockName);
+}
+
+	// resolves the next time the menu is closed (immediately if it's not
+	// open).  a queued request on the menu's lock is granted as soon as the
+	// menu page releases it by going away.
+export function whenMenuClosed()
+{
+	return navigator.locks.request(MenuOpenLockName, () => {});
 }

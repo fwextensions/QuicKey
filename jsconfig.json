@@ -1,0 +1,15 @@
+{
+	"compilerOptions": {
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["./src/js/*"],
+			"lodash": ["./src/js/lib/lodont.js"]
+		}
+	},
+	"exclude": [
+		"node_modules",
+		"dist",
+		"build",
+		"release"
+	]
+}

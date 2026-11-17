@@ -37,19 +37,27 @@ export default function addURLs(
 			item.unsuspendURL = unsuspendURL;
 		}
 
-			// look up the favicon via chrome://favicon if the item itself
-			// doesn't have one.  we want to prioritize the item's URL since
-			// The Great Suspender creates faded favicons and stores them as
-			// data URIs in item.favIconUrl.  except, sometimes it seems to
-			// put its own icon in there if the background page wasn't
-			// available, so default to the chrome:// URL in that case.
-			// in FF, use a fallback icon, as bookmarks and history items
-			// don't show favicons, annoyingly.
-		item.faviconURL = (IsFirefox && !favIconUrl)
+			// in FF, which has no _favicon API, fall back to a default icon,
+			// as bookmarks and history items don't show favicons, annoyingly.
+		const fallbackURL = IsFirefox
 			? DefaultFaviconPath
-			: (favIconUrl && favIconUrl.indexOf(TGSIconPath) != 0)
-				? favIconUrl
-				: FaviconURLPrefix + (item.unsuspendURL || url);
+			: FaviconURLPrefix + (item.unsuspendURL || url);
+
+			// prioritize the item's own favicon, since it reflects icons that
+			// pages set dynamically, like Google Docs vs. Sheets vs. Slides,
+			// which all share a host and so all get the Docs icon from
+			// _favicon.  The Great Suspender also stores faded favicons there
+			// as data URIs.  but sometimes TGS seems to put its own icon in
+			// there if the background page wasn't available, so use the
+			// fallback in that case.  some sites block their favicon from
+			// loading in the popup via cross-origin-resource-policy, so
+			// ResultsListItem switches to fallbackFaviconURL if it fails.
+		if (favIconUrl && favIconUrl.indexOf(TGSIconPath) != 0) {
+			item.faviconURL = favIconUrl;
+			item.fallbackFaviconURL = fallbackURL;
+		} else {
+			item.faviconURL = fallbackURL;
+		}
 	}
 
 		// add a clean displayURL to each tab that we can score against and

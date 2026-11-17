@@ -18,12 +18,13 @@ const DefaultShortcuts = {
 const MacDefaults = Object.assign({}, DefaultShortcuts,
 	{ [k.Shortcuts.CloseTab]: "cmd+ctrl+w" });
 const DefaultSettings = {
-	[k.SpaceBehavior.Key]: k.SpaceBehavior.Select,
+	[k.SpaceBehavior.Key]: k.SpaceBehavior.Both,
 		// on FF, pressing esc always closes the menu and can't be prevented
 	[k.EscBehavior.Key]: k.IsFirefox ? k.EscBehavior.Close : k.EscBehavior.Clear,
 	[k.HomeEndBehavior.Key]: k.HomeEndBehavior.ResultsList,
 	[k.HidePopupBehavior.Key]: k.HidePopupBehavior.Behind,
 	[k.MarkTabsInOtherWindows.Key]: true,
+	[k.MarkSuspendedTabs.Key]: false,
 	[k.IncludeClosedTabs.Key]: true,
 	[k.ShowTabCount.Key]: false,
 	[k.UsePinyin.Key]: false,

@@ -2,16 +2,24 @@ import Tracker from "./tracker";
 import { IsEdge } from "./constants";
 
 
-const TrackerID = IsEdge
+const GA4ID = IsEdge
 	? "G-C4JVSJ09QQ"
 	: "G-Y6PNZ406H1";
+	// the QuicKey project's API key, which is public and safe to ship in the
+	// bundle, like the GA IDs above.  use https://eu.i.posthog.com for a
+	// project hosted in the EU region.
+const PostHogSettings = {
+	apiKey: "phc_9xd4G5AYHtZCBizFaVnQRsguCsDTTPmX0Sp0sQW20lN",
+	host: "https://us.i.posthog.com"
+};
 const ClientIDKey = "clientID";
 
 
-	// use an IIFE to init a function to create trackers with standard settings
+	// await an IIFE to make some async calls that we then use to init a function
+	// that then returns a function that creates trackers with standard settings.
+	// this is a workaround so that createTracker() doesn't have to be async.
 const createTracker = await (async () => {
-	const { version: dimension1, installType } = await chrome.management.getSelf();
-	const dimension2 = installType === "development" ? "D" : "P";
+	const { version, installType } = await chrome.management.getSelf();
 	let { [ClientIDKey]: client_id } = await chrome.storage.local.get(ClientIDKey);
 
 	if (!client_id) {
@@ -21,18 +29,22 @@ const createTracker = await (async () => {
 	}
 
 	return (name) => new Tracker({
-		id: TrackerID,
+		id: GA4ID,
+		posthog: PostHogSettings,
 		name,
 		settings: {
 			client_id,
 			persistentEventParameters: {
 				page_location: `/${name}.html`,
 				page_title: `/${name}`,
-				dimension1,
-				dimension2
+					// these names match the "Extension version" and "Install
+					// type" custom dimensions registered in GA4.  installType
+					// is "development" for unpacked builds, which is how dev
+					// events are filtered out.
+				version,
+				installType
 			}
-		},
-		sendPageview: false
+		}
 	});
 })();
 

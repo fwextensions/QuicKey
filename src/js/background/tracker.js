@@ -1,8 +1,32 @@
 import ga4mp from "@/lib/ga4mp";
+import { createPostHogClient } from "@/lib/posthog";
+import { createExceptionList, scrubURLs } from "@/lib/exception-list";
 
 
+	// GA event names that PostHog has native equivalents for, which light
+	// up its built-in error tracking UI
+const PostHogEventNames = {
+	exception: "$exception"
+};
 const PathPattern = /chrome-extension:\/\/[^\n]+\//g;
 const MaxStackLength = 2000;
+	// conditions in the browser rather than bugs in QuicKey: the user's disk is
+	// full, a tab closed between us looking it up and using it, a drag is in
+	// progress.  there's nothing to fix in any of them, and they arrive often
+	// enough to crowd out the errors we can act on, since GA buckets everything
+	// past 500 distinct descriptions into "(other)".  matched anywhere in the
+	// description, since these arrive both as bare messages and buried in a
+	// stack or an unhandled-rejection wrapper.
+	//
+	// "The browser is shutting down" is deliberately not in this list.  It's the
+	// single biggest source of noise, but coalescing the badge writes should
+	// have taken most of it out, and dropping it now would hide whether that
+	// worked.  Revisit once there's a month of numbers to compare.
+const IgnoredErrors = [
+	"FILE_ERROR_NO_SPACE",
+	"No tab with id:",
+	"Tabs cannot be edited right now"
+];
 const DefaultSettings = {
 	client_id: crypto.randomUUID(),
 	user_id: undefined,
@@ -14,20 +38,34 @@ const DefaultSettings = {
 export default class Tracker {
 	constructor({
 		id,
+		posthog = {},
 		settings = {},
-		sendPageview = true,
 		enabled = true })
 	{
 		if (!id || typeof id !== "string") {
 			throw new Error("A Google Analytics 4 tracker ID is required.");
 		}
 
-		this.ga4 = ga4mp([id], { ...DefaultSettings, ...settings });
-		this.enabled = enabled;
+		const mergedSettings = { ...DefaultSettings, ...settings };
 
-		if (sendPageview) {
-			this.pageview();
-		}
+		this.ga4 = ga4mp([id], mergedSettings);
+			// send every event to PostHog as well, so the two services can
+			// be compared for a release before GA is dropped.  reuse the GA
+			// client_id as the distinct_id, so if we later cut over fully,
+			// install continuity is preserved.
+		const persistentEventParameters =
+			mergedSettings.persistentEventParameters ?? {};
+
+		this.posthog = createPostHogClient({
+			...posthog,
+			distinctID: mergedSettings.client_id,
+			superProperties: {
+				...persistentEventParameters,
+					// PostHog's web analytics UI keys off $current_url
+				$current_url: persistentEventParameters.page_location
+			}
+		});
+		this.enabled = enabled;
 	}
 
 	enable()
@@ -42,10 +80,12 @@ export default class Tracker {
 
 	send(
 		event,
-		params)
+		params,
+		posthogParams = params)
 	{
 		if (this.enabled) {
 			this.ga4.trackEvent(event, params);
+			this.posthog.capture(PostHogEventNames[event] ?? event, posthogParams);
 		}
 	}
 
@@ -55,8 +95,10 @@ export default class Tracker {
 	{
 		if (name && typeof name == "object") {
 			Object.entries(name).forEach(([key, value]) => this.ga4.setEventsParameter(key, value));
+			this.posthog.register(name);
 		} else {
 			this.ga4.setEventsParameter(name, value);
+			this.posthog.register({ [name]: value });
 		}
 	}
 
@@ -87,20 +129,17 @@ export default class Tracker {
 		this.send(eventName, params);
 	}
 
-	pageview()
-	{
-		this.send("page_view");
-	}
-
 	timing(
 		category,
 		name,
-		value)
+		value,
+		params = {})
 	{
 		const roundedValue = Math.round(value);
 
 		if (category == "loading") {
 			this.send(name, {
+				...params,
 				event_category: category,
 				ms: roundedValue
 			});
@@ -109,9 +148,14 @@ export default class Tracker {
 		}
 	}
 
+		// source is the original error, when what's passed as error is a
+		// description that's already been built from it.  GA gets the
+		// description, while PostHog gets the type, message and stack frames
+		// parsed from the source, which its error tracking groups issues on.
 	exception(
 		error,
-		fatal)
+		fatal,
+		source = error)
 	{
 		let description;
 
@@ -131,9 +175,21 @@ export default class Tracker {
 				description = `${error.message}${location}`;
 			}
 
+				// PostHog's copy of the message is scrubbed the same way in
+				// createExceptionList()
+			description = scrubURLs(description);
+
+			if (IgnoredErrors.some((text) => description?.includes(text))) {
+				return;
+			}
+
 			this.send("exception", {
 				description: description,
 				fatal: Boolean(fatal)
+			}, {
+				fatal: Boolean(fatal),
+					// fatal is only passed for errors that nothing caught
+				$exception_list: createExceptionList(source, { handled: !fatal })
 			});
 		} catch (e) {
 			DEBUG && console.error("Calling tracker.exception() failed.", e);

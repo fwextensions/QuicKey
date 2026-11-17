@@ -25,6 +25,14 @@
 		--border-color: #555;
 	}
 
+	.banner {
+		--banner-background: #3a3524;
+		--banner-color: #e3d5a5;
+		--banner-fill: #c8a415;
+		--banner-hover-background: #4c4530;
+		--banner-active-background: #5a5239;
+	}
+
 	.search-box input::-webkit-input-placeholder,
 	.search-box input::placeholder,
 	.command-placeholder {
@@ -284,6 +292,69 @@ img {
 
 .options-button:hover img {
 	filter: invert(1);
+}
+
+
+/* ===========================================================================
+	Banner
+   =========================================================================== */
+
+.banner {
+	background-color: var(--banner-background, #fdf3d5);
+	color: var(--banner-color, hsl(45 66% 18% / 1));
+	font-size: 12px;
+	line-height: 130%;
+    margin: 0 5px 6px 5px;
+    padding: 6px 9px 5px 28px;
+	min-height: 45px;
+	gap: 5px;
+	align-items: flex-start;
+	display: flex;
+	position: relative;
+}
+
+	/* positioned where the background-image used to be, so the padding above
+	   still means the same thing */
+.banner .alert.icon {
+	width: 14px;
+	height: 14px;
+	top: 7px;
+	left: 7px;
+	fill: var(--banner-fill, #c8a415);
+	position: absolute;
+}
+
+.banner .close-button {
+	width: 24px;
+    height: 24px;
+	padding: 0;
+	background-color: transparent;
+	border: none;
+	border-radius: 50%;
+	opacity: .6;
+	outline: none;
+	flex: none;
+	align-self: center;
+	visibility: hidden;
+}
+
+.banner:hover .close-button {
+	visibility: visible;
+}
+
+.banner .close-button .clear.icon {
+    width: 10px;
+    height: 16px;
+    fill: var(--banner-color, hsl(45 66% 18% / .6));
+}
+
+.banner .close-button:hover {
+	opacity: 1;
+	background-color: var(--banner-hover-background, #f2e2b0);
+}
+
+.banner .close-button:hover:active {
+	background-color: var(--banner-active-background, #e8d391);
 }
 
 

@@ -82,6 +82,19 @@ class Channel {
 
 	#handleDisconnect = () =>
 	{
+			// connect() opens a channel to every other context whenever
+			// getContexts() reports more than one, without knowing whether any
+			// of them listens for it.  when none does, as with the options page,
+			// or a popup page that's already gone, the port disconnects with
+			// "Receiving end does not exist", which Chrome reports as an
+			// unchecked runtime.lastError unless it's read here.  a worker
+			// starting up runs connect() three times, once each for
+			// popup-window, colorScheme and tabCount.
+		const error = chrome.runtime.lastError;
+
+		globalThis.DEBUG && error &&
+			console.log("ipc channel disconnected:", this.#port?.name, error.message);
+
 		this.#onDisconnect?.(this);
 		this.#port?.onMessage.removeListener(this.#handleMessage);
 		this.#port = null;

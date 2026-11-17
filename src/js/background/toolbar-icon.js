@@ -1,7 +1,9 @@
 import trackers from "@/background/page-trackers";
 import { IsEdge, IsFirefox } from "@/background/constants";
 import storage from "@/background/quickey-storage";
+import { debounce } from "@/background/debounce";
 import { connect } from "@/lib/ipc";
+import log from "@/background/persistent-log";
 
 
 const backgroundTracker = trackers.background;
@@ -43,11 +45,26 @@ const IconPaths = {
 const ExtensionName = chrome.runtime.getManifest().short_name;
 
 
+	// the dev-only stamp sw.js adds to the end of the title
+const WorkerStartMarkerPattern = / (\(worker started [^)]*\))$/;
+
+	// how long to wait for the tab count to settle before rendering it.  long
+	// enough to collapse a burst of tabs.onCreated/onRemoved events into one
+	// write, short enough that a single tab closing still looks instant.
+const BadgeWriteDelay = 50;
+
 let isNormalIcon = true;
 let isTabCountVisible = false;
 let tabCount = 0;
+	// whether the badge currently has anything in it, so that we can tell a
+	// pointless write (the count is off and nothing is shown) from the one
+	// write that's needed to clear the badge after the count is turned off
+let isBadgeShown = false;
 let inversionTimer;
 let colorScheme = "light";
+	// the decoded pixels for each icon set, keyed on the paths object it came
+	// from.  there are only ever two sets, and they never change.
+const imageDataByPaths = new Map();
 
 
 function getIconsAndBadgeColor(
@@ -58,6 +75,66 @@ function getIconsAndBadgeColor(
 	const color = BadgeColors[colorScheme][iconMode];
 
 	return { paths, color };
+}
+
+
+	// decode one set of icons into the pixels setIcon() would otherwise fetch
+	// for itself
+async function loadImageData(
+	paths)
+{
+	const sizes = await Promise.all(
+		Object.entries(paths).map(async ([size, path]) => {
+			const response = await fetch(chrome.runtime.getURL(path));
+			const bitmap = await createImageBitmap(await response.blob());
+			const {width, height} = bitmap;
+			const context = new OffscreenCanvas(width, height).getContext("2d");
+
+			context.drawImage(bitmap, 0, 0);
+
+			return [size, context.getImageData(0, 0, width, height)];
+		})
+	);
+
+	return Object.fromEntries(sizes);
+}
+
+
+	// setIcon() fetches the PNG itself when it's handed a path, and that fetch
+	// is what fails with "Failed to set icon '/img/icon-16.png': Failed to
+	// fetch" -- the single noisiest real error we report after the shutdown
+	// noise.  the icons never change, so decode them once and hand setIcon the
+	// pixels from then on, which takes the fetch out of every icon update and
+	// leaves it somewhere we control.
+	//
+	// keyed on the paths object rather than a name because IconPaths points
+	// both color schemes at the same two objects.
+async function getImageData(
+	paths)
+{
+	if (!imageDataByPaths.has(paths)) {
+			// cache the promise, so overlapping calls share one decode
+		imageDataByPaths.set(paths, loadImageData(paths.path)
+				// fall back to letting setIcon fetch the paths itself.  we don't
+				// report this: if the images really are unreachable then the
+				// setIcon() below will fail too, and the caller reports that the
+				// same way it always has, rather than us sending two errors for
+				// one problem.  the failure stays cached so a broken profile
+				// doesn't retry five fetches on every icon update -- a new
+				// worker gets a fresh attempt soon enough.
+			.catch(() => null));
+	}
+
+	return imageDataByPaths.get(paths);
+}
+
+
+async function setIcon(
+	paths)
+{
+	const imageData = await getImageData(paths);
+
+	return chrome.action.setIcon(imageData ? { imageData } : paths);
 }
 
 
@@ -72,7 +149,7 @@ async function setNormalIcon()
 
 	try {
 		await chrome.action.setBadgeBackgroundColor({ color });
-		await chrome.action.setIcon(paths);
+		await setIcon(paths);
 	} catch (error) {
 		backgroundTracker.exception(error);
 	}
@@ -101,7 +178,7 @@ async function invertFor(
 		if (isTabCountVisible) {
 			await chrome.action.setBadgeBackgroundColor({ color });
 		} else {
-			await chrome.action.setIcon(paths);
+			await setIcon(paths);
 		}
 	} catch (error) {
 		backgroundTracker.exception(error);
@@ -109,28 +186,23 @@ async function invertFor(
 }
 
 
-async function showTabCount(
-	value)
-{
-	if (isTabCountVisible !== value) {
-		isTabCountVisible = value;
-		tabCount = (await chrome.tabs.query({})).length;
-
-		await setNormalIcon();
-		await updateTabCount();
+	// render whatever tabCount is up to now.  this is debounced rather than
+	// called directly from updateTabCount() because closing a window fires
+	// tabs.onRemoved for every tab in it: rendering each intermediate number is
+	// wasted work, and during a browser shutdown every one of those calls
+	// throws "The browser is shutting down", which we'd then report once per
+	// tab.  the debounced function deliberately takes no arguments and reads
+	// tabCount when it fires, since this debounce keeps only the last call's
+	// args and would otherwise drop all but one of the deltas.
+const writeBadge = debounce(async () => {
+		// nothing to render and nothing left over to clear
+	if (!isTabCountVisible && !isBadgeShown) {
+		return;
 	}
-}
 
-
-async function updateTabCount(
-	delta = 0)
-{
 		// default to an empty string, which will hide the badge
 	let text = "";
 	let title = ExtensionName;
-
-	tabCount += delta;
-
 
 	if (isTabCountVisible) {
 		text = String(tabCount);
@@ -145,10 +217,85 @@ async function updateTabCount(
 	}
 
 	try {
-		await chrome.action.setBadgeText({ text }),
-		await chrome.action.setTitle({ title })
+			// keep the dev-only worker start time that sw.js put in the title.
+			// the popup can write the badge when it holds control, and it has
+			// no stamp of its own, so it carries over the one already there.
+		if (globalThis.DEBUG) {
+			const marker = globalThis.workerStartMarker
+				?? (await chrome.action.getTitle({})).match(WorkerStartMarkerPattern)?.[1];
+
+			if (marker) {
+				title += ` ${marker}`;
+			}
+		}
+
+		await chrome.action.setBadgeText({ text });
+		await chrome.action.setTitle({ title });
+
+			// only after both writes land, so a failure leaves us knowing the
+			// badge still needs clearing
+		isBadgeShown = isTabCountVisible;
 	} catch (error) {
 		backgroundTracker.exception(error);
+	}
+}, BadgeWriteDelay);
+
+
+async function showTabCount(
+	value)
+{
+	if (isTabCountVisible !== value) {
+		isTabCountVisible = value;
+
+		if (value) {
+				// only pay for the query when we're going to show the result.
+				// while the count is hidden, tabCount drifts with the tab
+				// events, and this is where it gets resynced
+			tabCount = (await chrome.tabs.query({})).length;
+		}
+
+		await setNormalIcon();
+
+			// toggling the setting should take effect now rather than after the
+			// debounce.  turning the count off relies on this for the single
+			// write that clears the badge, since nothing else will call
+			// updateTabCount() afterwards.
+		await writeBadge.now();
+	}
+}
+
+
+function updateTabCount(
+	delta = 0)
+{
+		// keep the running total exact even though the render is coalesced
+	tabCount += delta;
+
+	writeBadge();
+}
+
+
+	// replace the running total with a real count.  the deltas can't be trusted
+	// after a restart: the worker's first query runs before Chrome has restored
+	// the session, and the restored tabs never fire tabs.onCreated, so the badge
+	// would otherwise sit at 0 until the next worker queries again.
+async function resyncTabCount(
+	count)
+{
+	if (!isTabCountVisible) {
+		return;
+	}
+
+	const source = typeof count == "number" ? "popup" : "query";
+
+	if (source == "query") {
+		count = (await chrome.tabs.query({})).length;
+	}
+
+	if (count !== tabCount) {
+		log("tab count resync:", tabCount, "->", count, "from:", source);
+		tabCount = count;
+		writeBadge();
 	}
 }
 
@@ -159,8 +306,19 @@ connect("colorScheme").receive({
 	{
 		if (name !== colorScheme) {
 			await setColorScheme(name);
-			await storage.set(() => ({ colorScheme: name }));
+			await storage.set(() => ({ colorScheme: name }), "saveColorScheme");
 		}
+	}
+});
+
+
+	// the popup already queries every tab when it opens, so it hands us that
+	// count instead of making us run a second big query at the same moment
+connect("tabCount").receive({
+	setTabCount(
+		count)
+	{
+		return resyncTabCount(count);
 	}
 });
 
@@ -171,6 +329,7 @@ export default {
 	invertFor,
 	showTabCount,
 	updateTabCount,
+	resyncTabCount,
 	get isNormal() {
 		return isNormalIcon;
 	}

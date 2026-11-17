@@ -1,0 +1,459 @@
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+
+	// a faithful get/set stand-in for the quickey-storage singleton, mirroring
+	// the real merge-and-save rule: a task returning a falsy/undefined value
+	// saves nothing.  this exact pattern is the proven way to test recent-tabs
+	// deterministically, since vi.mock() factories are hoisted above imports.
+const storage = vi.hoisted(() => {
+	const clone = (v) => structuredClone(v);
+	let data = {};
+
+	async function doTask(task, save) {
+		const current = clone(data);
+		const result = await task(current);
+
+		if (save && result) {
+			data = { ...current, ...result };
+		}
+
+		return result;
+	}
+
+	return {
+		default: {
+			get: (task = (d) => d) => doTask(task, false),
+			set: (task) => doTask(task, true),
+			reset: () => { data = {}; return Promise.resolve(); },
+			_seed: (v) => { data = clone(v); },
+			_dump: () => clone(data),
+		},
+	};
+});
+
+vi.mock("@/background/quickey-storage", () => storage);
+
+const store = storage.default;
+let recentTabs;
+
+
+function tab(
+	id,
+	url,
+	windowId = 1)
+{
+	return { id, url, windowId };
+}
+
+
+beforeEach(async () => {
+	recentTabs = (await import("@/background/recent-tabs")).default;
+	store._seed({ tabIDs: [], tabsByID: {} });
+	vi.useFakeTimers();
+	vi.setSystemTime(new Date(2024, 0, 1));
+});
+
+afterEach(() => {
+	vi.useRealTimers();
+});
+
+
+describe("recent-tabs add()", () => {
+	it("pushes a new tab onto the end of tabIDs and records it with a lastVisit", async () => {
+		await recentTabs.add(tab(1, "https://a.example.com/"));
+
+		const { tabIDs, tabsByID } = store._dump();
+
+		expect(tabIDs).toEqual([1]);
+		expect(tabsByID[1]).toMatchObject({ id: 1, url: "https://a.example.com/", windowId: 1 });
+		expect(tabsByID[1].lastVisit).toBeGreaterThan(0);
+	});
+
+	it("refreshes lastVisit instead of duplicating when the same last tab is re-added", async () => {
+		const t = tab(1, "https://a.example.com/");
+
+		await recentTabs.add(t);
+		const firstVisit = store._dump().tabsByID[1].lastVisit;
+
+		vi.advanceTimersByTime(1000);
+		await recentTabs.add(t);
+
+		const { tabIDs, tabsByID } = store._dump();
+
+		expect(tabIDs).toEqual([1]);
+		expect(tabsByID[1].lastVisit).toBeGreaterThan(firstVisit);
+	});
+
+	it("add(tab, true) inserts penultimately and bumps the previous last tab's lastVisit above it", async () => {
+		await recentTabs.add(tab(1, "https://a.example.com/"));
+		vi.advanceTimersByTime(1000);
+		await recentTabs.add(tab(2, "https://b.example.com/"), true);
+
+		const { tabIDs, tabsByID } = store._dump();
+
+		expect(tabIDs).toEqual([2, 1]);
+		expect(tabsByID[1].lastVisit).toBeGreaterThan(tabsByID[2].lastVisit);
+	});
+
+	it("re-adding an existing id moves it to the top without duplicating it", async () => {
+		await recentTabs.add(tab(1, "https://a.example.com/"));
+		await recentTabs.add(tab(2, "https://b.example.com/"));
+		await recentTabs.add(tab(1, "https://a-changed.example.com/"));
+
+		const { tabIDs, tabsByID } = store._dump();
+
+		expect(tabIDs).toEqual([2, 1]);
+		expect(tabsByID[1].url).toBe("https://a-changed.example.com/");
+	});
+
+		// a tab we can't see a URL for still isn't one of our own popups, so
+		// the popup check has to let it through rather than throwing on it.
+		// tabs.onCreated in particular hands us tabs that haven't committed a
+		// URL yet, and dropping those would lose a ctrl-clicked background tab
+		// from the recents list.
+	it("adds a tab whose URL isn't available instead of throwing", async () => {
+		await recentTabs.add({ id: 1, windowId: 1 });
+
+		const { tabIDs, tabsByID } = store._dump();
+
+		expect(tabIDs).toEqual([1]);
+		expect(tabsByID[1]).toMatchObject({ id: 1, windowId: 1 });
+	});
+
+	it("adds a tab whose URL hasn't committed yet", async () => {
+		await recentTabs.add(tab(1, ""));
+
+		expect(store._dump().tabIDs).toEqual([1]);
+	});
+
+	it("still ignores the extension's own popup", async () => {
+		await recentTabs.add(tab(1, chrome.runtime.getURL("popup.html")));
+
+		expect(store._dump().tabIDs).toEqual([]);
+	});
+
+	it("trims tabs beyond MaxTabsLength and deletes the oldest from tabsByID", async () => {
+		for (let id = 1; id <= 51; id++) {
+			await recentTabs.add(tab(id, `https://site${id}.example.com/`));
+		}
+
+		const { tabIDs, tabsByID } = store._dump();
+
+		expect(tabIDs.length).toBe(50);
+		expect(tabIDs[0]).toBe(2);
+		expect(tabIDs[tabIDs.length - 1]).toBe(51);
+		expect(tabsByID[1]).toBeUndefined();
+		expect(tabsByID[51]).toBeDefined();
+	});
+});
+
+
+describe("recent-tabs remove()", () => {
+	it("drops the id from both tabIDs and tabsByID", async () => {
+		await recentTabs.add(tab(1, "https://a.example.com/"));
+		await recentTabs.add(tab(2, "https://b.example.com/"));
+		await recentTabs.remove(1);
+
+		const { tabIDs, tabsByID } = store._dump();
+
+		expect(tabIDs).toEqual([2]);
+		expect(tabsByID[1]).toBeUndefined();
+	});
+});
+
+
+describe("recent-tabs replace()", () => {
+	it("swaps the id in place in tabIDs and re-keys tabsByID with the new id", async () => {
+		await recentTabs.add(tab(1, "https://a.example.com/"));
+		await recentTabs.add(tab(2, "https://b.example.com/"));
+		await recentTabs.replace(1, 100);
+
+		const { tabIDs, tabsByID } = store._dump();
+
+		expect(tabIDs).toEqual([100, 2]);
+		expect(tabsByID[1]).toBeUndefined();
+		expect(tabsByID[100]).toMatchObject({ id: 100, url: "https://a.example.com/", windowId: 1 });
+	});
+
+	it("swaps an id that tabsByID has lost instead of throwing", async () => {
+		await recentTabs.add(tab(1, "https://a.example.com/"));
+		await recentTabs.add(tab(2, "https://b.example.com/"));
+
+		const data = store._dump();
+
+		delete data.tabsByID[1];
+		store._seed(data);
+		await recentTabs.replace(1, 100);
+
+		const { tabIDs, tabsByID } = store._dump();
+
+		expect(tabIDs).toEqual([100, 2]);
+		expect(tabsByID[100]).toBeUndefined();
+	});
+});
+
+
+describe("recent-tabs toggle()", () => {
+	it("switches to the penultimate tab via windows.update then tabs.update", async () => {
+		chrome.windows.update = vi.fn(() => Promise.resolve());
+		chrome.tabs.update = vi.fn(() => Promise.resolve());
+
+		store._seed({
+			tabIDs: [1, 2],
+			tabsByID: {
+				1: { id: 1, url: "https://a.example.com/", windowId: 10, lastVisit: 100 },
+				2: { id: 2, url: "https://b.example.com/", windowId: 10, lastVisit: 200 },
+			},
+		});
+
+		await recentTabs.toggle();
+
+		expect(chrome.windows.update).toHaveBeenCalledWith(10, { focused: true });
+		expect(chrome.tabs.update).toHaveBeenCalledWith(1, { active: true });
+	});
+});
+
+
+describe("recent-tabs updateAll() / updateFromFreshTabs", () => {
+	it("remaps stored recents onto fresh tab ids by matching URL, preserving recency order", async () => {
+		store._seed({
+			tabIDs: [10, 20],
+			tabsByID: {
+				10: { id: 10, url: "https://a.example.com/", windowId: 1, lastVisit: 100 },
+				20: { id: 20, url: "https://b.example.com/", windowId: 1, lastVisit: 200 },
+			},
+		});
+
+		chrome.tabs.query = vi.fn(() => Promise.resolve([
+			{ id: 200, url: "https://b.example.com/", windowId: 1 },
+			{ id: 100, url: "https://a.example.com/", windowId: 1 },
+		]));
+
+		await recentTabs.updateAll();
+
+		const { tabIDs, tabsByID } = store._dump();
+
+		expect(tabIDs).toEqual([100, 200]);
+		expect(tabsByID[100]).toMatchObject({ id: 100, url: "https://a.example.com/", lastVisit: 100 });
+		expect(tabsByID[200]).toMatchObject({ id: 200, url: "https://b.example.com/", lastVisit: 200 });
+		expect(tabsByID[10]).toBeUndefined();
+		expect(tabsByID[20]).toBeUndefined();
+	});
+
+	it("drops recents whose URL no longer matches any fresh tab", async () => {
+		store._seed({
+			tabIDs: [10, 20],
+			tabsByID: {
+				10: { id: 10, url: "https://a.example.com/", windowId: 1, lastVisit: 100 },
+				20: { id: 20, url: "https://gone.example.com/", windowId: 1, lastVisit: 200 },
+			},
+		});
+
+		chrome.tabs.query = vi.fn(() => Promise.resolve([
+			{ id: 100, url: "https://a.example.com/", windowId: 1 },
+		]));
+
+		await recentTabs.updateAll();
+
+		const { tabIDs, tabsByID } = store._dump();
+
+		expect(tabIDs).toEqual([100]);
+		expect(tabsByID[20]).toBeUndefined();
+	});
+
+	it("resolves to the number of recents that didn't match a fresh tab", async () => {
+		store._seed({
+			tabIDs: [10, 20],
+			tabsByID: {
+				10: { id: 10, url: "https://a.example.com/", windowId: 1, lastVisit: 100 },
+				20: { id: 20, url: "https://gone.example.com/", windowId: 1, lastVisit: 200 },
+			},
+		});
+
+		chrome.tabs.query = vi.fn(() => Promise.resolve([
+			{ id: 100, url: "https://a.example.com/", windowId: 1 },
+		]));
+
+		await expect(recentTabs.updateAll()).resolves.toMatchObject({ missingCount: 1 });
+	});
+
+		// the startup loop retries on pendingCount, not missingCount, so that a
+		// recent whose tab was closed before the restart doesn't keep it going
+	it("reports how many fresh tabs have no URL to match against yet", async () => {
+		store._seed({ tabIDs: [], tabsByID: {} });
+
+		chrome.tabs.query = vi.fn(() => Promise.resolve([
+			{ id: 100, url: "https://a.example.com/", windowId: 1 },
+			{ id: 200, url: "", windowId: 1 },
+			{ id: 300, url: "", windowId: 1 },
+		]));
+
+		await expect(recentTabs.updateAll()).resolves.toMatchObject({ pendingCount: 2 });
+	});
+
+	it("doesn't store the counts it reports to the caller", async () => {
+		store._seed({ tabIDs: [], tabsByID: {} });
+		chrome.tabs.query = vi.fn(() => Promise.resolve([]));
+
+		await recentTabs.updateAll();
+
+		expect(store._dump()).not.toHaveProperty("missingCount");
+		expect(store._dump()).not.toHaveProperty("pendingCount");
+	});
+
+		// on startup, a restored tab may not have its URL populated yet, so an
+		// unmatched recent doesn't mean the tab is gone -- see the onStartup
+		// handler in background.js
+	it("keeps unmatched recents under their old IDs when retaining", async () => {
+		store._seed({
+			tabIDs: [10, 20],
+			tabsByID: {
+				10: { id: 10, url: "https://a.example.com/", windowId: 1, lastVisit: 100 },
+				20: { id: 20, url: "https://b.example.com/", windowId: 1, lastVisit: 200 },
+			},
+		});
+
+			// only the first tab has finished restoring and has a URL to match
+		chrome.tabs.query = vi.fn(() => Promise.resolve([
+			{ id: 100, url: "https://a.example.com/", windowId: 1 },
+			{ id: 200, url: "", windowId: 1 },
+		]));
+
+		await expect(recentTabs.updateAll(true)).resolves
+			.toMatchObject({ missingCount: 1, pendingCount: 1 });
+
+		const { tabIDs, tabsByID } = store._dump();
+
+			// the unmatched recent survives at its old ID, in recency order,
+			// so a later pass can still match it once the tab loads
+		expect(tabIDs).toEqual([100, 20]);
+		expect(tabsByID[20]).toMatchObject({ url: "https://b.example.com/", lastVisit: 200 });
+	});
+
+	it("drops a retained recent once a later pass stops retaining", async () => {
+		store._seed({
+			tabIDs: [10, 20],
+			tabsByID: {
+				10: { id: 10, url: "https://a.example.com/", windowId: 1, lastVisit: 100 },
+				20: { id: 20, url: "https://b.example.com/", windowId: 1, lastVisit: 200 },
+			},
+		});
+
+		chrome.tabs.query = vi.fn(() => Promise.resolve([
+			{ id: 100, url: "https://a.example.com/", windowId: 1 },
+		]));
+
+		await recentTabs.updateAll(true);
+		expect(store._dump().tabIDs).toEqual([100, 20]);
+
+			// the second pass finds the same fresh tabs, so the retained recent
+			// really is gone and gets dropped
+		await recentTabs.updateAll();
+		expect(store._dump().tabIDs).toEqual([100]);
+	});
+
+	it("matches a retained recent on a later pass once its tab has loaded", async () => {
+		store._seed({
+			tabIDs: [10, 20],
+			tabsByID: {
+				10: { id: 10, url: "https://a.example.com/", windowId: 1, lastVisit: 100 },
+				20: { id: 20, url: "https://b.example.com/", windowId: 1, lastVisit: 200 },
+			},
+		});
+
+		chrome.tabs.query = vi.fn(() => Promise.resolve([
+			{ id: 100, url: "https://a.example.com/", windowId: 1 },
+			{ id: 200, url: "", windowId: 1 },
+		]));
+
+		await recentTabs.updateAll(true);
+
+			// tab 200 has now finished restoring and reports its URL
+		chrome.tabs.query = vi.fn(() => Promise.resolve([
+			{ id: 100, url: "https://a.example.com/", windowId: 1 },
+			{ id: 200, url: "https://b.example.com/", windowId: 1 },
+		]));
+
+		await expect(recentTabs.updateAll()).resolves
+			.toMatchObject({ missingCount: 0, pendingCount: 0 });
+
+		const { tabIDs, tabsByID } = store._dump();
+
+		expect(tabIDs).toEqual([100, 200]);
+		expect(tabsByID[200]).toMatchObject({ lastVisit: 200 });
+		expect(tabsByID[20]).toBeUndefined();
+	});
+
+		// reusing an old ID that a restored tab now holds would clobber the
+		// real tab's entry with stale data
+	it("doesn't retain an unmatched recent whose ID a fresh tab now has", async () => {
+		store._seed({
+			tabIDs: [10, 20],
+			tabsByID: {
+				10: { id: 10, url: "https://a.example.com/", windowId: 1, lastVisit: 100 },
+				20: { id: 20, url: "https://gone.example.com/", windowId: 1, lastVisit: 200 },
+			},
+		});
+
+			// a restored tab happens to have been given ID 20
+		chrome.tabs.query = vi.fn(() => Promise.resolve([
+			{ id: 20, url: "https://a.example.com/", windowId: 1 },
+		]));
+
+		await recentTabs.updateAll(true);
+
+		const { tabIDs, tabsByID } = store._dump();
+
+		expect(tabIDs).toEqual([20]);
+		expect(tabsByID[20]).toMatchObject({ url: "https://a.example.com/", lastVisit: 100 });
+	});
+});
+
+
+describe("recent-tabs getAll()", () => {
+	beforeEach(() => {
+		store._seed({
+			tabIDs: [1, 2],
+			tabsByID: {
+				1: { ...tab(1, "https://a.example.com/"), lastVisit: 100 },
+				2: { ...tab(2, "https://b.example.com/"), lastVisit: 200 },
+			},
+		});
+		chrome.tabs.query = vi.fn(() => Promise.resolve([
+			tab(1, "https://a.example.com/"),
+			tab(2, "https://b.example.com/"),
+		]));
+	});
+
+	it("shares one tabs.query() between calls made while it's loading", async () => {
+		const [first, second] = await Promise.all([
+			recentTabs.getAll(false),
+			recentTabs.getAll(false),
+		]);
+
+		expect(chrome.tabs.query).toHaveBeenCalledTimes(1);
+		expect(second).toEqual(first);
+			// initTabs() mutates the tabs, so the callers can't share objects
+		expect(second[0]).not.toBe(first[0]);
+	});
+
+	it("passes the tab count to every caller sharing a load", async () => {
+		const firstCount = vi.fn();
+		const secondCount = vi.fn();
+
+		await Promise.all([
+			recentTabs.getAll(false, firstCount),
+			recentTabs.getAll(false, secondCount),
+		]);
+
+		expect(chrome.tabs.query).toHaveBeenCalledTimes(1);
+		expect(firstCount).toHaveBeenCalledExactlyOnceWith(2);
+		expect(secondCount).toHaveBeenCalledExactlyOnceWith(2);
+	});
+
+	it("queries again once the earlier load has finished", async () => {
+		await recentTabs.getAll(false);
+		await recentTabs.getAll(false);
+
+		expect(chrome.tabs.query).toHaveBeenCalledTimes(2);
+	});
+});
