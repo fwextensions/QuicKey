@@ -1,4 +1,4 @@
-import { PopupPadding, PopupURL } from "@/background/constants";
+import { PopupInnerHeight, PopupInnerWidth, PopupPadding, PopupURL } from "@/background/constants";
 import { getScreenFromWindow } from "@/background/screen";
 
 function getAlignedPosition(
@@ -20,6 +20,28 @@ function getAlignedPosition(
 		case "bottom":
 			return start + availableSpace - padding - size;
 	}
+}
+
+
+	// the smallest popup we'll ask for.  it only has to be big enough that
+	// Chrome accepts it and the user can see something is there.
+const MinPopupSize = 100;
+
+
+	// keep a requested size between MinPopupSize and what fits on the screen
+	// inside the padding.  a size that isn't a finite number falls back to the
+	// default, rather than reaching Chrome as NaN.
+function clampSize(
+	size,
+	defaultSize,
+	available)
+{
+	const rounded = Number.isFinite(size) ? Math.round(size) : defaultSize;
+		// a screen smaller than the minimum plus padding still gets the minimum,
+		// since a popup Chrome rejects is worse than one that's slightly cramped
+	const max = Math.max(MinPopupSize, Math.floor(available - PopupPadding * 2));
+
+	return Math.min(Math.max(rounded, MinPopupSize), max);
 }
 
 export function calcBounds(
@@ -62,8 +84,15 @@ export function calcBounds(
 		// them to resize().  round the size before positioning, so the centering
 		// math and the off-screen clamp below both work from the same values
 		// Chrome will actually be given.
-	const w = Math.round(width);
-	const h = Math.round(height);
+		//
+		// the size is also clamped to the screen.  the position clamp below
+		// can't save a popup that's taller or wider than the screen: it pins the
+		// top or left edge, and the rest hangs off, so Chrome rejects it as "more
+		// than 50% off-screen".  a drifting size adjustment in create() did
+		// exactly that in 2.5.0, and also drove the width negative, which
+		// Chrome rejects as "Value must be at least 0".
+	const w = clampSize(width, PopupInnerWidth, screen.right - screen.left);
+	const h = clampSize(height, PopupInnerHeight, screen.bottom - screen.top);
 		// Chrome will throw an error if the popup is more than 50% off-screen,
 		// which can happen if the target window has been dragged mostly off-
 		// screen.  so clamp the top/left to keep it fully on-screen, with padding.
