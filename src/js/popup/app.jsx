@@ -118,6 +118,9 @@ export default class App extends React.Component {
 	openedForSearch = false;
 	ignoreNextBlur = false;
 	ignoreNextResize = false;
+		// borders-collapsed is reported once per page load, not on every
+		// resize event while the window stays that way
+	reportedCollapsedBorders = false;
 	navigatingRecents = false;
 		// the tab whose monitor the popup stays on while navigating recents
 	recentsScreenTab = null;
@@ -1228,18 +1231,6 @@ export default class App extends React.Component {
 	}
 
 
-	reopenWindow()
-	{
-			// ignore the blur event triggered by closing the popup
-		this.ignoreNextBlur = true;
-		this.endSession("reopen");
-			// pass false so that this message is sent to the background rather
-			// than being short-circuited to our onMessage handler, since the
-			// background needs to manage the closing and reopening of the popup
-		this.sendMessage("reopenPopup", { focusSearch: this.openedForSearch }, false);
-	}
-
-
 		// with an activeTab, the popup is centered on that tab's window.
 		// otherwise, it goes at the right side of a screen, which is screenTab's
 		// screen if there is one, or the primary screen if not.
@@ -1623,14 +1614,35 @@ export default class App extends React.Component {
 
 	onWindowResize = debounce(() => {
 		if (innerWidth == outerWidth && k.IsWin) {
-				// sometimes, something forces the popup to redraw in
-				// a weird way, where the borders and window drop
-				// shadow are lost.  seems like the only solution is
-				// to close and reopen the window.  this happens only on
-				// Windows.  on macOS, the inner and outer widths are
-				// always the same.
-			this.reopenWindow();
-			log("=== borders collapsed");
+				// years ago, something would sometimes force the popup to
+				// redraw without its borders and drop shadow, and closing and
+				// reopening the window was the only fix.  this happens only
+				// on Windows.  on macOS, the inner and outer widths are always
+				// the same.  but a maximized window has no side borders either,
+				// so maximizing the popup closed and reopened it, and that
+				// reopen is a likely cause of popups looping for some users.
+				// the original glitch may be long fixed in Chrome, so report
+				// it to see whether it still happens, and leave the window
+				// alone.  don't snap it back or refit it either: a maximized
+				// window has no side borders, so the padding measured now
+				// would be wrong.
+			if (!this.reportedCollapsedBorders) {
+				const maximized = outerWidth >= screen.availWidth
+					&& outerHeight >= screen.availHeight;
+
+				this.reportedCollapsedBorders = true;
+				this.props.tracker.event("borders-collapsed", {
+					event_label: maximized ? "maximized" : "normal",
+					outer: `${outerWidth}x${outerHeight}`,
+					inner: `${innerWidth}x${innerHeight}`
+				});
+			}
+
+			log("=== borders collapsed", `outer: ${outerWidth}x${outerHeight}`,
+				`inner: ${innerWidth}x${innerHeight}`,
+				`screen: ${screen.availWidth}x${screen.availHeight}`);
+
+			return;
 		} else if (!this.ignoreNextResize &&
 				(notEqual(outerWidth, this.popupW) || notEqual(outerHeight, this.popupH))) {
 				// prevent the window from resizing, but only if the width

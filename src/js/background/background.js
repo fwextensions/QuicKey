@@ -199,27 +199,6 @@ DEBUG && console.log("== onConnect", port.name, state.startingUp);
 });
 
 
-chrome.runtime.onMessage.addListener(({message, ...payload}) => {
-	if (message === "reopenPopup") {
-		(async () => {
-			const currentActiveTab = state.activeTab;
-
-				// instead of closing the popup and then calling
-				// openPopupWindow() to reopen it, we just call create(),
-				// which always closes the window first, and pass the current
-				// activeTab, since the query in openPopupWindow() seems to
-				// not find a last focused window, so we end up with an
-				// undefined activeTab
-			await popupWindow.create(currentActiveTab, payload.focusSearch);
-
-				// restore activeTab, which gets cleared when the port from
-				// the popup is closed
-			state.activeTab = currentActiveTab;
-		})();
-	}
-});
-
-
 chrome.runtime.onUpdateAvailable.addListener(details => {
 	function restartExtension()
 	{
