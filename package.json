@@ -29,6 +29,7 @@
     "react-router": "^8.5.1"
   },
   "devDependencies": {
+    "@types/chrome": "^0.3.7",
     "adm-zip": "^0.6.1",
     "rollup-plugin-visualizer": "^7.1.1",
     "stdout-ext": "file:../../Chrome Extensions/stdout/stdout",
