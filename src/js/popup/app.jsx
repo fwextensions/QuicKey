@@ -266,22 +266,9 @@ export default class App extends React.Component {
 				// hide the window if it loses focus
 			window.addEventListener("blur", this.onWindowBlur);
 
-// TODO: sometimes the resolution change doesn't get noticed and we don't resize the popup correctly
-
 				// listen for resolution changes so we can resize the popup, in
 				// case it changes based on the new DPI
-			const mountDPR = window.devicePixelRatio;
-
-			matchMedia(`(resolution: ${mountDPR}dppx)`).addEventListener("change", event => {
-				if (!event.matches) {
-						// force past the dedupe: this is the transition we're
-						// chasing, and the target it's about to re-apply was
-						// measured under mountDPR, not the current one
-					this.lastLoggedSize = "";
-					this.logSize("dpi-change", "was dpr:", mountDPR);
-					popupWindow.resize(this.popupW, this.popupH);
-				}
-			});
+			this.watchResolution();
 
 				// this sendMessage function will trigger a local event when the
 				// popup has control or call runtime.sendMessage() when the
@@ -1597,6 +1584,26 @@ export default class App extends React.Component {
 				"screen:", `${screen.width}x${screen.height}`,
 				...details);
 		}
+	}
+
+
+		// a resolution media query only describes one scale factor, so a
+		// listener on the one for the mount DPR fired when the popup moved off
+		// that display but not when it moved back.  watch the current scale
+		// factor instead, and start watching the new one each time it changes.
+	watchResolution()
+	{
+		const dpr = devicePixelRatio;
+
+		matchMedia(`(resolution: ${dpr}dppx)`).addEventListener("change", () => {
+				// force past the dedupe: this is the transition we're
+				// chasing, and the target it's about to re-apply was
+				// measured under the old dpr, not the current one
+			this.lastLoggedSize = "";
+			this.logSize("dpi-change", "was dpr:", dpr);
+			popupWindow.resize(this.popupW, this.popupH);
+			this.watchResolution();
+		}, { once: true });
 	}
 
 
