@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createStorage } from "@/background/storage";
 import log from "@/background/persistent-log";
+import trackers from "@/background/page-trackers";
 
 vi.mock("@/background/persistent-log", () => ({ default: vi.fn() }));
 
@@ -402,6 +403,41 @@ describe("storage init failure", () => {
 
 		expect(data).toEqual({ isNew: true });
 		expect(chrome.storage.local._dump().version).toBe(1);
+	});
+
+		// init retries on every task, so a profile that can never load would
+		// report on every one of them.  the first report has to say why, since
+		// tracker.exception() drops FILE_ERROR_NO_SPACE as noise.
+	it("reports a failed init once, with the scrubbed error message", async () => {
+		const event = vi.spyOn(trackers.background, "event");
+
+		vi.spyOn(chrome.storage.local, "get").mockRejectedValue(
+			new Error(String.raw`IO error: C:\Users\someone\AppData\Local\Google\Chrome\User Data\Default\Local Extension Settings\abc/000123.log: FILE_ERROR_NO_SPACE`));
+
+		const storage = createStorage({ name: "init-reports", version: 1 });
+
+		await expect(storage.get()).rejects.toThrow("FILE_ERROR_NO_SPACE");
+		await expect(storage.get()).rejects.toThrow("FILE_ERROR_NO_SPACE");
+		await expect(storage.set(() => ({ a: 1 }))).rejects.toThrow("FILE_ERROR_NO_SPACE");
+
+		const reports = event.mock.calls.filter(([, action]) => action === "failed-init");
+
+		expect(reports).toEqual([
+			["storage", "failed-init", "IO error: <path>: FILE_ERROR_NO_SPACE"]
+		]);
+	});
+
+	it("names a non-generic error type in the report", async () => {
+		const event = vi.spyOn(trackers.background, "event");
+
+		vi.spyOn(chrome.storage.local, "get").mockRejectedValueOnce(
+			new TypeError("Cannot read properties of undefined (reading 'data')"));
+
+		const storage = createStorage({ name: "init-typeerror", version: 1 });
+
+		await expect(storage.get()).rejects.toThrow(TypeError);
+		expect(event).toHaveBeenCalledWith("storage", "failed-init",
+			"TypeError: Cannot read properties of undefined (reading 'data')");
 	});
 
 		// nothing awaits the eager init kicked off by createStorage(), so it

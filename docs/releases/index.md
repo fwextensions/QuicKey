@@ -8,6 +8,16 @@ comments: true
 # Release history
 
 
+## 2.5.1 - 2026-11-18
+
+### Fixed
+
+* The popup window could stop opening entirely, or open larger than the screen, after it had been resized to fit a short list of results or maximized.  Once this happened, it kept failing until the extension was reset.  Affected installs recover automatically with this update.
+* When the popup is hidden in a tab, the same problem made the shortcut silently do nothing.
+* Maximizing the popup window on Windows closed and reopened it.
+* After moving the popup window to a monitor with different scaling and then back again, it wasn't resized for the original monitor's scaling.
+
+
 ## 2.5.0 - 2026-11-15
 
 ### Added

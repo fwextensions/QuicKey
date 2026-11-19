@@ -43,6 +43,7 @@ const IconPaths = {
 	}
 };
 const ExtensionName = chrome.runtime.getManifest().short_name;
+const IconFetchFailurePattern = /^Failed to set icon '.*': Failed to fetch/;
 
 
 	// the dev-only stamp sw.js adds to the end of the title
@@ -138,6 +139,30 @@ async function setIcon(
 }
 
 
+	// when the icon fetch fails, it's because the browser can't read our
+	// packaged files at all -- the decode above failed first -- and that
+	// lasts until the worker restarts.  every shortcut press inverts and then
+	// restores the icon, so each press would report it twice: one install sent
+	// 152 in six hours in the 2.5.0 rollout.  report it once per worker.  other
+	// errors go through as before, including the shutdown noise, which is
+	// being left unfiltered until its numbers come back (see error-triage).
+let iconFetchFailureReported = false;
+
+function reportIconError(
+	error)
+{
+	if (IconFetchFailurePattern.test(error?.message ?? "")) {
+		if (iconFetchFailureReported) {
+			return;
+		}
+
+		iconFetchFailureReported = true;
+	}
+
+	backgroundTracker.exception(error);
+}
+
+
 async function setNormalIcon()
 {
 	const {paths, color} = getIconsAndBadgeColor();
@@ -151,7 +176,7 @@ async function setNormalIcon()
 		await chrome.action.setBadgeBackgroundColor({ color });
 		await setIcon(paths);
 	} catch (error) {
-		backgroundTracker.exception(error);
+		reportIconError(error);
 	}
 }
 
@@ -181,7 +206,7 @@ async function invertFor(
 			await setIcon(paths);
 		}
 	} catch (error) {
-		backgroundTracker.exception(error);
+		reportIconError(error);
 	}
 }
 

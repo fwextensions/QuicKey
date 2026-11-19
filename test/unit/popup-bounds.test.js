@@ -134,6 +134,59 @@ describe("calcBounds", () => {
 		expect(bounds).toEqual({ left: 710, top: 240, width: 500, height: 600 });
 	});
 
+		// the position clamp pins the top or left edge, so a popup bigger than
+		// the screen hangs off it, and Chrome rejects it as "more than 50%
+		// off-screen".  a drifting size adjustment in 2.5.0 asked for these.
+	it("shrinks a popup taller or wider than the screen to fit it", () => {
+		const bounds = calcBounds(FractionalWindow, { width: 2500, height: 2488 });
+
+		expect(bounds.width).toBe(screen.width - 100);
+		expect(bounds.height).toBe(screen.height - 100);
+		expect(bounds.left).toBe(50);
+		expect(bounds.top).toBe(50);
+	});
+
+	it("keeps a negative or missing size above the minimum", () => {
+		for (const [width, height] of [[-484, 600], [500, -10], [NaN, 600], [undefined, undefined]]) {
+			const bounds = calcBounds(FractionalWindow, { width, height });
+
+			expectAllIntegers(bounds);
+			expect(bounds.width).toBeGreaterThanOrEqual(100);
+			expect(bounds.height).toBeGreaterThanOrEqual(100);
+		}
+	});
+
+	it("falls back to the default inner size for a missing size", () => {
+		const { width, height } = calcBounds(null, {});
+
+		expect([width, height]).toEqual([500, 488]);
+	});
+
+	it("fits an oversize popup on a screen that doesn't start at 0,0", () => {
+		const saved = screen;
+
+		screen = {
+			left: 1920,
+			top: 200,
+			width: 1280,
+			height: 720,
+			right: 3200,
+			bottom: 920,
+		};
+
+		try {
+			const bounds = calcBounds(
+				{ left: 2000, top: 300, width: 1000, height: 500 },
+				{ width: 516, height: 3000 }
+			);
+
+			expect(bounds.top).toBe(250);
+			expect(bounds.top + bounds.height).toBe(870);
+		} finally {
+			screen = saved;
+		}
+	});
+
 	it("clamps against a screen that doesn't start at 0,0", () => {
 		const saved = screen;
 

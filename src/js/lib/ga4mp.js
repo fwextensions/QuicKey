@@ -177,7 +177,9 @@ const sendRequest = (endpoint, payload, mode = 'browser', opts = {}) => {
 		if (navigator?.sendBeacon) {
 			navigator.sendBeacon(url);
 		} else {
-			fetch(url)
+				// keepalive lets the request finish even if the service worker
+				// is torn down right after sending, like PostHog's fetch
+			fetch(url, { keepalive: true })
 				.catch((error) => DEBUG && console.log(error));
 		}
 	} else {
@@ -357,6 +359,30 @@ const ga4mp = function (measurement_ids, config = {}) {
 			);
 		}
 	}
+
+		// EDIT: ask for the client hints once, when the tracker is created,
+		// rather than awaiting a fresh getHighEntropyValues() call before every
+		// event.  that async hop meant an event sent just before the page went
+		// away was never sent: the menu ends its popup-session and calls
+		// window.close() in the same tick, so GA lost about 59% of the menu's
+		// popup-session events, while PostHog's synchronous keepalive fetch got
+		// them all.  once the hints are in, events go out synchronously.  only
+		// events before then, a few ms after load, still wait for them.
+	let clientHintsReady = false;
+	const clientHintsPromise = clientHints(internalModel.mode)
+		.then((ch) => {
+			if (ch) {
+				internalModel.payloadData = Object.assign(
+					internalModel.payloadData,
+					ch
+				);
+			}
+		})
+			// a refused or failed lookup just means the hints are left out
+		.catch(() => {})
+		.finally(() => {
+			clientHintsReady = true;
+		});
 	/**
 	 * Dispatching Queue
 	 * TO-DO
@@ -530,14 +556,7 @@ const ga4mp = function (measurement_ids, config = {}) {
 		sessionControl = {},
 		forceDispatch = true
 	) => {
-		// We want to wait for the CH Promise to fullfill
-		clientHints(internalModel?.mode).then((ch) => {
-			if (ch) {
-				internalModel.payloadData = Object.assign(
-					internalModel.payloadData,
-					ch
-				);
-			}
+		const dispatch = () => {
 			const payload = buildPayload(eventName, eventParameters);
 			if (payload && forceDispatch) {
 				for (let i = 0; i < payload.tid.length; i++) {
@@ -554,7 +573,14 @@ const ga4mp = function (measurement_ids, config = {}) {
 					dispatchQueue();
 				}
 			}
-		});
+		};
+
+			// EDIT: see clientHintsPromise above
+		if (clientHintsReady) {
+			dispatch();
+		} else {
+			clientHintsPromise.then(dispatch);
+		}
 	};
 	return {
 		version: internalModel.version,

@@ -295,3 +295,41 @@ describe("toolbar icon images", () => {
 		expect(fetchImage).toHaveBeenCalledTimes(afterFirst);
 	});
 });
+
+
+describe("toolbar icon error reporting", () => {
+	const IconFetchError = "Failed to set icon '/img/icon-16.png': Failed to fetch";
+	let exception;
+
+	beforeEach(async () => {
+			// the same instance toolbar-icon imported, since both come from the
+			// module registry this test's beforeEach reset
+		const trackers = (await import("@/background/page-trackers")).default;
+
+		exception = vi.spyOn(trackers.background, "exception");
+	});
+
+		// a profile that can't read its own files fails every icon update until
+		// the worker restarts, and each shortcut press is an invert plus a restore
+	it("reports a failed icon fetch once per worker", async () => {
+		setIcon.mockRejectedValue(new Error(IconFetchError));
+
+		await toolbarIcon.invertFor();
+		await toolbarIcon.setNormalIcon();
+		await toolbarIcon.invertFor();
+		await toolbarIcon.setNormalIcon();
+
+		expect(setIcon).toHaveBeenCalledTimes(4);
+		expect(exception).toHaveBeenCalledTimes(1);
+		expect(exception.mock.calls[0][0].message).toBe(IconFetchError);
+	});
+
+	it("still reports every other icon error", async () => {
+		setIcon.mockRejectedValue(new Error("The browser is shutting down."));
+
+		await toolbarIcon.setNormalIcon();
+		await toolbarIcon.setNormalIcon();
+
+		expect(exception).toHaveBeenCalledTimes(2);
+	});
+});

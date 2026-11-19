@@ -118,6 +118,9 @@ export default class App extends React.Component {
 	openedForSearch = false;
 	ignoreNextBlur = false;
 	ignoreNextResize = false;
+		// borders-collapsed is reported once per page load, not on every
+		// resize event while the window stays that way
+	reportedCollapsedBorders = false;
 	navigatingRecents = false;
 		// the tab whose monitor the popup stays on while navigating recents
 	recentsScreenTab = null;
@@ -258,26 +261,17 @@ export default class App extends React.Component {
 			this.lastWindowPadding = {width, height};
 			this.logSize("mount");
 			window.addEventListener("resize", this.onWindowResize);
+				// onWindowResize is debounced, so it misses a resize that
+				// bounces back within 250ms.  log every raw event, to see if a
+				// list that shifts by a px or two is the window being resized.
+			window.addEventListener("resize", this.logResizeEvent);
 
 				// hide the window if it loses focus
 			window.addEventListener("blur", this.onWindowBlur);
 
-// TODO: sometimes the resolution change doesn't get noticed and we don't resize the popup correctly
-
 				// listen for resolution changes so we can resize the popup, in
 				// case it changes based on the new DPI
-			const mountDPR = window.devicePixelRatio;
-
-			matchMedia(`(resolution: ${mountDPR}dppx)`).addEventListener("change", event => {
-				if (!event.matches) {
-						// force past the dedupe: this is the transition we're
-						// chasing, and the target it's about to re-apply was
-						// measured under mountDPR, not the current one
-					this.lastLoggedSize = "";
-					this.logSize("dpi-change", "was dpr:", mountDPR);
-					popupWindow.resize(this.popupW, this.popupH);
-				}
-			});
+			this.watchResolution();
 
 				// this sendMessage function will trigger a local event when the
 				// popup has control or call runtime.sendMessage() when the
@@ -348,6 +342,9 @@ export default class App extends React.Component {
 			// we only want these flags to be true through one render cycle
 		this.forceUpdate = false;
 		this.selectAllSearchBoxText = false;
+			// deduped, so this only logs when a render finds the window at a
+			// different size than last time
+		this.logSize("render", "body:", `${document.body.offsetWidth}x${document.body.offsetHeight}`);
 
 			// when the number of matched items is < MaxItems, shrink the window
 			// height, but only in the popup case, since the toolbar menu does
@@ -1234,18 +1231,6 @@ export default class App extends React.Component {
 	}
 
 
-	reopenWindow()
-	{
-			// ignore the blur event triggered by closing the popup
-		this.ignoreNextBlur = true;
-		this.endSession("reopen");
-			// pass false so that this message is sent to the background rather
-			// than being short-circuited to our onMessage handler, since the
-			// background needs to manage the closing and reopening of the popup
-		this.sendMessage("reopenPopup", { focusSearch: this.openedForSearch }, false);
-	}
-
-
 		// with an activeTab, the popup is centered on that tab's window.
 		// otherwise, it goes at the right side of a screen, which is screenTab's
 		// screen if there is one, or the primary screen if not.
@@ -1593,16 +1578,71 @@ export default class App extends React.Component {
 	}
 
 
+		// a resolution media query only describes one scale factor, so a
+		// listener on the one for the mount DPR fired when the popup moved off
+		// that display but not when it moved back.  watch the current scale
+		// factor instead, and start watching the new one each time it changes.
+	watchResolution()
+	{
+		const dpr = devicePixelRatio;
+
+		matchMedia(`(resolution: ${dpr}dppx)`).addEventListener("change", () => {
+				// force past the dedupe: this is the transition we're
+				// chasing, and the target it's about to re-apply was
+				// measured under the old dpr, not the current one
+			this.lastLoggedSize = "";
+			this.logSize("dpi-change", "was dpr:", dpr);
+			popupWindow.resize(this.popupW, this.popupH);
+			this.watchResolution();
+		}, { once: true });
+	}
+
+
+	logResizeEvent = () =>
+	{
+		log("popup resize event",
+			"dpr:", devicePixelRatio,
+			"outer:", `${outerWidth}x${outerHeight}`,
+			"inner:", `${innerWidth}x${innerHeight}`,
+			"body:", `${document.body.offsetWidth}x${document.body.offsetHeight}`,
+			"target:", `${this.popupW}x${this.popupH}`,
+			"pos:", `${screenX},${screenY}`,
+			"ignoreNext:", this.ignoreNextResize,
+			"visible:", this.visible);
+	};
+
+
 	onWindowResize = debounce(() => {
 		if (innerWidth == outerWidth && k.IsWin) {
-				// sometimes, something forces the popup to redraw in
-				// a weird way, where the borders and window drop
-				// shadow are lost.  seems like the only solution is
-				// to close and reopen the window.  this happens only on
-				// Windows.  on macOS, the inner and outer widths are
-				// always the same.
-			this.reopenWindow();
-			log("=== borders collapsed");
+				// years ago, something would sometimes force the popup to
+				// redraw without its borders and drop shadow, and closing and
+				// reopening the window was the only fix.  this happens only
+				// on Windows.  on macOS, the inner and outer widths are always
+				// the same.  but a maximized window has no side borders either,
+				// so maximizing the popup closed and reopened it, and that
+				// reopen is a likely cause of popups looping for some users.
+				// the original glitch may be long fixed in Chrome, so report
+				// it to see whether it still happens, and leave the window
+				// alone.  don't snap it back or refit it either: a maximized
+				// window has no side borders, so the padding measured now
+				// would be wrong.
+			if (!this.reportedCollapsedBorders) {
+				const maximized = outerWidth >= screen.availWidth
+					&& outerHeight >= screen.availHeight;
+
+				this.reportedCollapsedBorders = true;
+				this.props.tracker.event("borders-collapsed", {
+					event_label: maximized ? "maximized" : "normal",
+					outer: `${outerWidth}x${outerHeight}`,
+					inner: `${innerWidth}x${innerHeight}`
+				});
+			}
+
+			log("=== borders collapsed", `outer: ${outerWidth}x${outerHeight}`,
+				`inner: ${innerWidth}x${innerHeight}`,
+				`screen: ${screen.availWidth}x${screen.availHeight}`);
+
+			return;
 		} else if (!this.ignoreNextResize &&
 				(notEqual(outerWidth, this.popupW) || notEqual(outerHeight, this.popupH))) {
 				// prevent the window from resizing, but only if the width

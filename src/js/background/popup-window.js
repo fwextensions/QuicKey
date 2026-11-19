@@ -27,6 +27,26 @@ let lastActiveTab;
 let sizeSeeded = null;
 
 
+	// the popup's frame -- the difference between the window's outer size and
+	// its tab's inner size -- is a few tens of pixels: 0 wide on macOS, about 16
+	// on Windows, and a title bar's height.  a measurement outside these ranges
+	// isn't the frame.  it's a window manager forcing the window to a different
+	// size (a tiling WM on Linux), or a maximized window, and recording it as
+	// the adjustment would size every later popup wrong.
+const MaxFrameWidth = 100;
+const MaxFrameHeight = 150;
+
+
+function isPlausibleFrame(
+	width,
+	height)
+{
+	return Number.isFinite(width) && Number.isFinite(height)
+		&& width >= 0 && width <= MaxFrameWidth
+		&& height >= 0 && height <= MaxFrameHeight;
+}
+
+
 	// read the stored size adjustments the first time something needs the
 	// popup's size, rather than in a top-level await.  this module is
 	// imported by background.js, so a top-level read held up every listener
@@ -46,6 +66,19 @@ function seedSize()
 {
 	sizeSeeded ??= storage.peek((data = {}) => {
 		({ popupAdjustmentWidth = 0, popupAdjustmentHeight = 0 } = data);
+
+			// 2.5.0's create() could drift these far out of range and save them,
+			// and then every popup after a restart was sized off the screen or
+			// below zero, so it failed to open until the profile was reset.
+			// ignore a stored value that can't be a frame, and the next
+			// successful create() measures and saves a real one.
+		if (!isPlausibleFrame(popupAdjustmentWidth, popupAdjustmentHeight)) {
+			log("popup size: ignoring stored adjustment",
+				`${popupAdjustmentWidth}x${popupAdjustmentHeight}`);
+			popupAdjustmentWidth = 0;
+			popupAdjustmentHeight = 0;
+		}
+
 		currentWidth = PopupInnerWidth + popupAdjustmentWidth;
 		currentHeight = PopupInnerHeight + popupAdjustmentHeight;
 
@@ -171,6 +204,77 @@ async function createPopup(
 }
 
 
+	// measure the frame of a newly created popup window, and resize it so its
+	// tab gets the default inner size.  the frame is stored as the size
+	// adjustment that seeds currentWidth/currentHeight for later popups.
+	//
+	// the frame is the requested outer size minus the measured inner size,
+	// measured fresh each time.  this used to add the miss against the default
+	// inner size to the stored adjustment, which is only right when the window
+	// was requested at the default size plus that adjustment.  resize() changes
+	// currentWidth/currentHeight to whatever the popup page asks for, so after
+	// a popup was shrunk to fit a short list, every create() moved the stored
+	// adjustment by the difference.  in 2.5.0 it drifted far enough to size
+	// popups off the screen or below zero, so they failed to open at all.
+async function fitToFrame(
+	window,
+	bounds)
+{
+	const [popupTab] = window.tabs ?? [];
+	const frameWidth = bounds.width - popupTab?.width;
+	const frameHeight = bounds.height - popupTab?.height;
+
+		// TEMPORARY INSTRUMENTATION -- see logSize() in popup/app.jsx
+	log("popup create: measured", `${popupTab?.width}x${popupTab?.height}`,
+		"bounds", `${bounds.width}x${bounds.height}`,
+		"frame", `${frameWidth}x${frameHeight}`,
+		"stored adjustment", `${popupAdjustmentWidth}x${popupAdjustmentHeight}`);
+
+	if (!isPlausibleFrame(frameWidth, frameHeight)) {
+			// something other than the frame decided this window's size, so
+			// leave it and the stored adjustment alone
+		log("popup create: not using the measured frame");
+
+		return;
+	}
+
+	const width = PopupInnerWidth + frameWidth;
+	const height = PopupInnerHeight + frameHeight;
+	const widthDelta = width - bounds.width;
+	const heightDelta = height - bounds.height;
+
+	if (widthDelta || heightDelta) {
+		try {
+			await chrome.windows.update(window.id, {
+					// shift the position by half the change, to keep the
+					// window centered in the target area
+				left: bounds.left - Math.floor(widthDelta / 2),
+				top: bounds.top - Math.floor(heightDelta / 2),
+				width,
+				height
+			});
+		} catch (error) {
+				// the window is open at the size it was created with, which is
+				// still usable, so don't fail the create.  don't record the
+				// frame either, since the size it implies didn't take.
+			log("popup create: resize to fit the frame failed:", error.message,
+				"size", `${width}x${height}`);
+
+			return;
+		}
+
+		currentWidth = width;
+		currentHeight = height;
+	}
+
+	if (frameWidth !== popupAdjustmentWidth || frameHeight !== popupAdjustmentHeight) {
+		popupAdjustmentWidth = frameWidth;
+		popupAdjustmentHeight = frameHeight;
+		await storage.set(() => ({ popupAdjustmentWidth, popupAdjustmentHeight }), "savePopupAdjustment");
+	}
+}
+
+
 async function create(
 	activeTab,
 	props = {},
@@ -221,46 +325,18 @@ async function create(
 			// calling show() will create a new popup window and move the
 			// QuicKey tab to it
 		window = await show(activeTab);
+
+		if (!window) {
+				// show() swallows its errors and returns nothing, and has
+				// already logged why.  say what failed, instead of a TypeError
+				// from reading the tabs of undefined below.
+			throw new Error("popup create: couldn't move the popup tab into a window");
+		}
 	}
 
-	const [popupTab] = window.tabs;
-	const {width: innerWidth, height: innerHeight} = popupTab;
-	const widthDelta = PopupInnerWidth - innerWidth;
-	const heightDelta = PopupInnerHeight - innerHeight;
-
-		// TEMPORARY INSTRUMENTATION -- see logSize() in popup/app.jsx.  these
-		// adjustments persist to storage and seed currentWidth/currentHeight on
-		// every later show(), so a bad measurement here follows the popup
-		// around until something recreates the window.  window chrome is a few
-		// tens of px; an adjustment anywhere near PopupInnerHeight means a
-		// device-pixel value got recorded as the CSS-pixel target.
-	log("popup create: measured",
-		`${innerWidth}x${innerHeight}`,
-		"wanted", `${PopupInnerWidth}x${PopupInnerHeight}`,
-		"delta", `${widthDelta}x${heightDelta}`,
-		"adjustment now",
-		`${popupAdjustmentWidth + widthDelta}x${popupAdjustmentHeight + heightDelta}`,
-		"bounds", `${bounds.width}x${bounds.height}`);
-
-	if (widthDelta || heightDelta) {
-			// the current adjustments weren't enough to hit the target size,
-			// so update them with the latest deltas, and then adjust the
-			// popup size
-		popupAdjustmentWidth += widthDelta;
-		popupAdjustmentHeight += heightDelta;
-		bounds.width += widthDelta;
-		bounds.height += heightDelta;
-		currentWidth = bounds.width;
-		currentHeight = bounds.height;
-
-			// shift the position by half a negative delta to keep the
-			// window centered in the target area
-		bounds.left += -Math.floor(widthDelta / 2);
-		bounds.top += -Math.floor(heightDelta / 2);
-
-		await chrome.windows.update(window.id, bounds);
-		await storage.set(() => ({ popupAdjustmentWidth, popupAdjustmentHeight }), "savePopupAdjustment");
-	}
+	currentWidth = bounds.width;
+	currentHeight = bounds.height;
+	await fitToFrame(window, bounds);
 
 	lastActiveTab = activeTab;
 	isVisible = true;
@@ -544,7 +620,12 @@ async function resize(
 	width,
 	height)
 {
-	if (height < 0) {
+		// the popup page measures these from its own window, which can report
+		// nonsense mid-transition.  storing it would size every later popup off
+		// it, and calcBounds() would only paper over it, so ignore the call.
+	if (!(width > 0 && height > 0 && Number.isFinite(width) && Number.isFinite(height))) {
+		log("popup resize: ignoring", `${width}x${height}`);
+
 		return;
 	}
 
