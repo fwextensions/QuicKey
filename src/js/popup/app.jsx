@@ -6,6 +6,7 @@ import MessageItem from "./message-item";
 import Banner from "./banner";
 import OptionsButton from "./options-button";
 import { connectPopupWindow } from "./popup-window";
+import { activateTab } from "./activate-tab";
 import scoreItems from "./score/score-items";
 import initTabs from "./data/init-tabs";
 import getBookmarks from "./data/get-bookmarks";
@@ -797,12 +798,10 @@ export default class App extends React.Component {
 				// focusing the tab's window blurs the popup, which closes it
 			this.pendingCloseReason = "select";
 
-				// bring the tab's window forward *before* focusing the tab, since
-				// activating the window can sometimes put keyboard focus on the
-				// very first tab button on macOS 10.14 (could never repro on
-				// 10.12).  then focus the tab, which should fix any focus issues.
-			return chrome.windows.update(tab.windowId, { focused: true })
-				.then(() => chrome.tabs.update(tab.id, { active: true, ...options }))
+                // focus the window and the tab in one go, since in the toolbar
+                // menu, focusing the window closes the menu before anything
+                // chained after it can run.  see activateTab().
+            return activateTab(tab, options)
 				.then((focusedTab) => {
 					this.executeAddTab();
 
